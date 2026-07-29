@@ -1,0 +1,187 @@
+import React, { useState, useRef, useEffect } from 'react'
+import { Search, ChevronDown, Check, Sparkles, X } from 'lucide-react'
+
+export interface ModelOption {
+  id: string
+  name: string
+  category?: string
+  description?: string
+  badge?: string
+}
+
+export const REAL_AI_MODELS: ModelOption[] = [
+  {
+    id: 'claude-sonnet-5',
+    name: 'Claude 5 Sonnet',
+    category: 'Flagship (Anthropic)',
+    description: 'מודל הדגל המקצועי החדש של Anthropic — מומלץ ביותר לצייתנות ודיוק',
+    badge: 'מומלץ',
+  },
+  {
+    id: 'claude-opus-4-6',
+    name: 'Claude Opus 4.6',
+    category: 'Reasoning (Anthropic)',
+    description: 'מודל הדגל לעיבוד מידע ומשימות לוגיות מורכבות במיוחד',
+    badge: 'חזק',
+  },
+]
+
+interface ModelSearchSelectProps {
+  value: string
+  onChange: (value: string) => void
+}
+
+export const ModelSearchSelect: React.FC<ModelSearchSelectProps> = ({ value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const containerRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => searchInputRef.current?.focus(), 50)
+    }
+  }, [isOpen])
+
+  const filteredModels = REAL_AI_MODELS.filter(
+    (m) =>
+      m.id.toLowerCase().includes(search.toLowerCase()) ||
+      m.name.toLowerCase().includes(search.toLowerCase()) ||
+      (m.description && m.description.toLowerCase().includes(search.toLowerCase())),
+  )
+
+  const selectedModelObj = REAL_AI_MODELS.find((m) => m.id === value)
+  const isCustomModel = !selectedModelObj && value
+
+  const handleSelect = (modelId: string) => {
+    onChange(modelId)
+    setIsOpen(false)
+    setSearch('')
+  }
+
+  return (
+    <div ref={containerRef} className="relative w-full font-assistant md:w-96" dir="rtl">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-input bg-muted px-4 py-2.5 text-right text-sm text-foreground transition-colors hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+      >
+        <div className="flex items-center gap-2.5 overflow-hidden">
+          <Sparkles size={16} className="shrink-0 text-primary" />
+          <span className="truncate font-semibold">
+            {selectedModelObj ? selectedModelObj.name : value || 'בחר מודל AI…'}
+          </span>
+          {selectedModelObj?.badge && (
+            <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+              {selectedModelObj.badge}
+            </span>
+          )}
+          {isCustomModel && (
+            <span className="shrink-0 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+              מותאם אישית
+            </span>
+          )}
+        </div>
+        <ChevronDown
+          size={16}
+          className={`shrink-0 text-muted-foreground transition-transform duration-200 ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-50 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-card shadow-2xl backdrop-blur-xl">
+          <div className="border-b border-border bg-muted/40 p-2">
+            <div className="relative flex items-center">
+              <Search size={15} className="pointer-events-none absolute right-3 text-muted-foreground" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="חפש מודל (למשל: gpt-4o, gpt-5, o3…)"
+                className="w-full rounded-lg border border-input bg-background py-1.5 pr-9 pl-8 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary/50 focus:outline-none"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  className="absolute left-2.5 text-muted-foreground hover:text-foreground"
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="max-h-60 overflow-y-auto p-1.5 space-y-1">
+            {filteredModels.length > 0
+              ? filteredModels.map((m) => {
+                  const isSelected = value === m.id
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => handleSelect(m.id)}
+                      className={`flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-right transition-colors ${
+                        isSelected
+                          ? 'border border-primary/30 bg-primary/15 text-foreground'
+                          : 'text-foreground hover:bg-muted/70'
+                      }`}
+                    >
+                      <div className="flex flex-col gap-0.5 overflow-hidden">
+                        <div className="flex items-center gap-2">
+                          <span className="font-assistant text-xs font-bold">{m.name}</span>
+                          <span className="font-mono text-[10px] text-muted-foreground/70">({m.id})</span>
+                          {m.badge && (
+                            <span className="rounded bg-primary/10 px-1.5 text-[9px] font-bold text-primary">
+                              {m.badge}
+                            </span>
+                          )}
+                        </div>
+                        {m.description && (
+                          <span className="truncate text-[11px] leading-tight text-muted-foreground">
+                            {m.description}
+                          </span>
+                        )}
+                      </div>
+                      {isSelected && <Check size={14} className="mr-2 shrink-0 text-primary" />}
+                    </button>
+                  )
+                })
+              : null}
+
+            {search.trim() && !REAL_AI_MODELS.some((m) => m.id === search.trim()) && (
+              <button
+                type="button"
+                onClick={() => handleSelect(search.trim())}
+                className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-right text-amber-400 transition-colors hover:bg-amber-500/20"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold">השתמש במודל:</span>
+                  <span className="font-mono text-xs font-semibold">{search.trim()}</span>
+                </div>
+                <Check size={14} className="shrink-0 text-amber-400" />
+              </button>
+            )}
+
+            {filteredModels.length === 0 && !search.trim() && (
+              <div className="p-3 text-center text-xs text-muted-foreground">לא נמצאו מודלים</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

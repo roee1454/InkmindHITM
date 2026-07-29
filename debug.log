@@ -1,0 +1,18 @@
+[2026-07-22T19:50:34.452Z] [INDEX] beforeLoad called
+[2026-07-22T19:50:34.482Z] [AUTH-SERVER] needsBootstrap handler called
+[2026-07-22T19:50:34.482Z] [PB-SU] getSuperuserClient called, env NODE_ENV: development
+[2026-07-22T19:50:34.482Z] [PB-SU] createSuperuserClient starting...
+[2026-07-22T19:50:34.482Z] [PB-SU] authWithPassword email: admin@inkmind.local
+[2026-07-22T19:50:34.554Z] [PB-SU] authWithPassword completed successfully!
+[2026-07-22T19:50:34.554Z] [AUTH-SERVER] su client obtained, calling getList...
+[2026-07-22T19:50:34.559Z] [AUTH-SERVER] getList returned totalItems: 2
+[2026-07-22T19:52:27.697Z] [INDEX] beforeLoad called
+[2026-07-22T19:52:27.699Z] [AUTH-SERVER] needsBootstrap handler called
+[2026-07-22T19:52:27.700Z] [PB-SU] getSuperuserClient called, env NODE_ENV: production
+[2026-07-22T19:52:27.700Z] [PB-SU] superuserClientPromise is null, creating new promise...
+[2026-07-22T19:52:27.700Z] [PB-SU] createSuperuserClient starting...
+[2026-07-22T19:52:27.700Z] [PB-SU] authWithPassword email: admin@inkmind.local
+[2026-07-22T19:52:27.765Z] [PB-SU] authWithPassword completed successfully!
+[2026-07-22T19:52:27.765Z] [PB-SU] superuserClientPromise resolved, checking isValid: true
+[2026-07-22T19:52:27.765Z] [AUTH-SERVER] su client obtained, calling getList...
+[2026-07-22T19:52:27.769Z] [AUTH-SERVER] getList returned totalItems: 2
