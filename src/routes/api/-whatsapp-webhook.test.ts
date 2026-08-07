@@ -45,6 +45,10 @@ vi.mock('@/features/conversations/server/webhook', () => ({
   processInboundEvent: vi.fn(),
 }))
 
+vi.mock('@/features/settings/server/whatsapp-error-log', () => ({
+  logWhatsAppError: vi.fn(),
+}))
+
 describe('handleWebhookPost', () => {
   afterEach(() => vi.resetAllMocks())
 
@@ -53,7 +57,6 @@ describe('handleWebhookPost', () => {
       '@/features/conversations/server/webhook'
     )
     vi.mocked(getWhatsAppSettings).mockResolvedValue({
-      id: 's1',
       phoneNumberId: 'PNID',
       accessToken: 'T',
       verifyToken: 'V',
@@ -92,7 +95,6 @@ describe('handleWebhookPost', () => {
       '@/features/conversations/server/webhook'
     )
     vi.mocked(getWhatsAppSettings).mockResolvedValue({
-      id: 's1',
       phoneNumberId: 'PNID',
       accessToken: 'T',
       verifyToken: 'V',
@@ -131,7 +133,6 @@ describe('handleWebhookPost', () => {
       '@/features/conversations/server/webhook'
     )
     vi.mocked(getWhatsAppSettings).mockResolvedValue({
-      id: 's1',
       phoneNumberId: 'PNID',
       accessToken: 'T',
       verifyToken: 'V',

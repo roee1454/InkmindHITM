@@ -2,13 +2,13 @@ import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { z } from 'zod'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { TeamAccessTab } from '@/features/settings/components/TeamAccessTab'
-import { CalendarFeedsTab } from '@/features/settings/components/CalendarFeedsTab'
 import { AiAgentTab } from '@/features/settings/components/AiAgentTab'
 import { StudioPolicyTab } from '@/features/settings/components/StudioPolicyTab'
 import { WhatsAppSettingsTab } from '@/features/settings/components/WhatsAppSettingsTab'
+import { BackupSettingsTab } from '@/features/settings/components/BackupSettingsTab'
 
 const settingsSearchSchema = z.object({
-  tab: z.enum(['team', 'calendar', 'ai', 'policy', 'whatsapp']).optional().default('team'),
+  tab: z.enum(['team', 'ai', 'policy', 'whatsapp', 'backups']).optional().default('team'),
 })
 
 export const Route = createFileRoute('/dashboard/settings')({
@@ -19,21 +19,24 @@ export const Route = createFileRoute('/dashboard/settings')({
 function SettingsPage() {
   const search = useSearch({ from: '/dashboard/settings' })
   const navigate = useNavigate({ from: '/dashboard/settings' })
-  const activeTab = search.tab || 'team'
+  const activeTab = search.tab
 
   const settingsTabs = [
-    { label: 'צוות והרשאות', id: 'team', description: 'הגדרת חברי הצוות, תפקידים, הרשאות גישה וסיסמאות' },
-    { label: 'קישורי יומן', id: 'calendar', description: 'חיבור וסנכרון תורים עם Google Calendar' },
+    { label: 'צוות והרשאות', id: 'team', description: 'הגדרת חברי הצוות, תפקידים, הרשאות גישה, סיסמאות וחיבורי Google Calendar' },
     { label: 'הגדרות סוכן AI', id: 'ai', description: 'פרמטרים של בוט ה-AI, כיבוי חירום ומאגר ידע' },
     { label: 'מדיניות סטודיו', id: 'policy', description: 'אמצעי תשלום למקדמה, חלון ביטול, ימי סגירה והתראות' },
     { label: 'וואטסאפ', id: 'whatsapp', description: 'הגדרות חיבור WhatsApp Cloud API, טוקנים ו-Webhook' },
+    { label: 'גיבויים', id: 'backups', description: 'תדירות גיבוי אוטומטי, שמירת גיבויים והרצה ידנית' },
   ]
 
   const activeTabObj = settingsTabs.find((t) => t.id === activeTab) ?? settingsTabs[0]!
 
   const handleTabChange = (val: string) => {
     void navigate({
-      search: (old) => ({ ...old, tab: val as 'team' | 'calendar' | 'ai' | 'policy' | 'whatsapp' }),
+      search: (old) => ({
+        ...old,
+        tab: val as 'team' | 'ai' | 'policy' | 'whatsapp' | 'backups',
+      }),
     })
   }
 
@@ -69,9 +72,6 @@ function SettingsPage() {
             <TabsContent value="team" className="focus-visible:outline-none">
               <TeamAccessTab />
             </TabsContent>
-            <TabsContent value="calendar" className="focus-visible:outline-none">
-              <CalendarFeedsTab />
-            </TabsContent>
             <TabsContent value="ai" className="focus-visible:outline-none">
               <AiAgentTab />
             </TabsContent>
@@ -80,6 +80,9 @@ function SettingsPage() {
             </TabsContent>
             <TabsContent value="whatsapp" className="focus-visible:outline-none">
               <WhatsAppSettingsTab />
+            </TabsContent>
+            <TabsContent value="backups" className="focus-visible:outline-none">
+              <BackupSettingsTab />
             </TabsContent>
           </div>
         </Tabs>

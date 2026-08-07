@@ -2,6 +2,7 @@
   "name": "inkmind-crm",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.18.3",
   "imports": {
     "#/*": "./src/*"
   },
@@ -69,5 +70,10 @@
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
     "vitest": "^4.1.5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "unrs-resolver"
+    ]
   }
 }

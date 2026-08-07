@@ -67,20 +67,51 @@ export const getStaffList = createServerFn({ method: 'GET' }).handler(
   },
 )
 
-const createStaffSchema = z.object({
+const addStaffSchema = z.object({
   name: z.string().trim().min(2, 'השם חייב להכיל לפחות 2 תווים'),
+  email: z.string().email('נא להזין אימייל תקין'),
+  password: z.string().min(8, 'לפחות 8 תווים'),
+  role: z.enum(['admin', 'staff']),
 })
 
-export const createStaffMember = createServerFn({ method: 'POST' })
-  .validator(createStaffSchema)
+/** The single canonical "add staff" flow — creates a full login-ready account (name+email+
+ *  password+role) in one step, used by both dashboard Settings and onboarding's team step.
+ *  Supersedes the old name-only createStaffMember (which left the account passwordless until
+ *  a separate "set password" step) — one flow instead of two divergent ones. */
+export const addStaffMember = createServerFn({ method: 'POST' })
+  .validator(addStaffSchema)
   .handler(async ({ data }) => {
     await requireAdmin()
     const su = await getSuperuserClient()
-    const created = await su.collection('staff').create({
+    return su.collection('staff').create({
       name: data.name,
-      role: 'artist',
+      email: data.email,
+      password: data.password,
+      passwordConfirm: data.password,
+      role: data.role,
+      active: true,
+      emailVisibility: true,
     })
-    return { id: created.id, name: created.name }
+  })
+
+const updateStaffSchema = z.object({
+  id: z.string(),
+  name: z.string().trim().min(2, 'השם חייב להכיל לפחות 2 תווים'),
+  email: z.string().email('נא להזין אימייל תקין'),
+  role: z.enum(['owner', 'admin', 'staff']),
+})
+
+export const updateStaffMember = createServerFn({ method: 'POST' })
+  .validator(updateStaffSchema)
+  .handler(async ({ data }) => {
+    await requireAdmin()
+    const su = await getSuperuserClient()
+    await su.collection('staff').update(data.id, {
+      name: data.name,
+      email: data.email,
+      role: data.role,
+    })
+    return { ok: true }
   })
 
 const deleteStaffSchema = z.object({

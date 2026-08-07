@@ -27,6 +27,7 @@ import {
   type WorkingHoursWindow,
   type StyleOption,
 } from '../server/settings'
+import { useConfirm } from '@/hooks/use-confirm'
 
 export const DAY_LABELS = ['יום א׳', 'יום ב׳', 'יום ג׳', 'יום ד׳', 'יום ה׳', 'יום ו׳', 'שבת']
 
@@ -77,6 +78,7 @@ export const ArtistProfileEditor: React.FC<ArtistProfileEditorProps> = ({
   readOnly = false,
 }) => {
   const queryClient = useQueryClient()
+  const confirm = useConfirm()
   const [activeTab, setActiveTab] = useState<'profile' | 'hours'>('profile')
 
   const [styles, setStyles] = useState<string[]>(profile?.styles ?? [])
@@ -377,10 +379,14 @@ export const ArtistProfileEditor: React.FC<ArtistProfileEditorProps> = ({
 
               {profile && (
                 <Button
-                  onClick={() => {
-                    if (window.confirm('האם אתה בטוח שברצונך למחוק את פרופיל המקעקע/ת?')) {
-                      deleteProfileMutation.mutate()
-                    }
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: 'מחיקת פרופיל מקעקע/ת',
+                      description: 'הפרופיל, הסגנונות, הביוגרפיה והקישורים יימחקו לצמיתות.',
+                      confirmLabel: 'מחק',
+                      variant: 'destructive',
+                    })
+                    if (ok) deleteProfileMutation.mutate()
                   }}
                   disabled={deleteProfileMutation.isPending}
                   variant="outline"

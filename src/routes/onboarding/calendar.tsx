@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { getCurrentSession } from '@/features/auth/server/auth'
-import { listStaff, completeOnboarding } from '@/features/onboarding/server/onboarding'
+import { completeOnboarding } from '@/features/onboarding/server/onboarding'
+import { getStaffList } from '@/features/settings/server/staff'
 import { GoogleCalendarConnection } from '@/features/settings/components/GoogleCalendarConnection'
 import { CalendarDays, ArrowRight, CheckCircle2, Info } from 'lucide-react'
 
@@ -14,21 +16,27 @@ export const Route = createFileRoute('/onboarding/calendar')({
 function CalendarStep() {
   const session = Route.useLoaderData()
   const navigate = useNavigate()
+  const [error, setError] = useState<string | null>(null)
 
   const staffQuery = useQuery({
     queryKey: ['staff-list'],
-    queryFn: () => listStaff(),
+    queryFn: () => getStaffList(),
   })
 
   const finishMutation = useMutation({
     mutationFn: () => completeOnboarding(),
     onSuccess: () => navigate({ to: '/dashboard' }),
+    onError: (err: unknown) => {
+      setError(err instanceof Error ? err.message : 'שגיאה בסיום ההגדרה')
+    },
   })
 
   if (!session) return null
 
   return (
     <div className="space-y-6 text-right font-assistant" dir="rtl">
+      {error && <p className="text-xs font-semibold text-rose-500">{error}</p>}
+
       {/* Info Banner */}
       <div className="rounded-2xl border border-blue-500/20 bg-blue-500/8 p-4 shadow-xs">
         <div className="flex items-start gap-3">
@@ -72,7 +80,7 @@ function CalendarStep() {
               <div key={member.id} className="p-4">
                 <div className="mb-3 flex items-center gap-2">
                   <div className="flex size-8 items-center justify-center rounded-xl bg-muted font-bold text-xs text-foreground">
-                    {member.name?.slice(0, 2) || '??'}
+                    {member.name.slice(0, 2) || '??'}
                   </div>
                   <div>
                     <span className="text-sm font-bold text-foreground">{member.name}</span>

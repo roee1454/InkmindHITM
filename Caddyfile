@@ -1,0 +1,14 @@
+# Replace both hostnames with your real domains before deploying — see DEPLOY.md.
+# Caddy handles HTTPS automatically: it requests and renews Let's Encrypt certificates for
+# whatever hostnames appear here, no separate certbot setup or cron job needed. Both hostnames
+# need a DNS A record pointing at this VPS's IP before Caddy can complete the ACME challenge.
+
+app.yourdomain.com {
+	reverse_proxy web:3101
+}
+
+# The browser talks to PocketBase directly (realtime subscriptions, file/media URLs) via
+# VITE_POCKETBASE_URL — it genuinely needs to be public, not just the app.
+pb.yourdomain.com {
+	reverse_proxy pocketbase:8090
+}

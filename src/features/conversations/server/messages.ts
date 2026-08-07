@@ -143,7 +143,7 @@ export const sendMessage = createServerFn({ method: 'POST' })
     const customer = conversation.expand?.customer as RecordModel | undefined
     if (!customer?.phone) throw new Error('לשיחה אין מספר טלפון תקין.')
 
-    const settings = await getWhatsAppSettings(su)
+    const settings = await getWhatsAppSettings()
     if (!settings?.phoneNumberId || !settings.accessToken) {
       throw new Error('וואטסאפ אינו מוגדר. יש להזין פרטי חיבור בהגדרות.')
     }
@@ -319,7 +319,7 @@ export const confirmDepositReceived = createServerFn({ method: 'POST' })
 
     await su.collection('appointments').update(appointment.id, { deposit_paid: true })
 
-    const settings = await getWhatsAppSettings(su)
+    const settings = await getWhatsAppSettings()
     if (!settings?.phoneNumberId || !settings.accessToken) {
       throw new Error('וואטסאפ אינו מוגדר. יש להזין פרטי חיבור בהגדרות.')
     }

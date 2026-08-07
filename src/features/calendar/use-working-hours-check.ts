@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { fitsWithinWorkingHours, type WorkingHoursWindow } from '@/lib/working-hours'
+import { fitsWithinWorkingHours } from '@/lib/working-hours'
+import type { WorkingHoursWindow } from '@/lib/working-hours'
+import { matchClosureForDate } from '@/lib/closures'
 import { getWorkingHours } from '@/features/settings/server/profiles'
+import { getStudioClosures } from '@/features/settings/server/closures'
 
 export function useWorkingHoursCheck(
   staffId: string | null,
@@ -14,7 +17,13 @@ export function useWorkingHoursCheck(
     enabled: !!staffId,
   })
 
-  const fitsWorkingHours = !staffId || fitsWithinWorkingHours(windows, date, timeSlot, durationHours)
+  const { data: closures = [] } = useQuery({
+    queryKey: ['studio-closures'],
+    queryFn: () => getStudioClosures(),
+  })
 
-  return { fitsWorkingHours, windows }
+  const fitsWorkingHours = !staffId || fitsWithinWorkingHours(windows, date, timeSlot, durationHours)
+  const closure = date ? matchClosureForDate(closures, date) : { closed: false, reason: null }
+
+  return { fitsWorkingHours, windows, isStudioClosed: closure.closed, closureReason: closure.reason }
 }

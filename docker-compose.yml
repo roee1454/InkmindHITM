@@ -1,0 +1,86 @@
+# Single-VPS deployment. `caddy` is the only service exposed to the internet (ports 80/443) —
+# it terminates HTTPS and reverse-proxies two public hostnames to `web` and `pocketbase` over
+# the compose network (see ./Caddyfile). PocketBase is genuinely public (via its own subdomain,
+# proxied by Caddy) because the browser talks to it directly for realtime subscriptions
+# (dashboard/route.tsx's pb.collection(...).subscribe(...) calls) and file/media access — it is
+# NOT admin-UI-only. `pocketbase` additionally publishes 127.0.0.1:8090 for host-side tooling
+# only (pocketbase/scripts/backup.sh, scripts/deploy.sh) — loopback-bound, not internet-reachable.
+# `web` publishes nothing to the host; Caddy reaches it as `web:3101` over the compose network.
+#
+# WEB_IMAGE_TAG controls which built image is running — set/read by scripts/deploy.sh and
+# scripts/rollback.sh so a rollback is just "point this at the previous tag and restart",
+# no rebuild. Defaults to `local` for a plain `docker compose up -d` during development.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # The browser's own PocketBase URL, baked into the client bundle at build time — must
+        # be the real public URL (e.g. https://pb.yourdomain.com), never the Docker-internal
+        # service name. Set VITE_POCKETBASE_URL in the root .env before `docker compose build`.
+        VITE_POCKETBASE_URL: ${VITE_POCKETBASE_URL:?VITE_POCKETBASE_URL must be set in .env to the public PocketBase URL before building}
+    image: inkmind-crm-web:${WEB_IMAGE_TAG:-local}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Overrides whatever POCKETBASE_URL/PB_URL is in .env — inside compose's network,
+      # PocketBase is reachable by service name, not 127.0.0.1.
+      POCKETBASE_URL: http://pocketbase:8090
+      PB_URL: http://pocketbase:8090
+      APP_INTERNAL_URL: http://web:3101
+      PORT: "3101"
+    depends_on:
+      pocketbase:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3101/').then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  pocketbase:
+    build:
+      context: ./pocketbase
+      dockerfile: Dockerfile
+    image: inkmind-crm-pocketbase:${WEB_IMAGE_TAG:-local}
+    restart: unless-stopped
+    environment:
+      # Must also be set here for the appointments hook (pocketbase/pb_hooks/appointments.pb.js)
+      # to reach `web` and authenticate — PocketBase's Go binary does not read the app's .env.
+      PB_HOOK_SECRET: ${PB_HOOK_SECRET:?PB_HOOK_SECRET must be set in the shell environment running docker compose}
+      APP_INTERNAL_URL: http://web:3101
+    volumes:
+      - pb_data:/pb/pb_data
+    ports:
+      - "127.0.0.1:8090:8090"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8090/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Persisted across redeploys — without this Caddy re-requests certs from Let's Encrypt
+      # on every recreate and risks hitting their rate limit.
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - pocketbase
+
+volumes:
+  pb_data:
+  caddy_data:
+  caddy_config:

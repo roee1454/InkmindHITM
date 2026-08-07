@@ -8,11 +8,8 @@ import type PocketBase from 'pocketbase'
 import type { RecordModel } from 'pocketbase'
 import { fitsWithinWorkingHours } from '@/lib/working-hours'
 import { getWorkingHoursForStaff } from '@/features/settings/server/profiles'
+import { isStudioClosedOn } from '@/features/settings/server/closures'
 import { minutesToTime, toYmd } from '@/lib/date-utils'
-import {
-  syncAppointmentToGoogle,
-  deleteSyncedAppointmentFromGoogle,
-} from '@/integrations/google-calendar/server/google-sync'
 import { bookingLock } from '@/lib/async-lock'
 
 const ACTIVE_STATUSES = '(status = "pending" || status = "confirmed")'
@@ -63,7 +60,14 @@ async function staffExists(su: PocketBase, staffId: string): Promise<boolean> {
 
 export interface AvailabilityCheckResult {
   available: boolean
-  reason: 'available' | 'outside_working_hours' | 'slot_taken' | 'no_working_hours_configured' | 'invalid_staff_id' | 'date_in_past'
+  reason:
+    | 'available'
+    | 'outside_working_hours'
+    | 'slot_taken'
+    | 'no_working_hours_configured'
+    | 'invalid_staff_id'
+    | 'date_in_past'
+    | 'studio_closed'
 }
 
 /** Past-date gate: the model resolves relative dates ("ראשון הבא") itself, and a
@@ -84,6 +88,8 @@ export async function checkAvailabilityForBot(
   },
 ): Promise<AvailabilityCheckResult> {
   if (slotIsInPast(date, timeSlot)) return { available: false, reason: 'date_in_past' }
+  const closure = await isStudioClosedOn(su, date)
+  if (closure.closed) return { available: false, reason: 'studio_closed' }
   if (!(await staffExists(su, staffId))) return { available: false, reason: 'invalid_staff_id' }
   const windows = await getWorkingHoursForStaff(su, staffId)
   if (windows.length === 0) return { available: false, reason: 'no_working_hours_configured' }
@@ -136,7 +142,7 @@ export interface CreatePendingHoldInput {
 }
 
 export interface CreatePendingHoldResult {
-  status: 'created' | 'already_pending' | 'slot_taken' | 'invalid_staff_id' | 'date_in_past'
+  status: 'created' | 'already_pending' | 'slot_taken' | 'invalid_staff_id' | 'date_in_past' | 'studio_closed'
   appointmentId: string | null
 }
 
@@ -149,6 +155,8 @@ export async function createPendingHoldForBot(
 ): Promise<CreatePendingHoldResult> {
   const { customerId, staffId, date, timeSlot, durationHours, tattooDescription } = input
   if (slotIsInPast(date, timeSlot)) return { status: 'date_in_past', appointmentId: null }
+  const closure = await isStudioClosedOn(su, date)
+  if (closure.closed) return { status: 'studio_closed', appointmentId: null }
   if (!(await staffExists(su, staffId))) return { status: 'invalid_staff_id', appointmentId: null }
   const { start } = slotToRange(date, timeSlot, durationHours)
 
@@ -174,7 +182,9 @@ export async function createPendingHoldForBot(
       source: 'ai_bot',
     })
 
-    await syncAppointmentToGoogle(created.id)
+    // Google Calendar sync is handled by the appointments PocketBase hook
+    // (pocketbase/pb_hooks/appointments.pb.js) — not needed here (this hold isn't
+    // status='confirmed' yet anyway, so it wouldn't sync regardless).
 
     return { status: 'created' as const, appointmentId: created.id }
   })
@@ -205,20 +215,11 @@ export async function getCompletedAppointmentAwaitingNpsForBot(
   ).catch(() => null)
 }
 
-export interface CancelAppointmentResult {
-  googleSyncAttempted: boolean
-}
-
-/** Soft-cancels an appointment (status='cancelled', never a DELETE — preserves booking history)
- *  and best-effort releases it from the artist's Google Calendar. Matches this codebase's
- *  existing non-strict Google-sync convention (`deleteSyncedAppointmentFromGoogle` already
- *  swallows and logs its own errors — see `deleteAppointment` in `./appointments.ts`), so a
- *  Google failure never blocks the local cancellation. */
-export async function cancelAppointmentForBot(
-  su: PocketBase,
-  appointment: RecordModel,
-): Promise<CancelAppointmentResult> {
-  await deleteSyncedAppointmentFromGoogle(appointment)
+/** Soft-cancels an appointment (status='cancelled', never a DELETE — preserves booking history).
+ *  Releasing it from the artist's Google Calendar happens via the appointments PocketBase hook
+ *  (pocketbase/pb_hooks/appointments.pb.js) reacting to this update — syncAppointmentToGoogle
+ *  already deletes the Google event when status isn't 'confirmed', so no explicit call is
+ *  needed here. */
+export async function cancelAppointmentForBot(su: PocketBase, appointment: RecordModel): Promise<void> {
   await su.collection('appointments').update(appointment.id, { status: 'cancelled' })
-  return { googleSyncAttempted: true }
 }

@@ -3,7 +3,6 @@ node_modules
 dist
 dist-ssr
 *.local
-.env
 .nitro
 .tanstack
 .wrangler
@@ -17,3 +16,7 @@ pb_data/
 .env
 .env.prod
 .env.local
+
+# Deploy state (scripts/deploy.sh, scripts/rollback.sh) — machine-local, not source
+.deploy-tag
+deploy-history.log

@@ -80,6 +80,14 @@ To deploy:
 Both services use the `starter` plan ($7/mo each) so they stay always-on — no cold-start spin-down.
 
 
+## Deploy to a VPS (Docker Compose + Caddy)
+
+Self-hosted alternative to Render: `docker-compose.yml` + `Caddyfile` run the app, PocketBase,
+and a Caddy reverse proxy (automatic HTTPS, no certbot) as three services. Full first-deploy
+walkthrough — DNS, env vars, PocketBase superuser bootstrap, webhook URLs, backup cron — is in
+[`DEPLOY.md`](./DEPLOY.md). Ongoing deploys/rollbacks use `scripts/deploy.sh`/`scripts/rollback.sh`.
+
+
 
 ## Routing
 

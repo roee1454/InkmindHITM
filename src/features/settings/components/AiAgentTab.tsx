@@ -18,6 +18,7 @@ import { resetConversations } from '@/features/conversations/server/debug'
 import { FaqTab } from './FaqTab'
 import { ModelSearchSelect } from './ModelSearchSelect'
 import { useSettingsUiStore } from '../store/settingsUiStore'
+import { useConfirm } from '@/hooks/use-confirm'
 
 function parseMaxTokens(raw: string): number | null {
   const trimmed = raw.trim()
@@ -28,6 +29,7 @@ function parseMaxTokens(raw: string): number | null {
 
 export const AiAgentTab: React.FC = () => {
   const queryClient = useQueryClient()
+  const confirm = useConfirm()
   const {
     aiModel: model,
     aiTemperature: temperature,
@@ -103,9 +105,18 @@ export const AiAgentTab: React.FC = () => {
     },
   })
 
-  const handleToggleAi = () => {
+  const handleToggleAi = async () => {
     if (!settings) return
-    toggleAiMutation.mutate(!settings.aiEnabled)
+    const nextEnabled = !settings.aiEnabled
+    const ok = await confirm({
+      title: nextEnabled ? 'הפעלת הבוט' : 'כיבוי הבוט',
+      description: nextEnabled
+        ? 'הבוט יחזור לענות אוטומטית בכל השיחות הפעילות.'
+        : 'כל התשובות האוטומטיות בכל השיחות יופסקו מיידית. הודעות מלקוחות ימשיכו להתקבל, אך הבוט לא יענה עד שתפעיל אותו מחדש.',
+      confirmLabel: nextEnabled ? 'הפעל' : 'כבה',
+      variant: nextEnabled ? 'default' : 'destructive',
+    })
+    if (ok) toggleAiMutation.mutate(nextEnabled)
   }
 
   const handleSaveConfig = (e: React.FormEvent) => {
@@ -145,14 +156,14 @@ export const AiAgentTab: React.FC = () => {
     },
   })
 
-  const handleResetConversations = () => {
-    if (
-      window.confirm(
-        'פעולה זו תמחק לצמיתות את כל השיחות וההודעות במערכת (לקוחות ותורים יישארו). להמשיך?',
-      )
-    ) {
-      resetConversationsMutation.mutate()
-    }
+  const handleResetConversations = async () => {
+    const ok = await confirm({
+      title: 'איפוס כל השיחות וההודעות',
+      description: 'פעולה זו תמחק לצמיתות את כל השיחות וההודעות במערכת (לקוחות ותורים יישארו). לא ניתן לבטל פעולה זו.',
+      confirmLabel: 'איפוס',
+      variant: 'destructive',
+    })
+    if (ok) resetConversationsMutation.mutate()
   }
 
   return (

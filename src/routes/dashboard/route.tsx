@@ -5,6 +5,7 @@ import { getCurrentSession } from '@/features/auth/server/auth'
 import { getSettings } from '@/features/onboarding/server/onboarding'
 import { getBrowserClient } from '@/integrations/pocketbase/client'
 import { useToast } from '@/components/ui/ToastProvider'
+import { ConfirmProvider } from '@/hooks/use-confirm'
 import { useQueryClient } from '@tanstack/react-query'
 
 export const Route = createFileRoute('/dashboard')({
@@ -226,11 +227,13 @@ function DashboardLayout() {
   }, [toast, queryClient, navigate])
 
   return (
-    <div className="flex min-h-svh bg-background">
-      <Sidebar staff={session.staff} />
-      <main className={isConversations ? "h-svh min-w-0 flex-1 overflow-hidden p-0 m-0" : "page-container min-w-0 flex-1"}>
-        <Outlet />
-      </main>
-    </div>
+    <ConfirmProvider>
+      <div className="flex min-h-svh bg-background">
+        <Sidebar staff={session.staff} />
+        <main className={isConversations ? "h-svh min-w-0 flex-1 overflow-hidden p-0 m-0" : "page-container min-w-0 flex-1"}>
+          <Outlet />
+        </main>
+      </div>
+    </ConfirmProvider>
   )
 }

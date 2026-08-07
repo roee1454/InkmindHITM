@@ -242,7 +242,7 @@ function HoursStep() {
       <div className="flex items-center justify-between pt-2">
         <Button
           variant="outline"
-          onClick={() => navigate({ to: '/onboarding/profile' })}
+          onClick={() => navigate({ to: '/onboarding/artist-profile' })}
           className="rounded-xl px-5 font-bold cursor-pointer gap-2"
         >
           <ArrowRight size={16} />

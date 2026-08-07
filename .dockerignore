@@ -1,0 +1,14 @@
+node_modules
+.output
+.nitro
+.tanstack
+.vinxi
+dist
+dist-ssr
+.git
+.env
+.env.local
+.env.prod
+.env.example
+pocketbase
+*.log

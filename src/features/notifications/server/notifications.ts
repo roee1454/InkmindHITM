@@ -1,4 +1,4 @@
-import { createServerFn } from '@tanstack/react-start'
+import { createServerFn, createServerOnlyFn } from '@tanstack/react-start'
 import { z } from 'zod'
 
 export interface ApiNotification {
@@ -74,20 +74,19 @@ export const markAllNotificationsAsRead = createServerFn({ method: 'POST' }).han
   },
 )
 
-/** Helper to add a system notification from the server side. */
-export async function addSystemNotification(data: {
-  title: string
-  message: string
-  type: ApiNotification['type']
-  link?: string
-}) {
-  const { getSuperuserClient } = await import('@/integrations/pocketbase/superuser.server')
-  const su = await getSuperuserClient()
-  return su.collection('notifications').create({
-    title: data.title,
-    message: data.message,
-    type: data.type,
-    read: false,
-    link: data.link,
-  })
-}
+/** Helper to add a system notification from the server side. Only ever called from other
+ *  server modules (appointments/state-machine/AI agent) — `createServerOnlyFn` guarantees it
+ *  can't be pulled into the client bundle even via a dynamic import. */
+export const addSystemNotification = createServerOnlyFn(
+  async (data: { title: string; message: string; type: ApiNotification['type']; link?: string }) => {
+    const { getSuperuserClient } = await import('@/integrations/pocketbase/superuser.server')
+    const su = await getSuperuserClient()
+    return su.collection('notifications').create({
+      title: data.title,
+      message: data.message,
+      type: data.type,
+      read: false,
+      link: data.link,
+    })
+  },
+)

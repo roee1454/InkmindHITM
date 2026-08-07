@@ -1,10 +1,6 @@
 import { create } from 'zustand'
 
 interface SettingsUiState {
-  // Team tab state
-  newStaffName: string
-  teamError: string | null
-
   // AI config state
   aiModel: string
   aiTemperature: number
@@ -21,10 +17,6 @@ interface SettingsUiState {
   faqEditQuestion: string
   faqEditAnswer: string
   faqError: string | null
-
-  // Team actions
-  setNewStaffName: (name: string) => void
-  setTeamError: (error: string | null) => void
 
   // AI config actions
   setAiModel: (model: string) => void
@@ -46,9 +38,6 @@ interface SettingsUiState {
 
 export const useSettingsUiStore = create<SettingsUiState>((set) => ({
   // Defaults
-  newStaffName: '',
-  teamError: null,
-
   aiModel: 'gpt-4o',
   aiTemperature: 0.4,
   aiMaxTokens: '',
@@ -65,9 +54,6 @@ export const useSettingsUiStore = create<SettingsUiState>((set) => ({
   faqError: null,
 
   // Setters
-  setNewStaffName: (newStaffName) => set({ newStaffName }),
-  setTeamError: (teamError) => set({ teamError }),
-
   setAiModel: (aiModel) => set({ aiModel }),
   setAiTemperature: (aiTemperature) => set({ aiTemperature }),
   setAiMaxTokens: (aiMaxTokens) => set({ aiMaxTokens }),

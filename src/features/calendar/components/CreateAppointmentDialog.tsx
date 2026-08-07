@@ -72,12 +72,21 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   const handleChange = (patch: Partial<AppointmentFormValues>) =>
     setValues((prev) => ({ ...prev, ...patch }))
 
-  const { fitsWorkingHours } = useWorkingHoursCheck(values.staffId, values.date, values.timeSlot, values.durationHours)
+  const { fitsWorkingHours, isStudioClosed } = useWorkingHoursCheck(
+    values.staffId,
+    values.date,
+    values.timeSlot,
+    values.durationHours,
+  )
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!values.customerId || !values.date || !values.timeSlot) {
       setLocalError('נא לבחור לקוח, תאריך ושעה')
+      return
+    }
+    if (isStudioClosed && !values.allowException) {
+      setLocalError('יש לסמן שאתם מודעים שהסטודיו סגור בתאריך זה')
       return
     }
     if (!fitsWorkingHours && !values.allowException) {

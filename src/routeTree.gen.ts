@@ -24,12 +24,15 @@ import { Route as DashboardCustomersRouteImport } from './routes/dashboard/custo
 import { Route as DashboardLeadsRouteImport } from './routes/dashboard/leads'
 import { Route as DashboardNotificationsRouteImport } from './routes/dashboard/notifications'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
+import { Route as OnboardingArtistProfileRouteImport } from './routes/onboarding/artist-profile'
 import { Route as OnboardingCalendarRouteImport } from './routes/onboarding/calendar'
 import { Route as OnboardingHoursRouteImport } from './routes/onboarding/hours'
 import { Route as OnboardingProfileRouteImport } from './routes/onboarding/profile'
 import { Route as OnboardingTeamRouteImport } from './routes/onboarding/team'
 import { Route as OnboardingWhatsappRouteImport } from './routes/onboarding/whatsapp'
+import { Route as ApiInternalAppointmentSyncRouteImport } from './routes/api/internal.appointment-sync'
 import { Route as ApiGoogleCalendarOauthCallbackRouteImport } from './routes/api/google-calendar.oauth.callback'
+import { Route as ApiSettingsBackupsKeyDownloadRouteImport } from './routes/api/settings.backups.$key.download'
 import { Route as ApiStaffStaffIdGoogleCalendarConnectRouteImport } from './routes/api/staff.$staffId.google-calendar.connect'
 
 const IndexRoute = IndexRouteImport.update({
@@ -107,6 +110,11 @@ const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const OnboardingArtistProfileRoute = OnboardingArtistProfileRouteImport.update({
+  id: '/artist-profile',
+  path: '/artist-profile',
+  getParentRoute: () => OnboardingRouteRoute,
+} as any)
 const OnboardingCalendarRoute = OnboardingCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -132,10 +140,22 @@ const OnboardingWhatsappRoute = OnboardingWhatsappRouteImport.update({
   path: '/whatsapp',
   getParentRoute: () => OnboardingRouteRoute,
 } as any)
+const ApiInternalAppointmentSyncRoute =
+  ApiInternalAppointmentSyncRouteImport.update({
+    id: '/api/internal/appointment-sync',
+    path: '/api/internal/appointment-sync',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiGoogleCalendarOauthCallbackRoute =
   ApiGoogleCalendarOauthCallbackRouteImport.update({
     id: '/api/google-calendar/oauth/callback',
     path: '/api/google-calendar/oauth/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiSettingsBackupsKeyDownloadRoute =
+  ApiSettingsBackupsKeyDownloadRouteImport.update({
+    id: '/api/settings/backups/$key/download',
+    path: '/api/settings/backups/$key/download',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiStaffStaffIdGoogleCalendarConnectRoute =
@@ -160,13 +180,16 @@ export interface FileRoutesByFullPath {
   '/dashboard/leads': typeof DashboardLeadsRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
+  '/onboarding/artist-profile': typeof OnboardingArtistProfileRoute
   '/onboarding/calendar': typeof OnboardingCalendarRoute
   '/onboarding/hours': typeof OnboardingHoursRoute
   '/onboarding/profile': typeof OnboardingProfileRoute
   '/onboarding/team': typeof OnboardingTeamRoute
   '/onboarding/whatsapp': typeof OnboardingWhatsappRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/api/internal/appointment-sync': typeof ApiInternalAppointmentSyncRoute
   '/api/google-calendar/oauth/callback': typeof ApiGoogleCalendarOauthCallbackRoute
+  '/api/settings/backups/$key/download': typeof ApiSettingsBackupsKeyDownloadRoute
   '/api/staff/$staffId/google-calendar/connect': typeof ApiStaffStaffIdGoogleCalendarConnectRoute
 }
 export interface FileRoutesByTo {
@@ -183,13 +206,16 @@ export interface FileRoutesByTo {
   '/dashboard/leads': typeof DashboardLeadsRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
+  '/onboarding/artist-profile': typeof OnboardingArtistProfileRoute
   '/onboarding/calendar': typeof OnboardingCalendarRoute
   '/onboarding/hours': typeof OnboardingHoursRoute
   '/onboarding/profile': typeof OnboardingProfileRoute
   '/onboarding/team': typeof OnboardingTeamRoute
   '/onboarding/whatsapp': typeof OnboardingWhatsappRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/api/internal/appointment-sync': typeof ApiInternalAppointmentSyncRoute
   '/api/google-calendar/oauth/callback': typeof ApiGoogleCalendarOauthCallbackRoute
+  '/api/settings/backups/$key/download': typeof ApiSettingsBackupsKeyDownloadRoute
   '/api/staff/$staffId/google-calendar/connect': typeof ApiStaffStaffIdGoogleCalendarConnectRoute
 }
 export interface FileRoutesById {
@@ -208,13 +234,16 @@ export interface FileRoutesById {
   '/dashboard/leads': typeof DashboardLeadsRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
+  '/onboarding/artist-profile': typeof OnboardingArtistProfileRoute
   '/onboarding/calendar': typeof OnboardingCalendarRoute
   '/onboarding/hours': typeof OnboardingHoursRoute
   '/onboarding/profile': typeof OnboardingProfileRoute
   '/onboarding/team': typeof OnboardingTeamRoute
   '/onboarding/whatsapp': typeof OnboardingWhatsappRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/api/internal/appointment-sync': typeof ApiInternalAppointmentSyncRoute
   '/api/google-calendar/oauth/callback': typeof ApiGoogleCalendarOauthCallbackRoute
+  '/api/settings/backups/$key/download': typeof ApiSettingsBackupsKeyDownloadRoute
   '/api/staff/$staffId/google-calendar/connect': typeof ApiStaffStaffIdGoogleCalendarConnectRoute
 }
 export interface FileRouteTypes {
@@ -234,13 +263,16 @@ export interface FileRouteTypes {
     | '/dashboard/leads'
     | '/dashboard/notifications'
     | '/dashboard/settings'
+    | '/onboarding/artist-profile'
     | '/onboarding/calendar'
     | '/onboarding/hours'
     | '/onboarding/profile'
     | '/onboarding/team'
     | '/onboarding/whatsapp'
     | '/dashboard/'
+    | '/api/internal/appointment-sync'
     | '/api/google-calendar/oauth/callback'
+    | '/api/settings/backups/$key/download'
     | '/api/staff/$staffId/google-calendar/connect'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -257,13 +289,16 @@ export interface FileRouteTypes {
     | '/dashboard/leads'
     | '/dashboard/notifications'
     | '/dashboard/settings'
+    | '/onboarding/artist-profile'
     | '/onboarding/calendar'
     | '/onboarding/hours'
     | '/onboarding/profile'
     | '/onboarding/team'
     | '/onboarding/whatsapp'
     | '/dashboard'
+    | '/api/internal/appointment-sync'
     | '/api/google-calendar/oauth/callback'
+    | '/api/settings/backups/$key/download'
     | '/api/staff/$staffId/google-calendar/connect'
   id:
     | '__root__'
@@ -281,13 +316,16 @@ export interface FileRouteTypes {
     | '/dashboard/leads'
     | '/dashboard/notifications'
     | '/dashboard/settings'
+    | '/onboarding/artist-profile'
     | '/onboarding/calendar'
     | '/onboarding/hours'
     | '/onboarding/profile'
     | '/onboarding/team'
     | '/onboarding/whatsapp'
     | '/dashboard/'
+    | '/api/internal/appointment-sync'
     | '/api/google-calendar/oauth/callback'
+    | '/api/settings/backups/$key/download'
     | '/api/staff/$staffId/google-calendar/connect'
   fileRoutesById: FileRoutesById
 }
@@ -298,7 +336,9 @@ export interface RootRouteChildren {
   OnboardingRouteRoute: typeof OnboardingRouteRouteWithChildren
   ApiPingRoute: typeof ApiPingRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
+  ApiInternalAppointmentSyncRoute: typeof ApiInternalAppointmentSyncRoute
   ApiGoogleCalendarOauthCallbackRoute: typeof ApiGoogleCalendarOauthCallbackRoute
+  ApiSettingsBackupsKeyDownloadRoute: typeof ApiSettingsBackupsKeyDownloadRoute
   ApiStaffStaffIdGoogleCalendarConnectRoute: typeof ApiStaffStaffIdGoogleCalendarConnectRoute
 }
 
@@ -409,6 +449,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/onboarding/artist-profile': {
+      id: '/onboarding/artist-profile'
+      path: '/artist-profile'
+      fullPath: '/onboarding/artist-profile'
+      preLoaderRoute: typeof OnboardingArtistProfileRouteImport
+      parentRoute: typeof OnboardingRouteRoute
+    }
     '/onboarding/calendar': {
       id: '/onboarding/calendar'
       path: '/calendar'
@@ -444,11 +491,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingWhatsappRouteImport
       parentRoute: typeof OnboardingRouteRoute
     }
+    '/api/internal/appointment-sync': {
+      id: '/api/internal/appointment-sync'
+      path: '/api/internal/appointment-sync'
+      fullPath: '/api/internal/appointment-sync'
+      preLoaderRoute: typeof ApiInternalAppointmentSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/google-calendar/oauth/callback': {
       id: '/api/google-calendar/oauth/callback'
       path: '/api/google-calendar/oauth/callback'
       fullPath: '/api/google-calendar/oauth/callback'
       preLoaderRoute: typeof ApiGoogleCalendarOauthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/settings/backups/$key/download': {
+      id: '/api/settings/backups/$key/download'
+      path: '/api/settings/backups/$key/download'
+      fullPath: '/api/settings/backups/$key/download'
+      preLoaderRoute: typeof ApiSettingsBackupsKeyDownloadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/staff/$staffId/google-calendar/connect': {
@@ -500,6 +561,7 @@ const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
 )
 
 interface OnboardingRouteRouteChildren {
+  OnboardingArtistProfileRoute: typeof OnboardingArtistProfileRoute
   OnboardingCalendarRoute: typeof OnboardingCalendarRoute
   OnboardingHoursRoute: typeof OnboardingHoursRoute
   OnboardingProfileRoute: typeof OnboardingProfileRoute
@@ -508,6 +570,7 @@ interface OnboardingRouteRouteChildren {
 }
 
 const OnboardingRouteRouteChildren: OnboardingRouteRouteChildren = {
+  OnboardingArtistProfileRoute: OnboardingArtistProfileRoute,
   OnboardingCalendarRoute: OnboardingCalendarRoute,
   OnboardingHoursRoute: OnboardingHoursRoute,
   OnboardingProfileRoute: OnboardingProfileRoute,
@@ -526,7 +589,9 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRouteRoute: OnboardingRouteRouteWithChildren,
   ApiPingRoute: ApiPingRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
+  ApiInternalAppointmentSyncRoute: ApiInternalAppointmentSyncRoute,
   ApiGoogleCalendarOauthCallbackRoute: ApiGoogleCalendarOauthCallbackRoute,
+  ApiSettingsBackupsKeyDownloadRoute: ApiSettingsBackupsKeyDownloadRoute,
   ApiStaffStaffIdGoogleCalendarConnectRoute:
     ApiStaffStaffIdGoogleCalendarConnectRoute,
 }

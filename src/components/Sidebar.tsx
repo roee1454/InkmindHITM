@@ -29,10 +29,10 @@ const NAV_ITEMS = [
 
 const SETTINGS_SUB_ITEMS = [
   { id: 'team', label: 'צוות והרשאות' },
-  { id: 'calendar', label: 'קישורי יומן' },
   { id: 'ai', label: 'הגדרות סוכן AI' },
   { id: 'policy', label: 'מדיניות סטודיו' },
   { id: 'whatsapp', label: 'וואטסאפ' },
+  { id: 'backups', label: 'גיבויים' },
 ] as const
 
 export function Sidebar({ staff }: SidebarProps) {

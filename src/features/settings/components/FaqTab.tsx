@@ -11,9 +11,11 @@ import {
   type ApiFaqEntry,
 } from '../server/settings'
 import { useSettingsUiStore } from '../store/settingsUiStore'
+import { useConfirm } from '@/hooks/use-confirm'
 
 export const FaqTab: React.FC = () => {
   const queryClient = useQueryClient()
+  const confirm = useConfirm()
   const {
     faqNewQuestion: newQuestion,
     faqNewAnswer: newAnswer,
@@ -184,7 +186,15 @@ export const FaqTab: React.FC = () => {
                     </p>
                   </div>
                   <Button
-                    onClick={() => deleteFaqMutation.mutate(entry.id)}
+                    onClick={async () => {
+                      const ok = await confirm({
+                        title: 'מחיקת שאלה נפוצה',
+                        description: `"${entry.question}" תימחק לצמיתות ממאגר הידע של הבוט.`,
+                        confirmLabel: 'מחק',
+                        variant: 'destructive',
+                      })
+                      if (ok) deleteFaqMutation.mutate(entry.id)
+                    }}
                     variant="ghost"
                     size="icon"
                     className="border border-transparent text-muted-foreground hover:border-rose-500/20 hover:bg-rose-500/10 hover:text-rose-500"

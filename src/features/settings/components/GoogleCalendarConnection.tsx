@@ -8,6 +8,7 @@ import {
   disconnectStaffGoogleCalendar,
 } from '@/features/calendar/server/appointments'
 import type { ApiGoogleConnection } from '@/features/calendar/types'
+import { useConfirm } from '@/hooks/use-confirm'
 
 function GoogleIcon({ size = 16 }: { size?: number }) {
   return (
@@ -46,6 +47,7 @@ export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> =
   isSelf,
 }) => {
   const queryClient = useQueryClient()
+  const confirm = useConfirm()
 
   const { data: currentStaff } = useQuery<CurrentStaffInfo>({
     queryKey: ['current-staff-info'],
@@ -110,14 +112,14 @@ export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> =
     }, 500)
   }
 
-  const handleDisconnect = () => {
-    if (
-      window.confirm(
-        'לנתק את היומן? התורים ימשיכו להתנהל ב-CRM, אך לא יסונכרנו יותר עם Google Calendar.',
-      )
-    ) {
-      disconnectMutation.mutate()
-    }
+  const handleDisconnect = async () => {
+    const ok = await confirm({
+      title: 'ניתוק יומן Google',
+      description: 'התורים ימשיכו להתנהל ב-CRM, אך לא יסונכרנו יותר עם Google Calendar.',
+      confirmLabel: 'נתק',
+      variant: 'destructive',
+    })
+    if (ok) disconnectMutation.mutate()
   }
 
   const roleLabel =

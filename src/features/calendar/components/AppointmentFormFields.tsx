@@ -75,7 +75,12 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
     }
   }, [values.chatId, values.customerId, customers, onChange])
 
-  const { fitsWorkingHours } = useWorkingHoursCheck(values.staffId, values.date, values.timeSlot, values.durationHours)
+  const { fitsWorkingHours, isStudioClosed, closureReason } = useWorkingHoursCheck(
+    values.staffId,
+    values.date,
+    values.timeSlot,
+    values.durationHours,
+  )
 
   const selectedCustomer = customers.find((c) => c.id === values.customerId)
   const filteredCustomers = customers.filter(
@@ -288,6 +293,26 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
           />
         </div>
       </div>
+
+      {isStudioClosed && (
+        <div className="flex flex-col gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
+            <TriangleAlert size={13} className="shrink-0" />
+            הסטודיו סגור בתאריך זה
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            {closureReason ? `סיבת הסגירה: ${closureReason}.` : 'התאריך שנבחר מוגדר כיום סגירה של הסטודיו.'}
+          </p>
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-xs font-semibold text-foreground">אני מודע/ת שהסטודיו סגור — שריין בכל זאת</span>
+            <Switch
+              id="appointment-allow-closure-exception"
+              checked={values.allowException}
+              onCheckedChange={(checked) => onChange({ allowException: checked })}
+            />
+          </div>
+        </div>
+      )}
 
       {!fitsWorkingHours && (
         <div className="flex flex-col gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">

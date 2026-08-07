@@ -67,7 +67,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   const handleChange = (patch: Partial<AppointmentFormValues>) =>
     setValues((prev) => (prev ? { ...prev, ...patch } : prev))
 
-  const { fitsWorkingHours } = useWorkingHoursCheck(
+  const { fitsWorkingHours, isStudioClosed } = useWorkingHoursCheck(
     values?.staffId ?? null,
     values?.date ?? '',
     values?.timeSlot ?? '',
@@ -79,6 +79,10 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
     if (!values) return
     if (!values.customerId || !values.date || !values.timeSlot) {
       setLocalError('נא לבחור לקוח, תאריך ושעה')
+      return
+    }
+    if (isStudioClosed && !values.allowException) {
+      setLocalError('יש לסמן שאתם מודעים שהסטודיו סגור בתאריך זה')
       return
     }
     if (!fitsWorkingHours && !values.allowException) {

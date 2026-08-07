@@ -9,7 +9,6 @@ import {
 } from '@/features/calendar/server/bot-appointments'
 import { getWorkingHoursForStaff } from '@/features/settings/server/profiles'
 import { getStudioPolicyForBot } from '@/features/settings/server/policy'
-import { syncAppointmentToGoogle } from '@/integrations/google-calendar/server/google-sync'
 import type { ConversationState } from '../prompts'
 
 export function buildBookingTools(ctx: ToolFactoryContext) {
@@ -42,6 +41,7 @@ export function buildBookingTools(ctx: ToolFactoryContext) {
           no_working_hours_configured: 'לא הוגדרו שעות עבודה לאמן/ית הזה/ו — יש להעביר את הטיפול לצוות עם call_staff (סיבה: slot_conflict).',
           invalid_staff_id: 'staffId לא תקין — לעולם אל תמציאו או תעבירו שם אמן במקום מזהה. קראו ל-suggest_artists וקבלו ממנו את המזהה המדויק.',
           date_in_past: 'התאריך והשעה האלה כבר עברו! כנראה חישבת תאריך יחסי לא נכון. חזור/י לבלוק "הקשר זמן" שבהנחיות, חשב/י מחדש את התאריך שהלקוח ביקש, והצע/י מועד עתידי.',
+          studio_closed: 'הסטודיו סגור בתאריך זה. הודע/י ללקוח בנימוס והצע/י מועד אחר.',
         }
         return { status: result.available ? 'success' : 'unavailable', message: messages[result.reason], data: result }
       }
@@ -131,6 +131,12 @@ export function buildBookingTools(ctx: ToolFactoryContext) {
             message: 'התאריך והשעה של התור כבר עברו — אי אפשר לקבוע תור בעבר. חזור/י לבלוק "הקשר זמן", חשב/י מחדש את התאריך, ואשר/י מועד עתידי מול הלקוח לפני קריאה חוזרת.',
           }
         }
+        if (result.status === 'studio_closed') {
+          return {
+            status: 'error',
+            message: 'הסטודיו סגור בתאריך זה. הודע/י ללקוח בנימוס והצע/י מועד אחר.',
+          }
+        }
         await transitionState('AWAIT_PRICE_OFFER', {
           reason: 'collect_tattoo_info',
           extraFields: {
@@ -184,12 +190,9 @@ export function buildBookingTools(ctx: ToolFactoryContext) {
           su.collection('appointments').update(appointment.id, { status: 'confirmed' }),
           transitionState('AWAITING_APPOINTMENT', { reason: 'confirm_booking_final' }),
         ])
-        
-        try {
-          await syncAppointmentToGoogle(appointment.id)
-        } catch (googleErr) {
-          console.error('Failed to sync appointment to Google Calendar:', googleErr)
-        }
+
+        // Google Calendar sync fires from the appointments PocketBase hook
+        // (pocketbase/pb_hooks/appointments.pb.js) reacting to the update above.
         return {
           status: 'success',
           message: 'התור ננעל סופית! אשר/י זאת בחום ובהתלהבות ללקוח.',

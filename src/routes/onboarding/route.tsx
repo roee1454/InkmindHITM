@@ -1,11 +1,12 @@
 import { createFileRoute, Outlet, redirect, useRouterState } from '@tanstack/react-router'
 import { getCurrentSession } from '@/features/auth/server/auth'
 import { getSettings } from '@/features/onboarding/server/onboarding'
-import { User, Clock, MessageSquare, Users, Sparkles, CheckCircle2, CalendarDays } from 'lucide-react'
+import { User, Clock, MessageSquare, Users, Sparkles, CheckCircle2, CalendarDays, Building2 } from 'lucide-react'
 
 const STEPS = [
   { path: '/onboarding/whatsapp', label: 'WhatsApp', icon: MessageSquare, desc: 'חיבור Cloud API' },
-  { path: '/onboarding/profile', label: 'פרופיל סטודיו', icon: User, desc: 'שם, לוגו ואמן' },
+  { path: '/onboarding/profile', label: 'זהות הסטודיו', icon: Building2, desc: 'שם, לוגו ומדיניות' },
+  { path: '/onboarding/artist-profile', label: 'פרופיל אמן', icon: User, desc: 'סגנונות וקישורים' },
   { path: '/onboarding/hours', label: 'שעות פעילות', icon: Clock, desc: 'לוח זמנים שבועי' },
   { path: '/onboarding/team', label: 'צוות', icon: Users, desc: 'ניהול חברי צוות' },
   { path: '/onboarding/calendar', label: 'יומנים', icon: CalendarDays, desc: 'חיבור Google Calendar' },
@@ -80,7 +81,10 @@ function OnboardingLayout() {
           </div>
 
           {/* Step Indicators */}
-          <div className="grid grid-cols-4 gap-2">
+          <div
+            className="grid gap-2"
+            style={{ gridTemplateColumns: `repeat(${STEPS.length}, minmax(0, 1fr))` }}
+          >
             {STEPS.map((step, i) => {
               const Icon = step.icon
               const isDone = i < activeIndex
@@ -100,7 +104,7 @@ function OnboardingLayout() {
 
                   {/* Step icon label */}
                   <div
-                    className={`hidden sm:flex items-center gap-1 text-[10px] font-bold transition-colors ${
+                    className={`hidden sm:flex min-w-0 items-center gap-1 text-[10px] font-bold transition-colors ${
                       isCurrent
                         ? 'text-primary'
                         : isDone

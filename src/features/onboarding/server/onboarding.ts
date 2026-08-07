@@ -10,14 +10,6 @@ async function requireSession() {
   return session
 }
 
-async function requireAdmin() {
-  const session = await requireSession()
-  if (session.staff.role !== 'owner' && session.staff.role !== 'admin') {
-    throw new Error('רק בעלים/מנהלים יכולים לנהל צוות.')
-  }
-  return session
-}
-
 // ---------------------------------------------------------------------------
 // Settings singleton
 // ---------------------------------------------------------------------------
@@ -55,11 +47,6 @@ export const updateStudioSettings = createServerFn({ method: 'POST' })
   .validator(
     z.object({
       studio_name: z.string().optional(),
-      whatsapp_phone_number_id: z.string().optional(),
-      whatsapp_business_account_id: z.string().optional(),
-      whatsapp_access_token: z.string().optional(),
-      whatsapp_webhook_verify_token: z.string().optional(),
-      whatsapp_app_secret: z.string().optional(),
     }),
   )
   .handler(async ({ data }) => {
@@ -140,45 +127,6 @@ export const saveArtistProfile = createServerFn({ method: 'POST' })
 // ---------------------------------------------------------------------------
 // Staff management
 // ---------------------------------------------------------------------------
-
-export const listStaff = createServerFn({ method: 'GET' }).handler(async () => {
-  await requireSession()
-  const su = await getSuperuserClient()
-  const result = await su.collection('staff').getFullList({ sort: 'created' })
-  return result
-})
-
-const addStaffSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-  password: z.string().min(8),
-  role: z.enum(['admin', 'staff']),
-})
-
-/** Pre-creates the record with a temporary password set by the inviting admin. */
-export const addStaffMember = createServerFn({ method: 'POST' })
-  .validator(addStaffSchema)
-  .handler(async ({ data }) => {
-    await requireAdmin()
-    const su = await getSuperuserClient()
-    return su.collection('staff').create({
-      name: data.name,
-      email: data.email,
-      password: data.password,
-      passwordConfirm: data.password,
-      role: data.role,
-      active: true,
-      emailVisibility: true,
-    })
-  })
-
-export const removeStaffMember = createServerFn({ method: 'POST' })
-  .validator(z.object({ staffId: z.string() }))
-  .handler(async ({ data }) => {
-    const session = await requireAdmin()
-    if (data.staffId === session.staff.id) {
-      throw new Error('אי אפשר להסיר את החשבון שלך.')
-    }
-    const su = await getSuperuserClient()
-    await su.collection('staff').delete(data.staffId)
-  })
+// Staff listing/creation/deletion is shared with dashboard Settings — see
+// features/settings/server/staff.ts (getStaffList, addStaffMember, deleteStaffMember), the
+// single source of truth so onboarding and dashboard screens never diverge.

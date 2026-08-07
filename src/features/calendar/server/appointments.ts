@@ -8,11 +8,7 @@ import { checkAvailabilityForBot } from './bot-appointments'
 import type { ApiAppointment, AppointmentStatus, ApiGoogleConnection } from '../types'
 
 import { disconnectGoogleCalendar, newOAuthClient } from '@/integrations/google-calendar/server/google-auth'
-import {
-  syncAppointmentToGoogle,
-  deleteSyncedAppointmentFromGoogle,
-  cleanupStaffGoogleCalendarEvents,
-} from '@/integrations/google-calendar/server/google-sync'
+import { cleanupStaffGoogleCalendarEvents } from '@/integrations/google-calendar/server/google-sync'
 import { addSystemNotification } from '@/features/notifications/server/notifications'
 import {
   createWhatsAppClient,
@@ -180,7 +176,8 @@ export const createAppointment = createServerFn({ method: 'POST' })
       source: 'staff_manual',
     })
 
-    await syncAppointmentToGoogle(created.id)
+    // Google Calendar sync fires from the appointments PocketBase hook
+    // (pocketbase/pb_hooks/appointments.pb.js) reacting to this create.
 
     // Trigger system notification
     const dateFormatted = data.date.split('-').reverse().join('/')
@@ -241,7 +238,9 @@ export const updateAppointment = createServerFn({ method: 'POST' })
     }
     const before = await su.collection('appointments').getOne(data.id).catch(() => null)
     await su.collection('appointments').update(data.id, updateBody)
-    await syncAppointmentToGoogle(data.id)
+
+    // Google Calendar sync fires from the appointments PocketBase hook
+    // (pocketbase/pb_hooks/appointments.pb.js) reacting to this update.
 
     // Trigger system notification
     if (before) {
@@ -278,11 +277,9 @@ export const deleteAppointment = createServerFn({ method: 'POST' })
     await requireAuth()
     const su = await getSuperuserClient()
 
-    const existing = await su.collection('appointments').getOne(data.id).catch(() => null)
-    if (existing) {
-      await deleteSyncedAppointmentFromGoogle(existing)
-      await su.collection('appointments').delete(data.id)
-    }
+    // Google Calendar cleanup fires from the appointments PocketBase hook
+    // (pocketbase/pb_hooks/appointments.pb.js) reacting to this delete.
+    await su.collection('appointments').delete(data.id).catch(() => null)
 
     return { ok: true }
   })
@@ -357,7 +354,7 @@ export const sendPriceQuoteToCustomer = createServerFn({ method: 'POST' })
       start_time: start.toISOString(),
     })
 
-    const waSettings = await getWhatsAppSettings(su)
+    const waSettings = await getWhatsAppSettings()
     if (!waSettings?.phoneNumberId || !waSettings.accessToken) {
       throw new Error('וואטסאפ אינו מוגדר. יש להזין פרטי חיבור בהגדרות.')
     }

@@ -48,7 +48,7 @@ async function ingestInboundMessage(
   const [aiEnabled, customer, waSettings] = await Promise.all([
     isAiEnabled(su),
     findOrCreateCustomer(su, phone, event.senderName),
-    getWhatsAppSettings(su),
+    getWhatsAppSettings(),
   ])
   const conversation = await findOrCreateConversation(su, customer.id, nowIso, windowExpiresIso, aiEnabled)
 
@@ -69,7 +69,7 @@ async function ingestInboundMessage(
   let errorDetail = ''
   if (event.message.media) {
     try {
-      mediaFile = await downloadMediaFile(su, event.message.media)
+      mediaFile = await downloadMediaFile(event.message.media)
     } catch (err) {
       errorDetail = `Media download failed: ${err instanceof Error ? err.message : String(err)}`
     }
@@ -241,8 +241,8 @@ async function findOrCreateConversation(
   }
 }
 
-async function downloadMediaFile(su: PocketBase, media: InboundMedia): Promise<File> {
-  const settings = await getWhatsAppSettings(su)
+async function downloadMediaFile(media: InboundMedia): Promise<File> {
+  const settings = await getWhatsAppSettings()
   if (!settings?.phoneNumberId || !settings.accessToken) {
     throw new Error('WhatsApp credentials not configured')
   }

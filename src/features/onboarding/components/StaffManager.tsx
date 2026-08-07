@@ -31,12 +31,9 @@ import {
 } from '@/components/ui/form'
 import { ArtistProfileEditor } from '@/features/settings/components/ArtistProfileEditor'
 import { GoogleCalendarConnection } from '@/features/settings/components/GoogleCalendarConnection'
-import {
-  addStaffMember,
-  listStaff,
-  removeStaffMember,
-} from '@/features/onboarding/server/onboarding'
-import { getArtistProfiles, type ApiArtistProfile } from '@/features/settings/server/profiles'
+import { addStaffMember, deleteStaffMember, getStaffList } from '@/features/settings/server/staff'
+import { getArtistProfiles } from '@/features/settings/server/profiles'
+import type { ApiArtistProfile } from '@/features/settings/server/profiles'
 
 const ROLE_LABELS: Record<string, string> = {
   owner: 'בעלים',
@@ -72,7 +69,7 @@ export function StaffManager({ currentStaffId }: StaffManagerProps) {
 
   const staffQuery = useQuery({
     queryKey: ['staff-list'],
-    queryFn: () => listStaff(),
+    queryFn: () => getStaffList(),
   })
 
   const profilesQuery = useQuery<ApiArtistProfile[]>({
@@ -87,9 +84,11 @@ export function StaffManager({ currentStaffId }: StaffManagerProps) {
 
   const addMutation = useMutation({
     mutationFn: (values: z.infer<typeof addStaffSchema>) => addStaffMember({ data: values }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['staff-list'] })
-      queryClient.invalidateQueries({ queryKey: ['artist-profiles'] })
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staff-list'] }),
+        queryClient.invalidateQueries({ queryKey: ['artist-profiles'] }),
+      ])
       form.reset()
       setAddOpen(false)
     },
@@ -97,7 +96,7 @@ export function StaffManager({ currentStaffId }: StaffManagerProps) {
   })
 
   const removeMutation = useMutation({
-    mutationFn: (staffId: string) => removeStaffMember({ data: { staffId } }),
+    mutationFn: (staffId: string) => deleteStaffMember({ data: { id: staffId } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff-list'] })
       queryClient.invalidateQueries({ queryKey: ['artist-profiles'] })

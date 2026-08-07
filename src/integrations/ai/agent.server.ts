@@ -193,7 +193,7 @@ async function runBotTurnInner({ su, conversationId, customerId }: RunBotTurnInp
       activeAppointment
     ] = await Promise.all([
       loadAiSettings(su),
-      getWhatsAppSettings(su),
+      getWhatsAppSettings(),
       su.collection('conversations').getOne(conversationId),
       su.collection('customers').getOne(customerId),
       // Newest window only — getFullList pulled the entire conversation on every turn

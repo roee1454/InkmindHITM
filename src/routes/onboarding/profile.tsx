@@ -5,14 +5,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { getCurrentSession } from '@/features/auth/server/auth'
-import {
-  getArtistProfile,
-  saveArtistProfile,
-  getSettings,
-  updateStudioSettings,
-} from '@/features/onboarding/server/onboarding'
-import { StyleTagSelector } from '@/features/onboarding/components/StyleTagSelector'
-import { ArrowLeft, ArrowRight, Image as ImageIcon, Building2, User } from 'lucide-react'
+import { getSettings, updateStudioSettings } from '@/features/onboarding/server/onboarding'
+import { getStudioPolicySettings, saveStudioPolicySettings } from '@/features/settings/server/policy'
+import type { StudioPolicySettings } from '@/features/settings/server/policy'
+import { ClosuresSection } from '@/features/settings/components/ClosuresSection'
+import { ArrowLeft, ArrowRight, Image as ImageIcon, Building2, CreditCard } from 'lucide-react'
 
 export const Route = createFileRoute('/onboarding/profile')({
   loader: () => getCurrentSession(),
@@ -28,27 +25,22 @@ function ProfileStep() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [studioName, setStudioName] = useState('')
 
-  // Artist Profile state
-  const [website, setWebsite] = useState('')
-  const [instagram, setInstagram] = useState('')
-  const [facebook, setFacebook] = useState('')
-  const [bio, setBio] = useState('')
-  const [styles, setStyles] = useState<string[]>([])
+  // Studio policy state
+  const [paymentInstructions, setPaymentInstructions] = useState('')
+  const [reviewLink, setReviewLink] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
-  // Load existing data
   const { data: settings } = useQuery({
     queryKey: ['settings'],
     queryFn: () => getSettings(),
   })
 
-  const { data: profile } = useQuery({
-    queryKey: ['artist-profile', session?.staff.id],
-    queryFn: () => getArtistProfile({ data: { staffId: session!.staff.id } }),
-    enabled: Boolean(session?.staff.id),
+  const { data: policy } = useQuery<StudioPolicySettings>({
+    queryKey: ['studio-policy-settings'],
+    queryFn: () => getStudioPolicySettings(),
   })
 
   useEffect(() => {
-    // Load logo from localStorage if present
     const savedLogo = localStorage.getItem('studio_logo')
     if (savedLogo) setLogoPreview(savedLogo)
   }, [])
@@ -60,14 +52,11 @@ function ProfileStep() {
   }, [settings])
 
   useEffect(() => {
-    if (profile) {
-      setWebsite(profile.portfolio_website || '')
-      setInstagram(profile.portfolio_instagram || '')
-      setFacebook(profile.portfolio_facebook || '')
-      setBio(profile.bio || '')
-      setStyles(profile.tattoo_styles || [])
+    if (policy) {
+      setPaymentInstructions(policy.paymentInstructions ?? '')
+      setReviewLink(policy.reviewLink ?? '')
     }
-  }, [profile])
+  }, [policy])
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -85,29 +74,24 @@ function ProfileStep() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!session) return
-      // 1. Save Studio Name to settings
       await updateStudioSettings({
-        data: {
-          studio_name: studioName || 'אינקמיינד סטודיו',
-        },
+        data: { studio_name: studioName || 'אינקמיינד סטודיו' },
       })
-      // 2. Save Owner Artist Profile
-      await saveArtistProfile({
+      await saveStudioPolicySettings({
         data: {
-          staffId: session.staff.id,
-          portfolio_website: website,
-          portfolio_instagram: instagram,
-          portfolio_facebook: facebook,
-          bio,
-          tattoo_styles: styles,
-          work_hours: profile?.work_hours || [],
+          paymentInstructions,
+          reviewLink,
+          cancellationCutoffHours: policy?.cancellationCutoffHours ?? 48,
         },
       })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] })
-      queryClient.invalidateQueries({ queryKey: ['artist-profile', session?.staff.id] })
-      navigate({ to: '/onboarding/hours' })
+      queryClient.invalidateQueries({ queryKey: ['studio-policy-settings'] })
+      navigate({ to: '/onboarding/artist-profile' })
+    },
+    onError: (err: unknown) => {
+      setError(err instanceof Error ? err.message : 'שגיאה בשמירת פרטי הסטודיו')
     },
   })
 
@@ -115,6 +99,8 @@ function ProfileStep() {
 
   return (
     <div className="space-y-6 text-right font-assistant" dir="rtl">
+      {error && <p className="text-xs font-semibold text-rose-500">{error}</p>}
+
       {/* Section 1: Studio Identity */}
       <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
@@ -162,68 +148,43 @@ function ProfileStep() {
         </div>
       </div>
 
-      {/* Section 2: Owner Artist Profile */}
+      {/* Section 2: Payment, Reviews & Closures */}
       <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm space-y-5">
         <div className="flex items-center gap-2 mb-2">
           <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <User size={18} />
+            <CreditCard size={18} />
           </div>
           <div>
-            <h2 className="text-base font-bold text-foreground">פרופיל האמן האישי שלך ({session.staff.name || 'בעלים'})</h2>
-            <p className="text-xs text-muted-foreground">סגנונות העבודה והקישורים העסקיים שלך</p>
+            <h2 className="text-base font-bold text-foreground">תשלום, ביקורות וימי סגירה</h2>
+            <p className="text-xs text-muted-foreground">מוצג ללקוחות בשיחת ה-WhatsApp ובעת קביעת תורים</p>
           </div>
         </div>
 
-        {/* Style Tag Selector */}
-        <div>
-          <label className="text-xs font-bold text-foreground mb-2 block">סגנונות קעקוע בולטים</label>
-          <StyleTagSelector value={styles} onChange={setStyles} />
-        </div>
-
-        {/* Social & Portfolio Links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground mb-1 block">אתר אינטרנט</label>
-            <Input
-              value={website}
-              onChange={(e) => setWebsite(e.target.value)}
-              placeholder="https://..."
-              dir="ltr"
-              className="rounded-xl text-xs"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground mb-1 block">אינסטגרם</label>
-            <Input
-              value={instagram}
-              onChange={(e) => setInstagram(e.target.value)}
-              placeholder="https://instagram.com/..."
-              dir="ltr"
-              className="rounded-xl text-xs"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground mb-1 block">פייסבוק</label>
-            <Input
-              value={facebook}
-              onChange={(e) => setFacebook(e.target.value)}
-              placeholder="https://facebook.com/..."
-              dir="ltr"
-              className="rounded-xl text-xs"
-            />
-          </div>
-        </div>
-
-        {/* Bio */}
-        <div>
-          <label className="text-xs font-semibold text-muted-foreground mb-1 block">אודות וביוגרפיה קצרה</label>
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-foreground block">אמצעי תשלום למקדמה</label>
           <Textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            placeholder="מתמחה בקעקועים רציונליים, ריאליזם וקווים עדינים..."
+            value={paymentInstructions}
+            onChange={(e) => setPaymentInstructions(e.target.value)}
+            placeholder="לדוגמה: ביט למספר 050-1234567, או העברה בנקאית: בנק 12 סניף 345 חשבון 678901"
             rows={3}
+            dir="rtl"
             className="rounded-xl text-xs resize-none"
           />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-foreground block">קישור לביקורת Google</label>
+          <Input
+            value={reviewLink}
+            onChange={(e) => setReviewLink(e.target.value)}
+            placeholder="https://g.page/r/…"
+            dir="ltr"
+            className="rounded-xl text-xs"
+          />
+        </div>
+
+        <div className="border-t border-border/50 pt-1">
+          <ClosuresSection />
         </div>
       </div>
 
@@ -242,7 +203,7 @@ function ProfileStep() {
           disabled={saveMutation.isPending}
           className="rounded-xl px-6 font-bold cursor-pointer gap-2"
         >
-          <span>{saveMutation.isPending ? 'שומר פרטים...' : 'המשך לשעות פעילות'}</span>
+          <span>{saveMutation.isPending ? 'שומר פרטים...' : 'המשך לפרופיל האמן'}</span>
           <ArrowLeft size={16} />
         </Button>
       </div>

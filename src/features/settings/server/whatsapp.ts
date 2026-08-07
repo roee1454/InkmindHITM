@@ -1,92 +1,78 @@
 import { createServerFn } from '@tanstack/react-start'
-import { z } from 'zod'
 import {
   WhatsAppApiError,
   createWhatsAppClient,
 } from '@/integrations/whatsapp-cloud-api/client'
-import { requireAdmin, getSettingsRecord } from './helpers.server'
+import { getWhatsAppSettings } from '@/integrations/whatsapp-cloud-api/settings.server'
+import { requireAdmin } from './helpers.server'
+import { logWhatsAppError } from './whatsapp-error-log'
 
+/**
+ * WhatsApp credentials are configured exclusively via environment variables (see CLAUDE.md) —
+ * this tab is read-only diagnostics: what's configured, and a live connection test. There is
+ * no write path here on purpose.
+ */
 export interface WhatsAppSettingsForm {
-  studioName: string
   phoneNumberId: string
   businessAccountId: string
   verifyToken: string
   hasAccessToken: boolean
   hasAppSecret: boolean
+  hasPhoneNumberId: boolean
+  hasBusinessAccountId: boolean
+  hasVerifyToken: boolean
 }
 
 export const getWhatsAppSettingsForm = createServerFn({ method: 'GET' }).handler(
   async (): Promise<WhatsAppSettingsForm> => {
     await requireAdmin()
-    const { record } = await getSettingsRecord()
+    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID ?? ''
+    const businessAccountId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID ?? ''
+    const verifyToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN ?? ''
     return {
-      studioName: (record?.studio_name as string) || '',
-      phoneNumberId: (record?.whatsapp_phone_number_id as string) || '',
-      businessAccountId: (record?.whatsapp_business_account_id as string) || '',
-      verifyToken: (record?.whatsapp_webhook_verify_token as string) || '',
-      hasAccessToken: Boolean(record?.whatsapp_access_token),
-      hasAppSecret: Boolean(record?.whatsapp_app_secret),
+      phoneNumberId,
+      businessAccountId,
+      verifyToken,
+      hasAccessToken: Boolean(process.env.WHATSAPP_ACCESS_TOKEN),
+      hasAppSecret: Boolean(process.env.WHATSAPP_APP_SECRET),
+      hasPhoneNumberId: Boolean(phoneNumberId),
+      hasBusinessAccountId: Boolean(businessAccountId),
+      hasVerifyToken: Boolean(verifyToken),
     }
   },
 )
-
-const saveSchema = z.object({
-  phoneNumberId: z.string().trim().max(64).default(''),
-  businessAccountId: z.string().trim().max(64).default(''),
-  verifyToken: z.string().trim().max(200).default(''),
-  accessToken: z.string().trim().optional(),
-  appSecret: z.string().trim().optional(),
-})
-
-export const saveWhatsAppSettings = createServerFn({ method: 'POST' })
-  .validator(saveSchema)
-  .handler(async ({ data }) => {
-    await requireAdmin()
-    const { su, record } = await getSettingsRecord()
-    if (!record) throw new Error('רשומת ההגדרות חסרה. יש להשלים תחילה את תהליך ההקמה.')
-
-    const payload: Record<string, unknown> = {
-      whatsapp_phone_number_id: data.phoneNumberId,
-      whatsapp_business_account_id: data.businessAccountId,
-      whatsapp_webhook_verify_token: data.verifyToken,
-    }
-    if (data.accessToken) payload.whatsapp_access_token = data.accessToken
-    if (data.appSecret) payload.whatsapp_app_secret = data.appSecret
-
-    await su.collection('settings').update(record.id, payload)
-    return { ok: true }
-  })
 
 export interface TestConnectionResult {
   displayPhoneNumber: string
   verifiedName: string
 }
 
-const testSchema = z.object({
-  phoneNumberId: z.string().trim().optional(),
-  accessToken: z.string().trim().optional(),
-})
-
-export const testWhatsAppConnection = createServerFn({ method: 'POST' })
-  .validator(testSchema)
-  .handler(async ({ data }): Promise<TestConnectionResult> => {
+export const testWhatsAppConnection = createServerFn({ method: 'POST' }).handler(
+  async (): Promise<TestConnectionResult> => {
     await requireAdmin()
-    const { record } = await getSettingsRecord()
-
-    const phoneNumberId = data.phoneNumberId || (record?.whatsapp_phone_number_id as string) || ''
-    const accessToken = data.accessToken || (record?.whatsapp_access_token as string) || ''
-    if (!phoneNumberId || !accessToken) {
-      throw new Error('חסרים מזהה מספר טלפון או טוקן גישה.')
+    const settings = await getWhatsAppSettings()
+    if (!settings?.phoneNumberId || !settings.accessToken) {
+      const message = 'חסרים משתני הסביבה WHATSAPP_PHONE_NUMBER_ID או WHATSAPP_ACCESS_TOKEN.'
+      await logWhatsAppError('test_connection', message)
+      throw new Error(message)
     }
 
-    const client = createWhatsAppClient({ phoneNumberId, accessToken })
+    const client = createWhatsAppClient({
+      phoneNumberId: settings.phoneNumberId,
+      accessToken: settings.accessToken,
+    })
     try {
       const info = await client.getPhoneNumberInfo()
       return { displayPhoneNumber: info.displayPhoneNumber, verifiedName: info.verifiedName }
     } catch (err) {
-      if (err instanceof WhatsAppApiError) {
-        throw new Error(`בדיקת החיבור נכשלה (${err.httpStatus}): ${err.message}`)
-      }
-      throw new Error('בדיקת החיבור נכשלה.')
+      const message =
+        err instanceof WhatsAppApiError
+          ? `בדיקת החיבור נכשלה (${err.httpStatus}): ${err.message}`
+          : 'בדיקת החיבור נכשלה.'
+      await logWhatsAppError('test_connection', message)
+      throw new Error(message)
     }
-  })
+  },
+)
+
+export { getWhatsAppErrorLog } from './whatsapp-error-log'

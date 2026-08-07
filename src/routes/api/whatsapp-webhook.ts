@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { createFileRoute } from '@tanstack/react-router'
 import { parseWebhookPayload } from '@/integrations/whatsapp-cloud-api/webhook'
 import { getWhatsAppSettings, processInboundEvent } from '@/features/conversations/server/webhook'
+import { logWhatsAppError } from '@/features/settings/server/whatsapp-error-log'
 
 /** Verifies Meta's X-Hub-Signature-256 header against the WhatsApp App Secret, per
  *  https://developers.facebook.com/docs/graph-api/webhooks/getting-started#validating-payloads —
@@ -52,6 +53,7 @@ export async function handleWebhookPost(request: Request): Promise<Response> {
   const settings = await getWhatsAppSettings()
   const signature = request.headers.get('x-hub-signature-256')
   if (!isValidSignature(rawBody, signature, settings?.appSecret ?? '')) {
+    await logWhatsAppError('webhook_signature', 'Rejected inbound webhook: invalid or missing X-Hub-Signature-256.')
     return new Response('Forbidden', { status: 403 })
   }
 
@@ -68,6 +70,8 @@ export async function handleWebhookPost(request: Request): Promise<Response> {
       await processInboundEvent(event)
     } catch (err) {
       console.error('[whatsapp-webhook] failed to process event', event.wamid, err)
+      const message = err instanceof Error ? err.message : String(err)
+      await logWhatsAppError('webhook_processing', `wamid ${event.wamid}: ${message}`)
     }
   }
 
