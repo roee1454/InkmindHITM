@@ -12,6 +12,7 @@ __unconfig*
 todos.json
 pocketbase-bin
 pb_data/
+pocketbase/pocketbase
 
 .env
 .env.prod
