@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, redirect, useRouterState } from '@tanstack/rea
 import { getCurrentSession } from '@/features/auth/server/auth'
 import { getSettings } from '@/features/onboarding/server/onboarding'
 import { User, Clock, MessageSquare, Users, Sparkles, CheckCircle2, CalendarDays, Building2 } from 'lucide-react'
+import { ConfirmProvider } from '@/hooks/use-confirm'
 
 const STEPS = [
   { path: '/onboarding/whatsapp', label: 'WhatsApp', icon: MessageSquare, desc: 'חיבור Cloud API' },
@@ -29,6 +30,7 @@ function OnboardingLayout() {
   const progressPercent = Math.round(((activeIndex + 1) / STEPS.length) * 100)
 
   return (
+    <ConfirmProvider>
     <div
       className="relative min-h-svh bg-background font-assistant text-foreground antialiased selection:bg-primary/20 selection:text-primary"
       dir="rtl"
@@ -127,5 +129,6 @@ function OnboardingLayout() {
         </main>
       </div>
     </div>
+    </ConfirmProvider>
   )
 }
