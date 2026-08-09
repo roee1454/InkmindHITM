@@ -3,12 +3,12 @@
 # whatever hostnames appear here, no separate certbot setup or cron job needed. Both hostnames
 # need a DNS A record pointing at this VPS's IP before Caddy can complete the ACME challenge.
 
-app.91.98.130.93.sslip.io {
+app.roee.fyi {
 	reverse_proxy web:3101
 }
 
 # The browser talks to PocketBase directly (realtime subscriptions, file/media URLs) via
 # VITE_POCKETBASE_URL — it genuinely needs to be public, not just the app.
-pb.91.98.130.93.sslip.io {
+pb.roee.fyi {
 	reverse_proxy pocketbase:8090
 }
