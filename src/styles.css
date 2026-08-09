@@ -152,6 +152,7 @@
     /* Stop mobile Safari/Chrome inflating text when the device rotates. */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    overscroll-behavior: none;
   }
 
   body {
@@ -164,9 +165,7 @@
     -moz-osx-font-smoothing: grayscale;
     /* Kill the grey flash on every tap — the clearest "this is a web page" tell. */
     -webkit-tap-highlight-color: transparent;
-    /* `contain`, not `none`: stops pull-to-refresh and the rubber-band overscroll at the app
-       boundary while still allowing normal scroll chaining inside the thread/kanban columns. */
-    overscroll-behavior-y: contain;
+    overscroll-behavior: none;
   }
 
   /* Removes the legacy 300ms double-tap-zoom delay on every interactive element. */

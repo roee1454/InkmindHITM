@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react'
+import React, { Suspense, lazy } from 'react'
 import {
   HeadContent,
   Scripts,
@@ -27,14 +27,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       { charSet: 'utf-8' },
       {
         name: 'viewport',
-        // `viewport-fit=cover` is what makes env(safe-area-inset-*) resolve to non-zero —
-        // without it the bottom nav sits under the iOS home indicator.
-        // `interactive-widget=resizes-content` makes the Android keyboard shrink the layout
-        // viewport rather than overlay it, keeping the chat composer visible while typing.
-        // Deliberately no `maximum-scale`/`user-scalable=no`: that's an a11y failure, and
-        // 16px mobile inputs already prevent iOS focus-zoom.
         content:
-          'width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content',
+          'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content',
       },
       { title: 'Inkmind CRM' },
       {
@@ -64,6 +58,16 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  React.useEffect(() => {
+    const preventZoom = (e: Event) => {
+      e.preventDefault()
+    }
+    document.addEventListener('gesturestart', preventZoom)
+    return () => {
+      document.removeEventListener('gesturestart', preventZoom)
+    }
+  }, [])
+
   return (
     <html lang="he" dir="rtl">
       <head>

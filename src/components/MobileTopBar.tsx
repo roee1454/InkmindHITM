@@ -23,7 +23,7 @@ export function MobileTopBar({ title, onOpenMenu, className }: MobileTopBarProps
     <header
       data-app-chrome
       className={cn(
-        'sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-card/95 px-4 backdrop-blur-md',
+        'sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-card/95 px-4 backdrop-blur-md [transform:translate3d(0,0,0)]',
         className,
       )}
     >
