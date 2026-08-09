@@ -8,7 +8,6 @@ import {
   markAllNotificationsAsRead,
   type ApiNotification,
 } from '@/features/notifications/server/notifications'
-import { getCurrentSession } from '@/features/auth/server/auth'
 import { z } from 'zod'
 import { useEffect } from 'react'
 
@@ -18,7 +17,6 @@ const notificationsSearchSchema = z.object({
 
 export const Route = createFileRoute('/dashboard/notifications')({
   validateSearch: notificationsSearchSchema,
-  loader: () => getCurrentSession(),
   component: NotificationsPage,
 })
 

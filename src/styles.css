@@ -152,7 +152,6 @@
     /* Stop mobile Safari/Chrome inflating text when the device rotates. */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    overscroll-behavior: none;
   }
 
   body {
@@ -165,7 +164,6 @@
     -moz-osx-font-smoothing: grayscale;
     /* Kill the grey flash on every tap — the clearest "this is a web page" tell. */
     -webkit-tap-highlight-color: transparent;
-    overscroll-behavior: none;
   }
 
   /* Removes the legacy 300ms double-tap-zoom delay on every interactive element. */
@@ -232,6 +230,15 @@
   padding-block-start: 1rem;
   /* Keep content clear of the fixed bottom tab bar (0 on desktop). */
   padding-block-end: calc(1.5rem + var(--app-bottom-nav-h));
+}
+
+@media (width < 64rem) {
+  .page-container {
+    height: calc(100svh - var(--app-top-bar-h) - var(--app-bottom-nav-h));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: auto;
+  }
 }
 
 @media (width >= 48rem) {

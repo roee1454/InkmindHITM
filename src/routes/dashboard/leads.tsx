@@ -1,14 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { getCurrentSession } from '@/features/auth/server/auth'
+import { createFileRoute, getRouteApi } from '@tanstack/react-router'
 import { LeadsBoardPage } from '@/features/leads/components/LeadsBoardPage'
 
+const dashboardRoute = getRouteApi('/dashboard')
+
 export const Route = createFileRoute('/dashboard/leads')({
-  loader: () => getCurrentSession(),
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  const session = Route.useLoaderData()
+  const session = dashboardRoute.useLoaderData()
   // Unreachable in practice: /dashboard's beforeLoad already redirects unauthenticated
   // visitors to /auth/login before this route's own loader ever runs.
   if (!session) return null

@@ -1,14 +1,14 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, getRouteApi } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { getCurrentSession } from '@/features/auth/server/auth'
 import { MetricsSummary } from '@/features/dashboard/components/MetricsSummary'
 import { RecentLeadsCard } from '@/features/dashboard/components/RecentLeadsCard'
 import { CloseAppointmentsCard } from '@/features/dashboard/components/CloseAppointmentsCard'
 import { AlertBanners } from '@/features/dashboard/components/AlertBanners'
 import { getDashboardData } from '@/features/dashboard/server/dashboard'
 
+const dashboardRoute = getRouteApi('/dashboard')
+
 export const Route = createFileRoute('/dashboard/')({
-  loader: () => getCurrentSession(),
   component: DashboardHome,
 })
 
@@ -33,7 +33,7 @@ function getGreeting() {
 }
 
 function DashboardHome() {
-  const session = Route.useLoaderData()
+  const session = dashboardRoute.useLoaderData()
   const navigate = useNavigate()
 
   const today = new Date()

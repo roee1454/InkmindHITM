@@ -250,7 +250,7 @@ function DashboardLayout() {
           mobile-chat-detail, and desktop-chat. */}
       <div
         data-mobile-chrome={showMobileChrome ? 'on' : 'off'}
-        className="flex min-h-svh bg-background"
+        className="flex h-svh w-screen overflow-hidden bg-background lg:h-auto lg:w-auto lg:overflow-visible"
       >
         <Sidebar staff={session.staff} />
 

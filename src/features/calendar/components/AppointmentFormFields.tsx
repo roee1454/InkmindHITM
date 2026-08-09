@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { DatePicker } from '@/components/ui/date-picker'
+import { HourPicker } from '@/components/ui/hour-picker'
 import {
   Dialog,
   DialogContent,
@@ -219,19 +221,16 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold text-foreground">תאריך *</label>
-          <Input
-            type="date"
+          <DatePicker
             value={values.date}
-            onChange={(e) => onChange({ date: e.target.value })}
+            onChange={(ymd) => onChange({ date: ymd })}
           />
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold text-foreground">שעה *</label>
-          <Input
-            type="time"
-            step="1800"
+          <HourPicker
             value={values.timeSlot}
-            onChange={(e) => onChange({ timeSlot: e.target.value })}
+            onChange={(time) => onChange({ timeSlot: time })}
           />
         </div>
       </div>
