@@ -11,6 +11,7 @@ import { getAiSettings } from '@/features/settings/server/ai'
 import { cn } from '#/lib/utils.ts'
 import { BrandMark } from '#/components/BrandMark.tsx'
 import { NAV_ITEMS, SETTINGS_SUB_ITEMS } from '#/components/navigation.ts'
+import { clearSessionCache } from '@/routes/dashboard/route'
 
 interface SidebarProps {
   staff: StaffRecord
@@ -203,6 +204,7 @@ export function Sidebar({ staff, className }: SidebarProps) {
           size="sm"
           className="mt-2 w-full justify-start gap-2"
           onClick={async () => {
+            clearSessionCache()
             await logout()
             navigate({ to: '/auth/login' })
           }}

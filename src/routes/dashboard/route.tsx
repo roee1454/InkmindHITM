@@ -12,12 +12,35 @@ import { useToast } from '@/components/ui/ToastProvider'
 import { ConfirmProvider } from '@/hooks/use-confirm'
 import { useQueryClient } from '@tanstack/react-query'
 
+let cachedSession: any = null
+let cachedSettings: any = null
+
+export function clearSessionCache() {
+  cachedSession = null
+  cachedSettings = null
+}
+
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: async () => {
+    if (typeof window !== 'undefined' && cachedSession && cachedSettings) {
+      return { session: cachedSession }
+    }
+
     const session = await getCurrentSession()
-    if (!session) throw redirect({ to: '/auth/login' })
+    if (!session) {
+      clearSessionCache()
+      throw redirect({ to: '/auth/login' })
+    }
     const settings = await getSettings()
-    if (!settings?.onboarding_completed) throw redirect({ to: '/onboarding/profile' })
+    if (!settings?.onboarding_completed) {
+      throw redirect({ to: '/onboarding/profile' })
+    }
+
+    if (typeof window !== 'undefined') {
+      cachedSession = session
+      cachedSettings = settings
+    }
+
     return { session }
   },
   loader: ({ context }) => context.session,

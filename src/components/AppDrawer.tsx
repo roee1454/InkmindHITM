@@ -16,6 +16,7 @@ import { logout } from '#/features/auth/server/auth.ts'
 import { getAiSettings } from '#/features/settings/server/ai.ts'
 import { getUnreadNotificationsCount } from '#/features/notifications/server/notifications.ts'
 import type { StaffRecord } from '#/integrations/pocketbase/types.ts'
+import { clearSessionCache } from '@/routes/dashboard/route'
 
 const ROLE_LABELS: Record<string, string> = {
   owner: 'בעלים',
@@ -142,6 +143,7 @@ export function AppDrawer({ open, onOpenChange, staff }: AppDrawerProps) {
             variant="ghost"
             className="h-11 w-full justify-start gap-2"
             onClick={async () => {
+              clearSessionCache()
               await logout()
               navigate({ to: '/auth/login' })
             }}
