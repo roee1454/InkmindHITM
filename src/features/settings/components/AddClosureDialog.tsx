@@ -119,7 +119,7 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
                     onCheckedChange={() => toggleHoliday(holiday.title)}
                   />
                   <span className="font-semibold text-foreground">{holiday.hebrew || holiday.title}</span>
-                  <span className="text-[10px] text-muted-foreground" dir="ltr">
+                  <span className="text-micro text-muted-foreground" dir="ltr">
                     {holiday.date}
                   </span>
                 </label>
@@ -127,7 +127,7 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
             </div>
           )}
 
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-micro text-muted-foreground">
             נתוני חגים מסופקים על ידי{' '}
             <a href="https://www.hebcal.com" target="_blank" rel="noreferrer" className="underline">
               Hebcal.com
@@ -156,7 +156,7 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
 
           <div className="flex flex-wrap items-end gap-2">
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-muted-foreground">תאריך</label>
+              <label className="text-mini font-bold text-muted-foreground">תאריך</label>
               <Input
                 type="date"
                 value={customDate}
@@ -165,7 +165,7 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
               />
             </div>
             <div className="min-w-[140px] flex-1 space-y-1">
-              <label className="text-[11px] font-bold text-muted-foreground">סיבה (אופציונלי)</label>
+              <label className="text-mini font-bold text-muted-foreground">סיבה (אופציונלי)</label>
               <Input
                 value={customReason}
                 onChange={(e) => setCustomReason(e.target.value)}
@@ -178,7 +178,7 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
           <div className="flex items-center justify-between rounded-xl border border-border bg-card px-3 py-2.5">
             <div className="flex flex-col gap-0.5">
               <span className="text-xs font-bold text-foreground">סגור כל שנה</span>
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-micro text-muted-foreground">
                 כבוי = סגירה חד-פעמית בתאריך זה בלבד
               </span>
             </div>

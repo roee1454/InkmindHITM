@@ -27,6 +27,7 @@ import {
 import { getCurrentStaffInfo, getStaffList, type StaffMember, type CurrentStaffInfo } from '@/features/settings/server/staff'
 import { getWorkingHours } from '@/features/settings/server/profiles'
 import { useCalendarUiStore } from './store/calendarUiStore'
+import { useIsMobile } from '@/hooks/use-media-query'
 
 export const CalendarPage: React.FC = () => {
   const queryClient = useQueryClient()
@@ -54,6 +55,14 @@ export const CalendarPage: React.FC = () => {
     openCreate,
     openEdit,
   } = useCalendarUiStore()
+
+  // Derived, not written back to the store: seven ~40px day columns are unusable on a phone,
+  // so `week` renders as `day` there. Keeping the stored value untouched means rotating a
+  // phone — or opening the same persisted store on a desktop — never strands a `day` mode
+  // where a week was intended.
+  const isMobile = useIsMobile()
+  const effectiveCalendarMode = isMobile ? 'day' : calendarMode
+  const effectiveViewMode = isMobile ? 'calendar' : viewMode
 
   const { data: currentStaff } = useQuery<CurrentStaffInfo>({
     queryKey: ['currentStaff'],
@@ -250,7 +259,7 @@ export const CalendarPage: React.FC = () => {
   const upcomingCount = appointments.filter((a) => a.status === 'confirmed' && a.date >= todayString).length
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-6 text-right font-assistant py-6" dir="rtl">
+    <div className="w-full max-w-5xl mx-auto space-y-4 md:space-y-6 text-right font-assistant py-3 md:py-6" dir="rtl">
       <CalendarHeader
         todayCount={todayCount}
         upcomingCount={upcomingCount}
@@ -281,10 +290,10 @@ export const CalendarPage: React.FC = () => {
         <div className="h-44 flex items-center justify-center text-xs text-muted-foreground font-semibold">
           טוען תורים…
         </div>
-      ) : viewMode === 'calendar' ? (
+      ) : effectiveViewMode === 'calendar' ? (
         <div className="space-y-4">
           <CalendarGrid
-            mode={calendarMode}
+            mode={effectiveCalendarMode}
             onModeChange={setCalendarMode}
             anchorDate={anchorDate}
             onAnchorDateChange={setAnchorDate}

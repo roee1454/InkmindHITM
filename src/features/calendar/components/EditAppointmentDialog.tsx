@@ -119,7 +119,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
                 <p className="text-xs font-semibold text-foreground">
                   בקשת הזמנה מהבוט — ממתינה להצעת מחיר
                 </p>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-mini text-muted-foreground">
                   מלא/י מחיר ומקדמה למעלה ואז שלח/י ללקוח את הצעת המחיר בוואטסאפ.
                 </p>
                 <Button

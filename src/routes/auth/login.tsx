@@ -1,6 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { LoginForm } from '@/features/auth/components/LoginForm'
 import { getCurrentSession, needsBootstrap } from '@/features/auth/server/auth'
+import { BrandMark } from '@/components/BrandMark'
 
 export const Route = createFileRoute('/auth/login')({
   beforeLoad: async () => {
@@ -19,12 +20,7 @@ function LoginPage() {
     <div className="space-y-6">
       {/* Brand Header */}
       <div className="flex flex-col items-center justify-center text-center">
-        <div className="relative mb-3 shrink-0">
-          <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl" />
-          <div className="relative flex size-12 items-center justify-center rounded-2xl border-2 border-primary/40 bg-primary font-assistant text-lg font-black text-primary-foreground shadow-md">
-            IM
-          </div>
-        </div>
+        <BrandMark size="lg" className="mb-3" />
         <h1 className="text-2xl font-black text-foreground">INKMIND CRM</h1>
         <p className="mt-1 text-xs text-muted-foreground">מערכת הנהלת סטודיו וניהול לקוחות חכמה</p>
       </div>

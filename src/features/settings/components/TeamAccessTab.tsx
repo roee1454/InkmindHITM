@@ -129,7 +129,7 @@ export const TeamAccessTab: React.FC = () => {
   return (
     <div className="space-y-4 font-assistant text-right" dir="rtl">
       <div className="space-y-1">
-        <h3 className="text-sm md:text-base font-bold text-foreground">צוות והרשאות גישה</h3>
+        <h3 className="text-base font-bold text-foreground">צוות והרשאות גישה</h3>
         <p className="max-w-xl text-xs leading-relaxed text-muted-foreground">
           {currentStaff?.isAdmin
             ? 'כמנהל/ת, ניתן לערוך פרטים, לקבוע/לאפס סיסמה, לערוך פרופיל ושעות עבודה, ולחבר/לנתק יומן Google לכל חבר צוות.'
@@ -162,17 +162,17 @@ export const TeamAccessTab: React.FC = () => {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold text-foreground text-sm">{member.name}</span>
                         {isSelf && (
-                          <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                          <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-micro font-bold text-primary">
                             את/ה
                           </span>
                         )}
                         {member.isAdmin && (
-                          <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+                          <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-micro font-bold text-amber-400">
                             מנהל
                           </span>
                         )}
                         {!member.hasPassword && (
-                          <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2 py-0.5 text-[10px] font-semibold text-rose-400">
+                          <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2 py-0.5 text-micro font-semibold text-rose-400">
                             אין סיסמה
                           </span>
                         )}
@@ -289,7 +289,7 @@ export const TeamAccessTab: React.FC = () => {
                 </div>
 
                 {!hasProfile(member.id) && (
-                  <span className="inline-block rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                  <span className="inline-block rounded-full border border-border bg-muted px-2 py-0.5 text-micro font-semibold text-muted-foreground">
                     אין פרופיל אמן
                   </span>
                 )}

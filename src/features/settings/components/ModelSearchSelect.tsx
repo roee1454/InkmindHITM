@@ -76,18 +76,18 @@ export const ModelSearchSelect: React.FC<ModelSearchSelectProps> = ({ value, onC
         onClick={() => setIsOpen(!isOpen)}
         className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-input bg-muted px-4 py-2.5 text-right text-sm text-foreground transition-colors hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
       >
-        <div className="flex items-center gap-2.5 overflow-hidden">
+        <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
           <Sparkles size={16} className="shrink-0 text-primary" />
-          <span className="truncate font-semibold">
+          <span className="truncate font-semibold min-w-0">
             {selectedModelObj ? selectedModelObj.name : value || 'בחר מודל AI…'}
           </span>
           {selectedModelObj?.badge && (
-            <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+            <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-micro font-bold text-primary">
               {selectedModelObj.badge}
             </span>
           )}
           {isCustomModel && (
-            <span className="shrink-0 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+            <span className="shrink-0 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-micro font-bold text-amber-400">
               מותאם אישית
             </span>
           )}
@@ -140,18 +140,18 @@ export const ModelSearchSelect: React.FC<ModelSearchSelectProps> = ({ value, onC
                           : 'text-foreground hover:bg-muted/70'
                       }`}
                     >
-                      <div className="flex flex-col gap-0.5 overflow-hidden">
-                        <div className="flex items-center gap-2">
-                          <span className="font-assistant text-xs font-bold">{m.name}</span>
-                          <span className="font-mono text-[10px] text-muted-foreground/70">({m.id})</span>
+                      <div className="flex flex-col gap-0.5 overflow-hidden min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-assistant text-xs font-bold truncate">{m.name}</span>
+                          <span className="hidden sm:inline font-mono text-micro text-muted-foreground/70">({m.id})</span>
                           {m.badge && (
-                            <span className="rounded bg-primary/10 px-1.5 text-[9px] font-bold text-primary">
+                            <span className="rounded bg-primary/10 px-1.5 text-micro font-bold text-primary">
                               {m.badge}
                             </span>
                           )}
                         </div>
                         {m.description && (
-                          <span className="truncate text-[11px] leading-tight text-muted-foreground">
+                          <span className="truncate text-mini leading-tight text-muted-foreground">
                             {m.description}
                           </span>
                         )}

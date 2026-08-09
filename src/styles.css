@@ -15,6 +15,16 @@
   --radius-2xl: 20px;
   --radius-3xl: 24px;
   --font-assistant: 'Assistant', sans-serif;
+
+  /* Density-aware micro type. Hebrew has no ascender/descender cues, so Assistant below
+     ~12px is genuinely unreadable on a phone. These give a legible floor on touch and
+     collapse back to the original desktop density at `lg` (see the override below).
+     A normal fluid `clamp()` scale would be the *wrong* direction here — it grows with the
+     viewport, making phone text smaller still. */
+  --text-micro: 0.75rem; /* 12px mobile → 10px desktop */
+  --text-micro--line-height: 1.15;
+  --text-mini: 0.8125rem; /* 13px mobile → 11px desktop */
+  --text-mini--line-height: 1.2;
 }
 
 :root {
@@ -138,6 +148,12 @@
     @apply border-border outline-ring/50;
   }
 
+  html {
+    /* Stop mobile Safari/Chrome inflating text when the device rotates. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   body {
     margin: 0;
     overflow-x: hidden;
@@ -146,14 +162,91 @@
     font-family: var(--font-assistant);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Kill the grey flash on every tap — the clearest "this is a web page" tell. */
+    -webkit-tap-highlight-color: transparent;
+    /* `contain`, not `none`: stops pull-to-refresh and the rubber-band overscroll at the app
+       boundary while still allowing normal scroll chaining inside the thread/kanban columns. */
+    overscroll-behavior-y: contain;
+  }
+
+  /* Removes the legacy 300ms double-tap-zoom delay on every interactive element. */
+  button,
+  a,
+  [role='button'],
+  label,
+  summary,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+
+  /* App chrome is furniture, not a document — long-press shouldn't start a text selection. */
+  nav,
+  header,
+  [data-app-chrome] {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+
+/* ---------------------------------------------------------------------------
+   Layout chrome
+   ---------------------------------------------------------------------------
+   Both default to 0 so every calc() that references them is a no-op on desktop. They are
+   turned on only when the mobile shell is actually mounted — the dashboard shell sets
+   data-mobile-chrome="on"/"off", so a full-screen route (an open chat thread) can opt out
+   even on a phone. One calc() expression then stays correct in all four states:
+   desktop, mobile-with-chrome, mobile-chat-detail, desktop-chat.
+
+   --app-bottom-nav-h must stay in sync with MobileBottomNav's `h-16`. */
+:root {
+  --app-top-bar-h: 0rem;
+  --app-bottom-nav-h: 0rem;
+}
+
+@media (width < 64rem) {
+  [data-mobile-chrome='on'] {
+    --app-top-bar-h: 4rem; /* h-16 — MobileTopBar */
+    --app-bottom-nav-h: calc(4rem + env(safe-area-inset-bottom, 0px)); /* h-16 + home indicator */
+  }
+
+  /* Restore desktop micro-type density only at lg and up; see @theme above. */
+}
+
+@media (width >= 64rem) {
+  :root {
+    --text-micro: 0.625rem; /* 10px — the pre-refactor value */
+    --text-mini: 0.6875rem; /* 11px — the pre-refactor value */
   }
 }
 
 /* Custom Design System Utilities (ported from WAHA/apps/ui/src/index.css) */
 .page-container {
-  padding: 2rem 2.5rem 3rem 2.5rem;
+  /* Flex column so pages can fill the viewport with `flex-1 min-h-0` instead of the magic
+     `h-[calc(100svh-7.5rem)]` that used to hardcode this element's own padding. */
+  display: flex;
+  flex-direction: column;
   background-color: var(--color-brand-bg);
-  min-height: 100vh;
+  padding-inline: 1rem;
+  padding-block-start: 1rem;
+  /* Keep content clear of the fixed bottom tab bar (0 on desktop). */
+  padding-block-end: calc(1.5rem + var(--app-bottom-nav-h));
+}
+
+@media (width >= 48rem) {
+  .page-container {
+    padding-inline: 1.5rem;
+    padding-block-start: 1.5rem;
+  }
+}
+
+@media (width >= 64rem) {
+  .page-container {
+    /* Byte-identical to the pre-refactor desktop value. */
+    padding: 2rem 2.5rem 3rem 2.5rem;
+  }
 }
 
 .text-glow {
@@ -174,29 +267,38 @@
   background: linear-gradient(to right, transparent, rgba(79, 70, 229, 0.2), transparent);
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Scrollbars are fully hidden everywhere — scrolling still works (wheel, touch, keyboard,
+   scrollbar-gutter is not reserved), there is just no visible track or thumb. In this RTL
+   document the browser places the vertical scrollbar on the inline-end edge, i.e. the left,
+   so nothing needs to be flipped; `scrollbar-width: none` means it occupies no layout width
+   on either side. */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--color-brand-bg);
+*::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--color-brand-border);
-  border-radius: 3px;
+/* Kept so the explicit `.scrollbar-none` call sites (filter strips, kanban board) stay
+   meaningful even if the global rule above is ever relaxed. */
+.scrollbar-none {
+  scrollbar-width: none;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-brand-primary);
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 /* Animations */
+/* Enters from the inline-start (right) edge — the document is RTL, and the toast stack is
+   anchored to `start`. Was -100% (left edge), which slid in from the wrong side. */
 @keyframes slide-in {
   from {
-    transform: translateX(-100%);
+    transform: translateX(100%);
     opacity: 0;
   }
   to {
@@ -222,4 +324,20 @@
 
 .animate-fade-in {
   animation: fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Disable text selection on mobile devices (< 1024px) for a native feel, except for input fields */
+@media (max-width: 1023px) {
+  body, body * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  input, textarea, [contenteditable="true"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
 }

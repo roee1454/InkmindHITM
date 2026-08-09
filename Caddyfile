@@ -3,7 +3,13 @@
 # whatever hostnames appear here, no separate certbot setup or cron job needed. Both hostnames
 # need a DNS A record pointing at this VPS's IP before Caddy can complete the ACME challenge.
 
-app.roee.fyi {
+admin.roee.fyi {
+	# Nitro currently serves public/ revalidatable, so these are belt-and-braces: if a blanket
+	# cache rule is ever added, a stale sw.js would otherwise become permanently sticky and
+	# block every future deploy from reaching installed clients.
+	header /sw.js Cache-Control "no-cache, must-revalidate"
+	header /manifest.webmanifest Cache-Control "no-cache"
+
 	reverse_proxy web:3101
 }
 

@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { z } from 'zod'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -31,6 +32,24 @@ function SettingsPage() {
 
   const activeTabObj = settingsTabs.find((t) => t.id === activeTab) ?? settingsTabs[0]!
 
+  // Keep the selected pill visible in the mobile scroll strip — without this, arriving from
+  // the drawer at ?tab=backups (last pill) shows a strip scrolled to the start with no hint
+  // that the active tab is off-screen.
+  const tabsListRef = React.useRef<HTMLDivElement>(null)
+  const hasPositionedTabs = React.useRef(false)
+  React.useEffect(() => {
+    const el = tabsListRef.current?.querySelector<HTMLElement>(`[data-tab-id="${activeTab}"]`)
+    if (!el) return
+    // Jump instantly on first paint — animating the strip while the page is still settling
+    // reads as a glitch. Animate only once the user is actually switching tabs.
+    el.scrollIntoView({
+      inline: 'center',
+      block: 'nearest',
+      behavior: hasPositionedTabs.current ? 'smooth' : 'auto',
+    })
+    hasPositionedTabs.current = true
+  }, [activeTab])
+
   const handleTabChange = (val: string) => {
     void navigate({
       search: (old) => ({
@@ -42,9 +61,9 @@ function SettingsPage() {
 
   return (
     <div className="w-full font-assistant">
-      <div className="w-full max-w-5xl mx-auto space-y-6 text-right py-6" dir="rtl">
+      <div className="w-full max-w-5xl mx-auto space-y-4 md:space-y-6 text-right py-1.5 md:py-6" dir="rtl">
         {/* Page Title & Subtitle */}
-        <div>
+        <div className="hidden lg:block">
           <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight mb-1">
             הגדרות מערכת
           </h1>
@@ -55,12 +74,22 @@ function SettingsPage() {
 
         {/* System Styled Navigation Tabs Bar */}
         <Tabs value={activeTab} onValueChange={handleTabChange} dir="rtl">
-          <TabsList className="bg-muted/70 border border-border/80 p-1.5 rounded-2xl inline-flex flex-wrap gap-1 h-auto shadow-sm">
+          {/* Below md this is a single edge-to-edge scrolling strip rather than a wrapping
+              block: five pills at ~90px wrapped to three rows and ate ~120px of a 667px
+              screen. The negative margin lets it bleed past .page-container's 1rem padding
+              so the row reads as scrollable rather than clipped. */}
+          <TabsList
+            ref={tabsListRef}
+            className="scrollbar-none -mx-4 hidden h-auto w-auto max-w-none snap-x snap-mandatory flex-nowrap gap-1 overflow-x-auto rounded-none border-0 bg-transparent px-4 py-0 shadow-none lg:mx-0 lg:w-fit lg:flex-wrap lg:rounded-2xl lg:border lg:border-border/80 lg:bg-muted/70 lg:p-1.5 lg:shadow-sm lg:flex"
+          >
             {settingsTabs.map((item) => (
               <TabsTrigger
                 key={item.id}
                 value={item.id}
-                className="cursor-pointer data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground rounded-xl px-4 py-2 font-assistant font-bold text-xs transition-all hover:text-foreground"
+                data-tab-id={item.id}
+                // `flex-none` is required: TabsTrigger's base sets `flex-1`, which in a
+                // nowrap scroll container would squash all five into the visible width.
+                className="shrink-0 flex-none cursor-pointer snap-start whitespace-nowrap rounded-xl border border-border/80 bg-muted/70 px-4 py-2 font-assistant text-xs font-bold text-muted-foreground transition-all hover:text-foreground active:scale-[0.97] data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm md:border-0 md:bg-transparent"
               >
                 {item.label}
               </TabsTrigger>

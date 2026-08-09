@@ -43,7 +43,14 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <ToastContext.Provider value={{ toast, toasts, removeToast }}>
       {children}
       {/* Toast Portal/Container */}
-      <div className="fixed top-4 left-4 z-[9999] flex flex-col gap-3 w-full max-w-md pointer-events-none" dir="rtl">
+      {/* `start`, not `left` — the document is RTL. Below `sm` the stack spans the viewport
+          with a 1rem inset rather than `w-full` + a fixed edge offset, which used to overflow
+          by 16px on any screen narrower than 448px. */}
+      <div
+        className="pointer-events-none fixed inset-x-4 z-[9999] flex flex-col gap-3 sm:inset-x-auto sm:start-4 sm:w-full sm:max-w-md"
+        style={{ top: 'calc(1rem + env(safe-area-inset-top, 0px))' }}
+        dir="rtl"
+      >
         {toasts.map((t) => {
           let bgClass = 'bg-card border-border'
           let icon = <Info className="text-blue-500 shrink-0" size={22} />
@@ -62,7 +69,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             <div
               key={t.id}
               onClick={t.onClick}
-              className={`flex items-start gap-4 rounded-2xl border p-5 shadow-xl animate-slide-in backdrop-blur-md transition-all duration-300 pointer-events-auto ${t.onClick ? 'cursor-pointer hover:scale-[1.01] hover:brightness-[0.98] active:scale-[0.99]' : ''} ${bgClass}`}
+              className={`pointer-events-auto flex items-start gap-3 rounded-2xl border p-4 shadow-xl animate-slide-in backdrop-blur-md transition-all duration-300 sm:gap-4 sm:p-5 ${t.onClick ? 'cursor-pointer hover:scale-[1.01] hover:brightness-[0.98] active:scale-[0.99]' : ''} ${bgClass}`}
             >
               {icon}
               <div className="flex-1 min-w-0 font-assistant">

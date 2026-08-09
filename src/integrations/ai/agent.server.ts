@@ -64,7 +64,7 @@ async function loadAiSettings(su: PocketBase): Promise<AiSettingsRecord> {
   const record = list.items[0]
   return {
     aiEnabled: Boolean(record?.ai_enabled),
-    model: (record?.ai_model as string) || 'gpt-4o',
+    model: (record?.ai_model as string) || 'claude-sonnet-5',
     temperature: (record?.ai_temperature as number | undefined) ?? 0.4,
     maxTokens: (record?.ai_max_tokens as number | undefined) ?? null,
     systemInstructions: (record?.ai_system_instructions as string) || '',

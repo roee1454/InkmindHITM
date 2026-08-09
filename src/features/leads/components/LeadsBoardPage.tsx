@@ -13,6 +13,7 @@ import { LeadColumn } from './LeadColumn'
 import { LeadCard } from './LeadCard'
 import { LeadsBoardSkeleton } from './LeadsBoardSkeleton'
 import { useLeadsUiStore } from '../store/leadsUiStore'
+import { useIsCoarsePointer } from '@/hooks/use-media-query'
 
 // Ported verbatim from WAHA's board: edge auto-scroll while dragging, and click-and-drag-to-pan
 // on empty board space. Neither uses a drag-and-drop library — WAHA's board never had one.
@@ -41,6 +42,11 @@ export function LeadsBoardPage({ staff }: LeadsBoardPageProps) {
     setDropTarget,
     setIsPanning,
   } = useLeadsUiStore()
+
+  // The pan/drag handlers below are mouse-only. On touch they're mostly inert, but
+  // handleMouseDown's preventDefault() fires on the synthesized post-tap mousedown and can
+  // suppress focus — so they're detached entirely rather than left to misbehave.
+  const isCoarsePointer = useIsCoarsePointer()
 
   const leadsQuery = useQuery({
     queryKey: ['leads'],
@@ -173,12 +179,13 @@ export function LeadsBoardPage({ staff }: LeadsBoardPageProps) {
           // drag-and-drop, since this handler sits on an ancestor of every .lead-card.
           if (!(e.target as HTMLElement).closest('.lead-card')) e.preventDefault()
         }}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        className={`flex flex-1 gap-4 overflow-x-auto px-1 pb-2 select-none ${
-          isPanning ? 'cursor-grabbing' : 'cursor-grab'
+        onMouseDown={isCoarsePointer ? undefined : handleMouseDown}
+        onMouseMove={isCoarsePointer ? undefined : handleMouseMove}
+        onMouseUp={isCoarsePointer ? undefined : handleMouseUp}
+        onMouseLeave={isCoarsePointer ? undefined : handleMouseUp}
+        // Scroll-snap gives the phone one column per swipe; grab-to-pan stays desktop-only.
+        className={`scrollbar-none flex flex-1 snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 select-none lg:snap-none lg:gap-4 ${
+          isPanning ? 'cursor-grabbing' : 'lg:cursor-grab'
         }`}
       >
         {COLUMNS.map((col) => {
@@ -211,6 +218,8 @@ export function LeadsBoardPage({ staff }: LeadsBoardPageProps) {
                   editable={canEditLead(staff, lead.assignedStaffId)}
                   artistName={artistName(lead.assignedStaffId)}
                   isDragging={draggingId === lead.id}
+                  isCoarsePointer={isCoarsePointer}
+                  onMoveToStage={(stage) => moveLeadTo(lead, stage)}
                   onDragStart={() => setDraggingId(lead.id)}
                   onDragEnd={() => {
                     setDraggingId(null)

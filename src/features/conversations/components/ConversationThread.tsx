@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Paperclip, SendHorizontal, X, Bot, BotOff, Image, FileCheck } from 'lucide-react'
+import { Paperclip, SendHorizontal, X, Bot, BotOff, Image, FileCheck, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
@@ -31,7 +31,14 @@ const REASON_LABELS: Record<string, string> = {
   system_model_error: 'תקלת מודל AI',
 }
 
-export function ConversationThread({ conversation }: { conversation: UIConversation }) {
+export function ConversationThread({
+  conversation,
+  onBack,
+}: {
+  conversation: UIConversation
+  /** Mobile only — returns to the conversation list. Undefined on desktop (both panes visible). */
+  onBack?: () => void
+}) {
   const queryClient = useQueryClient()
   const {
     draft,
@@ -236,15 +243,28 @@ export function ConversationThread({ conversation }: { conversation: UIConversat
 
   return (
     <div className="flex h-full flex-1 flex-col bg-background" dir="rtl">
-      <header className="flex items-center justify-between gap-2 border-b border-border bg-card px-5 py-3">
-        <div className="flex flex-col">
-          <span className="font-assistant text-sm font-bold text-foreground">{title}</span>
-          <span className="font-assistant text-xs text-muted-foreground dir-ltr text-right">
-            {conversation.customerPhone}
-          </span>
+      <header className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-2.5 lg:px-5 lg:py-3">
+        <div className="flex min-w-0 items-center gap-1">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label="חזרה לרשימת השיחות"
+              // RTL: "back" points right, matching CalendarGrid's prev control.
+              className="-ms-1 flex size-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors duration-150 hover:bg-accent active:bg-accent lg:hidden"
+            >
+              <ChevronRight className="size-5" />
+            </button>
+          )}
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate font-assistant text-sm font-bold text-foreground">{title}</span>
+            <span className="font-assistant text-xs text-muted-foreground dir-ltr text-right">
+              {conversation.customerPhone}
+            </span>
+          </div>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
             {conversation.status === 'escalated' && conversation.staffCallReason ? (
               <Badge
                 variant="outline"
@@ -361,13 +381,18 @@ export function ConversationThread({ conversation }: { conversation: UIConversat
         )}
       </div>
 
-      <div className="border-t border-border bg-card p-3 space-y-2">
+      {/* The bottom tab bar is hidden in thread view, so nothing else keeps the composer clear
+          of the iOS home indicator. */}
+      <div
+        className="space-y-2 border-t border-border bg-card p-3"
+        style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+      >
         {/* Reply Context Banner */}
         {replyingTo && (
           <div className="flex items-center justify-between bg-muted/60 border-r-4 border-primary px-3 py-1.5 rounded-lg text-xs">
             <div className="flex flex-col truncate">
-              <span className="font-bold text-primary text-[11px]">השבה להודעה:</span>
-              <span className="truncate text-muted-foreground text-[11px]">{replyingTo.body || 'מדיה'}</span>
+              <span className="font-bold text-primary text-mini">השבה להודעה:</span>
+              <span className="truncate text-muted-foreground text-mini">{replyingTo.body || 'מדיה'}</span>
             </div>
             <button
               type="button"

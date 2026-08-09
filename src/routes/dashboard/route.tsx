@@ -1,6 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { createFileRoute, Outlet, redirect, useLocation, useNavigate } from '@tanstack/react-router'
 import { Sidebar } from '@/components/Sidebar'
+import { MobileTopBar } from '@/components/MobileTopBar'
+import { MobileBottomNav } from '@/components/MobileBottomNav'
+import { AppDrawer } from '@/components/AppDrawer'
+import { routeTitle } from '@/components/navigation'
 import { getCurrentSession } from '@/features/auth/server/auth'
 import { getSettings } from '@/features/onboarding/server/onboarding'
 import { getBrowserClient } from '@/integrations/pocketbase/client'
@@ -27,6 +31,19 @@ function DashboardLayout() {
   const isConversations = location.pathname.startsWith('/dashboard/conversations')
   const { toast } = useToast()
   const queryClient = useQueryClient()
+
+  // An open chat thread is a full-screen detail view on mobile: no top bar, no tab bar, so the
+  // composer isn't fighting the on-screen keyboard for the bottom 64px.
+  const chatId = (location.search as Record<string, unknown>)?.chatId
+  const isChatDetail = isConversations && typeof chatId === 'string' && !!chatId
+  const showMobileChrome = !isChatDetail
+
+  const [menuOpen, setMenuOpen] = useState(false)
+  // Radix won't close the sheet on a router navigation. Key on `href`, not `pathname` — the
+  // settings sub-links differ only by their `?tab=` search param.
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [location.href])
 
   useEffect(() => {
     const pb = getBrowserClient()
@@ -228,11 +245,40 @@ function DashboardLayout() {
 
   return (
     <ConfirmProvider>
-      <div className="flex min-h-svh bg-background">
+      {/* data-mobile-chrome drives --app-top-bar-h / --app-bottom-nav-h (src/styles.css), so a
+          single calc() stays correct in all four states: desktop, mobile-with-chrome,
+          mobile-chat-detail, and desktop-chat. */}
+      <div
+        data-mobile-chrome={showMobileChrome ? 'on' : 'off'}
+        className="flex min-h-svh bg-background"
+      >
         <Sidebar staff={session.staff} />
-        <main className={isConversations ? "h-svh min-w-0 flex-1 overflow-hidden p-0 m-0" : "page-container min-w-0 flex-1"}>
-          <Outlet />
-        </main>
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          {showMobileChrome && (
+            <MobileTopBar
+              title={routeTitle(location.pathname)}
+              onOpenMenu={() => setMenuOpen(true)}
+              className="lg:hidden"
+            />
+          )}
+
+          <main
+            className={
+              isConversations
+                ? // Deliberately NOT `flex-1`: in a flex column that sets flex-basis:0 and
+                  // grow:1, which overrides this height — the fixed bottom nav would then
+                  // overlay the last 64px of the thread, hiding the composer.
+                  'm-0 h-[calc(100svh-var(--app-top-bar-h)-var(--app-bottom-nav-h))] min-w-0 shrink-0 overflow-hidden p-0'
+                : 'page-container min-w-0 flex-1'
+            }
+          >
+            <Outlet />
+          </main>
+        </div>
+
+        {showMobileChrome && <MobileBottomNav className="lg:hidden" />}
+        <AppDrawer open={menuOpen} onOpenChange={setMenuOpen} staff={session.staff} />
       </div>
     </ConfirmProvider>
   )

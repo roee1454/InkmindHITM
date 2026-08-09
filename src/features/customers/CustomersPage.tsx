@@ -137,7 +137,7 @@ export const CustomersPage: React.FC = () => {
   const reviewsCount = customers.filter((c) => c.visits >= 1).length
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-6 text-right font-assistant py-6" dir="rtl">
+    <div className="w-full max-w-5xl mx-auto space-y-4 md:space-y-6 text-right font-assistant py-3 md:py-6" dir="rtl">
       <CustomersHeader
         totalCustomers={totalCustomers}
         totalSpend={totalSpend}
@@ -164,9 +164,9 @@ export const CustomersPage: React.FC = () => {
           placeholder="חיפוש בכל העמודים לפי שם, טלפון או אימייל…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pr-10 bg-white dark:bg-card text-foreground"
+          className="w-full pe-10 bg-white dark:bg-card text-foreground"
         />
-        <Search size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Search size={16} className="absolute end-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
       </div>
 
       {/* Grid of Customers */}
@@ -190,12 +190,12 @@ export const CustomersPage: React.FC = () => {
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-border/60 pt-4 text-xs font-assistant">
+            <div className="flex flex-col gap-3 border-t border-border/60 pt-4 font-assistant text-xs sm:flex-row sm:items-center sm:justify-between">
               <div className="text-muted-foreground">
                 מציג {((safePage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(safePage * ITEMS_PER_PAGE, filteredCustomers.length)} מתוך {filteredCustomers.length} לקוחות
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between gap-2 sm:justify-start">
                 <button
                   type="button"
                   onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
@@ -205,16 +205,21 @@ export const CustomersPage: React.FC = () => {
                   <ChevronRight size={14} /> הקודם
                 </button>
 
-                <div className="flex items-center gap-1">
+                {/* The number strip grows without bound — one 28px button per page overflows a
+                    375px viewport at ~9 pages. Below sm it collapses to a text indicator. */}
+                <span className="font-bold text-muted-foreground sm:hidden">
+                  עמוד {safePage} מתוך {totalPages}
+                </span>
+                <div className="hidden items-center gap-1 sm:flex">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
                     <button
                       key={pageNum}
                       type="button"
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                      className={`h-7 w-7 cursor-pointer rounded-lg text-xs font-bold transition-colors active:scale-95 ${
                         pageNum === safePage
                           ? 'bg-primary text-primary-foreground'
-                          : 'bg-card border border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+                          : 'border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground'
                       }`}
                     >
                       {pageNum}

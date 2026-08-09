@@ -135,7 +135,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
       {/* 1. Customer Selection */}
       {isEdit ? (
         <div className="bg-card border border-border rounded-xl p-3 flex flex-col gap-1.5">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+          <span className="text-micro uppercase font-bold tracking-wider text-muted-foreground">
             פרטי לקוח (לא ניתן לשינוי)
           </span>
           <div className="flex justify-between items-center text-xs">
@@ -205,7 +205,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
                       }`}
                     >
                       <span className="font-semibold text-foreground">{c.name || 'לקוח ללא שם'}</span>
-                      <span className="text-[10px] text-muted-foreground dir-ltr font-mono">{c.phone}</span>
+                      <span className="text-micro text-muted-foreground dir-ltr font-mono">{c.phone}</span>
                     </button>
                   ))
                 )}
@@ -266,7 +266,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
                     <div className="flex items-center gap-2">
                       <Avatar className="size-5">
                         <AvatarImage src={picture ?? undefined} />
-                        <AvatarFallback className="text-[9px] bg-muted">
+                        <AvatarFallback className="text-micro bg-muted">
                           {artist.name.slice(0, 2)}
                         </AvatarFallback>
                       </Avatar>
@@ -300,7 +300,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
             <TriangleAlert size={13} className="shrink-0" />
             הסטודיו סגור בתאריך זה
           </div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-mini text-muted-foreground">
             {closureReason ? `סיבת הסגירה: ${closureReason}.` : 'התאריך שנבחר מוגדר כיום סגירה של הסטודיו.'}
           </p>
           <div className="flex items-center justify-between pt-1">
@@ -320,7 +320,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
             <TriangleAlert size={13} className="shrink-0" />
             מחוץ לשעות העבודה
           </div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-mini text-muted-foreground">
             המועד שנבחר אינו בתוך שעות העבודה של האמן/ית שנבחר/ה.
           </p>
           <div className="flex items-center justify-between pt-1">
@@ -391,7 +391,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
       <div className="flex items-center justify-between border-t border-border/60 pt-4">
         <div className="flex flex-col gap-0.5">
           <span className="text-xs font-bold text-foreground">מקדמה שולמה</span>
-          <span className="text-[10px] text-muted-foreground">סמן אם מקדמת התור שולמה</span>
+          <span className="text-micro text-muted-foreground">סמן אם מקדמת התור שולמה</span>
         </div>
         <Switch
           id="appointment-deposit-paid"
@@ -478,7 +478,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
             <div className="flex items-center justify-between border-t border-border/60 pt-4">
               <div className="flex flex-col gap-0.5">
                 <span className="text-xs font-bold text-foreground">לקוח VIP</span>
-                <span className="text-[10px] text-muted-foreground">סמן לקוח זה כ-VIP</span>
+                <span className="text-micro text-muted-foreground">סמן לקוח זה כ-VIP</span>
               </div>
               <Switch checked={newCustIsVip} onCheckedChange={setNewCustIsVip} />
             </div>

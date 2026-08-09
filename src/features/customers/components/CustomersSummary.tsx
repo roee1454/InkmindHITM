@@ -13,32 +13,32 @@ export const CustomersSummary: React.FC<CustomersSummaryProps> = ({
   reviewsCount,
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-assistant" dir="rtl">
+    <div className="grid grid-cols-3 gap-2 md:gap-4 font-assistant" dir="rtl">
       {/* Card 1: סה"כ לקוחות */}
-      <div className="bg-card border border-border p-5 rounded-2xl flex flex-col justify-between h-28 shadow-sm">
+      <div className="flex h-24 flex-col justify-between rounded-2xl border border-border bg-card p-3 shadow-sm md:h-28 md:p-5">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-muted-foreground">סה"כ לקוחות במאגר</span>
+          <span className="text-sm font-bold text-muted-foreground">סה"כ לקוחות במאגר</span>
           <Users size={16} className="text-primary" />
         </div>
-        <div className="text-3xl font-bold text-foreground">{totalCustomers}</div>
+        <div className="text-xl font-bold text-foreground md:text-3xl">{totalCustomers}</div>
       </div>
 
       {/* Card 2: לקוחות חוזרים */}
-      <div className="bg-card border border-border p-5 rounded-2xl flex flex-col justify-between h-28 shadow-sm">
+      <div className="flex h-24 flex-col justify-between rounded-2xl border border-border bg-card p-3 shadow-sm md:h-28 md:p-5">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-muted-foreground">לקוחות חוזרים</span>
+          <span className="text-sm font-bold text-muted-foreground">לקוחות חוזרים</span>
           <UserCheck size={16} className="text-indigo-400" />
         </div>
-        <div className="text-3xl font-bold text-foreground">{returningCustomers}</div>
+        <div className="text-xl font-bold text-foreground md:text-3xl">{returningCustomers}</div>
       </div>
 
       {/* Card 3: ביקורים ודירוגים */}
-      <div className="bg-card border border-border p-5 rounded-2xl flex flex-col justify-between h-28 shadow-sm">
+      <div className="flex h-24 flex-col justify-between rounded-2xl border border-border bg-card p-3 shadow-sm md:h-28 md:p-5">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-muted-foreground">דירוגים וביקורים</span>
+          <span className="text-sm font-bold text-muted-foreground">דירוגים וביקורים</span>
           <Star size={16} className="text-amber-400 fill-amber-400" />
         </div>
-        <div className="text-3xl font-bold text-foreground">{reviewsCount}</div>
+        <div className="text-xl font-bold text-foreground md:text-3xl">{reviewsCount}</div>
       </div>
     </div>
   )

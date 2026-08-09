@@ -89,7 +89,7 @@ export const Calendar: React.FC<CalendarProps> = ({ selected, onSelect, disabled
 
       <div className="grid grid-cols-7 gap-y-1" onKeyDown={handleKeyDown}>
         {HEBREW_DAYS_SHORT.map((label) => (
-          <div key={label} className="flex h-7 items-center justify-center text-[10px] text-muted-foreground">
+          <div key={label} className="flex h-7 items-center justify-center text-micro text-muted-foreground">
             {label}
           </div>
         ))}

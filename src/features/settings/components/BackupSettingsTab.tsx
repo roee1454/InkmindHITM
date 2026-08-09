@@ -94,9 +94,9 @@ export const BackupSettingsTab: React.FC = () => {
       )}
 
       {/* Section 1: Schedule */}
-      <div className="grid grid-cols-1 gap-6 border-b border-border/60 py-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 border-b border-border/60 py-2 lg:py-6 lg:grid-cols-12">
         <div className="space-y-1 lg:col-span-5">
-          <h3 className="text-sm md:text-base font-bold text-foreground">תדירות ומדיניות גיבוי</h3>
+          <h3 className="text-base font-bold text-foreground">תדירות ומדיניות גיבוי</h3>
           <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
             גיבויים רצים ברקע לפי משתנה סביבה (cron) שבודק כל שעה אם הגיע הזמן — שינוי התדירות
             כאן לא דורש גישה לשרת.
@@ -107,7 +107,7 @@ export const BackupSettingsTab: React.FC = () => {
           <div className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3">
             <div className="flex flex-col gap-0.5">
               <span className="text-xs font-bold text-foreground">גיבוי אוטומטי מופעל</span>
-              <span className="text-[10px] text-muted-foreground">כיבוי ישהה את הגיבוי המתוזמן, לא ימחק גיבויים קיימים</span>
+              <span className="text-micro text-muted-foreground">כיבוי ישהה את הגיבוי המתוזמן, לא ימחק גיבויים קיימים</span>
             </div>
             <Switch checked={enabled} onCheckedChange={setEnabled} />
           </div>
@@ -123,7 +123,7 @@ export const BackupSettingsTab: React.FC = () => {
                 dir="rtl"
                 className="bg-white text-foreground border-input text-right"
               />
-              <p className="text-[11px] text-muted-foreground">לדוגמה: 24 לגיבוי יומי, 168 לשבועי.</p>
+              <p className="text-mini text-muted-foreground">לדוגמה: 24 לגיבוי יומי, 168 לשבועי.</p>
             </div>
 
             <div className="space-y-1.5">
@@ -136,7 +136,7 @@ export const BackupSettingsTab: React.FC = () => {
                 dir="rtl"
                 className="bg-white text-foreground border-input text-right"
               />
-              <p className="text-[11px] text-muted-foreground">גיבויים ישנים יותר יימחקו אוטומטית.</p>
+              <p className="text-mini text-muted-foreground">גיבויים ישנים יותר יימחקו אוטומטית.</p>
             </div>
           </div>
 
@@ -154,9 +154,9 @@ export const BackupSettingsTab: React.FC = () => {
       </div>
 
       {/* Section 2: Status + manual run */}
-      <div className="grid grid-cols-1 gap-6 border-b border-border/60 py-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 border-b border-border/60 py-2 lg:py-6 lg:grid-cols-12">
         <div className="space-y-1 lg:col-span-5">
-          <h3 className="text-sm md:text-base font-bold text-foreground">גיבוי עכשיו</h3>
+          <h3 className="text-base font-bold text-foreground">גיבוי עכשיו</h3>
           <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
             הרצה ידנית של גיבוי, ללא קשר לתזמון האוטומטי.
           </p>
@@ -201,9 +201,9 @@ export const BackupSettingsTab: React.FC = () => {
       </div>
 
       {/* Section 3: Backup list */}
-      <div className="grid grid-cols-1 gap-6 py-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 py-2 lg:py-6 lg:grid-cols-12">
         <div className="space-y-1 lg:col-span-5">
-          <h3 className="text-sm md:text-base font-bold text-foreground">גיבויים קיימים</h3>
+          <h3 className="text-base font-bold text-foreground">גיבויים קיימים</h3>
           <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
             כל הגיבויים השמורים כרגע בשרת.
           </p>
@@ -211,7 +211,7 @@ export const BackupSettingsTab: React.FC = () => {
 
         <div className="space-y-2 lg:col-span-7">
           {backups.length === 0 ? (
-            <p className="text-[11px] text-muted-foreground">אין גיבויים שמורים.</p>
+            <p className="text-mini text-muted-foreground">אין גיבויים שמורים.</p>
           ) : (
             <ul className="space-y-1.5">
               {backups.map((b) => (
@@ -221,7 +221,7 @@ export const BackupSettingsTab: React.FC = () => {
                 >
                   <div className="flex flex-col gap-0.5">
                     <span className="font-mono text-foreground">{b.key}</span>
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-micro text-muted-foreground">
                       {new Date(b.modifiedAt).toLocaleString('he-IL')} — {formatSize(b.size)}
                     </span>
                   </div>

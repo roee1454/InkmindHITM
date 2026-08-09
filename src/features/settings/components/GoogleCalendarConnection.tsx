@@ -137,29 +137,29 @@ export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> =
             <div className="flex items-center gap-2 text-sm font-bold text-foreground">
               <span>{staffName || 'חבר צוות'}</span>
               {isSelf && (
-                <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-micro font-bold text-primary">
                   את/ה
                 </span>
               )}
             </div>
-            <div className="text-[11px] font-medium text-muted-foreground">{roleLabel}</div>
+            <div className="text-mini font-medium text-muted-foreground">{roleLabel}</div>
           </div>
         </div>
 
         {/* Dynamic Status Pill */}
         <div>
           {connection?.status === 'connected' ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-400">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-mini font-bold text-emerald-400">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
               מחובר
             </span>
           ) : connection?.status === 'error' ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-bold text-rose-400">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-mini font-bold text-rose-400">
               <AlertTriangle size={12} />
               שגיאת סנכרון
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/60 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/60 px-2.5 py-1 text-mini font-semibold text-muted-foreground">
               לא מחובר
             </span>
           )}
@@ -171,7 +171,7 @@ export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> =
       )}
 
       {/* Action / Detail Box */}
-      <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-background/50 p-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 rounded-xl border border-border/60 bg-background/50 p-3">
         {isLoading ? (
           <p className="text-xs text-muted-foreground">טוען סטטוס יומן…</p>
         ) : connection?.status === 'connected' ? (
@@ -192,7 +192,7 @@ export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> =
                   {connection.googleAccountEmail || 'חשבון מחובר'}
                 </div>
                 {connection.lastSyncedAt && (
-                  <div className="text-[10px] text-muted-foreground">
+                  <div className="text-micro text-muted-foreground">
                     סונכרן: {connection.lastSyncedAt}
                   </div>
                 )}
@@ -205,7 +205,7 @@ export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> =
                 size="sm"
                 onClick={handleDisconnect}
                 disabled={disconnectMutation.isPending}
-                className="text-xs font-semibold text-rose-400 hover:bg-rose-500/10 hover:text-rose-500 shrink-0"
+                className="text-xs font-semibold text-rose-400 hover:bg-rose-500/10 hover:text-rose-500 shrink-0 self-start sm:self-auto"
               >
                 {disconnectMutation.isPending ? 'מנתק…' : 'נתק'}
               </Button>
@@ -225,7 +225,7 @@ export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> =
                 size="sm"
                 onClick={handleConnect}
                 disabled={connecting}
-                className="text-xs font-bold shrink-0"
+                className="text-xs font-bold shrink-0 self-start sm:self-auto"
               >
                 {connecting ? 'מתחבר…' : 'התחבר מחדש'}
               </Button>
@@ -243,7 +243,7 @@ export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> =
                 size="sm"
                 onClick={handleConnect}
                 disabled={connecting}
-                className="flex items-center gap-2 bg-white text-zinc-900 border border-zinc-200 hover:bg-zinc-100 shadow-sm font-bold text-xs rounded-xl px-3.5 py-1.5 transition-all cursor-pointer shrink-0"
+                className="flex items-center gap-2 bg-white text-zinc-900 border border-zinc-200 hover:bg-zinc-100 shadow-sm font-bold text-xs rounded-xl px-3.5 py-1.5 transition-all cursor-pointer shrink-0 self-start sm:self-auto"
               >
                 {connecting ? (
                   <RefreshCw size={14} className="animate-spin text-zinc-700" />

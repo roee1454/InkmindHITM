@@ -54,7 +54,7 @@ export const AiAgentTab: React.FC = () => {
 
   useEffect(() => {
     if (!settings) return
-    setModel(settings.aiConfig.model || 'gpt-4o')
+    setModel(settings.aiConfig.model || 'claude-sonnet-5')
     setTemperature(settings.aiConfig.temperature)
     setMaxTokens(settings.aiConfig.maxTokens === null ? '' : String(settings.aiConfig.maxTokens))
     setInstructions(settings.systemInstructions || '')
@@ -128,10 +128,6 @@ export const AiAgentTab: React.FC = () => {
       setError('מגבלת טוקנים חייבת להיות מספר שלם חיובי, או ריקה ללא הגבלה')
       return
     }
-    if (Number.isNaN(temperature) || temperature < 0 || temperature > 2) {
-      setError('רמת יצירתיות (Temperature) חייבת להיות בין 0 ל-2')
-      return
-    }
 
     const trimmedModel = model.trim()
     if (!trimmedModel) {
@@ -175,17 +171,18 @@ export const AiAgentTab: React.FC = () => {
       )}
 
       <Tabs defaultValue="general" dir="rtl" className="w-full">
-        <TabsList className="bg-muted/70 border border-border/80 p-1 rounded-xl mb-6 inline-flex gap-1 h-auto shadow-sm">
+        <div className="flex justify-center sm:justify-start">
+          <TabsList className="bg-muted/70 border border-border/80 p-1 rounded-xl mb-3 sm:mb-6 inline-flex gap-1 h-auto shadow-sm">
           <TabsTrigger
             value="general"
-            className="cursor-pointer rounded-lg px-4 py-2 font-bold text-xs transition-all hover:text-foreground data-[state=active]:bg-card data-[state=active]:shadow-xs flex items-center gap-1.5"
+            className="cursor-pointer rounded-lg px-2.5 py-1 sm:px-4 sm:py-2 font-bold text-xs transition-all hover:text-foreground data-[state=active]:bg-card data-[state=active]:shadow-xs flex items-center gap-1.5"
           >
             <SlidersHorizontal size={13} />
             הגדרות כלליות
           </TabsTrigger>
           <TabsTrigger
             value="knowledge"
-            className="cursor-pointer rounded-lg px-4 py-2 font-bold text-xs transition-all hover:text-foreground data-[state=active]:bg-card data-[state=active]:shadow-xs flex items-center gap-1.5"
+            className="cursor-pointer rounded-lg px-2.5 py-1 sm:px-4 sm:py-2 font-bold text-xs transition-all hover:text-foreground data-[state=active]:bg-card data-[state=active]:shadow-xs flex items-center gap-1.5"
           >
             <BookOpen size={13} />
             מאגרי מידע
@@ -193,20 +190,21 @@ export const AiAgentTab: React.FC = () => {
           {import.meta.env.DEV && (
             <TabsTrigger
               value="debug"
-              className="cursor-pointer rounded-lg px-4 py-2 font-bold text-xs transition-all hover:text-foreground data-[state=active]:bg-card data-[state=active]:shadow-xs flex items-center gap-1.5"
+              className="cursor-pointer rounded-lg px-2.5 py-1 sm:px-4 sm:py-2 font-bold text-xs transition-all hover:text-foreground data-[state=active]:bg-card data-[state=active]:shadow-xs flex items-center gap-1.5"
             >
               <Bug size={13} />
               כלי דיבאג
             </TabsTrigger>
           )}
         </TabsList>
+      </div>
 
         {/* Tab 1: General Settings */}
         <TabsContent value="general" className="space-y-6 focus-visible:outline-none">
           {/* Section 1.1: Emergency Kill Switch */}
-          <div className="grid grid-cols-1 gap-6 border-b border-border/60 pb-6 lg:grid-cols-12">
+          <div className="grid grid-cols-1 gap-6 border-b border-border/60 pb-2 lg:pb-6 lg:grid-cols-12">
             <div className="space-y-1 lg:col-span-5">
-              <h3 className="text-sm md:text-base font-bold text-foreground">כיבוי חירום של הבוט</h3>
+              <h3 className="text-base font-bold text-foreground">כיבוי חירום של הבוט</h3>
               <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
                 עוצר את כל התשובות האוטומטיות בכל השיחות בבת אחת. הודעות מלקוחות ימשיכו להתקבל ולהופיע
                 ב-CRM — הבוט פשוט לא יענה.
@@ -240,7 +238,7 @@ export const AiAgentTab: React.FC = () => {
                       >
                         {settings.aiEnabled ? 'הבוט פעיל בכל השיחות' : 'הבוט מושבת בכל השיחות'}
                       </div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-mini text-muted-foreground">
                         {settings.aiEnabled
                           ? 'תשובות אוטומטיות נשלחות כרגיל'
                           : 'אף תשובה אוטומטית לא נשלחת כרגע'}
@@ -264,9 +262,9 @@ export const AiAgentTab: React.FC = () => {
           </div>
 
           {/* Section 1.2: Model & Parameters */}
-          <form onSubmit={handleSaveConfig} className="grid grid-cols-1 gap-6 pb-6 lg:grid-cols-12">
+          <form onSubmit={handleSaveConfig} className="grid grid-cols-1 gap-6 pb-2 lg:pb-6 lg:grid-cols-12">
             <div className="space-y-1 lg:col-span-5">
-              <h3 className="text-sm md:text-base font-bold text-foreground">מודל ופרמטרים של AI</h3>
+              <h3 className="text-base font-bold text-foreground">מודל ופרמטרים של AI</h3>
               <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
                 בחירת מודל השפה, רמת היצירתיות ומגבלת אורך התשובה שמפעילות את בוט האינטייק בוואטסאפ.
               </p>
@@ -282,28 +280,6 @@ export const AiAgentTab: React.FC = () => {
                     <ModelSearchSelect value={model} onChange={setModel} />
                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs font-semibold text-foreground">
-                      <span>רמת יצירתיות (Temperature)</span>
-                      <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md font-mono">
-                        {temperature.toFixed(1)}
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={2}
-                      step={0.1}
-                      value={temperature}
-                      onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                      className="w-full accent-primary h-1.5 bg-muted rounded-lg appearance-none cursor-pointer"
-                    />
-                    <div className="flex justify-between text-[10px] text-muted-foreground">
-                      <span>ממוקד ועקבי (0.0)</span>
-                      <span>מאוזן (1.0)</span>
-                      <span>יצירתי ומגוון (2.0)</span>
-                    </div>
-                  </div>
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-foreground">
@@ -366,16 +342,16 @@ export const AiAgentTab: React.FC = () => {
         {/* Tab 2: Knowledge Base & Rules */}
         <TabsContent value="knowledge" className="space-y-8 focus-visible:outline-none">
           {/* Section 2.1: FAQ */}
-          <div className="border-b border-border/60 pb-8">
+          <div className="border-b border-border/60 pb-3 lg:pb-8">
             <FaqTab />
           </div>
 
           {/* Section 2.2: Ironclad Rules */}
-          <form onSubmit={handleSaveInstructions} className="grid grid-cols-1 gap-6 pb-6 lg:grid-cols-12">
+          <form onSubmit={handleSaveInstructions} className="grid grid-cols-1 gap-6 pb-2 lg:pb-6 lg:grid-cols-12">
             <div className="space-y-1 lg:col-span-5">
               <div className="flex items-center gap-2 text-foreground mb-1">
                 <ShieldAlert size={18} className="text-primary" />
-                <h3 className="text-sm md:text-base font-bold">חוקי ברזל שאסור להפר</h3>
+                <h3 className="text-base font-bold">חוקי ברזל שאסור להפר</h3>
               </div>
               <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
                 הנחיות קשיחות לבוט ה-AI. חוקים אלו ייאכפו בקפדנות ולא יופרו בשום מקרה (למשל: תנאי מקדמה, איסור מתן הנחות מסוימות, מגבלות גיל או הנחיות התנהגות מיוחדות).
@@ -390,7 +366,7 @@ export const AiAgentTab: React.FC = () => {
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs font-semibold text-foreground">
                       <label>רשימת חוקי ברזל והנחיות מערכת</label>
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-micro text-muted-foreground">
                         {instructions.length} תווים
                       </span>
                     </div>
@@ -428,11 +404,11 @@ export const AiAgentTab: React.FC = () => {
         {/* Tab 3: Debug tools (dev-only) */}
         {import.meta.env.DEV && (
           <TabsContent value="debug" className="space-y-6 focus-visible:outline-none">
-            <div className="grid grid-cols-1 gap-6 pb-6 lg:grid-cols-12">
+            <div className="grid grid-cols-1 gap-6 pb-2 lg:pb-6 lg:grid-cols-12">
               <div className="space-y-1 lg:col-span-5">
                 <div className="flex items-center gap-2 text-foreground mb-1">
                   <Bug size={18} className="text-primary" />
-                  <h3 className="text-sm md:text-base font-bold">איפוס שיחות</h3>
+                  <h3 className="text-base font-bold">איפוס שיחות</h3>
                 </div>
                 <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
                   מוחק לצמיתות את כל השיחות וההודעות במערכת, כדי לבדוק זרימת בוט נקייה מאפס.

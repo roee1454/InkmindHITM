@@ -46,7 +46,7 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
     <div dir="rtl" className="font-assistant">
       <div className="grid grid-cols-7 border-b border-border">
         {HEBREW_DAYS_SHORT.map((label) => (
-          <div key={label} className="py-3 text-center text-[11px] font-bold text-muted-foreground">
+          <div key={label} className="py-3 text-center text-mini font-bold text-muted-foreground">
             {label}
           </div>
         ))}
@@ -68,7 +68,7 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
             >
               <div className="mb-1 flex justify-start">
                 <span
-                  className={`flex h-5 min-w-5 items-center justify-center px-1 text-[11px] font-bold ${
+                  className={`flex h-5 min-w-5 items-center justify-center px-1 text-mini font-bold ${
                     today
                       ? 'rounded-full bg-primary text-primary-foreground'
                       : outside
@@ -85,7 +85,7 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
                   <div
                     key={busy.googleEventId}
                     style={BUSY_STRIPES}
-                    className="pointer-events-none flex w-full items-center gap-1 truncate rounded-md border border-border bg-muted/50 px-1.5 py-0.5 text-right text-[10px] text-muted-foreground"
+                    className="pointer-events-none flex w-full items-center gap-1 truncate rounded-md border border-border bg-muted/50 px-1.5 py-0.5 text-right text-micro text-muted-foreground"
                   >
                     {timeOf(busy.startsAt)} חסימה חיצונית
                   </div>
@@ -104,7 +104,7 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
                         e.stopPropagation()
                         onSelectAppointment(appointment)
                       }}
-                      className={`flex w-full items-center gap-1 truncate border-2 bg-card px-1.5 py-0.5 text-right text-[10px] text-foreground transition-all duration-200 hover:scale-[1.03] hover:shadow-md cursor-pointer rounded-md ${
+                      className={`flex w-full items-center gap-1 truncate border-2 bg-card px-1.5 py-0.5 text-right text-micro text-foreground transition-all duration-200 hover:scale-[1.03] hover:shadow-md cursor-pointer rounded-md ${
                         appointment.isException
                           ? 'border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.2)]'
                           : artistColor(appointment.staffId).block

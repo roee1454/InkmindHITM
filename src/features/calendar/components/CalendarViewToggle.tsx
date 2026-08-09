@@ -13,7 +13,7 @@ export const CalendarViewToggle: React.FC<CalendarViewToggleProps> = ({
   onViewModeChange,
 }) => {
   return (
-    <div className="flex border border-border bg-muted/40 p-0.5 rounded-xl font-assistant" dir="rtl">
+    <div className="hidden lg:flex border border-border bg-muted/40 p-0.5 rounded-xl font-assistant" dir="rtl">
       <button
         type="button"
         onClick={() => onViewModeChange('calendar')}

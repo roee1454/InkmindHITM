@@ -44,9 +44,9 @@ export function WhatsAppDiagnostics() {
   return (
     <div className="space-y-0 font-assistant text-right" dir="rtl">
       {/* Section 1: Env var status */}
-      <div className="grid grid-cols-1 gap-6 border-b border-border/60 py-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 border-b border-border/60 py-2 lg:py-6 lg:grid-cols-12">
         <div className="space-y-1 lg:col-span-5">
-          <h3 className="text-sm md:text-base font-bold text-foreground">משתני סביבה</h3>
+          <h3 className="text-base font-bold text-foreground">משתני סביבה</h3>
           <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
             כל פרטי החיבור ל-WhatsApp Cloud API מוגדרים אך ורק במשתני סביבה בשרת — אין אפשרות
             להזין אותם דרך המערכת.
@@ -63,9 +63,9 @@ export function WhatsAppDiagnostics() {
       </div>
 
       {/* Section 2: Connection details */}
-      <div className="grid grid-cols-1 gap-6 border-b border-border/60 py-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 border-b border-border/60 py-2 lg:py-6 lg:grid-cols-12">
         <div className="space-y-1 lg:col-span-5">
-          <h3 className="text-sm md:text-base font-bold text-foreground">פרטי חיבור</h3>
+          <h3 className="text-base font-bold text-foreground">פרטי חיבור</h3>
           <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
             מזהים לא-סודיים ('Phone Number ID' וכו') וכתובת ה-Webhook להעתקה ללוח הבקרה של Meta.
           </p>
@@ -85,9 +85,9 @@ export function WhatsAppDiagnostics() {
       </div>
 
       {/* Section 3: Test connection */}
-      <div className="grid grid-cols-1 gap-6 border-b border-border/60 py-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 border-b border-border/60 py-2 lg:py-6 lg:grid-cols-12">
         <div className="space-y-1 lg:col-span-5">
-          <h3 className="text-sm md:text-base font-bold text-foreground">בדיקת חיבור</h3>
+          <h3 className="text-base font-bold text-foreground">בדיקת חיבור</h3>
           <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
             בודק שהחיבור מול שרתי WhatsApp מתבצע כראוי עם משתני הסביבה הנוכחיים.
           </p>
@@ -123,9 +123,9 @@ export function WhatsAppDiagnostics() {
       </div>
 
       {/* Section 4: Recent errors */}
-      <div className="grid grid-cols-1 gap-6 py-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 py-2 lg:py-6 lg:grid-cols-12">
         <div className="space-y-1 lg:col-span-5">
-          <h3 className="text-sm md:text-base font-bold text-foreground">שגיאות אחרונות</h3>
+          <h3 className="text-base font-bold text-foreground">שגיאות אחרונות</h3>
           <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
             כשלי חתימת Webhook, עיבוד הודעות נכנסות, ובדיקות חיבור — 20 האחרונות.
           </p>
@@ -147,7 +147,7 @@ export function WhatsAppDiagnostics() {
                       <span className="font-bold text-foreground">
                         {SOURCE_LABELS[entry.source] ?? entry.source}
                       </span>
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-micro text-muted-foreground">
                         {new Date(entry.created).toLocaleString('he-IL')}
                       </span>
                     </div>
@@ -170,11 +170,11 @@ function EnvVarRow({ name, configured }: { name: string; configured: boolean }) 
         {name}
       </span>
       {configured ? (
-        <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-500">
+        <span className="flex items-center gap-1 text-mini font-semibold text-emerald-500">
           <CheckCircle2 size={13} /> מוגדר
         </span>
       ) : (
-        <span className="flex items-center gap-1 text-[11px] font-semibold text-destructive">
+        <span className="flex items-center gap-1 text-mini font-semibold text-destructive">
           <AlertTriangle size={13} /> חסר
         </span>
       )}
@@ -200,7 +200,7 @@ function ReadOnlyCopyInput({ value, placeholder }: { value: string; placeholder?
         readOnly
         disabled
         dir="ltr"
-        className="bg-muted/50 text-muted-foreground border-input font-mono text-xs cursor-not-allowed opacity-80"
+        className="w-full min-w-0 bg-muted/50 text-muted-foreground border-input font-mono text-xs cursor-not-allowed opacity-80"
       />
       <Button
         type="button"

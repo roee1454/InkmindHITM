@@ -41,7 +41,7 @@ export const OptionCardButton = React.forwardRef<HTMLButtonElement, OptionCardBu
               <div className="text-sm font-bold text-foreground flex items-center gap-2">
                 <span>{title}</span>
                 {badge && (
-                  <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                  <span className="rounded-full bg-primary/20 px-2 py-0.5 text-micro font-semibold text-primary">
                     {badge}
                   </span>
                 )}

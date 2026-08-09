@@ -20,9 +20,9 @@ interface RecentLeadsCardProps {
 
 export function RecentLeadsCard({ leads, onViewAll, onLeadClick }: RecentLeadsCardProps) {
   return (
-    <div className="flex h-[30rem] flex-col rounded-2xl border border-border bg-card py-6">
+    <div className="flex h-[18rem] md:h-[22rem] lg:h-[30rem] flex-col rounded-2xl border border-border bg-card py-6">
       <div className="mb-6 flex items-center justify-between px-6">
-        <h3 className="font-assistant text-lg font-bold text-foreground">פניות אחרונות</h3>
+        <h3 className="font-assistant text-xl font-bold text-foreground">פניות אחרונות</h3>
         <button
           type="button"
           onClick={onViewAll}
@@ -53,12 +53,12 @@ export function RecentLeadsCard({ leads, onViewAll, onLeadClick }: RecentLeadsCa
                   </div>
                   <div className="min-w-0">
                     <div className="truncate font-assistant text-sm font-bold text-foreground">{displayName}</div>
-                    <div className="max-w-[200px] truncate font-assistant text-[11px] text-muted-foreground/70">
+                    <div className="max-w-[60vw] md:max-w-[200px] truncate font-assistant text-mini text-muted-foreground/70 hidden md:block">
                       {lead.style || 'פנייה כללית'}
                     </div>
                   </div>
                 </div>
-                <span className={`inline-block shrink-0 border px-2 py-0.5 font-assistant text-[10px] font-bold ${translation.color}`}>
+                <span className={`inline-block shrink-0 border px-2 py-0.5 font-assistant text-micro font-bold ${translation.color}`}>
                   {translation.label}
                 </span>
               </div>

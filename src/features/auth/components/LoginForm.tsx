@@ -64,7 +64,7 @@ export function LoginForm() {
                   />
                 </div>
               </FormControl>
-              <FormMessage className="text-[11px]" />
+              <FormMessage className="text-mini" />
             </FormItem>
           )}
         />
@@ -96,7 +96,7 @@ export function LoginForm() {
                   </button>
                 </div>
               </FormControl>
-              <FormMessage className="text-[11px]" />
+              <FormMessage className="text-mini" />
             </FormItem>
           )}
         />

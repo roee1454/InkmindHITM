@@ -8,6 +8,7 @@ import {
   getWhatsAppConnectionStatus,
   listConversations,
 } from '@/features/conversations/server/messages'
+import { useIsMobile } from '@/hooks/use-media-query'
 
 const searchSchema = z.object({ chatId: z.string().optional() })
 
@@ -39,23 +40,37 @@ function ConversationsPage() {
     navigate({ search: { chatId: id } })
   }
 
+  // List/detail: both panes side by side on desktop, one at a time on mobile. `chatId` is
+  // already the URL-level source of truth, so this needs no extra state — and the browser's
+  // own back button works as the back affordance too.
+  const isMobile = useIsMobile()
+  const showList = !isMobile || !chatId
+  const showThread = !isMobile || !!chatId
+
   return (
-    <div className="h-svh w-full overflow-hidden">
+    // Both custom properties are 0rem on desktop, so this resolves to 100svh exactly as before.
+    <div className="h-[calc(100svh-var(--app-top-bar-h)-var(--app-bottom-nav-h))] w-full overflow-hidden">
       <div className="flex h-full">
         {statusQuery.data && !statusQuery.data.configured ? (
           <ConnectionStatusBanner />
         ) : (
           <>
-            <ConversationList selectedId={chatId ?? null} onSelect={select} />
-            {selected ? (
-              <ConversationThread conversation={selected} />
-            ) : (
-              <div className="flex flex-1 items-center justify-center bg-background">
-                <p className="font-assistant text-sm text-muted-foreground">
-                  בחרו שיחה כדי להציג את ההודעות.
-                </p>
-              </div>
-            )}
+            {showList && <ConversationList selectedId={chatId ?? null} onSelect={select} />}
+            {showThread &&
+              (selected ? (
+                <ConversationThread
+                  conversation={selected}
+                  onBack={isMobile ? () => navigate({ search: {} }) : undefined}
+                />
+              ) : (
+                !isMobile && (
+                  <div className="flex flex-1 items-center justify-center bg-background">
+                    <p className="font-assistant text-sm text-muted-foreground">
+                      בחרו שיחה כדי להציג את ההודעות.
+                    </p>
+                  </div>
+                )
+              ))}
           </>
         )}
       </div>

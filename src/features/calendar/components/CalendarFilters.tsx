@@ -67,9 +67,28 @@ export const CalendarFilters: React.FC<CalendarFiltersProps> = ({
   googleConnections = [],
 }) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 font-assistant" dir="rtl">
-      {/* Status Pills */}
-      <div className="flex flex-wrap gap-2">
+    <div className="mb-4 flex flex-col justify-between gap-3 font-assistant md:mb-6 md:flex-row md:items-center md:gap-4" dir="rtl">
+      {/* Status pills. Below md these bleed to the screen edge as a single scrollable row —
+          six wrapped pills would otherwise eat ~3 rows of vertical space on a phone. */}
+      {/* Mobile Status Selectable Dropdown */}
+      <div className="md:hidden w-full" dir="rtl">
+        <Select value={selectedStatus} onValueChange={onSelectedStatusChange}>
+          <SelectTrigger className="h-11 rounded-xl bg-card border-border hover:border-primary/50 text-foreground transition-all duration-150 text-xs font-semibold">
+            <SelectValue placeholder="סנן לפי סטטוס…" />
+          </SelectTrigger>
+          <SelectContent className="font-assistant">
+            <SelectItem value="all" className="text-xs font-semibold">הכל ({filterCounts.all})</SelectItem>
+            <SelectItem value="confirmed" className="text-xs font-semibold">מאושר ({filterCounts.confirmed})</SelectItem>
+            <SelectItem value="pending" className="text-xs font-semibold">ממתין לאישור ({filterCounts.pending})</SelectItem>
+            <SelectItem value="cancelled" className="text-xs font-semibold">בוטל ({filterCounts.cancelled})</SelectItem>
+            <SelectItem value="completed" className="text-xs font-semibold">הושלם ({filterCounts.completed})</SelectItem>
+            <SelectItem value="no_show" className="text-xs font-semibold">לא הגיע ({filterCounts.no_show})</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Status pills (desktop only) */}
+      <div className="hidden md:flex scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
         {[
           { id: 'all', label: 'הכל', count: filterCounts.all },
           { id: 'confirmed', label: 'מאושר', count: filterCounts.confirmed },
@@ -83,10 +102,10 @@ export const CalendarFilters: React.FC<CalendarFiltersProps> = ({
             <button
               key={pill.id}
               onClick={() => onSelectedStatusChange(pill.id)}
-              className={`px-3 py-1.5 border text-xs font-semibold font-assistant transition-colors cursor-pointer rounded-xl ${
+              className={`shrink-0 cursor-pointer whitespace-nowrap rounded-xl border px-3 py-1.5 font-assistant text-xs font-semibold transition-colors active:scale-[0.97] ${
                 active
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card text-muted-foreground border-border hover:bg-muted hover:text-foreground'
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted'
               }`}
             >
               {pill.label} ({pill.count})
@@ -96,7 +115,7 @@ export const CalendarFilters: React.FC<CalendarFiltersProps> = ({
       </div>
 
       {/* Artist Filter Dropdown */}
-      <div className="w-64 shrink-0" dir="rtl">
+      <div className="w-full md:w-64 md:shrink-0" dir="rtl">
         <Select value={selectedArtist} onValueChange={onSelectedArtistChange}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="לפי מקעקעים (כל הצוות)" />
@@ -117,7 +136,7 @@ export const CalendarFilters: React.FC<CalendarFiltersProps> = ({
                   <div className="flex items-center gap-2">
                     <Avatar className="size-5">
                       <AvatarImage src={isGoogleConnected ? picture : undefined} />
-                      <AvatarFallback className="text-[9px] bg-muted">
+                      <AvatarFallback className="text-micro bg-muted">
                         {artist.name.slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>

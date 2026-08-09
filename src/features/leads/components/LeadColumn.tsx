@@ -26,7 +26,7 @@ export function LeadColumn({
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
-      className={`flex h-full w-72 shrink-0 flex-col rounded-2xl border transition-colors ${
+      className={`flex h-full w-[85vw] max-w-[19rem] shrink-0 snap-center flex-col rounded-2xl border transition-colors lg:w-72 lg:max-w-none ${
         isDropTarget ? 'border-primary/60 bg-primary/5' : 'border-border bg-muted/40'
       }`}
     >

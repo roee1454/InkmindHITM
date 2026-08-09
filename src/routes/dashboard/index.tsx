@@ -52,9 +52,11 @@ function DashboardHome() {
   const closeAppointments = dashboardData?.closeAppointments ?? []
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-8 font-assistant py-6" dir="rtl">
+    <div className="mx-auto w-full max-w-5xl space-y-4 py-3 font-assistant md:space-y-6 md:py-6 lg:space-y-8" dir="rtl">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+        {/* Unlike the other pages' titles this is real content, not a repeat of the top bar's
+            "בית" — so it stays on mobile, just at a smaller size. */}
+        <h1 className="text-xl font-bold text-foreground md:text-2xl lg:text-3xl">
           {getGreeting()}, {session?.staff.name || 'אורח'} 👋
         </h1>
         <p className="mt-1 text-xs text-muted-foreground">

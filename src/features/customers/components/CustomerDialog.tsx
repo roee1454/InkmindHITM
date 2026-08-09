@@ -101,7 +101,7 @@ export const CustomerDialog: React.FC<CustomerDialogProps> = ({
           <div className="flex items-center justify-between border-t border-border/60 pt-4">
             <div className="flex flex-col gap-0.5">
               <span className="text-xs font-bold text-foreground">לקוח VIP</span>
-              <span className="text-[10px] text-muted-foreground">סמן לקוח זה כ-VIP</span>
+              <span className="text-micro text-muted-foreground">סמן לקוח זה כ-VIP</span>
             </div>
             <Switch checked={form.isVip} onCheckedChange={(v) => onFormChange('isVip', v)} />
           </div>

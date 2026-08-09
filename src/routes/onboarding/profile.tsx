@@ -116,22 +116,22 @@ function ProfileStep() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
           {/* Logo Placeholder / Upload Box */}
           <div className="md:col-span-4 flex flex-col items-center justify-center text-center">
-            <label className="group relative flex size-28 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/30 transition-all hover:border-primary hover:bg-primary/5">
+            <label className="group relative flex size-28 cursor-pointer flex-col items-center justify-center rounded-full border-2 border-dashed border-border bg-muted/30 transition-all hover:border-primary hover:bg-primary/5">
               {logoPreview ? (
-                <img src={logoPreview} alt="Studio Logo" className="size-full rounded-2xl object-cover p-1" />
+                <img src={logoPreview} alt="Studio Logo" className="size-full rounded-full object-cover p-1" />
               ) : (
                 <div className="flex flex-col items-center gap-1.5 p-2">
                   <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary transition-transform group-hover:scale-110">
                     <ImageIcon size={20} />
                   </div>
-                  <span className="text-[11px] font-bold text-muted-foreground group-hover:text-primary">
+                  <span className="text-mini font-bold text-muted-foreground group-hover:text-primary">
                     העלאת לוגו סטודיו
                   </span>
                 </div>
               )}
               <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
             </label>
-            <span className="text-[10px] text-muted-foreground mt-1.5">לחץ להעלאת לוגו (PNG, JPG, SVG)</span>
+            <span className="text-micro text-muted-foreground mt-1.5">לחץ להעלאת לוגו (PNG, JPG, SVG)</span>
           </div>
 
           {/* Studio Name Input */}
@@ -143,7 +143,7 @@ function ProfileStep() {
               placeholder="לדוגמה: INKMIND Tattoo Studio"
               className="h-11 rounded-xl text-sm"
             />
-            <p className="text-[11px] text-muted-foreground">שם הסטודיו יוצג ללקוחות שלכם ובהתראות ה-WhatsApp.</p>
+            <p className="text-mini text-muted-foreground">שם הסטודיו יוצג ללקוחות שלכם ובהתראות ה-WhatsApp.</p>
           </div>
         </div>
       </div>

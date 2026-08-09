@@ -68,7 +68,7 @@ export function SetupForm() {
                   />
                 </div>
               </FormControl>
-              <FormMessage className="text-[11px]" />
+              <FormMessage className="text-mini" />
             </FormItem>
           )}
         />
@@ -94,7 +94,7 @@ export function SetupForm() {
                   />
                 </div>
               </FormControl>
-              <FormMessage className="text-[11px]" />
+              <FormMessage className="text-mini" />
             </FormItem>
           )}
         />
@@ -127,8 +127,8 @@ export function SetupForm() {
                   </button>
                 </div>
               </FormControl>
-              <FormMessage className="text-[11px]" />
-              <p className="text-[11px] text-muted-foreground">
+              <FormMessage className="text-mini" />
+              <p className="text-mini text-muted-foreground">
                 הסיסמה חייבת להכיל לפחות 8 תווים. מומלץ לשמור אותה במקום בטוח.
               </p>
             </FormItem>

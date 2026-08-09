@@ -1,0 +1,47 @@
+{
+  "id": "/",
+  "name": "Inkmind CRM — ניהול סטודיו",
+  "short_name": "Inkmind",
+  "description": "ניהול תורים, לידים, לקוחות ושיחות וואטסאפ לסטודיו קעקועים",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "theme_color": "#ffffff",
+  "background_color": "#f8fafc",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "תורים", "url": "/dashboard/calendar" },
+    { "name": "לידים", "url": "/dashboard/leads" },
+    { "name": "שיחות", "url": "/dashboard/conversations" }
+  ]
+}

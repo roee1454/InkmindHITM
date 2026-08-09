@@ -126,19 +126,19 @@ export function StaffManager({ currentStaffId }: StaffManagerProps) {
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold text-sm">
                   {member.name ? member.name.slice(0, 2) : <User size={16} />}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-foreground text-sm">{member.name}</span>
-                    <Badge variant="outline" className="text-[10px] rounded-full">
+                    <span className="font-bold text-foreground text-sm truncate">{member.name}</span>
+                    <Badge variant="outline" className="text-micro rounded-full">
                       {ROLE_LABELS[member.role] ?? member.role}
                     </Badge>
                     {isSelf && (
-                      <Badge variant="secondary" className="text-[10px] rounded-full">
+                      <Badge variant="secondary" className="text-micro rounded-full">
                         את/ה
                       </Badge>
                     )}
                   </div>
-                  <span className="text-xs text-muted-foreground font-mono">{member.email}</span>
+                  <span className="text-xs text-muted-foreground font-mono break-all">{member.email}</span>
                 </div>
               </div>
 

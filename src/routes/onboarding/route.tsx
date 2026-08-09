@@ -3,6 +3,7 @@ import { getCurrentSession } from '@/features/auth/server/auth'
 import { getSettings } from '@/features/onboarding/server/onboarding'
 import { User, Clock, MessageSquare, Users, Sparkles, CheckCircle2, CalendarDays, Building2 } from 'lucide-react'
 import { ConfirmProvider } from '@/hooks/use-confirm'
+import { BrandMark } from '@/components/BrandMark'
 
 const STEPS = [
   { path: '/onboarding/whatsapp', label: 'WhatsApp', icon: MessageSquare, desc: 'חיבור Cloud API' },
@@ -32,28 +33,24 @@ function OnboardingLayout() {
   return (
     <ConfirmProvider>
     <div
-      className="relative min-h-svh bg-background font-assistant text-foreground antialiased selection:bg-primary/20 selection:text-primary"
+      className="relative min-h-svh overflow-hidden bg-background font-assistant text-foreground antialiased selection:bg-primary/20 selection:text-primary"
       dir="rtl"
     >
-      {/* Ambient background glows */}
-      <div className="pointer-events-none fixed -top-32 right-1/3 size-80 rounded-full bg-primary/10 blur-3xl" />
-      <div className="pointer-events-none fixed -bottom-40 left-1/4 size-96 rounded-full bg-indigo-500/8 blur-3xl" />
+      {/* Ambient background glows. `absolute` inside an `overflow-hidden` root rather than
+          `fixed`, matching auth/route.tsx — removes any chance of them widening the page. */}
+      <div className="pointer-events-none absolute -top-32 right-1/3 size-80 rounded-full bg-primary/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 left-1/4 size-96 rounded-full bg-indigo-500/8 blur-3xl" />
 
       {/* Gradient top bar */}
-      <div className="pointer-events-none fixed inset-x-0 top-0 h-0.5 bg-gradient-to-l from-primary via-indigo-400 to-primary/40" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-l from-primary via-indigo-400 to-primary/40" />
 
       <div className="relative mx-auto max-w-2xl px-4 py-8 md:py-14">
         {/* Brand + Badge */}
         <div className="mb-8 flex flex-col items-center text-center gap-3">
-          <div className="relative shrink-0">
-            <div className="absolute inset-0 rounded-2xl bg-primary/20 blur-lg" />
-            <div className="relative flex size-11 items-center justify-center rounded-2xl border-2 border-primary/40 bg-primary text-base font-black text-primary-foreground shadow-md">
-              IM
-            </div>
-          </div>
+          <BrandMark size="md" />
 
           <div>
-            <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary">
+            <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-mini font-bold text-primary">
               <Sparkles size={11} className="animate-pulse" />
               <span>אשף הגדרת מערכת INKMIND</span>
             </div>
@@ -74,7 +71,7 @@ function OnboardingLayout() {
               </div>
               <div>
                 <div className="text-sm font-bold text-foreground leading-tight">{currentStep.label}</div>
-                <div className="text-[10px] text-muted-foreground">{currentStep.desc}</div>
+                <div className="text-micro text-muted-foreground">{currentStep.desc}</div>
               </div>
             </div>
             <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary font-mono">
@@ -84,7 +81,7 @@ function OnboardingLayout() {
 
           {/* Step Indicators */}
           <div
-            className="grid gap-2"
+            className="grid gap-1 sm:gap-2"
             style={{ gridTemplateColumns: `repeat(${STEPS.length}, minmax(0, 1fr))` }}
           >
             {STEPS.map((step, i) => {
@@ -106,7 +103,7 @@ function OnboardingLayout() {
 
                   {/* Step icon label */}
                   <div
-                    className={`hidden sm:flex min-w-0 items-center gap-1 text-[10px] font-bold transition-colors ${
+                    className={`hidden sm:flex min-w-0 items-center gap-1 text-micro font-bold transition-colors ${
                       isCurrent
                         ? 'text-primary'
                         : isDone

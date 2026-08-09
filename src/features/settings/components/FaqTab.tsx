@@ -93,7 +93,7 @@ export const FaqTab: React.FC = () => {
   return (
     <div className="grid grid-cols-1 gap-6 font-assistant text-right lg:grid-cols-12" dir="rtl">
       <div className="space-y-1 lg:col-span-5">
-        <h3 className="text-sm md:text-base font-bold text-foreground">מאגר ידע לבוט (FAQ)</h3>
+        <h3 className="text-base font-bold text-foreground">מאגר ידע לבוט (FAQ)</h3>
         <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
           הבוט משתמש ברשימת השאלות והתשובות הזו כדי לענות ללקוחות על שאלות כלליות (שעות, מיקום,
           מדיניות, כאב, טיפוח).

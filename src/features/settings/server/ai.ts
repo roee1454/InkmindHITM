@@ -20,7 +20,7 @@ export const getAiSettings = createServerFn({ method: 'GET' }).handler(
     return {
       aiEnabled: Boolean(record?.ai_enabled),
       aiConfig: {
-        model: (record?.ai_model as string) || 'gpt-4o',
+        model: (record?.ai_model as string) || 'claude-sonnet-5',
         temperature: (record?.ai_temperature as number) ?? 0.4,
         maxTokens: (record?.ai_max_tokens as number) ?? null,
       },

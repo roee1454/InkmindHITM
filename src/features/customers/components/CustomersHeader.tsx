@@ -15,7 +15,7 @@ export const CustomersHeader: React.FC<CustomersHeaderProps> = ({
 }) => {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between font-assistant" dir="rtl">
-      <div>
+      <div className="hidden lg:block">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground">מאגר לקוחות</h1>
         <p className="text-xs text-muted-foreground mt-1">
           {totalCustomers} לקוחות • ₪{totalSpend.toLocaleString()} סה"כ הכנסות

@@ -5,7 +5,10 @@ import { Slot } from "radix-ui"
 import { cn } from "#/lib/utils.ts"
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl font-assistant text-sm font-semibold whitespace-nowrap transition-colors outline-none focus-visible:ring-1 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  // `active:scale-[0.97]` is the press affordance. Tailwind v4 compiles `hover:` behind
+  // `@media (hover: hover)`, so on touch every hover style here is inert — without an active
+  // state a tap produces no feedback at all. Kept at 120ms so it reads as a press.
+  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl font-assistant text-sm font-semibold whitespace-nowrap transition-[color,background-color,border-color,transform] duration-120 outline-none active:scale-[0.97] focus-visible:ring-1 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100 aria-invalid:border-destructive aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {

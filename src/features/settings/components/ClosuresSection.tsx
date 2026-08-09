@@ -35,9 +35,9 @@ export function ClosuresSection() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 py-6 font-assistant lg:grid-cols-12">
+    <div className="grid grid-cols-1 gap-6 py-2 lg:py-6 font-assistant lg:grid-cols-12">
       <div className="space-y-1 lg:col-span-5">
-        <h3 className="text-sm md:text-base font-bold text-foreground">ימי סגירה של הסטודיו</h3>
+        <h3 className="text-base font-bold text-foreground">ימי סגירה של הסטודיו</h3>
         <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
           תאריכים שבהם הסטודיו סגור (חגים, חופשות). הבוט וצוות הסטודיו לא יוכלו לקבוע תורים בתאריכים אלה.
         </p>
@@ -45,7 +45,7 @@ export function ClosuresSection() {
 
       <div className="space-y-3 lg:col-span-7">
         {closures.length === 0 ? (
-          <p className="text-[11px] text-muted-foreground">לא הוגדרו ימי סגירה.</p>
+          <p className="text-mini text-muted-foreground">לא הוגדרו ימי סגירה.</p>
         ) : (
           <ul className="space-y-1.5">
             {closures.map((c) => (
@@ -59,12 +59,12 @@ export function ClosuresSection() {
                   </span>
                   {c.reason && <span className="text-muted-foreground">{c.reason}</span>}
                   {c.isRecurring && (
-                    <span className="flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                    <span className="flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-micro font-bold text-primary">
                       <Repeat size={10} /> לצמיתות
                     </span>
                   )}
                   {c.source === 'hebcal' && (
-                    <span className="flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-500">
+                    <span className="flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-micro font-semibold text-amber-500">
                       <Sparkles size={10} /> Hebcal
                     </span>
                   )}

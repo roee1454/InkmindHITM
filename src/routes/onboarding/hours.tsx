@@ -147,21 +147,21 @@ function HoursStep() {
           <button
             type="button"
             onClick={() => applyPresetToAll('09:00', '17:00')}
-            className="cursor-pointer rounded-lg border border-border bg-card px-2.5 py-1 text-[11px] font-bold text-muted-foreground transition-all hover:border-primary/40 hover:text-primary"
+            className="cursor-pointer rounded-lg border border-border bg-card px-2.5 py-1 text-mini font-bold text-muted-foreground transition-all hover:border-primary/40 hover:text-primary"
           >
             בוקר (09:00 - 17:00)
           </button>
           <button
             type="button"
             onClick={() => applyPresetToAll('10:00', '18:00')}
-            className="cursor-pointer rounded-lg border border-border bg-card px-2.5 py-1 text-[11px] font-bold text-muted-foreground transition-all hover:border-primary/40 hover:text-primary"
+            className="cursor-pointer rounded-lg border border-border bg-card px-2.5 py-1 text-mini font-bold text-muted-foreground transition-all hover:border-primary/40 hover:text-primary"
           >
             סטנדרט (10:00 - 18:00)
           </button>
           <button
             type="button"
             onClick={() => applyPresetToAll('12:00', '20:00')}
-            className="cursor-pointer rounded-lg border border-border bg-card px-2.5 py-1 text-[11px] font-bold text-muted-foreground transition-all hover:border-primary/40 hover:text-primary"
+            className="cursor-pointer rounded-lg border border-border bg-card px-2.5 py-1 text-mini font-bold text-muted-foreground transition-all hover:border-primary/40 hover:text-primary"
           >
             ערב (12:00 - 20:00)
           </button>
@@ -183,11 +183,13 @@ function HoursStep() {
             return (
               <div
                 key={dayOfWeek}
-                className={`flex h-[52px] items-center justify-between px-3.5 transition-colors ${
+                // Tightest row in the app: w-32 label + two 74px pickers + "עד" + gaps needs
+                // ~390px, but a 375px phone only offers 343px. Stack it below sm.
+                className={`flex h-auto min-h-[52px] flex-col items-stretch gap-2 px-3 py-2.5 transition-colors sm:h-[52px] sm:flex-row sm:items-center sm:justify-between sm:px-3.5 sm:py-0 ${
                   active ? 'bg-card' : 'bg-muted/10'
                 }`}
               >
-                <div className="flex w-32 shrink-0 items-center gap-3">
+                <div className="flex w-full shrink-0 items-center gap-3 sm:w-32">
                   <Switch checked={active} onCheckedChange={() => toggleDay(dayOfWeek)} />
                   <span className={`text-sm font-bold ${active ? 'text-foreground' : 'text-muted-foreground/50'}`}>
                     {label}

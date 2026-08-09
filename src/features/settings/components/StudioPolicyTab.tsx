@@ -61,9 +61,9 @@ export const StudioPolicyTab: React.FC = () => {
       )}
 
       {/* Section 1: Payment Instructions */}
-      <div className="grid grid-cols-1 gap-6 border-b border-border/60 py-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 border-b border-border/60 py-2 lg:py-6 lg:grid-cols-12">
         <div className="space-y-1 lg:col-span-5">
-          <h3 className="text-sm md:text-base font-bold text-foreground">אמצעי תשלום למקדמה</h3>
+          <h3 className="text-base font-bold text-foreground">אמצעי תשלום למקדמה</h3>
           <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
             הזן את פרטי העברה הבנקאית או האפליקציות. מוצג ללקוח בשיחה בעת בקשת מקדמה.
           </p>
@@ -82,9 +82,9 @@ export const StudioPolicyTab: React.FC = () => {
       </div>
 
       {/* Section 2: Policy & Notifications */}
-      <div className="grid grid-cols-1 gap-6 border-b border-border/60 py-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 border-b border-border/60 py-2 lg:py-6 lg:grid-cols-12">
         <div className="space-y-1 lg:col-span-5">
-          <h3 className="text-sm md:text-base font-bold text-foreground">מדיניות וביקורות</h3>
+          <h3 className="text-base font-bold text-foreground">מדיניות וביקורות</h3>
           <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
             חלון ביטול וקישור לביקורת Google.
           </p>
@@ -112,7 +112,7 @@ export const StudioPolicyTab: React.FC = () => {
               dir="rtl"
               className="bg-white text-foreground border-input text-right"
             />
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-mini text-muted-foreground">
               ביטול בתוך פרק הזמן הזה מועבר לנציג.
             </p>
           </div>

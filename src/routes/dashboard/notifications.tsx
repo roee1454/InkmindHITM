@@ -112,10 +112,10 @@ function NotificationsPage() {
   const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-6 text-right font-assistant py-6" dir="rtl">
+    <div className="w-full max-w-5xl mx-auto space-y-4 md:space-y-6 text-right font-assistant py-3 md:py-6" dir="rtl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+        <div className="hidden lg:block">
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">התראות מערכת</h1>
           <p className="text-xs text-muted-foreground mt-1">
             {isLoading ? 'טוען התראות…' : `יש לך ${unreadCount} התראות שלא נקראו`}
@@ -172,7 +172,7 @@ function NotificationsPage() {
                   <h3 className={`text-sm font-bold text-foreground ${!notification.read ? '' : 'font-semibold text-muted-foreground'}`}>
                     {notification.title}
                   </h3>
-                  <span className="text-[10px] text-muted-foreground font-mono shrink-0">
+                  <span className="text-micro text-muted-foreground font-mono shrink-0">
                     {formatNotificationTime(notification.created)}
                   </span>
                 </div>
@@ -184,7 +184,7 @@ function NotificationsPage() {
                 {notification.link && (
                   <a
                     href={notification.link}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline mt-2.5"
+                    className="inline-flex items-center gap-1 text-mini font-semibold text-primary hover:underline mt-2.5"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <span>פרטים נוספים / מעבר לעמוד</span>

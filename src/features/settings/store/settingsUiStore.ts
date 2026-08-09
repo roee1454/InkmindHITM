@@ -38,7 +38,7 @@ interface SettingsUiState {
 
 export const useSettingsUiStore = create<SettingsUiState>((set) => ({
   // Defaults
-  aiModel: 'gpt-4o',
+  aiModel: 'claude-sonnet-5',
   aiTemperature: 0.4,
   aiMaxTokens: '',
   aiInstructions: '',

@@ -415,7 +415,7 @@ export const ArtistProfileEditor: React.FC<ArtistProfileEditorProps> = ({
                     type="button"
                     onClick={() => applyPresetToAll('09:00', '17:00')}
                     disabled={activeDaysCount === 0}
-                    className="cursor-pointer rounded-lg border border-border bg-card px-2.5 py-1.5 text-[11px] font-bold text-muted-foreground transition-all hover:border-primary/40 hover:text-primary disabled:opacity-40"
+                    className="cursor-pointer rounded-lg border border-border bg-card px-2.5 py-1.5 text-mini font-bold text-muted-foreground transition-all hover:border-primary/40 hover:text-primary disabled:opacity-40"
                   >
                     בוקר (09:00 - 17:00)
                   </button>
@@ -423,7 +423,7 @@ export const ArtistProfileEditor: React.FC<ArtistProfileEditorProps> = ({
                     type="button"
                     onClick={() => applyPresetToAll('11:00', '19:00')}
                     disabled={activeDaysCount === 0}
-                    className="cursor-pointer rounded-lg border border-border bg-card px-2.5 py-1.5 text-[11px] font-bold text-muted-foreground transition-all hover:border-primary/40 hover:text-primary disabled:opacity-40"
+                    className="cursor-pointer rounded-lg border border-border bg-card px-2.5 py-1.5 text-mini font-bold text-muted-foreground transition-all hover:border-primary/40 hover:text-primary disabled:opacity-40"
                   >
                     צהריים (11:00 - 19:00)
                   </button>
@@ -431,7 +431,7 @@ export const ArtistProfileEditor: React.FC<ArtistProfileEditorProps> = ({
                     type="button"
                     onClick={() => applyPresetToAll('12:00', '20:00')}
                     disabled={activeDaysCount === 0}
-                    className="cursor-pointer rounded-lg border border-border bg-card px-2.5 py-1.5 text-[11px] font-bold text-muted-foreground transition-all hover:border-primary/40 hover:text-primary disabled:opacity-40"
+                    className="cursor-pointer rounded-lg border border-border bg-card px-2.5 py-1.5 text-mini font-bold text-muted-foreground transition-all hover:border-primary/40 hover:text-primary disabled:opacity-40"
                   >
                     ערב (12:00 - 20:00)
                   </button>

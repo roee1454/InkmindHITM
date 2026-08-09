@@ -38,7 +38,9 @@ export function ConversationList({ selectedId, onSelect }: ConversationListProps
   }, [conversations, searchQuery])
 
   return (
-    <div className="flex h-full w-72 shrink-0 flex-col border-e border-border bg-card">
+    // Full width on mobile (it's the whole screen when no chat is selected); the fixed 288px
+    // rail with its divider only applies once the thread sits beside it at lg.
+    <div className="flex h-full w-full shrink-0 flex-col bg-card lg:w-72 lg:border-e lg:border-border">
       <div className="border-b border-border p-3">
         <div className="relative">
           <Search className="absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -96,7 +98,7 @@ function ConversationRow({
       >
         <div className="flex w-full items-center justify-between gap-2">
           <span className="truncate text-sm font-bold text-foreground">{title}</span>
-          <span className="shrink-0 text-[10px] text-muted-foreground">
+          <span className="shrink-0 text-micro text-muted-foreground">
             {formatListTimestamp(conversation.lastMessageAt)}
           </span>
         </div>
@@ -104,11 +106,11 @@ function ConversationRow({
           <span className="truncate text-xs text-muted-foreground">{conversation.customerPhone}</span>
           <div className="flex items-center gap-1.5 shrink-0">
             {conversation.unreadCount > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-black text-white leading-none">
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-micro font-black text-white leading-none">
                 {conversation.unreadCount}
               </span>
             )}
-            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+            <span className="rounded-full bg-muted px-2 py-0.5 text-micro text-muted-foreground">
               {STATUS_LABEL[conversation.status] ?? conversation.status}
             </span>
           </div>

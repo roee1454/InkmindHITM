@@ -38,7 +38,7 @@ export function MessageBubble({ message, onReply, onImageClick, onCategoryToggle
       )}
 
       <div
-        className={`max-w-[75%] rounded-2xl px-3.5 py-2 font-assistant text-sm shadow-sm ${
+        className={`max-w-[85%] rounded-2xl px-3.5 py-2 font-assistant text-sm shadow-sm sm:max-w-[75%] ${
           outbound
             ? 'bg-primary text-primary-foreground'
             : 'border border-border bg-card text-foreground'
@@ -53,7 +53,7 @@ export function MessageBubble({ message, onReply, onImageClick, onCategoryToggle
                 : 'border-primary bg-muted/60 text-muted-foreground'
             }`}
           >
-            <span className="block font-semibold text-[10px]">בתשובה להודעה</span>
+            <span className="block font-semibold text-micro">בתשובה להודעה</span>
           </div>
         )}
 
@@ -64,7 +64,7 @@ export function MessageBubble({ message, onReply, onImageClick, onCategoryToggle
         />
 
         <div
-          className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${
+          className={`mt-1 flex items-center justify-end gap-1 text-micro ${
             outbound ? 'text-primary-foreground/70' : 'text-muted-foreground'
           }`}
         >
@@ -79,7 +79,7 @@ export function MessageBubble({ message, onReply, onImageClick, onCategoryToggle
         </div>
 
         {message.status === 'failed' && message.errorDetail ? (
-          <p className="mt-1 text-[10px] text-destructive">{message.errorDetail}</p>
+          <p className="mt-1 text-micro text-destructive">{message.errorDetail}</p>
         ) : null}
       </div>
     </div>
@@ -118,7 +118,7 @@ function MessageBody({
                 e.stopPropagation()
                 onCategoryToggle(message.id, message.mediaCategory)
               }}
-              className="absolute bottom-2 right-2 px-2 py-1 rounded-full text-[10px] font-bold shadow-xs backdrop-blur-md bg-background/80 hover:bg-background border border-border/40 transition select-none text-foreground cursor-pointer flex items-center gap-1 opacity-0 group-hover/image:opacity-100 focus:opacity-100 transition-opacity duration-200"
+              className="absolute bottom-2 right-2 px-2 py-1 rounded-full text-micro font-bold shadow-xs backdrop-blur-md bg-background/80 hover:bg-background border border-border/40 transition select-none text-foreground cursor-pointer flex items-center gap-1 opacity-0 group-hover/image:opacity-100 focus:opacity-100 transition-opacity duration-200"
             >
               {isVerification ? '📁 אסמכתא' : '✨ השראה'}
             </button>

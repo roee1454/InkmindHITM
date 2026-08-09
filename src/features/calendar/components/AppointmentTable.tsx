@@ -42,7 +42,7 @@ export const AppointmentTable: React.FC<AppointmentTableProps> = ({
                   <div className="text-sm font-bold text-foreground leading-tight">
                     {appt.leadName || 'לקוח'}
                   </div>
-                  <div className="text-[11px] text-muted-foreground mt-1 font-mono dir-ltr text-right">
+                  <div className="text-mini text-muted-foreground mt-1 font-mono dir-ltr text-right">
                     {appt.leadPhone || '—'}
                   </div>
                 </td>
@@ -50,7 +50,7 @@ export const AppointmentTable: React.FC<AppointmentTableProps> = ({
                 {/* Date & Time */}
                 <td className="px-6 py-4 align-middle text-sm text-muted-foreground">
                   <div className="font-semibold text-foreground">{appt.date}</div>
-                  <div className="text-[11px] text-muted-foreground mt-1">
+                  <div className="text-mini text-muted-foreground mt-1">
                     {appt.timeSlot} {appt.durationHours ? `(${appt.durationHours} שעות)` : ''}
                   </div>
                 </td>
@@ -60,7 +60,7 @@ export const AppointmentTable: React.FC<AppointmentTableProps> = ({
                   <div className="text-sm font-bold text-foreground max-w-[200px] truncate">
                     {appt.style || 'קעקוע כללי'}
                   </div>
-                  <div className="text-[11px] text-muted-foreground mt-1">
+                  <div className="text-mini text-muted-foreground mt-1">
                     {appt.staffName || 'לא משויך'}
                   </div>
                 </td>
@@ -70,7 +70,7 @@ export const AppointmentTable: React.FC<AppointmentTableProps> = ({
                   <div className="text-sm font-bold text-foreground">
                     {appt.price !== null ? `₪${appt.price.toLocaleString()}` : '—'}
                   </div>
-                  <div className="text-[10px] mt-1">
+                  <div className="text-micro mt-1">
                     {appt.hasDeposit ? (
                       <span className="text-emerald-400 font-bold">מקדמה ✓</span>
                     ) : (

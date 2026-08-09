@@ -8,9 +8,13 @@ import { useQuery } from '@tanstack/react-query'
 import { getUnseenMessagesCount } from '#/features/conversations/server/messages.ts'
 import { getUnreadNotificationsCount } from '#/features/notifications/server/notifications.ts'
 import { getAiSettings } from '@/features/settings/server/ai'
+import { cn } from '#/lib/utils.ts'
+import { BrandMark } from '#/components/BrandMark.tsx'
+import { NAV_ITEMS, SETTINGS_SUB_ITEMS } from '#/components/navigation.ts'
 
 interface SidebarProps {
   staff: StaffRecord
+  className?: string
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -19,23 +23,7 @@ const ROLE_LABELS: Record<string, string> = {
   staff: 'צוות',
 }
 
-const NAV_ITEMS = [
-  { to: '/dashboard', label: 'בית' },
-  { to: '/dashboard/calendar', label: 'תורים' },
-  { to: '/dashboard/leads', label: 'לידים' },
-  { to: '/dashboard/customers', label: 'לקוחות' },
-  { to: '/dashboard/conversations', label: 'שיחות' },
-] as const
-
-const SETTINGS_SUB_ITEMS = [
-  { id: 'team', label: 'צוות והרשאות' },
-  { id: 'ai', label: 'הגדרות סוכן AI' },
-  { id: 'policy', label: 'מדיניות סטודיו' },
-  { id: 'whatsapp', label: 'וואטסאפ' },
-  { id: 'backups', label: 'גיבויים' },
-] as const
-
-export function Sidebar({ staff }: SidebarProps) {
+export function Sidebar({ staff, className }: SidebarProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const pathname = location.pathname
@@ -69,31 +57,22 @@ export function Sidebar({ staff }: SidebarProps) {
   })
   const aiEnabled = Boolean(aiSettings?.aiEnabled)
 
-  // Read custom studio logo from localStorage if set during onboarding
-  const [studioLogo, setStudioLogo] = React.useState<string | null>(null)
-
-  React.useEffect(() => {
-    const saved = localStorage.getItem('studio_logo')
-    if (saved) setStudioLogo(saved)
-  }, [])
-
   // Extract active tab from location.search
   const currentTab = (location.search as Record<string, string>)?.tab || 'team'
 
   return (
-    <aside className="sticky top-0 flex h-screen w-72 shrink-0 flex-col border-e border-border bg-card font-assistant">
+    // `lg:flex`, not `lg:block` — the aside depends on flex-column for its `flex-1` nav and
+    // the footer pinned to the bottom.
+    <aside
+      data-app-chrome
+      className={cn(
+        'sticky top-0 hidden h-svh w-72 shrink-0 flex-col border-e border-border bg-card font-assistant lg:flex',
+        className,
+      )}
+    >
       <div className="flex items-center justify-between gap-2 border-b border-border p-5">
         <div className="flex min-w-0 items-center justify-start gap-4">
-          <div className="relative shrink-0">
-            <div className="absolute inset-0 rounded-full bg-primary/20 blur-lg" />
-            {studioLogo ? (
-              <img src={studioLogo} alt="Studio Logo" className="relative h-9 w-9 rounded-full object-cover border-2 border-primary/40 shadow-xs" />
-            ) : (
-              <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary/40 bg-primary font-assistant text-sm font-black text-primary-foreground">
-                IM
-              </div>
-            )}
-          </div>
+          <BrandMark size="sm" />
           <div className="flex min-w-0 flex-col items-start font-assistant">
             <h1 className="text-sm font-black text-foreground">INKMIND</h1>
             <span className="text-glow text-xs font-black uppercase text-primary/80">
@@ -112,7 +91,7 @@ export function Sidebar({ staff }: SidebarProps) {
         >
           <Bell size={15} />
           {unreadNotificationsCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black text-white leading-none">
+            <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-micro font-black text-white leading-none">
               {unreadNotificationsCount}
             </span>
           )}
@@ -142,7 +121,7 @@ export function Sidebar({ staff }: SidebarProps) {
             <li key={item.to}>
               <Link
                 to={item.to}
-                activeOptions={{ exact: item.to === '/dashboard' }}
+                activeOptions={{ exact: item.exact }}
                 activeProps={{ className: 'border-border bg-primary/10 text-primary font-bold' }}
                 inactiveProps={{
                   className:
@@ -155,7 +134,7 @@ export function Sidebar({ staff }: SidebarProps) {
                     <div className="flex items-center gap-2">
                       <span>{item.label}</span>
                       {item.to === '/dashboard/conversations' && unseenMessagesCount > 0 && (
-                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-black text-white">
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-micro font-black text-white">
                           {unseenMessagesCount}
                         </span>
                       )}

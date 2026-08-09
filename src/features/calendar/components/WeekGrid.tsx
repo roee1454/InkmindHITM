@@ -11,7 +11,7 @@ import {
   minutesToTime,
   timeToMinutes,
   toYmd,
-  weekDays,
+  visibleDays,
 } from '../date-utils'
 
 const START_HOUR = 8
@@ -32,6 +32,12 @@ interface WeekGridProps {
   workingHours: WorkingHoursWindow[] | null
   onSelectAppointment: (appointment: ApiAppointment) => void
   onSelectSlot: (date: string, timeSlot: string) => void
+  /**
+   * 7 = the full week (desktop default). 1 = a single day column, used on phones where seven
+   * ~40px columns are unusable. Everything below maps over `days` with `flex-1` columns and
+   * percentage-based absolute positioning, so shortening the array is the whole change.
+   */
+  dayCount?: 1 | 7
 }
 
 export const WeekGrid: React.FC<WeekGridProps> = ({
@@ -42,8 +48,9 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
   workingHours,
   onSelectAppointment,
   onSelectSlot,
+  dayCount = 7,
 }) => {
-  const days = weekDays(anchorDate)
+  const days = visibleDays(anchorDate, dayCount)
 
   const isOutsideHours = (day: Date, hour: number) =>
     !!workingHours && !fitsWithinWorkingHours(workingHours, toYmd(day), minutesToTime(hour * 60), 1)
@@ -63,7 +70,8 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
 
   return (
     <div dir="rtl" className="overflow-x-auto font-assistant">
-      <div className="min-w-[720px]">
+      {/* Single-day mode fits any phone, so it must not inherit the week view's scroll floor. */}
+      <div className={dayCount === 1 ? '' : 'min-w-[720px]'}>
         {/* Day headers */}
         <div className="flex border-b border-border">
           <div className="w-16 shrink-0" />
@@ -74,7 +82,7 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
                 isToday(day) ? 'bg-card/60' : ''
               }`}
             >
-              <div className="text-[11px] text-muted-foreground">{HEBREW_DAYS_LONG[day.getDay()]}</div>
+              <div className="text-mini text-muted-foreground">{HEBREW_DAYS_LONG[day.getDay()]}</div>
               <div className={`text-sm font-bold ${isToday(day) ? 'text-foreground' : 'text-muted-foreground'}`}>
                 {day.getDate()}
               </div>
@@ -90,7 +98,7 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
               <div
                 key={hour}
                 style={{ height: ROW_HEIGHT }}
-                className="border-b border-border pl-2 pt-1 text-left text-[11px] text-muted-foreground"
+                className="border-b border-border pl-2 pt-1 text-left text-mini text-muted-foreground"
               >
                 {minutesToTime(hour * 60)}
               </div>
@@ -133,10 +141,10 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
                     style={{ top, height: Math.max(height, 24), ...BUSY_STRIPES }}
                     className="pointer-events-none absolute inset-x-1 z-[5] overflow-hidden rounded-lg border border-border/70 bg-muted/50 px-2 py-1 text-right"
                   >
-                    <div className="flex items-center gap-1 truncate text-[10px] font-semibold text-muted-foreground">
+                    <div className="flex items-center gap-1 truncate text-micro font-semibold text-muted-foreground">
                       חסימת יומן חיצוני
                     </div>
-                    <div className="truncate text-[10px] text-muted-foreground/80">
+                    <div className="truncate text-micro text-muted-foreground/80">
                       {minutesToTime(start.getHours() * 60 + start.getMinutes())}–{minutesToTime(end.getHours() * 60 + end.getMinutes())}
                     </div>
                   </div>
@@ -186,10 +194,10 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
                           <TriangleAlert size={10} className="shrink-0 text-amber-500" aria-label="מחוץ לשעות העבודה" />
                         )}
                         <div className="flex flex-col text-right justify-center truncate select-none leading-none">
-                          <div className="truncate text-[10px] font-bold text-foreground">
+                          <div className="truncate text-micro font-bold text-foreground">
                             {appointment.leadName || 'לקוח'}
                           </div>
-                          <div className="truncate text-[8px] text-muted-foreground mt-0.5">
+                          <div className="truncate text-micro text-muted-foreground mt-0.5">
                             {timeRange} ({durationHours}ש׳)
                           </div>
                         </div>
@@ -206,17 +214,17 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
                               />
                             )}
                             <div className="flex flex-col text-right truncate">
-                              <div className="truncate text-[11px] font-bold text-foreground leading-tight">
+                              <div className="truncate text-mini font-bold text-foreground leading-tight">
                                 {appointment.leadName || 'לקוח'}
                               </div>
-                              <div className="truncate text-[9px] text-muted-foreground mt-0.5">
+                              <div className="truncate text-micro text-muted-foreground mt-0.5">
                                 {timeRange} ({durationHours}ש׳)
                               </div>
                             </div>
                           </div>
                         </div>
 
-                        <div className="truncate text-[9px] text-foreground/90 bg-muted/40 px-1 py-0.5 rounded border border-border/30">
+                        <div className="truncate text-micro text-foreground/90 bg-muted/40 px-1 py-0.5 rounded border border-border/30">
                           {appointment.style || 'אין תיאור'}
                         </div>
                       </div>
