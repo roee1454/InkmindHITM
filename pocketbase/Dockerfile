@@ -12,5 +12,5 @@ COPY pb_migrations /pb/pb_migrations
 COPY pb_hooks /pb/pb_hooks
 EXPOSE 8090
 
-# Render injects $PORT; PocketBase must bind to it, not the hardcoded 8090 default.
-CMD ["sh", "-c", "/pb/pocketbase serve --http=0.0.0.0:${PORT:-8090} --dir=/pb/pb_data"]
+# Auto-bootstrap superuser if credentials are provided in the environment.
+CMD ["sh", "-c", "if [ -n \"$PB_SUPERUSER_EMAIL\" ] && [ -n \"$PB_SUPERUSER_PASSWORD\" ]; then /pb/pocketbase superuser upsert \"$PB_SUPERUSER_EMAIL\" \"$PB_SUPERUSER_PASSWORD\" --dir=/pb/pb_data; fi && exec /pb/pocketbase serve --http=0.0.0.0:${PORT:-8090} --dir=/pb/pb_data"]

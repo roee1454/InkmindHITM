@@ -66,16 +66,15 @@ hostnames.
 docker compose build
 ```
 
-## 5. Bootstrap the PocketBase superuser (first deploy only)
+## 5. Bootstrap the PocketBase superuser
 
 This is a separate account from the CRM's own studio-owner login — the PocketBase superuser is
 what `getSuperuserClient()` in the app authenticates as internally; you never log into the CRM
-UI with it. It only needs to exist once, on a fresh `pb_data` volume:
+UI with it. 
 
-```bash
-docker compose up -d pocketbase
-docker compose exec pocketbase /pb/pocketbase superuser upsert <PB_SUPERUSER_EMAIL> <PB_SUPERUSER_PASSWORD> --dir /pb/pb_data
-```
+This account is **bootstrapped automatically** on startup by the Docker container, reading the credentials
+directly from your `.env` file (`PB_SUPERUSER_EMAIL` and `PB_SUPERUSER_PASSWORD`). There is no need
+to run any manual creation commands on the VPS.
 
 ## 6. Bring everything up
 

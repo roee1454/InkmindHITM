@@ -53,6 +53,8 @@ services:
       # to reach `web` and authenticate — PocketBase's Go binary does not read the app's .env.
       PB_HOOK_SECRET: ${PB_HOOK_SECRET:?PB_HOOK_SECRET must be set in the shell environment running docker compose}
       APP_INTERNAL_URL: http://web:3101
+      PB_SUPERUSER_EMAIL: ${PB_SUPERUSER_EMAIL:?PB_SUPERUSER_EMAIL must be set in .env}
+      PB_SUPERUSER_PASSWORD: ${PB_SUPERUSER_PASSWORD:?PB_SUPERUSER_PASSWORD must be set in .env}
     volumes:
       - pb_data:/pb/pb_data
     ports:
