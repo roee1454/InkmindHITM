@@ -11,4 +11,6 @@ dist-ssr
 .env.prod
 .env.example
 pocketbase
+docs
+scratch
 *.log
