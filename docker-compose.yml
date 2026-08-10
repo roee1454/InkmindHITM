@@ -1,16 +1,3 @@
-# Single-VPS deployment. `caddy` is the only service exposed to the internet (ports 80/443) —
-# it terminates HTTPS and reverse-proxies two public hostnames to `web` and `pocketbase` over
-# the compose network (see ./Caddyfile). PocketBase is genuinely public (via its own subdomain,
-# proxied by Caddy) because the browser talks to it directly for realtime subscriptions
-# (dashboard/route.tsx's pb.collection(...).subscribe(...) calls) and file/media access — it is
-# NOT admin-UI-only. `pocketbase` additionally publishes 127.0.0.1:8090 for host-side tooling
-# only (pocketbase/scripts/backup.sh, scripts/deploy.sh) — loopback-bound, not internet-reachable.
-# `web` publishes nothing to the host; Caddy reaches it as `web:3101` over the compose network.
-#
-# WEB_IMAGE_TAG controls which built image is running — set/read by scripts/deploy.sh and
-# scripts/rollback.sh so a rollback is just "point this at the previous tag and restart",
-# no rebuild. Defaults to `local` for a plain `docker compose up -d` during development.
-
 services:
   web:
     build:
@@ -66,23 +53,5 @@ services:
       retries: 3
       start_period: 10s
 
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      # Persisted across redeploys — without this Caddy re-requests certs from Let's Encrypt
-      # on every recreate and risks hitting their rate limit.
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - web
-      - pocketbase
-
 volumes:
   pb_data:
-  caddy_data:
-  caddy_config:
