@@ -59,7 +59,7 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
     const dayAppointments = appointments.filter((a) => a.date === toYmd(day))
     const timed = dayAppointments.map((appointment) => {
       const startMinutes = timeToMinutes(appointment.timeSlot)
-      const durationHours = appointment.durationHours || 2
+      const durationHours = (appointment.durationMinutes || 120) / 60
       return { appointment, startMinutes, endMinutes: startMinutes + durationHours * 60 }
     })
     const overlapLayout = layoutOverlaps(timed)
@@ -153,7 +153,7 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
 
               {appointmentsForDay(day).map(({ appointment, startMinutes: absoluteStartMinutes, column, columnCount }) => {
                 const startMinutes = absoluteStartMinutes - START_HOUR * 60
-                const durationHours = appointment.durationHours || 2
+                const durationHours = (appointment.durationMinutes || 120) / 60
                 const top = (startMinutes / 60) * ROW_HEIGHT
                 const maxHeight = (END_HOUR + 1 - START_HOUR) * ROW_HEIGHT - top
                 const height = Math.min(durationHours * ROW_HEIGHT, maxHeight)

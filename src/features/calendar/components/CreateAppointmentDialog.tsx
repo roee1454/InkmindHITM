@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Button } from '@/components/ui/button'
 import { AppointmentFormFields } from './AppointmentFormFields'
 import type { ApiGoogleConnection, AppointmentFormValues } from '../types'
@@ -32,9 +32,10 @@ function emptyValues(): AppointmentFormValues {
     date: '',
     timeSlot: '',
     staffId: null,
-    durationHours: 2.0,
+    durationMinutes: 120,
     tattooDescription: '',
-    priceIls: null,
+    priceMinIls: null,
+    priceMaxIls: null,
     depositAmount: null,
     status: 'pending',
     depositPaid: false,
@@ -76,7 +77,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     values.staffId,
     values.date,
     values.timeSlot,
-    values.durationHours,
+    values.durationMinutes / 60,
   )
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -99,40 +100,34 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   const displayError = error || localError
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg rounded-2xl text-right font-assistant max-h-[90vh] overflow-y-auto" dir="rtl">
-        <DialogHeader>
-          <DialogTitle>תור חדש</DialogTitle>
-          <DialogDescription>הזן את פרטי הלקוח והתור. ניתן לקבוע תור גם ללקוח מזדמן, ללא שיחת ווטסאפ.</DialogDescription>
-        </DialogHeader>
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="תור חדש"
+      description="הזן את פרטי הלקוח והתור. ניתן לקבוע תור גם ללקוח מזדמן, ללא שיחת ווטסאפ."
+      contentClassName="sm:max-w-lg max-h-[90vh] overflow-y-auto"
+    >
+      {displayError && <p className="text-[13px] font-bold text-destructive">{displayError}</p>}
 
-        {displayError && <p className="text-xs font-semibold text-rose-400">{displayError}</p>}
+      <form onSubmit={handleSubmit} className="mt-2 space-y-4">
+        <AppointmentFormFields
+          values={values}
+          onChange={handleChange}
+          staff={staff}
+          googleConnections={googleConnections}
+          isEdit={false}
+        />
 
-        <form onSubmit={handleSubmit} className="mt-2 space-y-4">
-          <AppointmentFormFields
-            values={values}
-            onChange={handleChange}
-            staff={staff}
-            googleConnections={googleConnections}
-            isEdit={false}
-          />
-
-          <div className="grid grid-cols-2 gap-3 pt-2">
-            <Button type="submit" disabled={isSaving} className="rounded-xl font-bold cursor-pointer">
-              {isSaving ? 'שומר…' : 'שמור'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="rounded-xl font-bold cursor-pointer"
-            >
-              ביטול
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <Button type="submit" disabled={isSaving}>
+            {isSaving ? 'שומר…' : 'שמור'}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            ביטול
+          </Button>
+        </div>
+      </form>
+    </ResponsiveDialog>
   )
 }
 

@@ -18,8 +18,7 @@ export interface ArtistProfileRecord {
   staff: string
   portfolio_website: string
   portfolio_instagram: string
-  portfolio_facebook: string
-  tattoo_styles: string[]
+  website_url: string
   bio: string
   work_hours: WorkHoursWindow[]
   created: string

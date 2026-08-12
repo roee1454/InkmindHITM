@@ -1,0 +1,509 @@
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&display=swap');
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================================
+   1. THEME — tokens Tailwind turns into utilities
+   ========================================================================= */
+@theme {
+  --font-assistant: 'Assistant', sans-serif;
+
+  /* Native OS curvature — halfway between shadcn defaults and the original "+1 notch" scale */
+  --radius-xs: 4px;
+  --radius-sm: 7px;
+  --radius-md: 10px;
+  --radius-lg: 13px;
+  --radius-xl: 17px;
+  --radius-2xl: 21px;
+  --radius-3xl: 28px;
+
+  /* Soft, mobile-OS elevation. Never a hard drop shadow. */
+  --shadow-xs: 0 1px 2px 0 rgb(16 24 40 / 0.04);
+  --shadow-sm: 0 1px 3px 0 rgb(16 24 40 / 0.06), 0 1px 2px -1px rgb(16 24 40 / 0.04);
+  --shadow-md: 0 4px 16px -4px rgb(16 24 40 / 0.10);
+  --shadow-lg: 0 12px 32px -8px rgb(16 24 40 / 0.14);
+
+  /* Motion */
+  --ease-native: cubic-bezier(0.16, 1, 0.3, 1);
+  --default-transition-duration: 150ms;
+
+  --text-micro: 0.75rem;
+  --text-micro--line-height: 1.15;
+  --text-mini: 0.8125rem;
+  --text-mini--line-height: 1.2;
+}
+
+/* ============================================================================
+   2. ALIAS LAYER — written ONCE. Palettes below only swap --brand-*.
+   ========================================================================= */
+:root,
+.dark {
+  --background: var(--brand-bg);
+  --foreground: var(--brand-text);
+  --card: var(--brand-card);
+  --card-foreground: var(--brand-text);
+  --popover: var(--brand-card);
+  --popover-foreground: var(--brand-text);
+  --primary: var(--brand-primary);
+  --primary-foreground: var(--brand-primary-fg);
+  --secondary: var(--brand-secondary);
+  --secondary-foreground: var(--brand-primary-fg);
+  --muted: var(--brand-muted);
+  --muted-foreground: var(--brand-text-muted);
+  --accent: var(--brand-muted);
+  --accent-foreground: var(--brand-text);
+  --destructive: var(--brand-destructive);
+  --destructive-foreground: #ffffff;
+  --success: var(--brand-success);
+  --warning: var(--brand-warning);
+  --border: var(--brand-border);
+  --input: var(--brand-border);
+  --ring: var(--brand-primary);
+  --sidebar: var(--brand-card);
+  --sidebar-foreground: var(--brand-text);
+  --sidebar-primary: var(--brand-primary);
+  --sidebar-primary-foreground: var(--brand-primary-fg);
+  --sidebar-accent: var(--brand-muted);
+  --sidebar-accent-foreground: var(--brand-text);
+  --sidebar-border: var(--brand-border);
+  --sidebar-ring: var(--brand-primary);
+}
+
+/* ============================================================================
+   3. FOUR PALETTES — set data-theme on <html>, toggle .dark as today
+   ========================================================================= */
+
+/* ---- 1. Vibrant Indigo Modern  <html data-theme="indigo">  (default) ---- */
+[data-theme='indigo'] {
+  --brand-bg: #f5f7fb;
+  --brand-muted: #eef1f7;
+  --brand-card: #ffffff;
+  --brand-card-hover: #f7f9fc;
+  --brand-border: #e3e8f0;
+  --brand-text: #0b1220;
+  --brand-text-muted: #64748b;
+  --brand-primary: #4f46e5;
+  --brand-primary-fg: #ffffff;
+  --brand-secondary: #0ea5e9;
+  --brand-destructive: #e11d48;
+  --brand-success: #10b981;
+  --brand-warning: #f59e0b;
+}
+[data-theme='indigo'].dark {
+  --brand-bg: #0a0f1c;
+  --brand-muted: #1a2338;
+  --brand-card: #121a2b;
+  --brand-card-hover: #18213a;
+  --brand-border: #243049;
+  --brand-text: #eef2f8;
+  --brand-text-muted: #93a2ba;
+  --brand-primary: #7c7bf7;
+  --brand-primary-fg: #0a0f1c;
+  --brand-secondary: #38bdf8;
+  --brand-destructive: #fb7185;
+  --brand-success: #34d399;
+  --brand-warning: #fbbf24;
+}
+
+/* ---- 2. Nordic Minimalist Slate  <html data-theme="nordic"> ---- */
+[data-theme='nordic'] {
+  --brand-bg: #f7f6f3;
+  --brand-muted: #efeeea;
+  --brand-card: #ffffff;
+  --brand-card-hover: #faf9f7;
+  --brand-border: #e4e2db;
+  --brand-text: #1b1f1c;
+  --brand-text-muted: #77776d;
+  --brand-primary: #4c7a5b;
+  --brand-primary-fg: #ffffff;
+  --brand-secondary: #7d9b86;
+  --brand-destructive: #b4544a;
+  --brand-success: #4c7a5b;
+  --brand-warning: #c08a3e;
+}
+[data-theme='nordic'].dark {
+  --brand-bg: #12150f;
+  --brand-muted: #242a20;
+  --brand-card: #1a1e17;
+  --brand-card-hover: #202519;
+  --brand-border: #30372b;
+  --brand-text: #edefe8;
+  --brand-text-muted: #9aa394;
+  --brand-primary: #8ab897;
+  --brand-primary-fg: #12150f;
+  --brand-secondary: #a9c2b0;
+  --brand-destructive: #d98b80;
+  --brand-success: #8ab897;
+  --brand-warning: #dcae6c;
+}
+
+/* ---- 3. Deep Space Obsidian  <html data-theme="obsidian"> ---- */
+[data-theme='obsidian'] {
+  --brand-bg: #f2f5f7;
+  --brand-muted: #e7ecef;
+  --brand-card: #ffffff;
+  --brand-card-hover: #f7fafb;
+  --brand-border: #dbe3e7;
+  --brand-text: #0b1114;
+  --brand-text-muted: #5f6f7a;
+  --brand-primary: #0e8fa8;
+  --brand-primary-fg: #ffffff;
+  --brand-secondary: #0b6b7f;
+  --brand-destructive: #e0455e;
+  --brand-success: #12a594;
+  --brand-warning: #d08700;
+}
+[data-theme='obsidian'].dark {
+  --brand-bg: #07080a;
+  --brand-muted: #171a20;
+  --brand-card: #0e1013;
+  --brand-card-hover: #14171c;
+  --brand-border: #222730;
+  --brand-text: #f1f5f7;
+  --brand-text-muted: #8894a1;
+  --brand-primary: #22d3ee;
+  --brand-primary-fg: #04212a;
+  --brand-secondary: #67e8f9;
+  --brand-destructive: #fb7185;
+  --brand-success: #2dd4bf;
+  --brand-warning: #fbbf24;
+}
+
+/* ---- 4. Terracotta Sunset  <html data-theme="terracotta"> ---- */
+[data-theme='terracotta'] {
+  --brand-bg: #fbf6f1;
+  --brand-muted: #f3ebe3;
+  --brand-card: #ffffff;
+  --brand-card-hover: #fdf9f5;
+  --brand-border: #ebe0d4;
+  --brand-text: #291d16;
+  --brand-text-muted: #8a7566;
+  --brand-primary: #c0603c;
+  --brand-primary-fg: #ffffff;
+  --brand-secondary: #d98b62;
+  --brand-destructive: #c0392b;
+  --brand-success: #6f8f5e;
+  --brand-warning: #d99441;
+}
+[data-theme='terracotta'].dark {
+  --brand-bg: #16100d;
+  --brand-muted: #2a201a;
+  --brand-card: #1e1712;
+  --brand-card-hover: #251c16;
+  --brand-border: #372a22;
+  --brand-text: #f8efe8;
+  --brand-text-muted: #b09a8a;
+  --brand-primary: #e2825c;
+  --brand-primary-fg: #241009;
+  --brand-secondary: #edaa87;
+  --brand-destructive: #e8705f;
+  --brand-success: #9ab887;
+  --brand-warning: #eab26a;
+}
+
+/* ============================================================================
+   4. COLOR MAPPING — keep your existing @theme inline block; this is it
+   ========================================================================= */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* ============================================================================
+   5. BASE LAYER
+   ========================================================================= */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    overflow-x: hidden;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-assistant);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+    text-wrap: pretty;
+  }
+
+  /* 16px floor on every control. Anything smaller makes iOS Safari zoom the
+     page on focus — the single loudest "this is a website" tell. */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  button,
+  a,
+  [role='button'],
+  label,
+  summary,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+
+  /* Chrome is furniture, not a document. Text stays selectable in fields only. */
+  nav,
+  header,
+  aside,
+  [data-app-chrome],
+  [role='tablist'] {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  a {
+    color: var(--primary);
+    text-decoration: none;
+  }
+  a:hover {
+    color: var(--primary);
+    text-decoration: underline;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 16%, transparent);
+  }
+
+  /* Latin numerals that don't jitter, for times/prices/counters */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ============================================================================
+   6. COMPONENT UTILITIES — the classes to reach for in screens
+   ========================================================================= */
+@layer components {
+  /* ---- Primary CTA. Full-width on mobile (auth, onboarding, sheets). ---- */
+  .btn-native {
+    @apply inline-flex h-14 w-full cursor-pointer select-none items-center justify-center gap-2
+           rounded-2xl bg-primary px-6 text-[17px] font-bold text-primary-foreground
+           shadow-md outline-none transition-all duration-150 ease-native
+           active:scale-[0.97] active:shadow-sm
+           focus-visible:ring-4 focus-visible:ring-primary/15
+           disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100
+           md:h-12 md:w-auto md:text-base;
+  }
+  .btn-native-ghost {
+    @apply inline-flex h-14 w-full cursor-pointer select-none items-center justify-center gap-2
+           rounded-2xl bg-muted px-6 text-[17px] font-bold text-foreground
+           outline-none transition-all duration-150 ease-native
+           active:scale-[0.97] focus-visible:ring-4 focus-visible:ring-primary/15
+           disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100
+           md:h-12 md:w-auto md:text-base;
+  }
+
+  /* ---- The one card treatment. No nested cards, ever. ---- */
+  .card-native {
+    @apply rounded-3xl border border-border/80 bg-card shadow-sm;
+  }
+
+  /* ---- Wrapper for inputs/selects/pickers/date fields ---- */
+  .field-native {
+    @apply flex h-12 w-full items-center rounded-2xl border border-input/80 bg-card px-4
+           text-base text-foreground shadow-xs outline-none
+           transition-all duration-150 ease-native
+           placeholder:text-muted-foreground/50
+           focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10
+           md:h-11 md:text-[15px];
+  }
+
+  /* ---- A single list row inside .card-native ---- */
+  .row-native {
+    @apply flex select-none items-center gap-3 border-t border-border/60 px-4 py-3
+           transition-colors duration-100 first:border-t-0 active:bg-muted;
+  }
+
+  /* ---- Soft status indicator. See README §6 for the five colors. ---- */
+  .pill {
+    @apply inline-flex shrink-0 select-none items-center rounded-full px-3 py-1.5
+           text-[12.5px] leading-none font-bold whitespace-nowrap;
+  }
+
+  /* ---- Bolt onto anything that should feel pressable ---- */
+  .tap {
+    @apply cursor-pointer select-none transition-transform duration-150 ease-native
+           active:scale-[0.97];
+  }
+
+  /* ---- 44pt minimum, for icon-only chrome buttons ---- */
+  .tap-target {
+    @apply flex size-11 shrink-0 cursor-pointer select-none items-center justify-center
+           rounded-2xl transition-colors duration-100 active:bg-muted;
+  }
+
+  /* ---- Avatar / monogram circle ---- */
+  .avatar-native {
+    @apply flex size-[42px] shrink-0 items-center justify-center rounded-full
+           bg-primary/10 text-base font-extrabold text-primary;
+  }
+
+  /* ---- Auth & onboarding shell: centred, spacious, no card-in-card ---- */
+  .auth-shell {
+    @apply flex min-h-svh flex-col justify-center bg-background px-6 py-10;
+  }
+  .auth-stack {
+    @apply mx-auto flex w-full max-w-sm flex-col gap-8 md:max-w-md;
+  }
+  .auth-badge {
+    @apply flex size-18 items-center justify-center rounded-full bg-primary
+           text-2xl font-extrabold text-primary-foreground shadow-md;
+  }
+  .auth-title {
+    @apply text-center text-[25px] font-extrabold tracking-tight text-foreground;
+  }
+  .auth-sub {
+    @apply text-center text-[15px] font-medium text-muted-foreground;
+  }
+  .form-stack {
+    @apply flex flex-col gap-3.5;
+  }
+  .form-label {
+    @apply ps-1 text-sm font-bold text-foreground;
+  }
+
+  /* ---- Onboarding: one decision per screen, sticky footer, no scroll ---- */
+  .step-shell {
+    @apply flex h-svh flex-col bg-background;
+  }
+  .step-progress {
+    @apply h-[3px] w-full bg-muted;
+  }
+  .step-progress-fill {
+    @apply h-full bg-primary transition-[width] duration-300 ease-native;
+  }
+  .step-body {
+    @apply flex flex-1 flex-col gap-6 overflow-y-auto px-6 pt-5;
+  }
+  .step-question {
+    @apply text-[29px] leading-[1.2] font-extrabold tracking-tight text-foreground;
+  }
+  .step-hint {
+    @apply text-base leading-relaxed font-medium text-muted-foreground;
+  }
+  .step-footer {
+    @apply flex flex-col gap-3 px-6 pt-3.5 pb-[calc(1.125rem+env(safe-area-inset-bottom,0px))];
+  }
+
+  /* ---- Dashboard: flat header, no boxed page title ---- */
+  .page-head {
+    @apply flex flex-col gap-0.5 px-1;
+  }
+  .page-head h1 {
+    @apply text-[23px] font-extrabold tracking-tight text-foreground;
+  }
+  .page-head p {
+    @apply text-sm font-medium text-muted-foreground;
+  }
+
+  /* ---- Stat tile — small, quiet, three-up on a phone ---- */
+  .stat-native {
+    @apply flex flex-col gap-2.5 rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs;
+  }
+  .stat-native .stat-value {
+    @apply text-[26px] leading-none font-extrabold text-foreground;
+  }
+  .stat-native .stat-label {
+    @apply text-[12.5px] font-bold text-muted-foreground;
+  }
+
+  /* ---- Conversation HITL action row (quote / slot / receipt / final) ---- */
+  .hitl-row {
+    @apply flex select-none items-center gap-2 rounded-2xl border border-primary bg-card px-2.5 py-2;
+  }
+  .hitl-row-success {
+    @apply flex select-none items-center gap-2 rounded-2xl border border-emerald-500 bg-card px-2.5 py-2;
+  }
+  .hitl-action {
+    @apply flex h-8 shrink-0 cursor-pointer select-none items-center justify-center rounded-xl
+           bg-primary px-3 text-xs font-extrabold text-primary-foreground
+           transition-transform duration-150 ease-native active:scale-[0.97];
+  }
+}
+
+/* ============================================================================
+   7. APP SHELL GEOMETRY — unchanged contract, retuned numbers
+   ========================================================================= */
+:root {
+  --app-top-bar-h: 0rem;
+  --app-bottom-nav-h: 0rem;
+}
+
+@media (width < 64rem) {
+  [data-mobile-chrome='on'] {
+    --app-top-bar-h: 3.5rem;
+    --app-bottom-nav-h: calc(4rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.page-container {
+  display: flex;
+  flex-direction: column;
+  padding-inline: 1rem;
+  padding-block-start: 1.25rem;
+  padding-block-end: calc(1.5rem + var(--app-bottom-nav-h));
+  gap: 1.125rem;
+}
+
+@media (width < 64rem) {
+  .page-container {
+    height: calc(100svh - var(--app-top-bar-h) - var(--app-bottom-nav-h));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (width >= 64rem) {
+  .page-container {
+    padding: 2rem 2.5rem 3rem;
+    gap: 1.5rem;
+  }
+}
+
+/* Full-bleed screens that own their own scroll (chat thread, kanban) */
+.page-container--flush {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}

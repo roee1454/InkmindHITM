@@ -29,7 +29,7 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
       aria-label="ניווט ראשי"
       // z-40 sits below sheets/dialogs (z-50) and toasts (z-[9999]) — deliberate.
       className={cn(
-        'fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur-md',
+        'fixed inset-x-0 bottom-0 z-40 select-none border-t border-border bg-card',
         className,
       )}
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
@@ -40,9 +40,9 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
             <Link
               to={item.to}
               activeOptions={{ exact: item.exact }}
-              activeProps={{ className: 'text-primary' }}
-              inactiveProps={{ className: 'text-muted-foreground' }}
-              className="relative flex h-full flex-col items-center justify-center gap-1 font-assistant text-micro font-bold transition-colors duration-150 active:bg-accent/60"
+              activeProps={{ className: 'text-primary font-extrabold' }}
+              inactiveProps={{ className: 'text-muted-foreground font-bold' }}
+              className="relative flex h-full flex-col items-center justify-center gap-1 font-assistant text-[11.5px] transition-colors duration-150 active:bg-muted"
             >
               {({ isActive }) => (
                 <>
@@ -50,9 +50,9 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
                     <span className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-primary" />
                   )}
                   <span className="relative">
-                    <item.icon size={20} />
+                    <item.icon size={22} />
                     {item.to === '/dashboard/conversations' && unseenMessagesCount > 0 && (
-                      <span className="absolute -top-1.5 -end-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-micro font-black leading-none text-white">
+                      <span className="absolute -top-1.5 -end-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-success px-1 text-[10px] font-extrabold leading-none text-white">
                         {unseenMessagesCount}
                       </span>
                     )}

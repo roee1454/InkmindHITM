@@ -9,21 +9,19 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DatePicker } from '@/components/ui/date-picker'
 import { HourPicker } from '@/components/ui/hour-picker'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog'
+import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import type { ApiGoogleConnection, AppointmentFormValues, AppointmentStatus } from '../types'
 import { STATUS_LABELS } from '../types'
 import { useWorkingHoursCheck } from '../use-working-hours-check'
 import { getCustomers, createCustomer } from '@/features/customers/server/customers'
 import type { Customer } from '@/features/customers/types'
 import { SOURCE_LABELS } from '@/features/customers/types'
+import { formatDuration } from '@/features/conversations/lib/format'
 
 const NO_ARTIST = 'none'
+
+// 30-minute increments, 30 minutes to 8 hours.
+const DURATION_OPTIONS = Array.from({ length: 16 }, (_, i) => (i + 1) * 30)
 
 interface StaffItem {
   id: string
@@ -81,7 +79,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
     values.staffId,
     values.date,
     values.timeSlot,
-    values.durationHours,
+    values.durationMinutes / 60,
   )
 
   const selectedCustomer = customers.find((c) => c.id === values.customerId)
@@ -278,18 +276,23 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
           </Select>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-foreground">משך (שעות)</label>
-          <Input
-            type="number"
-            step="0.5"
-            min="0.5"
-            max="12"
-            value={values.durationHours}
-            onChange={(e) => onChange({ durationHours: Number(e.target.value) })}
-            dir="rtl"
-            className="text-right"
-          />
+        <div className="flex flex-col gap-1.5" dir="rtl">
+          <label className="text-xs font-semibold text-foreground">משך</label>
+          <Select
+            value={String(values.durationMinutes)}
+            onValueChange={(val) => onChange({ durationMinutes: Number(val) })}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              {DURATION_OPTIONS.map((minutes) => (
+                <SelectItem key={minutes} value={String(minutes)}>
+                  {formatDuration(minutes)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -345,27 +348,39 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-foreground">מחיר (₪)</label>
+          <label className="text-xs font-semibold text-foreground">מחיר מינימלי (₪)</label>
           <Input
             type="number"
             min="0"
-            value={values.priceIls ?? ''}
-            onChange={(e) => onChange({ priceIls: e.target.value === '' ? null : Number(e.target.value) })}
+            value={values.priceMinIls ?? ''}
+            onChange={(e) => onChange({ priceMinIls: e.target.value === '' ? null : Number(e.target.value) })}
             dir="rtl"
             className="text-right"
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-foreground">מקדמה (₪)</label>
+          <label className="text-xs font-semibold text-foreground">מחיר מקסימלי (₪)</label>
           <Input
             type="number"
             min="0"
-            value={values.depositAmount ?? ''}
-            onChange={(e) => onChange({ depositAmount: e.target.value === '' ? null : Number(e.target.value) })}
+            value={values.priceMaxIls ?? ''}
+            onChange={(e) => onChange({ priceMaxIls: e.target.value === '' ? null : Number(e.target.value) })}
             dir="rtl"
             className="text-right"
           />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-semibold text-foreground">מקדמה (₪)</label>
+        <Input
+          type="number"
+          min="0"
+          value={values.depositAmount ?? ''}
+          onChange={(e) => onChange({ depositAmount: e.target.value === '' ? null : Number(e.target.value) })}
+          dir="rtl"
+          className="text-right"
+        />
       </div>
 
       <div className="flex flex-col gap-1.5" dir="rtl">
@@ -410,15 +425,12 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
       </div>
 
       {/* Add Walk-In Customer Modal Prompt */}
-      <Dialog open={isAddCustomerOpen} onOpenChange={setIsAddCustomerOpen}>
-        <DialogContent className="sm:max-w-md rounded-2xl text-right font-assistant" dir="rtl">
-          <DialogHeader>
-            <DialogTitle>הוספת לקוח חדש</DialogTitle>
-            <DialogDescription>
-              הזן את פרטי הלקוח החדש במאגר.
-            </DialogDescription>
-          </DialogHeader>
-
+      <ResponsiveDialog
+        open={isAddCustomerOpen}
+        onOpenChange={setIsAddCustomerOpen}
+        title="הוספת לקוח חדש"
+        description="הזן את פרטי הלקוח החדש במאגר."
+      >
           {newCustError && (
             <p className="text-xs font-semibold text-rose-400">{newCustError}</p>
           )}
@@ -490,18 +502,15 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
               {createCustMutation.isPending ? 'יוצר לקוח…' : 'הוסף לקוח'}
             </Button>
           </form>
-        </DialogContent>
-      </Dialog>
+      </ResponsiveDialog>
 
       {/* OK-only warning dialog */}
-      <Dialog open={noCalendarArtistName !== null} onOpenChange={(open) => !open && setNoCalendarArtistName(null)}>
-        <DialogContent className="sm:max-w-sm rounded-2xl text-right font-assistant" dir="rtl">
-          <DialogHeader>
-            <DialogTitle>אין חיבור ליומן Google</DialogTitle>
-            <DialogDescription>
-              ל{noCalendarArtistName} אין חשבון Google Calendar מחובר. התור לא יסונכרן ליומן שלו/שלה.
-            </DialogDescription>
-          </DialogHeader>
+      <ResponsiveDialog
+        open={noCalendarArtistName !== null}
+        onOpenChange={(open) => !open && setNoCalendarArtistName(null)}
+        title="אין חיבור ליומן Google"
+        description={`ל${noCalendarArtistName} אין חשבון Google Calendar מחובר. התור לא יסונכרן ליומן שלו/שלה.`}
+      >
           <Button
             type="button"
             onClick={() => setNoCalendarArtistName(null)}
@@ -509,8 +518,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
           >
             הבנתי
           </Button>
-        </DialogContent>
-      </Dialog>
+      </ResponsiveDialog>
     </div>
   )
 }

@@ -10,9 +10,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetHandle,
 } from '@/components/ui/sheet'
-import { confirmDepositReceived } from '@/features/conversations/server/messages'
+import { confirmDepositReceived, rejectDepositReceipt } from '@/features/conversations/server/messages'
 import { useToast } from '@/components/ui/ToastProvider'
 
 interface ReceiptVerificationSheetProps {
@@ -31,7 +30,7 @@ export function ReceiptVerificationSheet({
   open,
   onOpenChange,
   conversationId,
-  initialAmount = '350',
+  initialAmount = '',
   receiptImageUrl,
   onZoomImage,
   onSuccess,
@@ -49,15 +48,20 @@ export function ReceiptVerificationSheet({
     },
   })
 
+  const rejectMutation = useMutation({
+    mutationFn: () => rejectDepositReceipt({ data: { conversationId } }),
+    onSuccess: () => {
+      toast('נשלחה ללקוח בקשה לאסמכתה ברורה יותר', 'info')
+      onSuccess()
+    },
+  })
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        side="bottom"
-        className="mx-auto w-full max-w-lg rounded-t-[28px] border-t border-border bg-card p-6 shadow-2xl max-h-[90svh] overflow-y-auto font-assistant space-y-5 select-none"
+        className="mx-auto w-full max-w-lg font-assistant space-y-5"
         dir="rtl"
       >
-        <SheetHandle />
-
         <SheetHeader className="text-right space-y-1">
           <SheetTitle className="text-lg font-extrabold text-foreground">
             אימות אסמכתה
@@ -68,24 +72,26 @@ export function ReceiptVerificationSheet({
         </SheetHeader>
 
         {/* Receipt Image Box */}
-        <div className="relative rounded-2xl border border-border bg-muted/40 p-4 flex flex-col items-center justify-center gap-2">
-          <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <ReceiptText size={28} />
-          </div>
-          <span className="text-xs font-bold text-foreground">
-            אסמכתת תשלום מצורפת
-          </span>
-          <Button
+        {receiptImageUrl ? (
+          <button
             type="button"
-            variant="outline"
-            size="sm"
-            className="rounded-xl text-xs font-bold gap-1.5"
-            onClick={() => onZoomImage?.(receiptImageUrl || 'mock_receipt')}
+            onClick={() => onZoomImage?.(receiptImageUrl)}
+            className="relative flex aspect-video w-full cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted/40"
           >
-            <ZoomIn size={14} />
-            <span>הגדל תמונה</span>
-          </Button>
-        </div>
+            <img src={receiptImageUrl} alt="אסמכתה" className="h-full w-full object-contain" />
+            <span className="absolute bottom-2 end-2 flex items-center gap-1 rounded-full bg-card/90 px-2.5 py-1 text-[11px] font-bold text-foreground shadow-sm">
+              <ZoomIn size={13} />
+              הגדל
+            </span>
+          </button>
+        ) : (
+          <div className="relative rounded-2xl border border-border bg-muted/40 p-4 flex flex-col items-center justify-center gap-2">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <ReceiptText size={28} />
+            </div>
+            <span className="text-xs font-bold text-muted-foreground">לא נמצאה תמונת אסמכתה בשיחה</span>
+          </div>
+        )}
 
         {/* Amount Confirmation Field */}
         <div className="space-y-1.5">
@@ -109,8 +115,7 @@ export function ReceiptVerificationSheet({
         <div className="flex gap-2 pt-2">
           <Button
             type="button"
-            variant="success"
-            className="flex-1 h-13 rounded-2xl text-base font-extrabold gap-2"
+            className="flex-1 h-13 rounded-2xl bg-success text-base font-extrabold gap-2 hover:bg-success/90"
             disabled={confirmMutation.isPending}
             onClick={() => confirmMutation.mutate()}
           >
@@ -121,7 +126,7 @@ export function ReceiptVerificationSheet({
           </Button>
           <Button
             type="button"
-            variant="takeover"
+            variant="outline"
             className="h-13 px-4 rounded-2xl text-sm font-bold gap-1.5"
             disabled={isTakingOver}
             onClick={onTakeover}
@@ -130,6 +135,15 @@ export function ReceiptVerificationSheet({
             <span>קח שליטה</span>
           </Button>
         </div>
+
+        <button
+          type="button"
+          disabled={rejectMutation.isPending}
+          onClick={() => rejectMutation.mutate()}
+          className="w-full cursor-pointer text-center text-[13px] font-bold text-muted-foreground disabled:opacity-50"
+        >
+          {rejectMutation.isPending ? 'שולח…' : 'דחיית אסמכתה — בקש/י צילום ברור יותר'}
+        </button>
       </SheetContent>
     </Sheet>
   )

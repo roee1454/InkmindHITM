@@ -6,7 +6,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetHandle,
 } from '@/components/ui/sheet'
 import { useToast } from '@/components/ui/ToastProvider'
 
@@ -40,13 +39,7 @@ export function HealthDeclarationSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="bottom"
-        className="mx-auto w-full max-w-lg rounded-t-[28px] border-t border-border bg-card p-6 shadow-2xl max-h-[90svh] overflow-y-auto font-assistant space-y-5 select-none"
-        dir="rtl"
-      >
-        <SheetHandle />
-
+      <SheetContent className="mx-auto w-full max-w-lg font-assistant space-y-5" dir="rtl">
         <SheetHeader className="text-right space-y-1">
           <SheetTitle className="text-lg font-extrabold text-foreground">
             אישור הצהרת בריאות
@@ -90,8 +83,7 @@ export function HealthDeclarationSheet({
         <div className="flex gap-2 pt-2">
           <Button
             type="button"
-            variant="success"
-            className="flex-1 h-13 rounded-2xl text-base font-extrabold gap-2"
+            className="flex-1 h-13 rounded-2xl bg-success text-base font-extrabold gap-2 hover:bg-success/90"
             onClick={handleConfirmDeclaration}
           >
             <FileCheck2 size={18} />
@@ -99,7 +91,7 @@ export function HealthDeclarationSheet({
           </Button>
           <Button
             type="button"
-            variant="takeover"
+            variant="outline"
             className="h-13 px-4 rounded-2xl text-sm font-bold gap-1.5"
             disabled={isTakingOver}
             onClick={onTakeover}

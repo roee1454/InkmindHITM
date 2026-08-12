@@ -1,50 +1,44 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { BadgeCheck, SendHorizontal, Tag } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Skeleton } from '@/components/ui/skeleton'
-import { DatePicker } from '@/components/ui/date-picker'
-import { HourPicker } from '@/components/ui/hour-picker'
-import { sendPriceQuoteToCustomer } from '@/features/calendar/server/appointments'
-import { confirmDepositReceived, getActiveAppointmentSummary } from '../server/messages'
-import type { UIConversation } from '../types'
+import { BadgeCheck, CalendarClock, HandCoins, ReceiptText, Send } from 'lucide-react'
+import { confirmSlot } from '@/features/calendar/server/appointments'
+import { sendMessage, takeOverConversation, getActiveAppointmentSummary } from '../server/messages'
+import { formatDuration, formatPriceRange } from '../lib/format'
+import { PriceQuoteSheet } from './sheets/PriceQuoteSheet'
+import { ReceiptVerificationSheet } from './sheets/ReceiptVerificationSheet'
+import type { UIAppointmentSummary, UIConversation } from '../types'
 
 /**
- * Inline HITL action card (HITL-2/3/7): the two human gates of the booking funnel —
- * pricing a pending hold, and confirming a deposit — handled inside the conversation
- * they belong to. Pricing used to live in the calendar screen (the escalation
- * notification literally sent staff away from the chat they had just read), and the
- * deposit-confirm button showed no payload at all: an approval with nothing to review.
+ * The four HITL blocks (HITL-2/3/7 + the new slot-confirm gate), inline in the message feed.
+ * They're independent axes and can show simultaneously — e.g. a fresh AWAIT_PRICE_OFFER
+ * conversation shows both Quote (price not set) and Slot confirm (bot-proposed date/time not
+ * yet sanity-checked by staff) at once.
  */
-export function BookingActionCard({ conversation }: { conversation: UIConversation }) {
+export function BookingActionCard({
+  conversation,
+  receiptImageUrl,
+  onZoomReceipt,
+}: {
+  conversation: UIConversation
+  /** Most recent verification-tagged image in the thread, if any — feeds the receipt sheet. */
+  receiptImageUrl?: string
+  onZoomReceipt?: (url: string) => void
+}) {
   const queryClient = useQueryClient()
+  const [quoteOpen, setQuoteOpen] = useState(false)
+  const [receiptOpen, setReceiptOpen] = useState(false)
 
-  const showPricing = conversation.state === 'AWAIT_PRICE_OFFER'
-  const showDepositConfirm =
+  const showQuote = conversation.state === 'AWAIT_PRICE_OFFER'
+  const showReceiptApprove =
     conversation.state === 'AWAIT_PAYMENT' && conversation.staffCallReason === 'receipt_verification'
-  const active = showPricing || showDepositConfirm
+  const showFinalConfirm = conversation.state === 'AWAIT_FINAL_CONFIRMATION'
 
-  const { data: appointment, isLoading } = useQuery({
+  const { data: appointment } = useQuery<UIAppointmentSummary | null>({
     queryKey: ['appointment-summary', conversation.id],
     queryFn: () => getActiveAppointmentSummary({ data: { conversationId: conversation.id } }),
-    enabled: active,
   })
 
-  // Editable fields, seeded from the hold the bot created. Keyed on appointment id so a
-  // different appointment re-seeds, but staff edits survive background refetches.
-  const [price, setPrice] = useState('')
-  const [deposit, setDeposit] = useState('')
-  const [date, setDate] = useState('')
-  const [timeSlot, setTimeSlot] = useState('')
-  useEffect(() => {
-    if (!appointment) return
-    setPrice(appointment.priceIls != null ? String(appointment.priceIls) : '')
-    setDeposit(appointment.depositAmount != null ? String(appointment.depositAmount) : '')
-    setDate(appointment.date)
-    setTimeSlot(appointment.timeSlot)
-  }, [appointment?.id])
+  const showSlotConfirm = Boolean(appointment && appointment.status === 'pending' && !appointment.slotConfirmed)
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ['conversations'] })
@@ -53,154 +47,148 @@ export function BookingActionCard({ conversation }: { conversation: UIConversati
     queryClient.invalidateQueries({ queryKey: ['appointments'] })
   }
 
-  const quoteMutation = useMutation({
+  const takeOverMutation = useMutation({
+    mutationFn: () => takeOverConversation({ data: { conversationId: conversation.id } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['conversations'] }),
+  })
+
+  const confirmSlotMutation = useMutation({
+    mutationFn: () => confirmSlot({ data: { appointmentId: appointment!.id } }),
+    onSuccess: invalidateAll,
+  })
+
+  const finalConfirmMutation = useMutation({
     mutationFn: () =>
-      sendPriceQuoteToCustomer({
+      sendMessage({
         data: {
-          appointmentId: appointment!.id,
-          priceIls: Number(price),
-          depositAmount: Number(deposit),
-          date: date || undefined,
-          timeSlot: timeSlot || undefined,
+          conversationId: conversation.id,
+          body: 'התור שלך אושר סופית! מחכים לך בסטודיו 🎉',
         },
       }),
     onSuccess: invalidateAll,
   })
 
-  const confirmMutation = useMutation({
-    mutationFn: () => confirmDepositReceived({ data: { conversationId: conversation.id } }),
-    onSuccess: invalidateAll,
-  })
-
-  if (!active) return null
-
-  if (isLoading) {
-    return (
-      <div className="border-b border-border bg-card px-5 py-3">
-        <Skeleton className="h-5 w-48" />
-        <Skeleton className="mt-2 h-9 w-full" />
-      </div>
-    )
-  }
-
-  if (!appointment || appointment.status !== 'pending') {
-    return (
-      <div className="border-b border-border bg-card px-5 py-3">
-        <p className="font-assistant text-xs text-muted-foreground">
-          לא נמצא תור ממתין לשיחה הזאת — ייתכן שבוטל או שכבר טופל דרך היומן.
-        </p>
-      </div>
-    )
-  }
-
-  const detailRows = [
-    { label: 'קעקוע', value: appointment.tattooDescription || '—' },
-    ...(appointment.staffName ? [{ label: 'אמן', value: appointment.staffName }] : []),
-    { label: 'משך', value: `${appointment.durationHours} שעות` },
-  ]
-
-  const mutationError = quoteMutation.error ?? confirmMutation.error
+  if (!showQuote && !showReceiptApprove && !showFinalConfirm && !showSlotConfirm) return null
 
   return (
-    <div className="border-b border-border bg-card px-5 py-4">
-      <div className="flex items-center gap-2">
-        {showPricing ? <Tag className="size-4 text-primary" /> : <BadgeCheck className="size-4 text-emerald-600" />}
-        <h3 className="font-assistant text-sm font-bold text-foreground">
-          {showPricing ? 'תמחור הבקשה — הלקוח ממתין להצעת מחיר' : 'אימות תשלום — בדוק את האסמכתה מול הפרטים'}
-        </h3>
-      </div>
-
-      <dl className="mt-2 flex flex-wrap gap-x-6 gap-y-1">
-        {detailRows.map((row) => (
-          <div key={row.label} className="flex items-baseline gap-1.5">
-            <dt className="font-assistant text-xs text-muted-foreground">{row.label}:</dt>
-            <dd className="font-assistant text-xs font-semibold text-foreground">{row.value}</dd>
+    <div className="flex flex-col gap-2 border-b border-border/60 bg-card px-3.5 py-3">
+      {showQuote && (
+        <div className="hitl-row flex-col items-stretch gap-1.5 p-2.5">
+          <div className="flex items-center gap-1.5">
+            <HandCoins size={14} className="shrink-0 text-primary" />
+            <span className="text-[13px] font-extrabold text-foreground">נדרש אישור שלך — תמחור</span>
           </div>
-        ))}
-        {!showPricing && (
-          <>
-            <div className="flex items-baseline gap-1.5">
-              <dt className="font-assistant text-xs text-muted-foreground">מועד:</dt>
-              <dd className="font-assistant text-xs font-semibold text-foreground">
-                {appointment.date} בשעה {appointment.timeSlot}
-              </dd>
+          <div className="grid grid-cols-3 gap-1.5">
+            <div className="flex h-[34px] flex-col items-center justify-center rounded-xl bg-muted/60">
+              <span className="text-[9.5px] font-bold text-muted-foreground">משך</span>
+              <span className="text-[12px] font-extrabold text-foreground">
+                {appointment ? formatDuration(appointment.durationMinutes) : '—'}
+              </span>
             </div>
-            <div className="flex items-baseline gap-1.5">
-              <dt className="font-assistant text-xs text-muted-foreground">מחיר / מקדמה:</dt>
-              <dd className="font-assistant text-xs font-semibold text-foreground">
-                ₪{appointment.priceIls ?? '—'} / ₪{appointment.depositAmount ?? '—'}
-              </dd>
+            <div className="flex h-[34px] flex-col items-center justify-center rounded-xl bg-muted/60">
+              <span className="text-[9.5px] font-bold text-muted-foreground">טווח מחיר</span>
+              <span className="text-[12px] font-extrabold text-foreground">
+                {appointment ? formatPriceRange(appointment.priceMinIls, appointment.priceMaxIls) : '—'}
+              </span>
             </div>
-          </>
-        )}
-      </dl>
-
-      {showPricing ? (
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-[1fr_1fr_auto_auto_auto] sm:items-end">
-          <div className="space-y-1">
-            <Label htmlFor="quote-price" className="font-assistant text-xs">
-              מחיר (₪)
-            </Label>
-            <Input
-              id="quote-price"
-              type="number"
-              min={0}
-              inputMode="numeric"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              className="h-10 rounded-xl font-assistant text-sm"
-            />
+            <div className="flex h-[34px] flex-col items-center justify-center rounded-xl bg-muted/60">
+              <span className="text-[9.5px] font-bold text-muted-foreground">מקדמה</span>
+              <span className="text-[12px] font-extrabold text-foreground">
+                {appointment?.depositAmount != null ? `₪${appointment.depositAmount.toLocaleString()}` : '—'}
+              </span>
+            </div>
           </div>
-          <div className="space-y-1">
-            <Label htmlFor="quote-deposit" className="font-assistant text-xs">
-              מקדמה (₪)
-            </Label>
-            <Input
-              id="quote-deposit"
-              type="number"
-              min={0}
-              inputMode="numeric"
-              value={deposit}
-              onChange={(e) => setDeposit(e.target.value)}
-              className="h-10 rounded-xl font-assistant text-sm"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label className="font-assistant text-xs">תאריך</Label>
-            <DatePicker value={date} onChange={setDate} className="sm:w-40" />
-          </div>
-          <div className="space-y-1">
-            <Label className="font-assistant text-xs">שעה</Label>
-            <HourPicker value={timeSlot} onChange={setTimeSlot} className="sm:w-28" />
-          </div>
-          <Button
-            type="button"
-            className="col-span-2 h-10 rounded-xl cursor-pointer gap-1.5 sm:col-span-1"
-            disabled={quoteMutation.isPending || !price || !deposit || Number(price) < 0 || Number(deposit) < 0}
-            onClick={() => quoteMutation.mutate()}
-          >
-            <SendHorizontal className="size-4" />
-            {quoteMutation.isPending ? 'שולח הצעה…' : 'שלח הצעת מחיר'}
-          </Button>
-        </div>
-      ) : (
-        <div className="mt-3">
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-xl cursor-pointer gap-1.5 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
-            disabled={confirmMutation.isPending}
-            onClick={() => confirmMutation.mutate()}
-          >
-            <BadgeCheck className="size-4" />
-            {confirmMutation.isPending ? 'מאשר תשלום…' : 'אשר קבלת תשלום ושלח סיכום ללקוח'}
-          </Button>
+          <button type="button" onClick={() => setQuoteOpen(true)} className="hitl-action h-9 w-full text-[13px]">
+            <Send size={14} className="me-1.5" />
+            שליחת הצעה ללקוח
+          </button>
         </div>
       )}
 
-      {mutationError ? (
-        <p className="mt-2 font-assistant text-xs font-semibold text-destructive">{mutationError.message}</p>
-      ) : null}
+      {showSlotConfirm && appointment && (
+        <div className="hitl-row">
+          <CalendarClock size={14} className="shrink-0 text-primary" />
+          <span className="flex-1 truncate text-[11.5px] font-bold text-foreground">
+            מועד: {appointment.date} · {appointment.timeSlot}
+          </span>
+          <button
+            type="button"
+            disabled={confirmSlotMutation.isPending}
+            onClick={() => confirmSlotMutation.mutate()}
+            className="hitl-action"
+          >
+            אישור
+          </button>
+        </div>
+      )}
+
+      {showReceiptApprove && (
+        <div className="hitl-row">
+          <ReceiptText size={14} className="shrink-0 text-primary" />
+          <span className="flex-1 truncate text-[11.5px] font-bold text-foreground">
+            אסמכתה: {appointment?.depositAmount != null ? `₪${appointment.depositAmount.toLocaleString()}` : 'ממתינה לבדיקה'}
+          </span>
+          <button type="button" onClick={() => setReceiptOpen(true)} className="hitl-action">
+            אישור
+          </button>
+        </div>
+      )}
+
+      {showFinalConfirm && (
+        <div className="hitl-row-success">
+          <BadgeCheck size={14} className="shrink-0 text-emerald-600" />
+          <span className="flex-1 truncate text-[11.5px] font-bold text-foreground">אישור סופי — התור נקבע</span>
+          <button
+            type="button"
+            disabled={finalConfirmMutation.isPending}
+            onClick={() => finalConfirmMutation.mutate()}
+            className="hitl-action bg-emerald-600 hover:bg-emerald-600/90"
+          >
+            {finalConfirmMutation.isPending ? 'שולח…' : 'שליחה'}
+          </button>
+        </div>
+      )}
+
+      {(takeOverMutation.error || confirmSlotMutation.error || finalConfirmMutation.error) && (
+        <p className="text-[12px] font-bold text-destructive">
+          {(takeOverMutation.error ?? confirmSlotMutation.error ?? finalConfirmMutation.error)?.message}
+        </p>
+      )}
+
+      {appointment && showQuote && (
+        <PriceQuoteSheet
+          open={quoteOpen}
+          onOpenChange={setQuoteOpen}
+          appointmentId={appointment.id}
+          initialPriceMin={appointment.priceMinIls != null ? String(appointment.priceMinIls) : ''}
+          initialPriceMax={appointment.priceMaxIls != null ? String(appointment.priceMaxIls) : ''}
+          initialDeposit={appointment.depositAmount != null ? String(appointment.depositAmount) : '350'}
+          initialDurationMinutes={appointment.durationMinutes}
+          onSuccess={() => {
+            setQuoteOpen(false)
+            invalidateAll()
+          }}
+          onTakeover={() => takeOverMutation.mutate()}
+          isTakingOver={takeOverMutation.isPending}
+        />
+      )}
+
+      {showReceiptApprove && (
+        <ReceiptVerificationSheet
+          open={receiptOpen}
+          onOpenChange={setReceiptOpen}
+          conversationId={conversation.id}
+          initialAmount={appointment?.depositAmount != null ? String(appointment.depositAmount) : ''}
+          receiptImageUrl={receiptImageUrl}
+          onZoomImage={onZoomReceipt}
+          onSuccess={() => {
+            setReceiptOpen(false)
+            invalidateAll()
+          }}
+          onTakeover={() => takeOverMutation.mutate()}
+          isTakingOver={takeOverMutation.isPending}
+        />
+      )}
     </div>
   )
 }

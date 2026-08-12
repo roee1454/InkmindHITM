@@ -6,7 +6,6 @@ import {
   SheetContent,
   SheetTitle,
   SheetDescription,
-  SheetHandle,
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 
@@ -40,76 +39,54 @@ export function ContinuationListSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="bottom"
-        className="mx-auto w-full max-w-lg rounded-t-[28px] border-t border-border bg-card p-6 shadow-2xl max-h-[90svh] overflow-y-auto font-assistant space-y-5 select-none"
-        dir="rtl"
-      >
-        <SheetHandle />
-
+      <SheetContent side="bottom" className="mx-auto w-full max-w-lg gap-5 font-assistant" dir="rtl">
         {/* Top Header with Back button */}
-        <div className="flex items-center justify-between border-b border-border pb-3">
+        <div className="flex items-center justify-between border-b border-border/60 pb-3">
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="flex size-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted cursor-pointer"
+            className="tap-target text-muted-foreground"
           >
             <ChevronRight size={22} />
           </button>
           <SheetTitle className="text-lg font-extrabold text-foreground">
             השלמת הגדרה
           </SheetTitle>
-          <div className="size-10" />
+          <div className="size-11" />
         </div>
 
-        <SheetDescription className="text-sm font-medium text-muted-foreground text-center">
+        <SheetDescription className="text-center text-sm font-medium text-muted-foreground">
           אף אחת מאלה לא חוסמת אותך. הסוכן עובד גם בלעדיהן.
         </SheetDescription>
 
         {/* Dynamic List Card */}
-        <div className="rounded-[22px] border border-border bg-card overflow-hidden shadow-xs">
-          <div className="divide-y divide-border/60">
-            {items.map((item) => {
-              const Icon = item.icon
-              return (
+        <div className="card-native overflow-hidden">
+          {items.map((item) => {
+            const Icon = item.icon
+            return (
+              <div key={item.id} onClick={() => handleItemClick(item.link)} className="row-native cursor-pointer">
                 <div
-                  key={item.id}
-                  onClick={() => handleItemClick(item.link)}
-                  className="flex items-center gap-3 px-4 py-3.5 cursor-pointer select-none transition-colors active:bg-muted/40 hover:bg-muted/20"
-                >
-                  <div
-                    className={cn(
-                      'flex size-9 shrink-0 items-center justify-center rounded-xl',
-                      item.completed
-                        ? 'bg-emerald-500/10 text-emerald-600'
-                        : 'bg-muted text-muted-foreground',
-                    )}
-                  >
-                    <Icon size={18} />
-                  </div>
-
-                  <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                    <span className="text-[15px] font-bold text-foreground truncate">
-                      {item.label}
-                    </span>
-                    <span className="text-[13px] text-muted-foreground font-medium truncate">
-                      {item.desc}
-                    </span>
-                  </div>
-
-                  {item.completed ? (
-                    <span className="text-xs font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 shrink-0">
-                      {item.actionText}
-                    </span>
-                  ) : (
-                    <span className="text-[13.5px] font-extrabold text-primary shrink-0 hover:underline">
-                      {item.actionText}
-                    </span>
+                  className={cn(
+                    'flex size-9 shrink-0 items-center justify-center rounded-xl',
+                    item.completed ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground',
                   )}
+                >
+                  <Icon size={18} />
                 </div>
-              )
-            })}
-          </div>
+
+                <div className="min-w-0 flex-1 flex flex-col gap-0.5">
+                  <span className="truncate text-[15px] font-bold text-foreground">{item.label}</span>
+                  <span className="truncate text-[13px] font-medium text-muted-foreground">{item.desc}</span>
+                </div>
+
+                {item.completed ? (
+                  <span className="pill bg-success/12 text-success shrink-0">{item.actionText}</span>
+                ) : (
+                  <span className="shrink-0 text-[13.5px] font-extrabold text-primary">{item.actionText}</span>
+                )}
+              </div>
+            )
+          })}
         </div>
 
         {/* Footer Link */}
@@ -117,7 +94,7 @@ export function ContinuationListSheet({
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="text-[14.5px] font-bold text-muted-foreground hover:text-foreground cursor-pointer"
+            className="cursor-pointer text-[14.5px] font-bold text-muted-foreground"
           >
             לא עכשיו — הזכר לי בעוד שבוע
           </button>

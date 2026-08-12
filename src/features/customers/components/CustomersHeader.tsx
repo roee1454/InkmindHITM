@@ -14,17 +14,14 @@ export const CustomersHeader: React.FC<CustomersHeaderProps> = ({
   onNewCustomer,
 }) => {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between font-assistant" dir="rtl">
-      <div className="hidden lg:block">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">מאגר לקוחות</h1>
-        <p className="text-xs text-muted-foreground mt-1">
+    <div className="hidden items-center justify-between gap-3 lg:flex" dir="rtl">
+      <div className="page-head">
+        <h1>מאגר לקוחות</h1>
+        <p>
           {totalCustomers} לקוחות • ₪{totalSpend.toLocaleString()} סה"כ הכנסות
         </p>
       </div>
-      <Button
-        onClick={onNewCustomer}
-        className="flex items-center gap-1.5 font-bold cursor-pointer shrink-0"
-      >
+      <Button onClick={onNewCustomer} className="shrink-0 gap-1.5">
         <Plus size={16} /> לקוח חדש
       </Button>
     </div>

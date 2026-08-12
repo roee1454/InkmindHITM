@@ -70,16 +70,26 @@ export const HourPicker: React.FC<HourPickerProps> = ({
         <button
           type="button"
           className={cn(
-            "flex h-10 w-full cursor-pointer items-center gap-2 rounded-xl border border-input bg-muted px-3 py-2 font-assistant text-xs text-foreground focus-visible:border-primary/50 focus-visible:outline-none",
+            "flex h-12 w-full cursor-pointer items-center gap-2 rounded-2xl border border-input/80 bg-card px-4 font-assistant text-base text-foreground shadow-xs transition-all duration-150 ease-native outline-none focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 md:h-11 md:text-[15px]",
             className
           )}
         >
-          {!hideIcon && <Clock size={14} className="shrink-0 text-muted-foreground" />}
-          <span className={cn("truncate", !value && "text-muted-foreground")}>{value || placeholder}</span>
+          {!hideIcon && <Clock size={18} className="shrink-0 text-muted-foreground" />}
+          <span className={cn("truncate", !value && "text-muted-foreground/50")}>{value || placeholder}</span>
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-28 p-1">
-        <div ref={listRef} onKeyDown={handleKeyDown} className="max-h-60 overflow-y-auto">
+      <PopoverContent className="w-32 p-2">
+        <div
+          ref={listRef}
+          onKeyDown={handleKeyDown}
+          // The popover renders in its own portal outside the modal Sheet/Dialog it opens from.
+          // That Dialog's scroll-lock (react-remove-scroll) intercepts touchmove document-wide and
+          // blocks scrolling on anything it doesn't recognize as its own content — stopping
+          // propagation here keeps the block from reaching this list, so it stays scrollable on
+          // mobile.
+          onTouchMove={(e) => e.stopPropagation()}
+          className="max-h-60 overflow-y-auto overscroll-contain"
+        >
           {options.map((time) => (
             <button
               key={time}
@@ -90,7 +100,7 @@ export const HourPicker: React.FC<HourPickerProps> = ({
                 setOpen(false)
               }}
               className={cn(
-                "block w-full cursor-pointer rounded-lg px-3 py-1.5 text-right text-xs outline-none hover:bg-muted focus:bg-muted",
+                "block h-12 w-full cursor-pointer rounded-xl px-3 text-right font-assistant text-base tabular-nums outline-none transition-colors duration-100 hover:bg-muted focus:bg-muted",
                 time === value && "bg-primary/10 font-bold text-primary"
               )}
             >

@@ -1,22 +1,11 @@
 import React, { useEffect } from 'react'
-import { Bot, PowerOff, Save, SlidersHorizontal, BookOpen, ShieldAlert, Bug, Trash2 } from 'lucide-react'
+import { Bot, Save, Trash2 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import {
-  getAiSettings,
-  toggleAiEnabled,
-  saveAiConfig,
-  saveAiInstructions,
-  testAiConnection,
-} from '../server/settings'
+import { getAiSettings, toggleAiEnabled, saveAiConfig } from '../server/settings'
 import type { AiSettings } from '../server/settings'
 import { resetConversations } from '@/features/conversations/server/debug'
-import { FaqTab } from './FaqTab'
 import { ModelSearchSelect } from './ModelSearchSelect'
+import { SettingsTabSkeleton } from './SettingsTabSkeleton'
 import { useSettingsUiStore } from '../store/settingsUiStore'
 import { useConfirm } from '@/hooks/use-confirm'
 
@@ -32,18 +21,12 @@ export const AiAgentTab: React.FC = () => {
   const confirm = useConfirm()
   const {
     aiModel: model,
-    aiTemperature: temperature,
     aiMaxTokens: maxTokens,
-    aiInstructions: instructions,
     aiConfigSaved: configSaved,
-    aiInstructionsSaved: instructionsSaved,
     aiError: error,
     setAiModel: setModel,
-    setAiTemperature: setTemperature,
     setAiMaxTokens: setMaxTokens,
-    setAiInstructions: setInstructions,
     setAiConfigSaved: setConfigSaved,
-    setAiInstructionsSaved: setInstructionsSaved,
     setAiError: setError,
   } = useSettingsUiStore()
 
@@ -55,9 +38,7 @@ export const AiAgentTab: React.FC = () => {
   useEffect(() => {
     if (!settings) return
     setModel(settings.aiConfig.model || 'claude-sonnet-5')
-    setTemperature(settings.aiConfig.temperature)
     setMaxTokens(settings.aiConfig.maxTokens === null ? '' : String(settings.aiConfig.maxTokens))
-    setInstructions(settings.systemInstructions || '')
   }, [settings])
 
   const toggleAiMutation = useMutation({
@@ -84,27 +65,6 @@ export const AiAgentTab: React.FC = () => {
     },
   })
 
-  const testMutation = useMutation({
-    mutationFn: () =>
-      testAiConnection({
-        data: { model: model.trim(), temperature, maxTokens: parseMaxTokens(maxTokens) },
-      }),
-  })
-
-  const saveInstructionsMutation = useMutation({
-    mutationFn: (body: { instructions: string }) =>
-      saveAiInstructions({ data: body }),
-    onSuccess: () => {
-      setError(null)
-      setInstructionsSaved(true)
-      setTimeout(() => setInstructionsSaved(false), 2000)
-      queryClient.invalidateQueries({ queryKey: ['ai-settings'] })
-    },
-    onError: (err: unknown) => {
-      setError(err instanceof Error ? err.message : 'שגיאה בשמירת חוקי הברזל')
-    },
-  })
-
   const handleToggleAi = async () => {
     if (!settings) return
     const nextEnabled = !settings.aiEnabled
@@ -119,28 +79,19 @@ export const AiAgentTab: React.FC = () => {
     if (ok) toggleAiMutation.mutate(nextEnabled)
   }
 
-  const handleSaveConfig = (e: React.FormEvent) => {
-    e.preventDefault()
-    const trimmedMaxTokens = maxTokens.trim()
-    const parsedMaxTokens = trimmedMaxTokens === '' ? null : parseInt(trimmedMaxTokens, 10)
-
-    if (parsedMaxTokens !== null && (!Number.isInteger(parsedMaxTokens) || parsedMaxTokens < 1)) {
-      setError('מגבלת טוקנים חייבת להיות מספר שלם חיובי, או ריקה ללא הגבלה')
-      return
-    }
-
+  const handleSaveConfig = () => {
     const trimmedModel = model.trim()
     if (!trimmedModel) {
       setError('נא לבחור או להזין שם מודל AI מורשה')
       return
     }
-
-    saveConfigMutation.mutate({ model: trimmedModel, temperature, maxTokens: parsedMaxTokens })
-  }
-
-  const handleSaveInstructions = (e: React.FormEvent) => {
-    e.preventDefault()
-    saveInstructionsMutation.mutate({ instructions })
+    // Temperature is no longer user-editable — round-trip whatever's already stored (or the
+    // shared 0.4 default) instead of silently overwriting it.
+    saveConfigMutation.mutate({
+      model: trimmedModel,
+      temperature: settings?.aiConfig.temperature ?? 0.4,
+      maxTokens: parseMaxTokens(maxTokens),
+    })
   }
 
   const resetConversationsMutation = useMutation({
@@ -163,289 +114,90 @@ export const AiAgentTab: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 font-assistant text-right" dir="rtl">
+    <div className="flex max-w-xl flex-col gap-5 pb-28 font-assistant" dir="rtl">
+      {import.meta.env.DEV && (
+        <div className="card-native space-y-2.5 border-rose-500/25 bg-rose-500/5 p-4">
+          <div className="flex items-center gap-2 text-rose-500">
+            <Trash2 size={16} />
+            <span className="text-[13px] font-extrabold">כלי פיתוח — איפוס שיחות</span>
+          </div>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            מוחק לצמיתות את כל השיחות וההודעות במערכת. לקוחות ותורים לא נמחקים. זמין רק בסביבת פיתוח.
+          </p>
+          <button
+            type="button"
+            disabled={resetConversationsMutation.isPending}
+            onClick={handleResetConversations}
+            className="btn-native h-11 !w-full bg-destructive text-destructive-foreground md:!w-auto"
+          >
+            {resetConversationsMutation.isPending ? 'מאפס…' : 'איפוס כל השיחות וההודעות'}
+          </button>
+          {resetConversationsMutation.isSuccess && (
+            <p className="text-xs font-semibold text-emerald-500">
+              נמחקו {resetConversationsMutation.data.deletedConversations} שיחות ו-
+              {resetConversationsMutation.data.deletedMessages} הודעות.
+            </p>
+          )}
+        </div>
+      )}
+
       {error && (
-        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs font-semibold text-rose-400">
+        <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs font-semibold text-rose-500">
           {error}
         </div>
       )}
 
-      <Tabs defaultValue="general" dir="rtl" className="w-full">
-        <div className="flex justify-center sm:justify-start">
-          <TabsList className="bg-muted/70 border border-border/80 p-1 rounded-xl mb-3 sm:mb-6 inline-flex gap-1 h-auto shadow-sm">
-          <TabsTrigger
-            value="general"
-            className="cursor-pointer rounded-lg px-2.5 py-1 sm:px-4 sm:py-2 font-bold text-xs transition-all hover:text-foreground data-[state=active]:bg-card data-[state=active]:shadow-xs flex items-center gap-1.5"
-          >
-            <SlidersHorizontal size={13} />
-            הגדרות כלליות
-          </TabsTrigger>
-          <TabsTrigger
-            value="knowledge"
-            className="cursor-pointer rounded-lg px-2.5 py-1 sm:px-4 sm:py-2 font-bold text-xs transition-all hover:text-foreground data-[state=active]:bg-card data-[state=active]:shadow-xs flex items-center gap-1.5"
-          >
-            <BookOpen size={13} />
-            מאגרי מידע
-          </TabsTrigger>
-          {import.meta.env.DEV && (
-            <TabsTrigger
-              value="debug"
-              className="cursor-pointer rounded-lg px-2.5 py-1 sm:px-4 sm:py-2 font-bold text-xs transition-all hover:text-foreground data-[state=active]:bg-card data-[state=active]:shadow-xs flex items-center gap-1.5"
+      {loadingSettings || !settings ? (
+        <SettingsTabSkeleton fields={1} />
+      ) : (
+        <>
+          <div className="row-native card-native !border-t-0">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/12 text-emerald-600">
+              <Bot size={18} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[15px] font-bold text-foreground">הסוכן פעיל</div>
+              <div className="text-[13px] text-muted-foreground">מגיב אוטומטית לפניות חדשות</div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={settings.aiEnabled}
+              disabled={toggleAiMutation.isPending}
+              onClick={handleToggleAi}
+              className={`peer inline-flex h-[30px] w-[50px] shrink-0 cursor-pointer items-center rounded-full border-0 p-[3px] transition-colors duration-150 ease-native disabled:cursor-not-allowed disabled:opacity-50 ${
+                settings.aiEnabled ? 'bg-primary' : 'bg-muted'
+              }`}
             >
-              <Bug size={13} />
-              כלי דיבאג
-            </TabsTrigger>
-          )}
-        </TabsList>
-      </div>
-
-        {/* Tab 1: General Settings */}
-        <TabsContent value="general" className="space-y-6 focus-visible:outline-none">
-          {/* Section 1.1: Emergency Kill Switch */}
-          <div className="grid grid-cols-1 gap-6 border-b border-border/60 pb-2 lg:pb-6 lg:grid-cols-12">
-            <div className="space-y-1 lg:col-span-5">
-              <h3 className="text-base font-bold text-foreground">כיבוי חירום של הבוט</h3>
-              <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
-                עוצר את כל התשובות האוטומטיות בכל השיחות בבת אחת. הודעות מלקוחות ימשיכו להתקבל ולהופיע
-                ב-CRM — הבוט פשוט לא יענה.
-              </p>
-            </div>
-
-            <div className="lg:col-span-7">
-              {loadingSettings ? (
-                <div className="text-xs font-semibold text-muted-foreground">טוען…</div>
-              ) : settings ? (
-                <div
-                  className={`flex items-center justify-between rounded-xl border p-4 transition-all duration-300 ${
-                    settings.aiEnabled
-                      ? 'border-emerald-500/20 bg-emerald-500/5 shadow-xs shadow-emerald-500/5'
-                      : 'border-rose-500/25 bg-rose-500/5 shadow-xs shadow-rose-500/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-10 items-center justify-center rounded-xl bg-card border border-border shadow-2xs">
-                      {settings.aiEnabled ? (
-                        <Bot size={20} className="animate-pulse text-emerald-500" />
-                      ) : (
-                        <PowerOff size={20} className="text-rose-500" />
-                      )}
-                    </div>
-                    <div>
-                      <div
-                        className={`text-sm font-bold ${
-                          settings.aiEnabled ? 'text-emerald-500' : 'text-rose-500'
-                        }`}
-                      >
-                        {settings.aiEnabled ? 'הבוט פעיל בכל השיחות' : 'הבוט מושבת בכל השיחות'}
-                      </div>
-                      <div className="text-mini text-muted-foreground">
-                        {settings.aiEnabled
-                          ? 'תשובות אוטומטיות נשלחות כרגיל'
-                          : 'אף תשובה אוטומטית לא נשלחת כרגע'}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-muted-foreground">
-                      {settings.aiEnabled ? 'פעיל' : 'כבוי'}
-                    </span>
-                    <Switch
-                      checked={settings.aiEnabled}
-                      onCheckedChange={handleToggleAi}
-                      disabled={toggleAiMutation.isPending}
-                    />
-                  </div>
-                </div>
-              ) : null}
-            </div>
+              <span
+                className={`block size-6 rounded-full bg-white shadow-sm transition-transform duration-150 ease-native ${
+                  settings.aiEnabled ? 'ms-auto' : ''
+                }`}
+              />
+            </button>
           </div>
 
-          {/* Section 1.2: Model & Parameters */}
-          <form onSubmit={handleSaveConfig} className="grid grid-cols-1 gap-6 pb-2 lg:pb-6 lg:grid-cols-12">
-            <div className="space-y-1 lg:col-span-5">
-              <h3 className="text-base font-bold text-foreground">מודל ופרמטרים של AI</h3>
-              <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
-                בחירת מודל השפה, רמת היצירתיות ומגבלת אורך התשובה שמפעילות את בוט האינטייק בוואטסאפ.
-              </p>
-            </div>
-
-            <div className="space-y-4 lg:col-span-7">
-              {loadingSettings ? (
-                <p className="text-xs text-muted-foreground">טוען…</p>
-              ) : (
-                <div className="space-y-5 rounded-2xl border border-border/80 bg-card p-5 shadow-2xs">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-foreground">מודל AI</label>
-                    <ModelSearchSelect value={model} onChange={setModel} />
-                  </div>
-
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-foreground">
-                      מגבלת טוקנים לתשובה (Context Limit)
-                    </label>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={maxTokens}
-                      onChange={(e) => setMaxTokens(e.target.value)}
-                      placeholder="ללא הגבלה"
-                      className="w-full bg-white dark:bg-muted/20 text-foreground border-input text-right md:w-64"
-                      dir="rtl"
-                    />
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3 pt-2">
-                    <Button
-                      type="submit"
-                      disabled={saveConfigMutation.isPending}
-                      className="cursor-pointer"
-                    >
-                      <Save size={14} className="ml-1.5" />
-                      {saveConfigMutation.isPending ? 'שומר…' : 'שמור שינויים'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={testMutation.isPending}
-                      onClick={() => testMutation.mutate()}
-                      className="cursor-pointer"
-                    >
-                      {testMutation.isPending ? 'בודק…' : 'בדיקת חיבור'}
-                    </Button>
-                    {configSaved && (
-                      <span className="text-xs font-semibold text-emerald-500 animate-fade-in">
-                        נשמר בהצלחה ✓
-                      </span>
-                    )}
-                  </div>
-
-                  {testMutation.isSuccess ? (
-                    <p className="text-xs font-semibold text-emerald-500">
-                      החיבור תקין — תשובת המודל: "{testMutation.data.sample}"
-                    </p>
-                  ) : null}
-                  {testMutation.isError ? (
-                    <p className="text-xs font-semibold text-destructive">
-                      {testMutation.error instanceof Error
-                        ? testMutation.error.message
-                        : 'בדיקת החיבור נכשלה.'}
-                    </p>
-                  ) : null}
-                </div>
-              )}
-            </div>
-          </form>
-        </TabsContent>
-
-        {/* Tab 2: Knowledge Base & Rules */}
-        <TabsContent value="knowledge" className="space-y-8 focus-visible:outline-none">
-          {/* Section 2.1: FAQ */}
-          <div className="border-b border-border/60 pb-3 lg:pb-8">
-            <FaqTab />
+          <div className="flex flex-col gap-1.5">
+            <label className="form-label">מודל</label>
+            <ModelSearchSelect value={model} onChange={setModel} />
           </div>
 
-          {/* Section 2.2: Ironclad Rules */}
-          <form onSubmit={handleSaveInstructions} className="grid grid-cols-1 gap-6 pb-2 lg:pb-6 lg:grid-cols-12">
-            <div className="space-y-1 lg:col-span-5">
-              <div className="flex items-center gap-2 text-foreground mb-1">
-                <ShieldAlert size={18} className="text-primary" />
-                <h3 className="text-base font-bold">חוקי ברזל שאסור להפר</h3>
-              </div>
-              <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
-                הנחיות קשיחות לבוט ה-AI. חוקים אלו ייאכפו בקפדנות ולא יופרו בשום מקרה (למשל: תנאי מקדמה, איסור מתן הנחות מסוימות, מגבלות גיל או הנחיות התנהגות מיוחדות).
-              </p>
-            </div>
-
-            <div className="space-y-4 lg:col-span-7">
-              {loadingSettings ? (
-                <p className="text-xs text-muted-foreground">טוען…</p>
-              ) : (
-                <div className="space-y-4 rounded-2xl border border-border/80 bg-card p-5 shadow-2xs">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs font-semibold text-foreground">
-                      <label>רשימת חוקי ברזל והנחיות מערכת</label>
-                      <span className="text-micro text-muted-foreground">
-                        {instructions.length} תווים
-                      </span>
-                    </div>
-                    <Textarea
-                      value={instructions}
-                      onChange={(e) => setInstructions(e.target.value)}
-                      placeholder={`רשום כאן את חוקי הברזל של הסטודיו. למשל:\n1. אין לקבוע תור ללא תשלום מקדמה של 200 ש"ח.\n2. לעולם אל תיתן מחיר סופי לקעקוע - תן טווח מחירים והבהר שמדובר בהערכה בלבד.\n3. הגבלת גיל המינימום לקעקוע היא 16 עם אישור הורים, או 18 ללא אישור.`}
-                      rows={8}
-                      className="bg-white dark:bg-muted/20 text-foreground border-input text-right font-assistant leading-relaxed"
-                      dir="rtl"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-3 pt-1">
-                    <Button
-                      type="submit"
-                      disabled={saveInstructionsMutation.isPending}
-                      className="cursor-pointer"
-                    >
-                      <Save size={14} className="ml-1.5" />
-                      {saveInstructionsMutation.isPending ? 'שומר חוקים…' : 'שמור חוקים'}
-                    </Button>
-                    {instructionsSaved && (
-                      <span className="text-xs font-semibold text-emerald-500 animate-fade-in">
-                        החוקים נשמרו בהצלחה ✓
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </form>
-        </TabsContent>
-
-        {/* Tab 3: Debug tools (dev-only) */}
-        {import.meta.env.DEV && (
-          <TabsContent value="debug" className="space-y-6 focus-visible:outline-none">
-            <div className="grid grid-cols-1 gap-6 pb-2 lg:pb-6 lg:grid-cols-12">
-              <div className="space-y-1 lg:col-span-5">
-                <div className="flex items-center gap-2 text-foreground mb-1">
-                  <Bug size={18} className="text-primary" />
-                  <h3 className="text-base font-bold">איפוס שיחות</h3>
-                </div>
-                <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
-                  מוחק לצמיתות את כל השיחות וההודעות במערכת, כדי לבדוק זרימת בוט נקייה מאפס.
-                  לקוחות ותורים לא נמחקים. זמין רק בסביבת פיתוח.
-                </p>
-              </div>
-              <div className="lg:col-span-7">
-                <div className="space-y-3 rounded-2xl border border-rose-500/25 bg-rose-500/5 p-5 shadow-2xs">
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    disabled={resetConversationsMutation.isPending}
-                    onClick={handleResetConversations}
-                    className="cursor-pointer"
-                  >
-                    <Trash2 size={14} className="ml-1.5" />
-                    {resetConversationsMutation.isPending ? 'מאפס…' : 'איפוס כל השיחות וההודעות'}
-                  </Button>
-                  {resetConversationsMutation.isSuccess ? (
-                    <p className="text-xs font-semibold text-emerald-500">
-                      נמחקו {resetConversationsMutation.data.deletedConversations} שיחות ו-
-                      {resetConversationsMutation.data.deletedMessages} הודעות.
-                    </p>
-                  ) : null}
-                  {resetConversationsMutation.isError ? (
-                    <p className="text-xs font-semibold text-destructive">
-                      {resetConversationsMutation.error instanceof Error
-                        ? resetConversationsMutation.error.message
-                        : 'האיפוס נכשל.'}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-        )}
-      </Tabs>
+          <div className="sticky bottom-0 z-10 -mx-4 mt-2 flex flex-col gap-2 border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:py-0">
+            <button
+              type="button"
+              disabled={saveConfigMutation.isPending}
+              onClick={handleSaveConfig}
+              className="btn-native"
+            >
+              <Save size={16} />
+              {saveConfigMutation.isPending ? 'שומר…' : 'שמור הגדרות'}
+            </button>
+            {configSaved && (
+              <span className="text-center text-xs font-semibold text-emerald-500">נשמר בהצלחה ✓</span>
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }

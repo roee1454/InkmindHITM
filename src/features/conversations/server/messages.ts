@@ -257,10 +257,12 @@ export const getActiveAppointmentSummary = createServerFn({ method: 'GET' })
       staffName: (staffRecord?.name as string) || null,
       date: toYmd(start),
       timeSlot: minutesToTime(start.getHours() * 60 + start.getMinutes()),
-      durationHours: Number(appointment.duration_hours) || 2,
-      priceIls: appointment.price_amount !== '' && appointment.price_amount != null ? Number(appointment.price_amount) : null,
+      durationMinutes: Number(appointment.duration_minutes) || 120,
+      priceMinIls: appointment.price_min !== '' && appointment.price_min != null ? Number(appointment.price_min) : null,
+      priceMaxIls: appointment.price_max !== '' && appointment.price_max != null ? Number(appointment.price_max) : null,
       depositAmount: appointment.deposit_amount !== '' && appointment.deposit_amount != null ? Number(appointment.deposit_amount) : null,
       depositPaid: Boolean(appointment.deposit_paid),
+      slotConfirmed: Boolean(appointment.slot_confirmed),
     }
   })
 
@@ -335,13 +337,16 @@ export const confirmDepositReceived = createServerFn({ method: 'POST' })
     const dateStr = toYmd(start)
     const timeStr = minutesToTime(start.getHours() * 60 + start.getMinutes())
 
+    const priceMin = appointment.price_min
+    const priceMax = appointment.price_max
+    const priceLabel = priceMin === priceMax ? `₪${priceMax}` : `₪${priceMin}–${priceMax}`
     const messageBody = [
       'קיבלנו את התשלום, תודה! 🎉',
       'רק לוודא לפני שנועלים את התור סופית:',
       `קעקוע: ${(appointment.tattoo_description as string) || '—'}`,
       staffRecord ? `עם: ${staffRecord.name as string}` : null,
       `תאריך: ${dateStr} בשעה ${timeStr}`,
-      `מחיר: ₪${appointment.price_amount}, מקדמה: ₪${appointment.deposit_amount}`,
+      `מחיר: ${priceLabel}, מקדמה: ₪${appointment.deposit_amount}`,
       '',
       'הכל תקין? 🙏',
     ].filter((line) => line !== null).join('\n')
@@ -378,6 +383,62 @@ export const confirmDepositReceived = createServerFn({ method: 'POST' })
         staff_call_reason: '',
         last_message_at: nowIso,
       },
+    })
+
+    return { ok: true }
+  })
+
+/** The muted "דחייה" action on the receipt-approve HITL block — the screenshot didn't hold up
+ *  (wrong amount, wrong method, unreadable). No state change: stays in AWAIT_PAYMENT (a legal
+ *  self-transition) and hands back to the bot so it can watch for a re-sent receipt. */
+export const rejectDepositReceipt = createServerFn({ method: 'POST' })
+  .validator(z.object({ conversationId: z.string() }))
+  .handler(async ({ data }) => {
+    await requireSession()
+    const su = await getSuperuserClient()
+
+    const conversation = await su.collection('conversations').getOne(data.conversationId, { expand: 'customer' })
+    const customer = conversation.expand?.customer as RecordModel | undefined
+    if (!customer?.phone) throw new Error('לשיחה אין לקוח עם מספר טלפון תקין.')
+
+    const windowExpiresAt = conversation.whatsapp_window_expires_at as string | undefined
+    if (windowExpiresAt && new Date(windowExpiresAt).getTime() < Date.now()) {
+      throw new Error('חלון 24 השעות של וואטסאפ נסגר — אי אפשר לשלוח הודעה עד שהלקוח יכתוב שוב.')
+    }
+
+    const settings = await getWhatsAppSettings()
+    if (!settings?.phoneNumberId || !settings.accessToken) {
+      throw new Error('וואטסאפ אינו מוגדר. יש להזין פרטי חיבור בהגדרות.')
+    }
+    const client = createWhatsAppClient({ phoneNumberId: settings.phoneNumberId, accessToken: settings.accessToken })
+
+    const messageBody = 'לא הצלחנו לאמת את האסמכתה ששלחת. אפשר לשלוח צילום מסך ברור יותר של אישור התשלום? 🙏'
+
+    let wamid: string
+    try {
+      ;({ wamid } = await client.sendText({ to: customer.phone as string, body: messageBody }))
+    } catch (err) {
+      throw new Error(err instanceof WhatsAppApiError ? `שליחת ההודעה נכשלה: ${err.message}` : 'שליחת ההודעה נכשלה.')
+    }
+
+    const nowIso = new Date().toISOString()
+    await su.collection('messages').create({
+      conversation: conversation.id,
+      whatsapp_message_id: wamid,
+      direction: 'outbound',
+      sender_type: 'ai_bot',
+      type: 'text',
+      body: messageBody,
+      status: 'sent',
+      timestamp: nowIso,
+      seen: true,
+    })
+
+    await su.collection('conversations').update(data.conversationId, {
+      status: 'bot_active',
+      is_staff_called: false,
+      staff_call_reason: '',
+      last_message_at: nowIso,
     })
 
     return { ok: true }

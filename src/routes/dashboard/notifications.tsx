@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Bell, CheckCheck, AlertCircle, Info, CheckCircle2, AlertTriangle, ExternalLink } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import {
   getNotifications,
   markNotificationAsRead,
@@ -9,7 +8,8 @@ import {
   type ApiNotification,
 } from '@/features/notifications/server/notifications'
 import { z } from 'zod'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { cn } from '@/lib/utils'
 
 const notificationsSearchSchema = z.object({
   highlightId: z.string().optional(),
@@ -40,13 +40,17 @@ function NotificationsPage() {
     },
   })
 
+  const highlightRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     if (highlightId && notifications.length > 0) {
       const targeted = notifications.find((n) => n.id === highlightId)
       if (targeted && !targeted.read) {
         markAsReadMutation.mutate(highlightId)
       }
+      highlightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [highlightId, notifications])
 
   const markAllReadMutation = useMutation({
@@ -65,136 +69,147 @@ function NotificationsPage() {
     markAllReadMutation.mutate()
   }
 
-  const formatNotificationTime = (isoString: string) => {
+  const formatRelativeTime = (isoString: string) => {
     const d = new Date(isoString)
-    return d.toLocaleDateString('he-IL', {
-      hour: '2-digit',
-      minute: '2-digit',
-      day: '2-digit',
-      month: '2-digit',
-    })
+    return d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+  }
+
+  const getIconChipClass = (type: ApiNotification['type']) => {
+    switch (type) {
+      case 'success':
+        return 'bg-success/12 text-success'
+      case 'error':
+        return 'bg-destructive/10 text-destructive'
+      case 'warning':
+        return 'bg-warning/12 text-warning'
+      default:
+        return 'bg-primary/10 text-primary'
+    }
   }
 
   const getIcon = (type: ApiNotification['type']) => {
     switch (type) {
       case 'success':
-        return <CheckCircle2 className="text-emerald-500 shrink-0" size={18} />
+        return <CheckCircle2 size={18} />
       case 'error':
-        return <AlertCircle className="text-rose-500 shrink-0" size={18} />
+        return <AlertCircle size={18} />
       case 'warning':
-        return <AlertTriangle className="text-amber-500 shrink-0" size={18} />
+        return <AlertTriangle size={18} />
       default:
-        return <Info className="text-blue-500 shrink-0" size={18} />
-    }
-  }
-
-  const getBgClass = (notification: ApiNotification) => {
-    if (notification.id === highlightId) {
-      return 'bg-primary/5 border-primary shadow-sm ring-2 ring-primary/20 scale-[1.01]'
-    }
-    if (notification.read) {
-      return 'bg-card/50 border-border/40 opacity-70'
-    }
-    switch (notification.type) {
-      case 'success':
-        return 'bg-emerald-500/5 border-emerald-500/15 shadow-xs shadow-emerald-500/2'
-      case 'error':
-        return 'bg-rose-500/5 border-rose-500/15 shadow-xs shadow-rose-500/2'
-      case 'warning':
-        return 'bg-amber-500/5 border-amber-500/15 shadow-xs shadow-amber-500/2'
-      default:
-        return 'bg-card border-border/80 shadow-2xs'
+        return <Info size={18} />
     }
   }
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
+  // Group by date bucket — היום / אתמול / השבוע / קודם לכן.
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const today = startOfDay(new Date())
+  const yesterday = today - 86400000
+  const weekAgo = today - 7 * 86400000
+
+  const groups: { label: string; items: ApiNotification[] }[] = [
+    { label: 'היום', items: [] },
+    { label: 'אתמול', items: [] },
+    { label: 'השבוע', items: [] },
+    { label: 'קודם לכן', items: [] },
+  ]
+  for (const n of notifications) {
+    const day = startOfDay(new Date(n.created))
+    if (day === today) groups[0]!.items.push(n)
+    else if (day === yesterday) groups[1]!.items.push(n)
+    else if (day > weekAgo) groups[2]!.items.push(n)
+    else groups[3]!.items.push(n)
+  }
+  const nonEmptyGroups = groups.filter((g) => g.items.length > 0)
+
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-4 md:space-y-6 text-right font-assistant py-3 md:py-6" dir="rtl">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-[18px] font-assistant lg:gap-6" dir="rtl">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="hidden lg:block">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">התראות מערכת</h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            {isLoading ? 'טוען התראות…' : `יש לך ${unreadCount} התראות שלא נקראו`}
-          </p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="page-head">
+          <h1>התראות מערכת</h1>
+          <p>{isLoading ? 'טוען התראות…' : `יש לך ${unreadCount} התראות שלא נקראו`}</p>
         </div>
 
         {unreadCount > 0 && (
-          <Button
+          <button
+            type="button"
             onClick={handleMarkAllRead}
             disabled={markAllReadMutation.isPending}
-            variant="outline"
-            size="sm"
-            className="self-start sm:self-auto cursor-pointer"
+            className="shrink-0 cursor-pointer text-[13.5px] font-bold text-primary disabled:opacity-50"
           >
-            <CheckCheck size={14} className="ml-1.5" />
+            <CheckCheck size={14} className="me-1 inline" />
             סמן הכל כנקרא
-          </Button>
+          </button>
         )}
       </div>
 
       {/* Notifications List */}
       {isLoading ? (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 bg-muted/40 animate-pulse rounded-xl border border-border/40" />
+            <div key={i} className="h-16 animate-pulse rounded-2xl bg-muted" />
           ))}
         </div>
       ) : notifications.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 rounded-2xl border border-dashed border-border/80 bg-card/30 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-muted mb-4">
-            <Bell size={24} className="text-muted-foreground/60" />
-          </div>
-          <h3 className="text-sm font-bold text-foreground">אין התראות חדשות</h3>
-          <p className="text-xs text-muted-foreground mt-1">כאשר יהיו עדכונים או פעילויות במערכת, הם יופיעו כאן.</p>
+        <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-border py-16 text-center">
+          <Bell size={64} className="text-muted-foreground/30" />
+          <p className="text-sm font-medium text-muted-foreground">אין התראות חדשות</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {notifications.map((notification) => (
-            <div
-              key={notification.id}
-              onClick={() => !notification.read && handleMarkAsRead(notification.id)}
-              className={`flex items-start gap-4 rounded-xl border p-4 transition-all duration-300 ${getBgClass(
-                notification
-              )} ${!notification.read ? 'cursor-pointer hover:border-border' : ''}`}
-            >
-              {/* Icon */}
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-card border border-border shadow-3xs">
-                {getIcon(notification.type)}
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className={`text-sm font-bold text-foreground ${!notification.read ? '' : 'font-semibold text-muted-foreground'}`}>
-                    {notification.title}
-                  </h3>
-                  <span className="text-micro text-muted-foreground font-mono shrink-0">
-                    {formatNotificationTime(notification.created)}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  {notification.message}
-                </p>
-
-                {/* Optional CTA Link */}
-                {notification.link && (
-                  <a
-                    href={notification.link}
-                    className="inline-flex items-center gap-1 text-mini font-semibold text-primary hover:underline mt-2.5"
-                    onClick={(e) => e.stopPropagation()}
+        <div className="flex flex-col gap-5">
+          {nonEmptyGroups.map((group) => (
+            <div key={group.label} className="flex flex-col gap-2">
+              <h2 className="px-1 text-[13px] font-extrabold text-muted-foreground">{group.label}</h2>
+              <div className="card-native overflow-hidden">
+                {group.items.map((notification) => (
+                  <div
+                    key={notification.id}
+                    ref={notification.id === highlightId ? highlightRef : undefined}
+                    onClick={() => !notification.read && handleMarkAsRead(notification.id)}
+                    className={cn(
+                      'row-native relative',
+                      !notification.read && 'bg-primary/5',
+                      !notification.read && 'cursor-pointer',
+                      notification.id === highlightId && 'ring-2 ring-primary/40',
+                    )}
                   >
-                    <span>פרטים נוספים / מעבר לעמוד</span>
-                    <ExternalLink size={10} />
-                  </a>
-                )}
-              </div>
+                    {!notification.read && (
+                      <span className="absolute start-1.5 top-1/2 size-2 -translate-y-1/2 rounded-full bg-primary" />
+                    )}
+                    <div
+                      className={cn(
+                        'flex size-9 shrink-0 items-center justify-center rounded-xl',
+                        getIconChipClass(notification.type),
+                      )}
+                    >
+                      {getIcon(notification.type)}
+                    </div>
 
-              {/* Status Dot */}
-              {!notification.read && (
-                <span className="h-2 w-2 rounded-full bg-primary animate-pulse shrink-0 self-center" />
-              )}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="truncate text-[15px] font-bold text-foreground">{notification.title}</h3>
+                        <span className="shrink-0 text-[12px] tabular-nums text-muted-foreground">
+                          {formatRelativeTime(notification.created)}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 truncate text-[13px] text-muted-foreground">{notification.message}</p>
+
+                      {notification.link && (
+                        <a
+                          href={notification.link}
+                          className="mt-1.5 inline-flex items-center gap-1 text-[12.5px] font-bold text-primary"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <span>פרטים נוספים</span>
+                          <ExternalLink size={11} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>

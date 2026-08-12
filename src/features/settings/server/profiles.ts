@@ -1,40 +1,47 @@
 import { createServerFn } from '@tanstack/react-start'
+import { ClientResponseError } from 'pocketbase'
 import { z } from 'zod'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { requireAuth } from './helpers.server'
 
-export interface StyleOption {
-  value: string
-  label: string
+/** Studio name/portfolio links commonly get typed as a bare domain or handle ("inkmind.tattoo",
+ *  "instagram.com/studio") with no scheme — PocketBase's `url` field type rejects those outright
+ *  ("Must be a valid url"), which is exactly what onboarding step 3 was hitting. Prepend `https://`
+ *  so a normal-looking link a person would type is accepted instead of silently failing. */
+function normalizeUrlField(value: string | null | undefined): string {
+  const trimmed = (value ?? '').trim()
+  if (!trimmed) return ''
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
 }
 
-export const STYLE_OPTIONS: StyleOption[] = [
-  { value: 'fine_line', label: 'קו עדין (Fine Line)' },
-  { value: 'traditional', label: 'מסורתי (Traditional)' },
-  { value: 'neo_traditional', label: 'ניאו מסורתי (Neo Traditional)' },
-  { value: 'realism', label: 'ריאליזם (Realism)' },
-  { value: 'blackwork', label: 'בלאקוורק (Blackwork)' },
-  { value: 'japanese', label: 'יפני (Japanese)' },
-  { value: 'geometric', label: 'גיאומטרי (Geometric)' },
-  { value: 'watercolor', label: 'צבעי מים (Watercolor)' },
-  { value: 'tribal', label: 'שבטי (Tribal)' },
-  { value: 'lettering', label: 'אותיות (Lettering)' },
-  { value: 'minimalist', label: 'מינימליסטי (Minimalist)' },
-  { value: 'portrait', label: 'פורטרט (Portrait)' },
-]
+const URL_FIELD_LABELS: Record<string, string> = {
+  portfolio_website: 'קישור לתיק עבודות',
+  portfolio_instagram: 'אינסטגרם',
+  website_url: 'אתר הסטודיו',
+}
 
-export const getStyleOptions = createServerFn({ method: 'GET' }).handler(
-  async (): Promise<StyleOption[]> => {
-    return STYLE_OPTIONS
-  },
-)
+/** PocketBase's generic "Failed to update/create record." tells the user nothing — surface which
+ *  field it actually rejected and why, in Hebrew, instead. */
+function describeArtistProfileError(err: unknown): Error {
+  if (err instanceof ClientResponseError) {
+    const fieldErrors = err.response?.data as Record<string, { message?: string }> | undefined
+    if (fieldErrors) {
+      const messages = Object.entries(fieldErrors).map(([field, detail]) => {
+        const label = URL_FIELD_LABELS[field] ?? field
+        return `${label}: ${detail?.message === 'Must be a valid url' ? 'הקישור אינו תקין' : detail?.message || 'ערך לא תקין'}`
+      })
+      if (messages.length > 0) return new Error(messages.join(' · '))
+    }
+  }
+  return err instanceof Error ? err : new Error('שגיאה בשמירת הפרופיל')
+}
 
 export interface ApiArtistProfile {
   id: string
   staffId: string
-  styles: string[]
   portfolioUrl: string | null
   instagramHandle: string | null
+  websiteUrl: string | null
   bio: string | null
   artistName: string
 }
@@ -50,9 +57,9 @@ export const getArtistProfiles = createServerFn({ method: 'GET' }).handler(
       return {
         id: item.id,
         staffId: (item.staff as string) || '',
-        styles: (item.tattoo_styles as string[] | undefined) || [],
         portfolioUrl: (item.portfolio_website as string) || null,
         instagramHandle: (item.portfolio_instagram as string) || null,
+        websiteUrl: (item.website_url as string) || null,
         bio: (item.bio as string) || null,
         artistName: staffObj?.name || 'מקעקע/ת',
       }
@@ -63,9 +70,9 @@ export const getArtistProfiles = createServerFn({ method: 'GET' }).handler(
 const saveArtistProfileSchema = z.object({
   id: z.string().optional(),
   staffId: z.string(),
-  styles: z.array(z.string()).default([]),
   portfolioUrl: z.string().nullable().optional(),
   instagramHandle: z.string().nullable().optional(),
+  websiteUrl: z.string().nullable().optional(),
   bio: z.string().nullable().optional(),
 })
 
@@ -81,26 +88,30 @@ export const saveArtistProfile = createServerFn({ method: 'POST' })
     const su = await getSuperuserClient()
     const payload: Record<string, unknown> = {
       staff: data.staffId,
-      tattoo_styles: data.styles,
-      portfolio_website: data.portfolioUrl || '',
-      portfolio_instagram: data.instagramHandle || '',
+      portfolio_website: normalizeUrlField(data.portfolioUrl),
+      portfolio_instagram: normalizeUrlField(data.instagramHandle),
+      website_url: normalizeUrlField(data.websiteUrl),
       bio: data.bio || '',
     }
 
-    if (data.id) {
-      const updated = await su.collection('artist_profiles').update(data.id, payload)
-      return { id: updated.id }
-    } else {
-      const existing = await su.collection('artist_profiles').getList(1, 1, {
-        filter: `staff = "${data.staffId}"`,
-      })
-      const first = existing.items[0]
-      if (first) {
-        const updated = await su.collection('artist_profiles').update(first.id, payload)
+    try {
+      if (data.id) {
+        const updated = await su.collection('artist_profiles').update(data.id, payload)
         return { id: updated.id }
+      } else {
+        const existing = await su.collection('artist_profiles').getList(1, 1, {
+          filter: `staff = "${data.staffId}"`,
+        })
+        const first = existing.items[0]
+        if (first) {
+          const updated = await su.collection('artist_profiles').update(first.id, payload)
+          return { id: updated.id }
+        }
+        const created = await su.collection('artist_profiles').create(payload)
+        return { id: created.id }
       }
-      const created = await su.collection('artist_profiles').create(payload)
-      return { id: created.id }
+    } catch (err) {
+      throw describeArtistProfileError(err)
     }
   })
 
@@ -123,20 +134,24 @@ export const deleteArtistProfile = createServerFn({ method: 'POST' })
 export interface BotArtistMatch {
   staffId: string
   name: string
-  styles: string[]
   portfolioUrl: string | null
   instagramHandle: string | null
+  websiteUrl: string | null
   bio: string | null
   isAdmin: boolean
 }
 
 /** Superuser-context artist lookup for the `suggest_artists` bot tool. A name search (when
- *  given) always takes precedence over a style search — a client naming a specific artist is
- *  a more specific request than a style preference. Name matching is case-insensitive
- *  substring, not exact, matching the ported prototype's behavior. */
+ *  given) always takes precedence — a client naming a specific artist is a more specific
+ *  request than a general style question. Style matching isn't done server-side any more
+ *  (there's no `tattoo_styles` enum): each artist's free-text `bio` is returned instead, and
+ *  the model reasons over it directly — it can read "מתמחה בריאליזם ושחור-לבן" as well as any
+ *  enum lookup could, without the studio being boxed into 12 fixed style buckets. Name
+ *  matching is case-insensitive substring, not exact, matching the ported prototype's
+ *  behavior. */
 export async function suggestArtistsForBot(
   su: Awaited<ReturnType<typeof getSuperuserClient>>,
-  { style, artistName }: { style?: string; artistName?: string },
+  { artistName }: { artistName?: string },
 ): Promise<BotArtistMatch[]> {
   const list = await su.collection('artist_profiles').getFullList({ expand: 'staff' })
 
@@ -145,9 +160,9 @@ export async function suggestArtistsForBot(
     return {
       staffId: (item.staff as string) || '',
       name: staffObj?.name || 'מקעקע/ת',
-      styles: (item.tattoo_styles as string[] | undefined) || [],
       portfolioUrl: (item.portfolio_website as string) || null,
       instagramHandle: (item.portfolio_instagram as string) || null,
+      websiteUrl: (item.website_url as string) || null,
       bio: (item.bio as string) || null,
       isAdmin: staffObj?.role === 'owner' || staffObj?.role === 'admin',
     }
@@ -159,11 +174,6 @@ export async function suggestArtistsForBot(
       const name = (item.expand?.staff as { name?: string } | undefined)?.name
       return name?.toLowerCase().includes(wanted)
     }).map(toMatch)
-    if (matches.length > 0) return matches
-  }
-
-  if (style) {
-    const matches = list.filter((item) => ((item.tattoo_styles as string[] | undefined) || []).includes(style)).map(toMatch)
     if (matches.length > 0) return matches
   }
 

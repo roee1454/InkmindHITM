@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
-import { createFileRoute, Outlet, redirect, useLocation, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, Outlet, redirect, useLocation, useNavigate } from '@tanstack/react-router'
+import { Plus } from 'lucide-react'
 import { Sidebar } from '@/components/Sidebar'
 import { MobileTopBar } from '@/components/MobileTopBar'
 import { MobileBottomNav } from '@/components/MobileBottomNav'
 import { AppDrawer } from '@/components/AppDrawer'
-import { routeTitle } from '@/components/navigation'
+import { routeTitle, settingsBackTarget } from '@/components/navigation'
 import { getCurrentSession } from '@/features/auth/server/auth'
 import { getSettings } from '@/features/onboarding/server/onboarding'
+import { getStaffList } from '@/features/settings/server/staff'
 import { getBrowserClient } from '@/integrations/pocketbase/client'
 import { useToast } from '@/components/ui/ToastProvider'
 import { ConfirmProvider } from '@/hooks/use-confirm'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 let cachedSession: any = null
 let cachedSettings: any = null
@@ -23,17 +25,18 @@ export function clearSessionCache() {
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: async () => {
     if (typeof window !== 'undefined' && cachedSession && cachedSettings) {
-      return { session: cachedSession }
+      return { session: cachedSession, settings: cachedSettings }
     }
 
-    const session = await getCurrentSession()
+    // Neither call depends on the other's result, and getSettings() doesn't require auth —
+    // safe to run in parallel instead of a sequential round-trip each.
+    const [session, settings] = await Promise.all([getCurrentSession(), getSettings()])
     if (!session) {
       clearSessionCache()
       throw redirect({ to: '/auth/login' })
     }
-    const settings = await getSettings()
     if (!settings?.onboarding_completed) {
-      throw redirect({ to: '/onboarding/profile' })
+      throw redirect({ to: '/onboarding/studio' })
     }
 
     if (typeof window !== 'undefined') {
@@ -41,7 +44,7 @@ export const Route = createFileRoute('/dashboard')({
       cachedSettings = settings
     }
 
-    return { session }
+    return { session, settings }
   },
   loader: ({ context }) => context.session,
   component: DashboardLayout,
@@ -49,17 +52,64 @@ export const Route = createFileRoute('/dashboard')({
 
 function DashboardLayout() {
   const session = Route.useLoaderData()
+  const { settings } = Route.useRouteContext()
   const location = useLocation()
   const navigate = useNavigate()
   const isConversations = location.pathname.startsWith('/dashboard/conversations')
+  const isLeads = location.pathname.startsWith('/dashboard/leads')
   const { toast } = useToast()
   const queryClient = useQueryClient()
+
+  // Studio-wide palette/dark-mode — DB stays authoritative (cross-device), but every load here
+  // reconciles it into localStorage so `__root.tsx`'s inline head script can apply the theme
+  // synchronously before first paint on the *next* load, with no extra fetch of its own.
+  useEffect(() => {
+    if (!settings) return
+    const theme = (settings.ui_theme as string) || 'indigo'
+    const dark = Boolean(settings.ui_dark_mode)
+    document.documentElement.setAttribute('data-theme', theme)
+    document.documentElement.classList.toggle('dark', dark)
+    try {
+      localStorage.setItem('ui-theme', theme)
+      localStorage.setItem('ui-dark-mode', dark ? '1' : '0')
+    } catch {}
+  }, [settings])
 
   // An open chat thread is a full-screen detail view on mobile: no top bar, no tab bar, so the
   // composer isn't fighting the on-screen keyboard for the bottom 64px.
   const chatId = (location.search as Record<string, unknown>)?.chatId
   const isChatDetail = isConversations && typeof chatId === 'string' && !!chatId
   const showMobileChrome = !isChatDetail
+
+  // Team member detail's top bar shows the member's name instead of the generic section title —
+  // the only route whose title depends on loaded data rather than pathname alone.
+  const isTeamDetail = location.pathname === '/dashboard/settings/team'
+  const staffIdParam = isTeamDetail ? ((location.search as Record<string, unknown>)?.staff as string | undefined) : undefined
+  const { data: staffListForTitle } = useQuery({
+    queryKey: ['staff-list'],
+    queryFn: () => getStaffList(),
+    enabled: Boolean(staffIdParam),
+  })
+  const selectedStaffName = staffIdParam ? staffListForTitle?.find((m) => m.id === staffIdParam)?.name : undefined
+  const mobileTopBarTitle = selectedStaffName ?? routeTitle(location.pathname)
+  const backTo = settingsBackTarget(location.pathname, (location.search as Record<string, unknown>) ?? {})
+
+  // Customers and calendar show a page-specific "+" create action instead of the bell — the
+  // page itself owns the create-dialog state, opened via the `new=1` search param.
+  const showsCreateAction =
+    location.pathname === '/dashboard/customers' ||
+    location.pathname.startsWith('/dashboard/calendar') ||
+    location.pathname === '/dashboard/settings/faq'
+  const mobileTopBarAction = showsCreateAction ? (
+    <Link
+      to="."
+      search={(prev) => ({ ...prev, new: '1' }) as Record<string, unknown>}
+      aria-label="הוספה"
+      className="tap-target text-primary"
+    >
+      <Plus size={22} />
+    </Link>
+  ) : undefined
 
   const [menuOpen, setMenuOpen] = useState(false)
   // Radix won't close the sheet on a router navigation. Key on `href`, not `pathname` — the
@@ -280,8 +330,10 @@ function DashboardLayout() {
         <div className="flex min-w-0 flex-1 flex-col">
           {showMobileChrome && (
             <MobileTopBar
-              title={routeTitle(location.pathname)}
+              title={mobileTopBarTitle}
               onOpenMenu={() => setMenuOpen(true)}
+              onBack={backTo ? () => navigate(backTo) : undefined}
+              action={mobileTopBarAction}
               className="lg:hidden"
             />
           )}
@@ -292,8 +344,10 @@ function DashboardLayout() {
                 ? // Deliberately NOT `flex-1`: in a flex column that sets flex-basis:0 and
                   // grow:1, which overrides this height — the fixed bottom nav would then
                   // overlay the last 64px of the thread, hiding the composer.
-                  'm-0 h-[calc(100svh-var(--app-top-bar-h)-var(--app-bottom-nav-h))] min-w-0 shrink-0 overflow-hidden p-0'
-                : 'page-container min-w-0 flex-1'
+                  'page-container--flush h-[calc(100svh-var(--app-top-bar-h)-var(--app-bottom-nav-h))] min-w-0 shrink-0'
+                : isLeads
+                  ? 'page-container--flush flex min-h-0 min-w-0 flex-1 flex-col h-[calc(100svh-var(--app-top-bar-h)-var(--app-bottom-nav-h))] lg:h-auto lg:min-h-[calc(100vh-4rem)]'
+                  : 'page-container min-w-0 flex-1'
             }
           >
             <Outlet />

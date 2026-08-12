@@ -6,13 +6,7 @@ import { z } from 'zod'
 import { Trash2, UserPlus, User, Edit3, Calendar, ChevronDown, ChevronUp } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog'
+import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -133,7 +127,7 @@ export function StaffManager({ currentStaffId }: StaffManagerProps) {
                       {ROLE_LABELS[member.role] ?? member.role}
                     </Badge>
                     {isSelf && (
-                      <Badge variant="secondary" className="text-micro rounded-full">
+                      <Badge variant="muted" className="text-micro rounded-full">
                         את/ה
                       </Badge>
                     )}
@@ -200,12 +194,7 @@ export function StaffManager({ currentStaffId }: StaffManagerProps) {
             {/* Expandable: Google Calendar */}
             {activePanel === 'calendar' && (
               <div className="border-t border-border/50 px-4 pb-4 pt-3">
-                <GoogleCalendarConnection
-                  staffId={member.id}
-                  staffName={member.name}
-                  staffRole={member.role}
-                  isSelf={isSelf}
-                />
+                <GoogleCalendarConnection staffId={member.id} />
               </div>
             )}
           </div>
@@ -223,15 +212,12 @@ export function StaffManager({ currentStaffId }: StaffManagerProps) {
       </button>
 
       {/* Add Staff Dialog */}
-      <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent dir="rtl" className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>הוספת חבר צוות חדש</DialogTitle>
-            <DialogDescription>
-              הזינו את פרטי המשתמש. הוא יוכל להתחבר למערכת עם האימייל והסיסמה שתגדירו.
-            </DialogDescription>
-          </DialogHeader>
-
+      <ResponsiveDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        title="הוספת חבר צוות חדש"
+        description="הזינו את פרטי המשתמש. הוא יוכל להתחבר למערכת עם האימייל והסיסמה שתגדירו."
+      >
           <Form {...form}>
             <form onSubmit={form.handleSubmit((values) => addMutation.mutate(values))} className="space-y-4">
               <FormField
@@ -267,7 +253,7 @@ export function StaffManager({ currentStaffId }: StaffManagerProps) {
                   <FormItem>
                     <FormLabel className="text-xs font-bold">סיסמה ראשונית</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} placeholder="לפחות 8 תווים" dir="ltr" className="rounded-xl text-xs" />
+                      <Input type="password" {...field} placeholder="לפחות 8 תווים" className="rounded-xl text-xs" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -302,8 +288,7 @@ export function StaffManager({ currentStaffId }: StaffManagerProps) {
               </Button>
             </form>
           </Form>
-        </DialogContent>
-      </Dialog>
+      </ResponsiveDialog>
     </div>
   )
 }

@@ -1,6 +1,5 @@
-import * as React from 'react'
-import { Link, useLocation, useNavigate } from '@tanstack/react-router'
-import { ChevronDown, LogOut, Bell } from 'lucide-react'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { Settings, LogOut, Bell } from 'lucide-react'
 import { Button } from '#/components/ui/button.tsx'
 import { logout } from '#/features/auth/server/auth.ts'
 import type { StaffRecord } from '#/integrations/pocketbase/types.ts'
@@ -10,7 +9,7 @@ import { getUnreadNotificationsCount } from '#/features/notifications/server/not
 import { getAiSettings } from '@/features/settings/server/ai'
 import { cn } from '#/lib/utils.ts'
 import { BrandMark } from '#/components/BrandMark.tsx'
-import { NAV_ITEMS, SETTINGS_SUB_ITEMS } from '#/components/navigation.ts'
+import { NAV_ITEMS } from '#/components/navigation.ts'
 import { clearSessionCache } from '@/routes/dashboard/route'
 
 interface SidebarProps {
@@ -25,17 +24,7 @@ const ROLE_LABELS: Record<string, string> = {
 }
 
 export function Sidebar({ staff, className }: SidebarProps) {
-  const location = useLocation()
   const navigate = useNavigate()
-  const pathname = location.pathname
-
-  const isInSettings = pathname.startsWith('/dashboard/settings')
-  const [isSettingsExpanded, setIsSettingsExpanded] = React.useState(isInSettings)
-
-  React.useEffect(() => {
-    if (isInSettings) setIsSettingsExpanded(true)
-  }, [isInSettings])
-
   // Counts update via the dashboard route's realtime subscriptions (direct cache
   // writes); these long intervals are only a fallback for a dropped SSE connection
   // (HITL-10 — three 15s polls used to run alongside realtime).
@@ -58,9 +47,6 @@ export function Sidebar({ staff, className }: SidebarProps) {
   })
   const aiEnabled = Boolean(aiSettings?.aiEnabled)
 
-  // Extract active tab from location.search
-  const currentTab = (location.search as Record<string, string>)?.tab || 'team'
-
   return (
     // `lg:flex`, not `lg:block` — the aside depends on flex-column for its `flex-1` nav and
     // the footer pinned to the bottom.
@@ -71,12 +57,12 @@ export function Sidebar({ staff, className }: SidebarProps) {
         className,
       )}
     >
-      <div className="flex items-center justify-between gap-2 border-b border-border p-5">
-        <div className="flex min-w-0 items-center justify-start gap-4">
+      <div className="flex items-center justify-between gap-2 border-b border-border/60 p-5">
+        <div className="flex min-w-0 items-center justify-start gap-3">
           <BrandMark size="sm" />
           <div className="flex min-w-0 flex-col items-start font-assistant">
-            <h1 className="text-sm font-black text-foreground">INKMIND</h1>
-            <span className="text-glow text-xs font-black uppercase text-primary/80">
+            <h1 className="text-sm font-extrabold text-foreground">INKMIND</h1>
+            <span className="text-[11px] font-bold uppercase text-muted-foreground">
               ניהול סטודיו
             </span>
           </div>
@@ -85,62 +71,61 @@ export function Sidebar({ staff, className }: SidebarProps) {
         {/* Bell icon button for system notifications */}
         <Link
           to="/dashboard/notifications"
-          activeProps={{ className: 'text-primary border-primary/20 bg-primary/10' }}
-          inactiveProps={{ className: 'text-muted-foreground border-border hover:bg-accent hover:text-foreground' }}
-          className="relative flex h-8 w-8 items-center justify-center rounded-xl border transition-all duration-200"
+          activeProps={{ className: 'text-primary' }}
+          inactiveProps={{ className: 'text-muted-foreground' }}
+          className="tap-target relative"
           title="התראות מערכת"
         >
-          <Bell size={15} />
+          <Bell size={18} />
           {unreadNotificationsCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-micro font-black text-white leading-none">
-              {unreadNotificationsCount}
-            </span>
+            <span className="absolute end-2 top-2 size-2 rounded-full bg-destructive ring-[1.5px] ring-card" />
           )}
         </Link>
       </div>
 
       <Link
-        to="/dashboard/settings"
-        search={{ tab: 'ai' }}
-        className="mx-5 mt-4 flex items-center justify-between rounded-xl border border-border px-3 py-2 font-assistant text-xs font-semibold text-muted-foreground transition-colors hover:bg-accent"
+        to="/dashboard/settings/ai"
+        className="mx-5 mt-4 flex items-center justify-between rounded-2xl border border-border/80 px-3.5 py-2.5 font-assistant text-[13px] font-bold text-muted-foreground transition-colors duration-150 active:bg-muted"
         title="הגדרות סוכן AI"
       >
         <span className="flex items-center gap-2">
           <span
-            className={`h-2 w-2 rounded-full ${aiEnabled ? 'bg-emerald-500' : 'bg-muted-foreground/40'}`}
+            className={cn('size-2 rounded-full', aiEnabled ? 'bg-success' : 'bg-muted-foreground/40')}
           />
           סוכן AI
         </span>
-        <span className={aiEnabled ? 'font-bold text-emerald-500' : 'text-muted-foreground'}>
+        <span className={aiEnabled ? 'font-extrabold text-success' : 'text-muted-foreground'}>
           {aiEnabled ? 'פעיל' : 'כבוי'}
         </span>
       </Link>
 
       <nav aria-label="ניווט ראשי" className="flex-1 px-5 py-6">
-        <ul className="space-y-1.5">
+        <ul className="space-y-1">
           {NAV_ITEMS.map((item) => (
             <li key={item.to}>
               <Link
                 to={item.to}
                 activeOptions={{ exact: item.exact }}
-                activeProps={{ className: 'border-border bg-primary/10 text-primary font-bold' }}
+                activeProps={{ className: 'bg-primary/10 text-primary font-extrabold' }}
                 inactiveProps={{
-                  className:
-                    'border-transparent text-muted-foreground hover:border-border hover:bg-accent hover:text-foreground font-semibold',
+                  className: 'text-muted-foreground font-bold active:bg-muted',
                 }}
-                className="flex h-10 items-center justify-between rounded-xl border px-3 font-assistant text-sm transition-colors"
+                className="flex h-[46px] items-center justify-between rounded-2xl px-3.5 font-assistant text-sm transition-colors duration-150"
               >
                 {({ isActive }) => (
                   <>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <item.icon size={18} />
                       <span>{item.label}</span>
-                      {item.to === '/dashboard/conversations' && unseenMessagesCount > 0 && (
-                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-micro font-black text-white">
-                          {unseenMessagesCount}
-                        </span>
-                      )}
                     </div>
-                    {isActive ? <span className="h-1.5 w-1.5 rounded-full bg-primary" /> : null}
+                    {item.to === '/dashboard/conversations' && unseenMessagesCount > 0 && (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-success px-1 text-[10px] font-extrabold text-white">
+                        {unseenMessagesCount}
+                      </span>
+                    )}
+                    {!(item.to === '/dashboard/conversations' && unseenMessagesCount > 0) && isActive ? (
+                      <span className="size-1.5 rounded-full bg-primary" />
+                    ) : null}
                   </>
                 )}
               </Link>
@@ -148,55 +133,22 @@ export function Sidebar({ staff, className }: SidebarProps) {
           ))}
 
           <li>
-            <button
-              type="button"
-              onClick={() => setIsSettingsExpanded(!isSettingsExpanded)}
-              className={`flex h-10 w-full cursor-pointer items-center justify-between rounded-xl border px-3 font-assistant text-sm font-bold outline-none transition-colors ${
-                isInSettings && !isSettingsExpanded
-                  ? 'border-border bg-primary/10 text-primary'
-                  : 'border-transparent text-muted-foreground hover:border-border hover:bg-accent hover:text-foreground'
-              }`}
+            <Link
+              to="/dashboard/settings"
+              activeProps={{ className: 'bg-primary/10 text-primary font-extrabold' }}
+              inactiveProps={{ className: 'text-muted-foreground font-bold active:bg-muted' }}
+              className="flex h-[46px] items-center gap-2.5 rounded-2xl px-3.5 font-assistant text-sm transition-colors duration-150"
             >
+              <Settings size={18} />
               <span>הגדרות</span>
-              <ChevronDown
-                className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
-                  isSettingsExpanded ? 'rotate-180' : ''
-                }`}
-              />
-            </button>
-
-            {isSettingsExpanded && (
-              <ul className="mt-1 animate-fade-in space-y-1 ps-4">
-                {SETTINGS_SUB_ITEMS.map((subItem) => {
-                  const isTabActive = isInSettings && currentTab === subItem.id
-                  return (
-                    <li key={subItem.id}>
-                      <Link
-                        to="/dashboard/settings"
-                        search={{ tab: subItem.id }}
-                        className={`flex h-9 items-center justify-between rounded-xl border px-3 font-assistant text-xs transition-all ${
-                          isTabActive
-                            ? 'border-primary/20 bg-primary/10 font-bold text-primary'
-                            : 'border-transparent font-semibold text-muted-foreground/70 hover:border-border hover:bg-accent hover:text-muted-foreground'
-                        }`}
-                      >
-                        <span>{subItem.label}</span>
-                        {isTabActive ? (
-                          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                        ) : null}
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
+            </Link>
           </li>
         </ul>
       </nav>
 
-      <div className="border-t border-border p-5">
-        <p className="font-assistant text-sm font-medium text-foreground">{staff.name}</p>
-        <p className="font-assistant text-xs text-muted-foreground">
+      <div className="border-t border-border/60 p-5">
+        <p className="font-assistant text-sm font-bold text-foreground">{staff.name}</p>
+        <p className="font-assistant text-[13px] text-muted-foreground">
           {ROLE_LABELS[staff.role] ?? staff.role}
         </p>
         <Button

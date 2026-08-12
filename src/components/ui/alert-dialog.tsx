@@ -34,7 +34,7 @@ function AlertDialogOverlay({
     <AlertDialogPrimitive.Overlay
       data-slot="alert-dialog-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        "fixed inset-0 z-50 bg-black/50 fill-mode-both data-[state=open]:animate-in data-[state=open]:duration-300 data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         className
       )}
       {...props}
@@ -52,15 +52,21 @@ function AlertDialogContent({
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
-      <AlertDialogPrimitive.Content
-        data-slot="alert-dialog-content"
-        data-size={size}
-        className={cn(
-          "group/alert-dialog-content fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg duration-200 data-[size=sm]:max-w-xs data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[size=default]:sm:max-w-lg",
-          className
-        )}
-        {...props}
-      />
+      {/* See dialog.tsx's DialogContent for why this is a flex-centering wrapper rather than
+          `top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2`: tw-animate-css's enter/exit
+          keyframes fully overwrite `transform`, so a static centering translate on the animated
+          element itself gets clobbered mid-animation and visibly jumps. */}
+      <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4">
+        <AlertDialogPrimitive.Content
+          data-slot="alert-dialog-content"
+          data-size={size}
+          className={cn(
+            "group/alert-dialog-content pointer-events-auto relative flex w-full max-w-lg flex-col gap-4 rounded-3xl border border-border/80 bg-card p-5 shadow-lg outline-none fill-mode-both data-[size=sm]:max-w-xs data-[state=open]:animate-in data-[state=open]:duration-300 data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            className
+          )}
+          {...props}
+        />
+      </div>
     </AlertDialogPortal>
   )
 }
@@ -105,7 +111,7 @@ function AlertDialogTitle({
     <AlertDialogPrimitive.Title
       data-slot="alert-dialog-title"
       className={cn(
-        "text-lg font-semibold sm:group-data-[size=default]/alert-dialog-content:group-has-data-[slot=alert-dialog-media]/alert-dialog-content:col-start-2",
+        "font-assistant text-lg leading-none font-extrabold text-foreground sm:group-data-[size=default]/alert-dialog-content:group-has-data-[slot=alert-dialog-media]/alert-dialog-content:col-start-2",
         className
       )}
       {...props}
@@ -120,7 +126,7 @@ function AlertDialogDescription({
   return (
     <AlertDialogPrimitive.Description
       data-slot="alert-dialog-description"
-      className={cn("text-sm text-muted-foreground", className)}
+      className={cn("font-assistant text-[13px] font-medium text-muted-foreground", className)}
       {...props}
     />
   )
@@ -134,7 +140,7 @@ function AlertDialogMedia({
     <div
       data-slot="alert-dialog-media"
       className={cn(
-        "mb-2 inline-flex size-16 items-center justify-center rounded-md bg-muted sm:group-data-[size=default]/alert-dialog-content:row-span-2 *:[svg:not([class*='size-'])]:size-8",
+        "mb-2 inline-flex size-16 items-center justify-center rounded-2xl bg-muted sm:group-data-[size=default]/alert-dialog-content:row-span-2 *:[svg:not([class*='size-'])]:size-8",
         className
       )}
       {...props}

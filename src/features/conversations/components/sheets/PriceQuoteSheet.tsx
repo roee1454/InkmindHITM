@@ -10,18 +10,16 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetHandle,
 } from '@/components/ui/sheet'
 import { sendPriceQuoteToCustomer } from '@/features/calendar/server/appointments'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui/ToastProvider'
 
-const DURATION_PRESETS = [
-  { label: '1–2 שעות', value: 1.5 },
-  { label: '2–3 שעות', value: 2.5 },
-  { label: '3–4 שעות', value: 3.5 },
-  { label: 'יום מלא (6+)', value: 6 },
-]
+// 30-minute increments, 1–6 hours — matches AppointmentFormFields' duration select.
+const DURATION_PRESETS = [90, 120, 150, 180, 240, 360].map((minutes) => ({
+  label: minutes % 60 === 0 ? `${minutes / 60} שעות` : `${Math.floor(minutes / 60)}.5 שעות`,
+  value: minutes,
+}))
 
 const DEPOSIT_PRESETS = ['200', '350', '500', 'ללא']
 
@@ -32,7 +30,7 @@ interface PriceQuoteSheetProps {
   initialPriceMin?: string
   initialPriceMax?: string
   initialDeposit?: string
-  initialDuration?: number
+  initialDurationMinutes?: number
   onSuccess: () => void
   onTakeover: () => void
   isTakingOver?: boolean
@@ -42,16 +40,16 @@ export function PriceQuoteSheet({
   open,
   onOpenChange,
   appointmentId,
-  initialPriceMin = '1600',
-  initialPriceMax = '2000',
+  initialPriceMin = '',
+  initialPriceMax = '',
   initialDeposit = '350',
-  initialDuration = 3.5,
+  initialDurationMinutes = 180,
   onSuccess,
   onTakeover,
   isTakingOver = false,
 }: PriceQuoteSheetProps) {
   const { toast } = useToast()
-  const [duration, setDuration] = useState<number>(initialDuration)
+  const [duration, setDuration] = useState<number>(initialDurationMinutes)
   const [priceMin, setPriceMin] = useState(initialPriceMin)
   const [priceMax, setPriceMax] = useState(initialPriceMax)
   const [deposit, setDeposit] = useState(initialDeposit)
@@ -61,10 +59,10 @@ export function PriceQuoteSheet({
       sendPriceQuoteToCustomer({
         data: {
           appointmentId,
-          priceIls: Number(priceMax) || Number(priceMin) || 1800,
+          priceMinIls: Number(priceMin) || Number(priceMax) || 0,
+          priceMaxIls: Number(priceMax) || Number(priceMin) || 0,
           depositAmount: deposit === 'ללא' ? 0 : Number(deposit) || 350,
-          date: '2026-08-19',
-          timeSlot: '14:30',
+          durationMinutes: duration,
         },
       }),
     onSuccess: () => {
@@ -76,12 +74,9 @@ export function PriceQuoteSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        side="bottom"
-        className="mx-auto w-full max-w-lg rounded-t-[28px] border-t border-border bg-card p-6 shadow-2xl max-h-[90svh] overflow-y-auto font-assistant space-y-5 select-none"
+        className="mx-auto w-full max-w-lg font-assistant space-y-5"
         dir="rtl"
       >
-        <SheetHandle />
-
         <SheetHeader className="text-right space-y-1">
           <SheetTitle className="text-lg font-extrabold text-foreground">
             הצעת טווח מחיר ומקדמה
@@ -205,7 +200,7 @@ export function PriceQuoteSheet({
           </Button>
           <Button
             type="button"
-            variant="takeover"
+            variant="outline"
             className="h-13 px-4 rounded-2xl text-sm font-bold gap-1.5"
             disabled={isTakingOver}
             onClick={onTakeover}

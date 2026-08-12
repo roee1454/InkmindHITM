@@ -117,10 +117,12 @@ export const getAppointments = createServerFn({ method: 'GET' }).handler(
         leadPhone: (customerObj?.phone as string) || (item.customer_phone_override as string) || null,
         staffName: (staffObj?.name as string) || null,
         style: (item.tattoo_description as string) || null,
-        price: item.price_amount != null ? Number(item.price_amount) : null,
+        priceMin: item.price_min != null ? Number(item.price_min) : null,
+        priceMax: item.price_max != null ? Number(item.price_max) : null,
         depositAmount: item.deposit_amount != null ? Number(item.deposit_amount) : null,
         hasDeposit: Boolean(item.deposit_paid),
-        durationHours: Number(item.duration_hours || 2.0),
+        durationMinutes: Number(item.duration_minutes || 120),
+        slotConfirmed: Boolean(item.slot_confirmed),
         notes: (item.notes as string) || null,
         isException: Boolean(item.is_exception),
         source: (item.source as 'ai_bot' | 'staff_manual') || 'staff_manual',
@@ -137,9 +139,10 @@ const createAppointmentSchema = z.object({
   date: z.string().min(1, 'תאריך נדרש'),
   timeSlot: z.string().min(1, 'שעה נדרשת'),
   staffId: z.string().nullable().optional(),
-  durationHours: z.number().default(2.0),
+  durationMinutes: z.number().default(120),
   tattooDescription: z.string().optional(),
-  priceIls: z.number().nullable().optional(),
+  priceMinIls: z.number().nullable().optional(),
+  priceMaxIls: z.number().nullable().optional(),
   depositAmount: z.number().nullable().optional(),
   status: z.enum(['pending', 'confirmed', 'cancelled', 'completed', 'no_show']).default('pending'),
   depositPaid: z.boolean().default(false),
@@ -163,12 +166,14 @@ export const createAppointment = createServerFn({ method: 'POST' })
       customer: data.customerId || null,
       staff: data.staffId || null,
       start_time: startTimeIso,
-      duration_hours: data.durationHours,
+      duration_minutes: data.durationMinutes,
       status: data.status,
       tattoo_description: data.tattooDescription || '',
-      price_amount: data.priceIls != null ? data.priceIls : null,
+      price_min: data.priceMinIls != null ? data.priceMinIls : null,
+      price_max: data.priceMaxIls != null ? data.priceMaxIls : null,
       deposit_amount: data.depositAmount != null ? data.depositAmount : null,
       deposit_paid: data.depositPaid,
+      slot_confirmed: data.status === 'confirmed',
       notes: data.notes || '',
       is_exception: data.allowException,
       customer_name_override: data.leadName || '',
@@ -200,9 +205,10 @@ const updateAppointmentSchema = z.object({
   date: z.string().optional(),
   timeSlot: z.string().optional(),
   staffId: z.string().nullable().optional(),
-  durationHours: z.number().optional(),
+  durationMinutes: z.number().optional(),
   tattooDescription: z.string().optional(),
-  priceIls: z.number().nullable().optional(),
+  priceMinIls: z.number().nullable().optional(),
+  priceMaxIls: z.number().nullable().optional(),
   depositAmount: z.number().nullable().optional(),
   status: z.enum(['pending', 'confirmed', 'cancelled', 'completed', 'no_show']).optional(),
   depositPaid: z.boolean().optional(),
@@ -220,10 +226,14 @@ export const updateAppointment = createServerFn({ method: 'POST' })
 
     if (data.customerId !== undefined) updateBody.customer = data.customerId
     if (data.staffId !== undefined) updateBody.staff = data.staffId
-    if (data.durationHours !== undefined) updateBody.duration_hours = data.durationHours
-    if (data.status !== undefined) updateBody.status = data.status
+    if (data.durationMinutes !== undefined) updateBody.duration_minutes = data.durationMinutes
+    if (data.status !== undefined) {
+      updateBody.status = data.status
+      if (data.status === 'confirmed') updateBody.slot_confirmed = true
+    }
     if (data.tattooDescription !== undefined) updateBody.tattoo_description = data.tattooDescription
-    if (data.priceIls !== undefined) updateBody.price_amount = data.priceIls
+    if (data.priceMinIls !== undefined) updateBody.price_min = data.priceMinIls
+    if (data.priceMaxIls !== undefined) updateBody.price_max = data.priceMaxIls
     if (data.depositAmount !== undefined) updateBody.deposit_amount = data.depositAmount
     if (data.depositPaid !== undefined) updateBody.deposit_paid = data.depositPaid
     if (data.notes !== undefined) updateBody.notes = data.notes
@@ -286,8 +296,10 @@ export const deleteAppointment = createServerFn({ method: 'POST' })
 
 const sendPriceQuoteSchema = z.object({
   appointmentId: z.string(),
-  priceIls: z.number().min(0),
+  priceMinIls: z.number().min(0),
+  priceMaxIls: z.number().min(0),
   depositAmount: z.number().min(0),
+  durationMinutes: z.number().min(15).optional(),
   // Optional quick-reschedule from the inline pricing card (HITL-7): staff adjusts the
   // proposed slot without leaving the conversation.
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
@@ -329,7 +341,7 @@ export const sendPriceQuoteToCustomer = createServerFn({ method: 'POST' })
         staffId: (appointment.staff as string) || '',
         date: data.date,
         timeSlot: data.timeSlot,
-        durationHours: Number(appointment.duration_hours) || 2,
+        durationHours: (Number(appointment.duration_minutes) || 120) / 60,
       })
       const currentSlot = `${toYmd(start)}|${minutesToTime(start.getHours() * 60 + start.getMinutes())}`
       const isSameSlot = currentSlot === `${data.date}|${data.timeSlot}`
@@ -349,9 +361,11 @@ export const sendPriceQuoteToCustomer = createServerFn({ method: 'POST' })
     }
 
     await su.collection('appointments').update(data.appointmentId, {
-      price_amount: data.priceIls,
+      price_min: data.priceMinIls,
+      price_max: data.priceMaxIls,
       deposit_amount: data.depositAmount,
       start_time: start.toISOString(),
+      ...(data.durationMinutes != null ? { duration_minutes: data.durationMinutes } : {}),
     })
 
     const waSettings = await getWhatsAppSettings()
@@ -365,10 +379,14 @@ export const sendPriceQuoteToCustomer = createServerFn({ method: 'POST' })
     })
 
     const dayName = HEBREW_DAYS_LONG[start.getDay()]
+    const priceRange =
+      data.priceMinIls === data.priceMaxIls
+        ? `₪${data.priceMinIls.toLocaleString()}`
+        : `₪${data.priceMinIls.toLocaleString()}–${data.priceMaxIls.toLocaleString()}`
     const messageBody = [
       '✨ קיבלנו את הבקשה שלך ואישרנו את הפרטים!',
       `מועד: ${dayName}, ${start.getDate()}.${start.getMonth() + 1} בשעה ${minutesToTime(start.getHours() * 60 + start.getMinutes())}`,
-      `מחיר הקעקוע: ₪${data.priceIls}`,
+      `מחיר הקעקוע: ${priceRange}`,
       `מקדמה לשריון התור: ₪${data.depositAmount}`,
       policy.paymentInstructions || '',
       'ברגע ששולחים צילום מסך של התשלום, נאשר את התור 🙌',
@@ -404,5 +422,23 @@ export const sendPriceQuoteToCustomer = createServerFn({ method: 'POST' })
       })
     }
 
+    return { ok: true }
+  })
+
+const confirmSlotSchema = z.object({
+  appointmentId: z.string(),
+})
+
+/** The "slot confirm" HITL block — a lightweight sanity-check gate on the bot-proposed
+ *  date/time, independent of `status`. Deliberately does not touch `status` or the
+ *  conversation state: `confirm_booking_final` (src/integrations/ai/tools/booking.server.ts)
+ *  relies on `status === 'pending'` as its own precondition for the final lock, and flipping
+ *  status here would let it fire early, before payment. */
+export const confirmSlot = createServerFn({ method: 'POST' })
+  .validator(confirmSlotSchema)
+  .handler(async ({ data }) => {
+    await requireAuth()
+    const su = await getSuperuserClient()
+    await su.collection('appointments').update(data.appointmentId, { slot_confirmed: true })
     return { ok: true }
   })

@@ -47,14 +47,12 @@ export const SetPasswordForm: React.FC<SetPasswordFormProps> = ({ staffId, onDon
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="סיסמה חדשה"
-          dir="ltr"
         />
         <Input
           type="password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           placeholder="אימות סיסמה"
-          dir="ltr"
         />
         <Button
           type="submit"

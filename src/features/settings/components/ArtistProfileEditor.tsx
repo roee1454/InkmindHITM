@@ -3,9 +3,9 @@ import {
   Save,
   Trash2,
   Clock,
-  X,
   AtSign,
   Link as LinkIcon,
+  Globe,
   User,
   Copy,
   Info,
@@ -14,18 +14,17 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { HourPicker } from '@/components/ui/hour-picker'
 import { OptionCardButton } from '@/components/ui/option-card-button'
 import {
-  getStyleOptions,
   saveArtistProfile,
   deleteArtistProfile,
   getWorkingHours,
   saveWorkingHours,
   type ApiArtistProfile,
   type WorkingHoursWindow,
-  type StyleOption,
 } from '../server/settings'
 import { useConfirm } from '@/hooks/use-confirm'
 
@@ -36,6 +35,17 @@ interface ArtistProfileEditorProps {
   profile: ApiArtistProfile | undefined
   onSaved: () => void
   readOnly?: boolean
+  /** Controlled tab — when set, the parent (e.g. the Team detail screen's 3-tab segmented
+   *  control) drives which section shows instead of the built-in selector below. */
+  activeTab?: 'profile' | 'hours'
+  onTabChange?: (tab: 'profile' | 'hours') => void
+  /** Hides the built-in OptionCardButton selector — used when a parent renders its own tabs. */
+  hideTabSelector?: boolean
+  /** Drops the section's own bordered/shadowed wrapper — used when a parent already supplies
+   *  a `.card-native` container, so sections don't nest cards. */
+  bare?: boolean
+  /** Pins the section's save button to the bottom of the scroll container instead of inline. */
+  stickyFooter?: boolean
 }
 
 const CompactWorkingHoursTimeline: React.FC<{ startTime?: string; endTime?: string }> = ({
@@ -76,28 +86,33 @@ export const ArtistProfileEditor: React.FC<ArtistProfileEditorProps> = ({
   profile,
   onSaved,
   readOnly = false,
+  activeTab: controlledTab,
+  onTabChange,
+  hideTabSelector = false,
+  bare = false,
+  stickyFooter = false,
 }) => {
   const queryClient = useQueryClient()
   const confirm = useConfirm()
-  const [activeTab, setActiveTab] = useState<'profile' | 'hours'>('profile')
+  const [internalTab, setInternalTab] = useState<'profile' | 'hours'>('profile')
+  const activeTab = controlledTab ?? internalTab
+  const setActiveTab = onTabChange ?? setInternalTab
+  const sectionClass = bare
+    ? 'space-y-5'
+    : 'space-y-5 rounded-2xl border border-border/80 bg-card p-5 shadow-sm'
+  const footerClass = stickyFooter
+    ? 'sticky bottom-0 z-10 -mx-4 mt-2 flex flex-col gap-2 border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:py-0'
+    : 'flex flex-wrap gap-3 pt-2'
 
-  const [styles, setStyles] = useState<string[]>(profile?.styles ?? [])
-  const [styleDraft, setStyleDraft] = useState('')
   const [portfolioUrl, setPortfolioUrl] = useState(profile?.portfolioUrl ?? '')
   const [instagramHandle, setInstagramHandle] = useState(profile?.instagramHandle ?? '')
+  const [websiteUrl, setWebsiteUrl] = useState(profile?.websiteUrl ?? '')
   const [bio, setBio] = useState(profile?.bio ?? '')
   const [error, setError] = useState<string | null>(null)
 
   const [windows, setWindows] = useState<WorkingHoursWindow[] | null>(null)
   const [savingHours, setSavingHours] = useState(false)
   const [hasUnsavedHours, setHasUnsavedHours] = useState(false)
-
-  const { data: styleOptions = [] } = useQuery<StyleOption[]>({
-    queryKey: ['artist-profile-style-options'],
-    queryFn: () => getStyleOptions(),
-  })
-  const styleLabel = (value: string) =>
-    styleOptions.find((o) => o.value === value)?.label ?? value
 
   const hoursQuery = useQuery<WorkingHoursWindow[]>({
     queryKey: ['working-hours', staffId],
@@ -111,31 +126,15 @@ export const ArtistProfileEditor: React.FC<ArtistProfileEditorProps> = ({
     }
   }, [hoursQuery.data])
 
-  const addStyleValue = (value: string) => {
-    if (readOnly || !value || styles.includes(value)) return
-    setStyles([...styles, value])
-  }
-
-  const addStyleFromDraft = () => {
-    if (readOnly) return
-    addStyleValue(styleDraft.trim())
-    setStyleDraft('')
-  }
-
-  const removeStyle = (value: string) => {
-    if (readOnly) return
-    setStyles(styles.filter((s) => s !== value))
-  }
-
   const saveProfileMutation = useMutation({
     mutationFn: async () => {
       return saveArtistProfile({
         data: {
           id: profile?.id,
           staffId,
-          styles,
           portfolioUrl: portfolioUrl || null,
           instagramHandle: instagramHandle || null,
+          websiteUrl: websiteUrl || null,
           bio: bio || null,
         },
       })
@@ -234,99 +233,34 @@ export const ArtistProfileEditor: React.FC<ArtistProfileEditorProps> = ({
       )}
 
       {/* Mode Selector Option Buttons */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <OptionCardButton
-          icon={<User size={18} />}
-          title="שינוי פרופיל"
-          description="סגנונות עבודה, אינסטגרם, תיק עבודות ותיאור"
-          active={activeTab === 'profile'}
-          onClick={() => setActiveTab('profile')}
-        />
-        <OptionCardButton
-          icon={<Clock size={18} />}
-          title="שינוי שעות עבודה"
-          description="שעות פעילות שבועיות ושבלונות מהירות"
-          badge={activeDaysCount ? `${activeDaysCount} ימים` : undefined}
-          active={activeTab === 'hours'}
-          onClick={() => setActiveTab('hours')}
-        />
-      </div>
+      {!hideTabSelector && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <OptionCardButton
+            icon={<User size={18} />}
+            title="שינוי פרופיל"
+            description="סגנונות עבודה, אינסטגרם, תיק עבודות ותיאור"
+            active={activeTab === 'profile'}
+            onClick={() => setActiveTab('profile')}
+          />
+          <OptionCardButton
+            icon={<Clock size={18} />}
+            title="שינוי שעות עבודה"
+            description="שעות פעילות שבועיות ושבלונות מהירות"
+            badge={activeDaysCount ? `${activeDaysCount} ימים` : undefined}
+            active={activeTab === 'hours'}
+            onClick={() => setActiveTab('hours')}
+          />
+        </div>
+      )}
 
       {/* Profile Edit Tab Content */}
       {activeTab === 'profile' && (
-        <div className="space-y-5 rounded-2xl border border-border/80 bg-card p-5 shadow-sm">
+        <div className={sectionClass}>
           {!readOnly && (
             <p className="text-xs text-muted-foreground">
-              רק שם וסגנון אחד מספיקים כדי להתחיל — אפשר להשלים את השאר בכל עת.
+              הכל אופציונלי — אפשר להשלים בכל עת.
             </p>
           )}
-
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-muted-foreground">סגנונות עבודה</label>
-
-            {!readOnly && styleOptions.filter((o) => !styles.includes(o.value)).length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {styleOptions
-                  .filter((o) => !styles.includes(o.value))
-                  .map((o) => (
-                    <button
-                      key={o.value}
-                      type="button"
-                      onClick={() => addStyleValue(o.value)}
-                      className="cursor-pointer rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
-                    >
-                      + {o.label}
-                    </button>
-                  ))}
-              </div>
-            )}
-
-            {/* Custom style input */}
-            {!readOnly && (
-              <div className="flex gap-2">
-                <Input
-                  value={styleDraft}
-                  onChange={(e) => setStyleDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      addStyleFromDraft()
-                    }
-                  }}
-                  placeholder="סגנון אחר שלא ברשימה — ואז Enter"
-                  dir="rtl"
-                />
-                <Button type="button" variant="outline" onClick={addStyleFromDraft} className="shrink-0">
-                  הוסף
-                </Button>
-              </div>
-            )}
-
-            {styles.length > 0 ? (
-              <div className="flex flex-wrap gap-2 pt-1">
-                {styles.map((s) => (
-                  <span
-                    key={s}
-                    className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary"
-                  >
-                    {styleLabel(s)}
-                    {!readOnly && (
-                      <button
-                        type="button"
-                        onClick={() => removeStyle(s)}
-                        className="cursor-pointer hover:text-destructive"
-                        aria-label={`הסר את הסגנון ${styleLabel(s)}`}
-                      >
-                        <X size={12} />
-                      </button>
-                    )}
-                  </span>
-                ))}
-              </div>
-            ) : readOnly ? (
-              <p className="text-xs text-muted-foreground">לא הוגדרו סגנונות עבודה.</p>
-            ) : null}
-          </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="flex flex-col gap-1.5">
@@ -353,24 +287,38 @@ export const ArtistProfileEditor: React.FC<ArtistProfileEditorProps> = ({
                 disabled={readOnly}
               />
             </div>
+            <div className="flex flex-col gap-1.5 md:col-span-2">
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                <Globe size={13} className="text-muted-foreground" /> אתר הסטודיו
+              </label>
+              <Input
+                value={websiteUrl}
+                onChange={(e) => setWebsiteUrl(e.target.value)}
+                placeholder="https://…"
+                dir="ltr"
+                disabled={readOnly}
+              />
+            </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">תיאור וסגנון</label>
-            <Input
+            <label className="text-xs font-semibold text-muted-foreground">תיאור קצר</label>
+            <Textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              placeholder="לדוגמה: מתמחה בעבודות קו עדין ופרחוניות"
+              placeholder="לדוגמה: מתמחה בעבודות קו עדין ופרחוניות, 8 שנות ניסיון"
               dir="rtl"
               disabled={readOnly}
+              className="min-h-16"
             />
           </div>
 
           {!readOnly && (
-            <div className="flex flex-wrap gap-3 pt-2">
+            <div className={footerClass}>
               <Button
                 onClick={() => saveProfileMutation.mutate()}
                 disabled={saveProfileMutation.isPending}
+                size={stickyFooter ? 'lg' : 'default'}
                 className="w-full md:w-auto"
               >
                 <Save size={13} className="ml-1.5" />
@@ -382,7 +330,7 @@ export const ArtistProfileEditor: React.FC<ArtistProfileEditorProps> = ({
                   onClick={async () => {
                     const ok = await confirm({
                       title: 'מחיקת פרופיל מקעקע/ת',
-                      description: 'הפרופיל, הסגנונות, הביוגרפיה והקישורים יימחקו לצמיתות.',
+                      description: 'הפרופיל, הביוגרפיה והקישורים יימחקו לצמיתות.',
                       confirmLabel: 'מחק',
                       variant: 'destructive',
                     })
@@ -390,6 +338,7 @@ export const ArtistProfileEditor: React.FC<ArtistProfileEditorProps> = ({
                   }}
                   disabled={deleteProfileMutation.isPending}
                   variant="outline"
+                  size={stickyFooter ? 'lg' : 'default'}
                   className="w-full text-muted-foreground hover:border-destructive/30 hover:text-destructive md:w-auto"
                 >
                   <Trash2 size={13} className="ml-1.5" />
@@ -403,7 +352,7 @@ export const ArtistProfileEditor: React.FC<ArtistProfileEditorProps> = ({
 
       {/* Working Hours Edit Tab Content */}
       {activeTab === 'hours' && (
-        <div className="space-y-4 rounded-2xl border border-border/80 bg-card p-5 shadow-sm">
+        <div className={sectionClass.replace('space-y-5', 'space-y-4')}>
           {windows === null ? (
             <p className="text-xs text-muted-foreground">טוען שעות עבודה…</p>
           ) : (
@@ -529,19 +478,22 @@ export const ArtistProfileEditor: React.FC<ArtistProfileEditorProps> = ({
               </div>
 
               {!readOnly && (
-                <Button
-                  onClick={handleSaveWorkingHours}
-                  disabled={savingHours || windows === null || hasInvalidHours}
-                  variant="secondary"
-                  className={`w-full md:w-auto ${
-                    hasUnsavedHours && !hasInvalidHours
-                      ? 'animate-pulse shadow-[0_0_10px_rgba(79,70,229,0.2)]'
-                      : ''
-                  }`}
-                >
-                  <Save size={13} className="ml-1.5" />
-                  {savingHours ? 'שומר שעות עבודה…' : 'שמור שעות עבודה'}
-                </Button>
+                <div className={footerClass}>
+                  <Button
+                    onClick={handleSaveWorkingHours}
+                    disabled={savingHours || windows === null || hasInvalidHours}
+                    variant={stickyFooter ? 'default' : 'secondary'}
+                    size={stickyFooter ? 'lg' : 'default'}
+                    className={`w-full md:w-auto ${
+                      hasUnsavedHours && !hasInvalidHours && !stickyFooter
+                        ? 'animate-pulse shadow-[0_0_10px_rgba(79,70,229,0.2)]'
+                        : ''
+                    }`}
+                  >
+                    <Save size={13} className="ml-1.5" />
+                    {savingHours ? 'שומר שעות עבודה…' : 'שמור שעות עבודה'}
+                  </Button>
+                </div>
               )}
             </div>
           )}

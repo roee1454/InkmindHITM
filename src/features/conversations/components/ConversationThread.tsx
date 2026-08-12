@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Paperclip, SendHorizontal, X, Bot, BotOff, Image, FileCheck, ChevronRight } from 'lucide-react'
+import { Paperclip, SendHorizontal, X, Bot, BotOff, EllipsisVertical, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
@@ -10,6 +10,7 @@ import { BookingActionCard } from './BookingActionCard'
 import type { UIConversation } from '../types'
 import { useConversationsUiStore } from '../store/conversationsUiStore'
 import { ImageGalleryDialog } from '@/features/calendar/components/ImageGalleryDialog'
+import { InspirationGalleryDialog, type ReceiptEntry } from './InspirationGalleryDialog'
 import { messageMediaUrl } from '../lib/media'
 
 /** Hebrew labels for staff_call_reason — until now the reason was stored but shown
@@ -74,25 +75,28 @@ export function ConversationThread({
 
   const messages = data?.messages ?? []
 
-  const { inspirationImages, verificationImages } = useMemo(() => {
+  const { inspirationImages, verificationImages, receipts } = useMemo(() => {
     const insp: string[] = []
     const verif: string[] = []
+    const receiptEntries: ReceiptEntry[] = []
     messages.forEach((m) => {
       if (m.mediaFilename && m.type === 'image') {
         const url = messageMediaUrl(m.id, m.mediaFilename)
         if (m.mediaCategory === 'verification') {
           verif.push(url)
+          receiptEntries.push({ url, timestamp: m.timestamp })
         } else {
           insp.push(url)
         }
       }
     })
-    return { inspirationImages: insp, verificationImages: verif }
+    return { inspirationImages: insp, verificationImages: verif, receipts: receiptEntries }
   }, [messages])
 
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [galleryImages, setGalleryImages] = useState<string[]>([])
   const [galleryInitialIndex, setGalleryInitialIndex] = useState(0)
+  const [inspirationDialogOpen, setInspirationDialogOpen] = useState(false)
 
   const handleImageClick = (url: string, category: 'inspiration' | 'verification' | null) => {
     const list = category === 'verification' ? verificationImages : inspirationImages
@@ -303,43 +307,29 @@ export function ConversationThread({
                 {resumeBotMutation.isPending ? 'מחזיר לבוט…' : 'החזרה לבוט'}
               </Button>
             )}
-            {inspirationImages.length > 0 && (
-              <Button
+            {(inspirationImages.length > 0 || verificationImages.length > 0) && (
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setGalleryImages(inspirationImages)
-                  setGalleryInitialIndex(0)
-                  setGalleryOpen(true)
-                }}
-                className="rounded-xl cursor-pointer gap-1.5 border-primary/20 text-primary hover:bg-primary/5"
+                onClick={() => setInspirationDialogOpen(true)}
+                aria-label="גלריית שיחה"
+                className="tap-target text-foreground"
               >
-                <Image className="size-4" />
-                תמונות השראה ({inspirationImages.length})
-              </Button>
-            )}
-            {verificationImages.length > 0 && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setGalleryImages(verificationImages)
-                  setGalleryInitialIndex(0)
-                  setGalleryOpen(true)
-                }}
-                className="rounded-xl cursor-pointer gap-1.5 border-border text-foreground hover:bg-muted"
-              >
-                <FileCheck className="size-4" />
-                אסמכתות ({verificationImages.length})
-              </Button>
+                <EllipsisVertical className="size-5" />
+              </button>
             )}
           </div>
         </div>
       </header>
 
-      <BookingActionCard conversation={conversation} />
+      <BookingActionCard
+        conversation={conversation}
+        receiptImageUrl={verificationImages[verificationImages.length - 1]}
+        onZoomReceipt={(url) => {
+          setGalleryImages([url])
+          setGalleryInitialIndex(0)
+          setGalleryOpen(true)
+        }}
+      />
 
       <div ref={scrollRef} onScroll={onScroll} className="flex-1 space-y-2 overflow-y-auto p-4">
         {isLoading ? (
@@ -480,6 +470,12 @@ export function ConversationThread({
         initialIndex={galleryInitialIndex}
         open={galleryOpen}
         onOpenChange={setGalleryOpen}
+      />
+      <InspirationGalleryDialog
+        open={inspirationDialogOpen}
+        onOpenChange={setInspirationDialogOpen}
+        inspirationImages={inspirationImages}
+        receipts={receipts}
       />
     </div>
   )

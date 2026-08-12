@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { CalendarCheck2, CalendarX2, AlertTriangle, User, RefreshCw } from 'lucide-react'
+import { CalendarDays, AlertTriangle } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
 import { getCurrentStaffInfo, type CurrentStaffInfo } from '../server/staff'
 import {
   getGoogleCalendarConnections,
@@ -10,42 +9,13 @@ import {
 import type { ApiGoogleConnection } from '@/features/calendar/types'
 import { useConfirm } from '@/hooks/use-confirm'
 
-function GoogleIcon({ size = 16 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className="shrink-0">
-      <path
-        fill="#4285F4"
-        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-      />
-    </svg>
-  )
-}
-
 interface GoogleCalendarConnectionProps {
   staffId: string
-  staffName?: string
-  staffRole?: string
-  isSelf?: boolean
 }
 
-export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> = ({
-  staffId,
-  staffName,
-  staffRole,
-  isSelf,
-}) => {
+/** One quiet row — icon chip, label, account email, status dot, connect/disconnect. No Google
+ *  logo, no gradient, no large card (deliberate — nothing to license or maintain visually). */
+export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> = ({ staffId }) => {
   const queryClient = useQueryClient()
   const confirm = useConfirm()
 
@@ -59,7 +29,7 @@ export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> =
   const [connectError, setConnectError] = useState<string | null>(null)
   const popupRef = useRef<Window | null>(null)
 
-  const { data: googleConnections = [], isLoading } = useQuery<ApiGoogleConnection[]>({
+  const { data: googleConnections = [] } = useQuery<ApiGoogleConnection[]>({
     queryKey: ['google-calendar-connections'],
     queryFn: () => getGoogleCalendarConnections(),
   })
@@ -78,7 +48,6 @@ export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> =
     function handleMessage(event: MessageEvent) {
       if (event.source !== popupRef.current) return
       if (event.data?.type !== 'google-calendar-oauth-result') return
-
       setConnecting(false)
       if (event.data.success) {
         setConnectError(null)
@@ -95,13 +64,8 @@ export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> =
   const handleConnect = () => {
     setConnectError(null)
     setConnecting(true)
-    const popup = window.open(
-      `/api/staff/${staffId}/google-calendar/connect`,
-      'google-calendar-connect',
-      'width=500,height=650',
-    )
+    const popup = window.open(`/api/staff/${staffId}/google-calendar/connect`, 'google-calendar-connect', 'width=500,height=650')
     popupRef.current = popup
-
     const pollClosed = setInterval(() => {
       if (popup?.closed) {
         clearInterval(pollClosed)
@@ -122,140 +86,50 @@ export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> =
     if (ok) disconnectMutation.mutate()
   }
 
-  const roleLabel =
-    staffRole === 'owner' ? 'בעלים' : staffRole === 'admin' ? 'מנהל' : 'מקעקע/ת'
+  const isConnected = connection?.status === 'connected'
+  const isError = connection?.status === 'error'
 
   return (
-    <div className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:border-primary/20 font-assistant">
-      {/* Header Row: Staff Info + Dynamic Connection Badge */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 font-bold text-primary text-xs">
-            {staffName ? staffName.slice(0, 2) : <User size={15} />}
-          </div>
-          <div>
-            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
-              <span>{staffName || 'חבר צוות'}</span>
-              {isSelf && (
-                <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-micro font-bold text-primary">
-                  את/ה
-                </span>
-              )}
-            </div>
-            <div className="text-mini font-medium text-muted-foreground">{roleLabel}</div>
-          </div>
+    <div className="flex flex-col gap-1.5 font-assistant">
+      <div className="flex items-center gap-3 rounded-2xl bg-background px-3.5 py-2.5">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+          <CalendarDays size={18} />
         </div>
-
-        {/* Dynamic Status Pill */}
-        <div>
-          {connection?.status === 'connected' ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-mini font-bold text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              מחובר
-            </span>
-          ) : connection?.status === 'error' ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-mini font-bold text-rose-400">
-              <AlertTriangle size={12} />
-              שגיאת סנכרון
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/60 px-2.5 py-1 text-mini font-semibold text-muted-foreground">
-              לא מחובר
-            </span>
+        <div className="min-w-0 flex-1">
+          <div className="text-[14.5px] font-extrabold text-foreground">Google Calendar</div>
+          {isConnected && connection.googleAccountEmail && (
+            <div dir="ltr" className="truncate text-end text-[12.5px] text-muted-foreground">
+              {connection.googleAccountEmail}
+            </div>
+          )}
+          {isError && (
+            <div className="flex items-center gap-1 text-[12.5px] text-destructive">
+              <AlertTriangle size={12} className="shrink-0" />
+              {connection.lastError || 'שגיאת סנכרון'}
+            </div>
           )}
         </div>
-      </div>
-
-      {connectError && (
-        <p className="text-xs font-semibold text-rose-400">{connectError}</p>
-      )}
-
-      {/* Action / Detail Box */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 rounded-xl border border-border/60 bg-background/50 p-3">
-        {isLoading ? (
-          <p className="text-xs text-muted-foreground">טוען סטטוס יומן…</p>
-        ) : connection?.status === 'connected' ? (
-          <>
-            <div className="flex items-center gap-2.5 min-w-0">
-              {connection.googleAccountPicture ? (
-                <img
-                  src={connection.googleAccountPicture}
-                  alt=""
-                  className="h-7 w-7 rounded-full object-cover shrink-0"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <CalendarCheck2 size={16} className="text-emerald-400 shrink-0" />
-              )}
-              <div className="min-w-0">
-                <div className="text-xs font-bold text-foreground truncate" dir="ltr">
-                  {connection.googleAccountEmail || 'חשבון מחובר'}
-                </div>
-                {connection.lastSyncedAt && (
-                  <div className="text-micro text-muted-foreground">
-                    סונכרן: {connection.lastSyncedAt}
-                  </div>
-                )}
-              </div>
-            </div>
-
+        {isConnected ? (
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="flex items-center gap-1.5 text-[13px] font-bold text-success">
+              <span className="size-2 rounded-full bg-success" />
+              מחובר
+            </span>
             {canManage && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleDisconnect}
-                disabled={disconnectMutation.isPending}
-                className="text-xs font-semibold text-rose-400 hover:bg-rose-500/10 hover:text-rose-500 shrink-0 self-start sm:self-auto"
-              >
+              <button type="button" onClick={handleDisconnect} disabled={disconnectMutation.isPending} className="cursor-pointer text-[13px] font-bold text-muted-foreground">
                 {disconnectMutation.isPending ? 'מנתק…' : 'נתק'}
-              </Button>
+              </button>
             )}
-          </>
-        ) : connection?.status === 'error' ? (
-          <>
-            <div className="flex items-center gap-2">
-              <AlertTriangle size={15} className="text-rose-400 shrink-0" />
-              <span className="text-xs text-muted-foreground truncate">
-                {connection.lastError || 'שגיאה בהתחברות לחשבון'}
-              </span>
-            </div>
-            {canManage && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleConnect}
-                disabled={connecting}
-                className="text-xs font-bold shrink-0 self-start sm:self-auto"
-              >
-                {connecting ? 'מתחבר…' : 'התחבר מחדש'}
-              </Button>
-            )}
-          </>
+          </div>
         ) : (
-          <>
-            <div className="flex items-center gap-2">
-              <CalendarX2 size={15} className="text-muted-foreground shrink-0" />
-              <span className="text-xs text-muted-foreground">אין יומן מחובר</span>
-            </div>
-
-            {canManage && (
-              <Button
-                size="sm"
-                onClick={handleConnect}
-                disabled={connecting}
-                className="flex items-center gap-2 bg-white text-zinc-900 border border-zinc-200 hover:bg-zinc-100 shadow-sm font-bold text-xs rounded-xl px-3.5 py-1.5 transition-all cursor-pointer shrink-0 self-start sm:self-auto"
-              >
-                {connecting ? (
-                  <RefreshCw size={14} className="animate-spin text-zinc-700" />
-                ) : (
-                  <GoogleIcon size={15} />
-                )}
-                <span>{connecting ? 'מתחבר…' : 'חבר יומן Google'}</span>
-              </Button>
-            )}
-          </>
+          canManage && (
+            <button type="button" onClick={handleConnect} disabled={connecting} className="shrink-0 cursor-pointer text-[13px] font-extrabold text-primary">
+              {connecting ? 'מתחבר…' : isError ? 'התחבר מחדש' : 'חבר יומן'}
+            </button>
+          )
         )}
       </div>
+      {connectError && <p className="px-1 text-[12.5px] font-bold text-destructive">{connectError}</p>}
     </div>
   )
 }

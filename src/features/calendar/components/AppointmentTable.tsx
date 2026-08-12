@@ -4,6 +4,7 @@ import { SelectInput } from '@/components/ui/select-input'
 import type { ApiAppointment, AppointmentStatus } from '../types'
 import { STATUS_LABELS } from '../types'
 import { ImageGalleryDialog } from './ImageGalleryDialog'
+import { formatDuration, formatPriceRange } from '@/features/conversations/lib/format'
 
 interface AppointmentTableProps {
   appointments: ApiAppointment[]
@@ -21,7 +22,7 @@ export const AppointmentTable: React.FC<AppointmentTableProps> = ({
   const [selectedGallery, setSelectedGallery] = useState<{ images: string[]; index: number } | null>(null)
 
   return (
-    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm font-assistant" dir="rtl">
+    <div className="bg-card border border-border/80 rounded-3xl overflow-hidden shadow-sm font-assistant" dir="rtl">
       <div className="overflow-x-auto">
         <table className="w-full text-right border-collapse">
           <thead>
@@ -51,7 +52,7 @@ export const AppointmentTable: React.FC<AppointmentTableProps> = ({
                 <td className="px-6 py-4 align-middle text-sm text-muted-foreground">
                   <div className="font-semibold text-foreground">{appt.date}</div>
                   <div className="text-mini text-muted-foreground mt-1">
-                    {appt.timeSlot} {appt.durationHours ? `(${appt.durationHours} שעות)` : ''}
+                    {appt.timeSlot} {appt.durationMinutes ? `(${formatDuration(appt.durationMinutes)})` : ''}
                   </div>
                 </td>
 
@@ -68,7 +69,7 @@ export const AppointmentTable: React.FC<AppointmentTableProps> = ({
                 {/* Price & Deposit */}
                 <td className="px-6 py-4 align-middle">
                   <div className="text-sm font-bold text-foreground">
-                    {appt.price !== null ? `₪${appt.price.toLocaleString()}` : '—'}
+                    {appt.priceMin !== null || appt.priceMax !== null ? formatPriceRange(appt.priceMin, appt.priceMax) : '—'}
                   </div>
                   <div className="text-micro mt-1">
                     {appt.hasDeposit ? (

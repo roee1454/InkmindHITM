@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   Form,
@@ -16,7 +15,7 @@ import {
 } from '@/components/ui/form'
 import { bootstrapAdmin } from '@/features/auth/server/auth'
 import { ensureSettings } from '@/features/onboarding/server/onboarding'
-import { Mail, Lock, User, AlertCircle, ArrowLeft, Eye, EyeOff } from 'lucide-react'
+import { Mail, Lock, User, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
 const schema = z.object({
   name: z.string().min(1, 'שדה חובה'),
@@ -38,7 +37,7 @@ export function SetupForm() {
       await bootstrapAdmin({ data: values })
       await ensureSettings()
     },
-    onSuccess: () => navigate({ to: '/onboarding/whatsapp' }),
+    onSuccess: () => navigate({ to: '/onboarding/studio' }),
     onError: (err: Error) => form.setError('root', { message: err.message }),
   })
 
@@ -46,112 +45,97 @@ export function SetupForm() {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit((values) => mutation.mutate(values))}
-        className="space-y-4 text-right font-assistant"
+        className="form-stack gap-8 text-right font-assistant"
         dir="rtl"
       >
-        {/* Full Name */}
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs font-bold text-foreground">שם מלא</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
-                    <User size={16} />
+        <div className="form-stack">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="form-label">שם מלא</FormLabel>
+                <FormControl>
+                  <div className="flex h-14 w-full items-center gap-2.5 rounded-[18px] border border-input/80 bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
+                    <User className="size-[18px] shrink-0 text-muted-foreground" />
+                    <Input
+                      placeholder="ישראל ישראלי"
+                      className="h-full w-full border-0 bg-transparent p-0 text-base shadow-none outline-none focus-visible:ring-0"
+                      {...field}
+                    />
                   </div>
-                  <Input
-                    placeholder="ישראל ישראלי"
-                    className="h-11 rounded-xl pr-10 text-sm"
-                    {...field}
-                  />
-                </div>
-              </FormControl>
-              <FormMessage className="text-mini" />
-            </FormItem>
-          )}
-        />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* Email */}
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs font-bold text-foreground">כתובת אימייל</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
-                    <Mail size={16} />
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="form-label">כתובת אימייל</FormLabel>
+                <FormControl>
+                  <div className="flex h-14 w-full items-center gap-2.5 rounded-[18px] border border-input/80 bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
+                    <Mail className="size-[18px] shrink-0 text-muted-foreground" />
+                    <Input
+                      type="email"
+                      placeholder="name@studio.com"
+                      dir="ltr"
+                      className="h-full w-full border-0 bg-transparent p-0 text-base shadow-none outline-none focus-visible:ring-0"
+                      {...field}
+                    />
                   </div>
-                  <Input
-                    type="email"
-                    placeholder="name@studio.com"
-                    dir="ltr"
-                    className="h-11 rounded-xl pr-10 text-xs font-mono"
-                    {...field}
-                  />
-                </div>
-              </FormControl>
-              <FormMessage className="text-mini" />
-            </FormItem>
-          )}
-        />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* Password */}
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs font-bold text-foreground">סיסמה</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
-                    <Lock size={16} />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="form-label">סיסמה</FormLabel>
+                <FormControl>
+                  <div className="flex h-14 w-full items-center gap-2.5 rounded-[18px] border border-input/80 bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
+                    <Lock className="size-[18px] shrink-0 text-muted-foreground" />
+                    <Input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="לפחות 8 תווים"
+                      className="h-full w-full border-0 bg-transparent p-0 text-base shadow-none outline-none focus-visible:ring-0"
+                      {...field}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="tap-target -me-2 shrink-0 text-muted-foreground"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                   </div>
-                  <Input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="לפחות 8 תווים"
-                    dir="ltr"
-                    className="h-11 rounded-xl px-10 text-xs font-mono"
-                    {...field}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                  </button>
-                </div>
-              </FormControl>
-              <FormMessage className="text-mini" />
-              <p className="text-mini text-muted-foreground">
-                הסיסמה חייבת להכיל לפחות 8 תווים. מומלץ לשמור אותה במקום בטוח.
-              </p>
-            </FormItem>
-          )}
-        />
+                </FormControl>
+                <FormMessage />
+                <p className="ps-1 text-[13px] text-muted-foreground">
+                  הסיסמה חייבת להכיל לפחות 8 תווים. מומלץ לשמור אותה במקום בטוח.
+                </p>
+              </FormItem>
+            )}
+          />
+        </div>
 
-        {/* Root Error */}
         {form.formState.errors.root && (
-          <div className="flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs font-semibold text-rose-400">
+          <div className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-[13px] font-semibold text-destructive">
             <AlertCircle size={15} className="shrink-0" />
             <span>{form.formState.errors.root.message}</span>
           </div>
         )}
 
-        {/* Submit */}
-        <Button
-          type="submit"
-          className="h-11 w-full rounded-xl font-bold cursor-pointer gap-2 text-sm shadow-md transition-all hover:scale-[1.01]"
-          disabled={mutation.isPending}
-        >
-          <span>{mutation.isPending ? 'יוצר חשבון…' : 'יצירת חשבון והמשך לאשף'}</span>
-          <ArrowLeft size={16} />
-        </Button>
+        <button type="submit" className="btn-native" disabled={mutation.isPending}>
+          {mutation.isPending ? 'יוצר חשבון…' : 'יצירת חשבון והמשך לאשף'}
+        </button>
       </form>
     </Form>
   )

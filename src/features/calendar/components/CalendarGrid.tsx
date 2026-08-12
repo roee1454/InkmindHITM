@@ -4,6 +4,7 @@ import type { ApiAppointment, ApiExternalBusyPeriod } from '../types'
 import type { WorkingHoursWindow } from '@/lib/working-hours'
 import { WeekGrid } from './WeekGrid'
 import { MonthGrid } from './MonthGrid'
+import { DailyAppointmentCards } from './DailyAppointmentCards'
 import {
   addDays,
   addMonths,
@@ -33,6 +34,7 @@ interface CalendarGridProps {
   workingHours: WorkingHoursWindow[] | null
   onSelectAppointment: (appointment: ApiAppointment) => void
   onSelectSlot: (date: string, timeSlot: string) => void
+  onDeleteAppointment: (id: string) => void
 }
 
 export const CalendarGrid: React.FC<CalendarGridProps> = ({
@@ -46,6 +48,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   workingHours,
   onSelectAppointment,
   onSelectSlot,
+  onDeleteAppointment,
 }) => {
   const isMobile = useIsMobile()
 
@@ -74,8 +77,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     <button
       type="button"
       onClick={() => onModeChange(value)}
-      className={`cursor-pointer rounded-xl px-3 py-1 text-xs font-semibold transition-colors active:bg-card/70 ${
-        mode === value ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+      className={`h-8 cursor-pointer rounded-xl px-3 text-[13px] font-bold transition-all duration-150 ease-native ${
+        mode === value ? 'bg-card font-extrabold text-foreground shadow-sm' : 'text-muted-foreground'
       } ${className}`}
       aria-pressed={mode === value}
     >
@@ -84,21 +87,21 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   )
 
   return (
-    <div className="border border-border bg-card rounded-2xl overflow-hidden shadow-sm font-assistant">
-      <div dir="rtl" className="flex items-center justify-between gap-2 border-b border-border px-3 py-3 lg:px-4">
+    <div className="border border-border/80 bg-card rounded-3xl overflow-hidden shadow-sm font-assistant">
+      <div dir="rtl" className="flex items-center justify-between gap-2 border-b border-border/60 px-3 py-3 lg:px-4">
         <button
           type="button"
           onClick={() => step(-1)}
-          className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer rounded-lg hover:bg-muted/50"
+          className="tap-target text-muted-foreground"
           aria-label="הקודם"
         >
           <ChevronRight size={18} />
         </button>
 
         <div className="flex min-w-0 flex-col items-center gap-1.5 sm:flex-row sm:gap-4">
-          <h4 className="truncate text-sm font-bold text-foreground">{title}</h4>
+          <h4 className="truncate text-[16px] font-extrabold text-foreground">{title}</h4>
           {/* The toggle stays two-wide at every size: `יום` below lg, `שבוע` at lg and up. */}
-          <div className="hidden lg:flex rounded-xl border border-border bg-muted/40 p-0.5">
+          <div className="hidden lg:flex select-none rounded-2xl bg-muted p-1">
             {modeButton('day', 'יום', 'lg:hidden')}
             {modeButton('week', 'שבוע', 'hidden lg:block')}
             {modeButton('month', 'חודש')}
@@ -108,7 +111,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         <button
           type="button"
           onClick={() => step(1)}
-          className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer rounded-lg hover:bg-muted/50"
+          className="tap-target text-muted-foreground"
           aria-label="הבא"
         >
           <ChevronLeft size={18} />
@@ -116,10 +119,11 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
       </div>
 
       {/* Mobile-only Day Carousel/Strip */}
-      <div className="flex lg:hidden items-center justify-between border-b border-border bg-muted/20 px-3 py-2 gap-1">
+      <div className="flex lg:hidden items-center justify-between border-b border-border/60 px-2 py-2 gap-1">
         {weekDays(anchorDate).map((day) => {
           const active = isSameDay(day, anchorDate)
           const today = isToday(day)
+          const isWeekend = day.getDay() === 5 || day.getDay() === 6
           const dayNameShort = HEBREW_DAYS_SHORT[day.getDay()]
           return (
             <button
@@ -127,22 +131,35 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               type="button"
               onClick={() => onAnchorDateChange(day)}
               className={cn(
-                "flex flex-1 flex-col items-center justify-center py-2 rounded-xl transition-all cursor-pointer",
+                'flex flex-1 select-none flex-col items-center justify-center gap-0.5 rounded-[14px] py-2 transition-all duration-150 ease-native cursor-pointer',
                 active
-                  ? "bg-primary text-primary-foreground font-bold shadow-xs scale-105"
+                  ? 'bg-primary text-primary-foreground shadow'
                   : today
-                    ? "bg-primary/10 text-primary hover:bg-primary/15 font-semibold"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? 'bg-primary/10 text-primary'
+                    : isWeekend
+                      ? 'text-muted-foreground opacity-40'
+                      : 'text-muted-foreground',
               )}
             >
-              <span className="text-[10px] uppercase tracking-wider">{dayNameShort}</span>
-              <span className="text-sm font-bold mt-0.5">{day.getDate()}</span>
+              <span className="text-[11.5px] font-bold">{dayNameShort}</span>
+              <span className="text-[16px] font-extrabold tabular-nums">{day.getDate()}</span>
             </button>
           )
         })}
       </div>
 
-      {mode === 'week' || mode === 'day' ? (
+      {isMobile && mode === 'day' ? (
+        <div className="px-3 py-3">
+          <DailyAppointmentCards
+            appointments={appointments
+              .filter((a) => a.date === toYmd(anchorDate))
+              .sort((a, b) => a.timeSlot.localeCompare(b.timeSlot))}
+            onSelectAppointment={onSelectAppointment}
+            onNewAppointment={() => onSelectSlot(toYmd(anchorDate), '10:00')}
+            onDeleteAppointment={onDeleteAppointment}
+          />
+        </div>
+      ) : mode === 'week' || mode === 'day' ? (
         <WeekGrid
           anchorDate={anchorDate}
           appointments={appointments}

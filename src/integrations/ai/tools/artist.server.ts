@@ -1,9 +1,7 @@
 import { z } from 'zod'
 import type PocketBase from 'pocketbase'
 import type { ToolFactoryContext } from './types'
-import { suggestArtistsForBot, STYLE_OPTIONS, getWorkingHoursForStaff } from '@/features/settings/server/profiles'
-
-const STYLE_VALUES = STYLE_OPTIONS.map((o) => o.value) as [string, ...string[]]
+import { suggestArtistsForBot, getWorkingHoursForStaff } from '@/features/settings/server/profiles'
 
 const DAY_NAMES = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
 
@@ -29,37 +27,33 @@ export function buildArtistTools(ctx: ToolFactoryContext) {
 
   return {
     suggest_artists: botTool(
-      'מחפש אמנים המתאימים לסגנון קעקוע מבוקש, או אמן ספציפי שהלקוח ציין בשם. חובה לקרוא לכלי זה ברגע שיש סגנון עיצוב, לפני בדיקת זמינות — התוצאה מספקת את staffId התקין.',
+      'מחפש אמן ספציפי שהלקוח ציין בשם, או מחזיר את כל אמני הסטודיו עם הביוגרפיה שלהם כדי להתאים לסגנון קעקוע מבוקש. חובה לקרוא לכלי זה ברגע שיש רעיון לקעקוע, לפני בדיקת זמינות — התוצאה מספקת את staffId התקין. אין רשימת סגנונות קבועה — יש להתאים לפי הביוגרפיה (bio) החופשית של כל אמן.',
       z.object({
-        style: z.string().optional().describe(`הסגנון המבוקש. חייב להיות אחד מהערכים הבאים בלבד: ${STYLE_VALUES.join(', ')}`),
         artistName: z.string().optional().describe('שם אמן ספציפי שהלקוח ביקש'),
       }),
-      async ({ style, artistName }) => {
-        if (!style && !artistName) {
+      async ({ artistName }) => {
+        if (!artistName) {
           const allArtists = await withWorkingHours(su, await suggestArtistsForBot(su, {}))
           return {
             status: 'success',
-            message: 'הצג ללקוח את כל אמני הסטודיו ובקש ממנו לבחור. הצע להראות תיק עבודות או אינסטגרם. שעות הפעילות (workingHours) מצורפות — ימים שלא מופיעים בהן סגורים, אז אפשר להציע ימים בלי get_artist_schedule; לבדיקת משבצת ספציפית עדיין חובה check_availability.',
+            message: 'הצג ללקוח את כל אמני הסטודיו לפי הביוגרפיה (bio) של כל אחד, ובקש ממנו לבחור בהתאם לסגנון שהוא מחפש. הצע להראות תיק עבודות או אינסטגרם. שעות הפעילות (workingHours) מצורפות — ימים שלא מופיעים בהן סגורים, אז אפשר להציע ימים בלי get_artist_schedule; לבדיקת משבצת ספציפית עדיין חובה check_availability.',
             data: allArtists,
           }
         }
-        const matches = await withWorkingHours(su, await suggestArtistsForBot(su, { style, artistName }))
-        
-        const isExactMatch = matches.length > 0 && matches.every(m => 
-          (style ? m.styles.includes(style) : true) &&
-          (artistName ? m.name.toLowerCase().includes(artistName.toLowerCase()) : true)
-        )
+        const matches = await withWorkingHours(su, await suggestArtistsForBot(su, { artistName }))
 
-        if ((style || artistName) && !isExactMatch) {
+        const isExactMatch = matches.length > 0 && matches.every((m) => m.name.toLowerCase().includes(artistName.toLowerCase()))
+
+        if (!isExactMatch) {
           return {
             status: 'fallback_all_artists',
-            message: `לא נמצאו אמנים שתואמים בדיוק את הסגנון או השם. הנה כל האמנים הפעילים — הצג אותם ללקוח ובקש ממנו לבחור, והצע בנימוס תיק עבודות או אינסטגרם. שעות הפעילות של כל אמן מצורפות (workingHours).`,
+            message: 'לא נמצא אמן שתואם בדיוק את השם. הנה כל האמנים הפעילים — הצג אותם ללקוח לפי הביוגרפיה של כל אחד ובקש ממנו לבחור, והצע בנימוס תיק עבודות או אינסטגרם. שעות הפעילות של כל אמן מצורפות (workingHours).',
             data: matches,
           }
         }
         return {
           status: 'success',
-          message: 'הצג ללקוח את האמן/ים בצורה טבעית והצע תיק עבודות. שעות הפעילות מצורפות (workingHours) — אפשר להציע ימים ישירות; לבדיקת משבצת ספציפית השתמש ב-check_availability.',
+          message: 'הצג ללקוח את האמן בצורה טבעית לפי הביוגרפיה שלו והצע תיק עבודות. שעות הפעילות מצורפות (workingHours) — אפשר להציע ימים ישירות; לבדיקת משבצת ספציפית השתמש ב-check_availability.',
           data: matches,
         }
       }

@@ -45,7 +45,7 @@ async function overlapsExistingAppointment(
   return candidates.some((item) => {
     if (excludeAppointmentId && item.id === excludeAppointmentId) return false
     const itemStart = new Date(item.start_time as string)
-    const itemDuration = Number(item.duration_hours) || 2
+    const itemDuration = (Number(item.duration_minutes) || 120) / 60
     const itemEnd = new Date(itemStart.getTime() + itemDuration * 60 * 60 * 1000)
     return start < itemEnd && end > itemStart
   })
@@ -126,7 +126,7 @@ export async function getArtistScheduleForBot(
     return {
       date: toYmd(d),
       timeSlot: minutesToTime(d.getHours() * 60 + d.getMinutes()),
-      durationHours: Number(item.duration_hours) || 2,
+      durationHours: (Number(item.duration_minutes) || 120) / 60,
       status: (item.status as string) || 'pending',
     }
   })
@@ -176,7 +176,7 @@ export async function createPendingHoldForBot(
       customer: customerId,
       staff: staffId,
       start_time: start.toISOString(),
-      duration_hours: durationHours,
+      duration_minutes: durationHours * 60,
       status: 'pending',
       tattoo_description: tattooDescription,
       source: 'ai_bot',

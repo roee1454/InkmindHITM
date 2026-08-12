@@ -44,7 +44,7 @@ function SheetOverlay({
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        "fixed inset-0 z-50 bg-black/45 fill-mode-both data-[state=open]:animate-in data-[state=open]:duration-300 data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         className
       )}
       {...props}
@@ -55,7 +55,7 @@ function SheetOverlay({
 function SheetContent({
   className,
   children,
-  side = "right",
+  side = "bottom",
   showCloseButton = true,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
@@ -67,24 +67,34 @@ function SheetContent({
       <SheetOverlay />
       <SheetPrimitive.Content
         data-slot="sheet-content"
+        tabIndex={-1}
+        onOpenAutoFocus={(e) => {
+          // Don't let Radix auto-focus the first focusable element — if that's a text input, it
+          // pops the mobile on-screen keyboard immediately on mount. Focus the panel itself.
+          e.preventDefault()
+          ;(e.currentTarget as HTMLElement | null)?.focus()
+        }}
         className={cn(
           // `fill-mode-both` matters here: the panel's un-animated resting transform is the
           // enter keyframe's *start* (fully off-screen), so if the animation is ever skipped
           // or interrupted — background tab, frozen compositor, a UA that disables animation
           // — the drawer would be unreachable. Holding the final frame makes that safe.
-          "fixed z-50 flex flex-col gap-4 bg-card font-assistant shadow-lg transition ease-in-out fill-mode-both data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:animate-in data-[state=open]:duration-500",
+          "fixed z-50 flex flex-col gap-4 bg-card font-assistant shadow-lg fill-mode-both data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=open]:animate-in data-[state=open]:duration-300",
           side === "right" &&
-            "inset-y-0 right-0 h-svh w-[85vw] max-w-sm border-l border-border data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+            "inset-y-0 right-0 h-svh w-[85vw] max-w-sm rounded-e-3xl border-e border-border/80 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
           side === "left" &&
-            "inset-y-0 left-0 h-svh w-[85vw] max-w-sm border-r border-border data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
+            "inset-y-0 left-0 h-svh w-[85vw] max-w-sm rounded-s-3xl border-s border-border/80 data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
           side === "bottom" &&
-            "inset-x-0 bottom-0 h-auto max-h-[85svh] rounded-t-2xl border-t border-border data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+            "inset-x-0 bottom-0 max-h-[92svh] rounded-t-3xl border-t border-border/80 px-5 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
           side === "top" &&
-            "inset-x-0 top-0 h-auto border-b border-border data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+            "inset-x-0 top-0 h-auto rounded-b-3xl border-b border-border/80 data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
           className
         )}
         {...props}
       >
+        {side === "bottom" && (
+          <div className="mx-auto h-1.5 w-10 shrink-0 rounded-full bg-foreground/15" />
+        )}
         {children}
         {showCloseButton && (
           <SheetPrimitive.Close
@@ -104,7 +114,7 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-header"
-      className={cn("flex flex-col gap-1 border-b border-border p-5 font-assistant", className)}
+      className={cn("flex flex-col gap-1 border-b border-border/60 p-5 font-assistant", className)}
       {...props}
     />
   )
@@ -114,7 +124,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-footer"
-      className={cn("mt-auto flex flex-col gap-2 border-t border-border p-5", className)}
+      className={cn("mt-auto flex flex-col gap-2 border-t border-border/60 p-5", className)}
       {...props}
     />
   )
@@ -127,7 +137,7 @@ function SheetTitle({
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
-      className={cn("font-assistant text-base leading-none font-black text-foreground", className)}
+      className={cn("font-assistant text-base leading-none font-extrabold text-foreground", className)}
       {...props}
     />
   )

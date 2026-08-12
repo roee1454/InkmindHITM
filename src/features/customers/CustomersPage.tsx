@@ -1,5 +1,6 @@
 import React from 'react'
 import { Search, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useLocation, useNavigate } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Input } from '@/components/ui/input'
 import type { Customer, CustomerFormData } from './types'
@@ -12,6 +13,7 @@ import {
 import { CustomersHeader } from './components/CustomersHeader'
 import { CustomersSummary } from './components/CustomersSummary'
 import { CustomerCard } from './components/CustomerCard'
+import { CustomersSkeleton } from './components/CustomersSkeleton'
 import { CustomerDialog } from './components/CustomerDialog'
 import { useCustomersUiStore } from './store/customersUiStore'
 
@@ -19,7 +21,10 @@ const ITEMS_PER_PAGE = 9
 
 export const CustomersPage: React.FC = () => {
   const queryClient = useQueryClient()
-  
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [returningOnly, setReturningOnly] = React.useState(false)
+
   const {
     searchQuery,
     currentPage,
@@ -43,6 +48,16 @@ export const CustomersPage: React.FC = () => {
     queryFn: () => getCustomers(),
     staleTime: 5 * 60 * 1000,
   })
+
+  // The mobile top bar's "+" action navigates here with `?new=1` since it lives outside this
+  // component's tree — pick it up once, then clear it so back-navigation doesn't reopen it.
+  React.useEffect(() => {
+    if ((location.search as Record<string, unknown>)?.new === '1') {
+      openCreate()
+      navigate({ to: '/dashboard/customers', search: {}, replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search])
 
   const createCustomerMutation = useMutation({
     mutationFn: (body: CustomerFormData) =>
@@ -118,6 +133,7 @@ export const CustomersPage: React.FC = () => {
 
   // Global search filtering across ALL pages first
   const filteredCustomers = customers.filter((c) => {
+    if (returningOnly && c.visits < 2) return false
     const term = searchQuery.toLowerCase().trim()
     if (!term) return true
     const nameMatch = c.name?.toLowerCase().includes(term)
@@ -132,65 +148,53 @@ export const CustomersPage: React.FC = () => {
   const paginatedCustomers = filteredCustomers.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE)
 
   const totalCustomers = customers.length
-  const returningCustomers = customers.filter((c) => c.visits >= 2).length
   const totalSpend = customers.reduce((sum, c) => sum + c.totalSpend, 0)
-  const reviewsCount = customers.filter((c) => c.visits >= 1).length
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-4 md:space-y-6 text-right font-assistant py-3 md:py-6" dir="rtl">
-      <CustomersHeader
-        totalCustomers={totalCustomers}
-        totalSpend={totalSpend}
-        onNewCustomer={openCreate}
-      />
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-[18px] font-assistant lg:gap-6" dir="rtl">
+      <CustomersHeader totalCustomers={totalCustomers} totalSpend={totalSpend} onNewCustomer={openCreate} />
 
       {error && (
-        <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold px-4 py-3 rounded-xl">
+        <div className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-[13px] font-semibold text-destructive">
           <AlertCircle size={15} />
           {(error as Error).message}
         </div>
       )}
 
-      <CustomersSummary
-        totalCustomers={totalCustomers}
-        returningCustomers={returningCustomers}
-        reviewsCount={reviewsCount}
-      />
-
-      {/* Search Bar */}
-      <div className="relative">
+      {/* Search field */}
+      <div className="flex h-13 w-full items-center gap-2.5 rounded-2xl border border-input/80 bg-card px-4 shadow-xs transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
+        <Search size={18} className="shrink-0 text-muted-foreground" />
         <Input
           type="text"
-          placeholder="חיפוש בכל העמודים לפי שם, טלפון או אימייל…"
+          placeholder="חיפוש שם, טלפון או אימייל"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pe-10 bg-white dark:bg-card text-foreground"
+          className="h-full w-full border-0 bg-transparent p-0 text-base shadow-none outline-none focus-visible:ring-0"
         />
-        <Search size={16} className="absolute end-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
       </div>
 
-      {/* Grid of Customers */}
+      <CustomersSummary
+        totalCustomers={filteredCustomers.length}
+        returningOnly={returningOnly}
+        onToggleReturning={() => {
+          setReturningOnly((v) => !v)
+          setCurrentPage(1)
+        }}
+      />
+
       {isLoading && !customers.length ? (
-        <div className="h-44 flex items-center justify-center text-xs font-semibold text-muted-foreground">
-          טוען לקוחות…
-        </div>
+        <CustomersSkeleton />
       ) : paginatedCustomers.length > 0 ? (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {paginatedCustomers.map((c, idx) => (
-              <CustomerCard
-                key={c.id}
-                customer={c}
-                colorIndex={(safePage - 1) * ITEMS_PER_PAGE + idx}
-                onEdit={openEdit}
-                onDelete={(id) => deleteCustomerMutation.mutate(id)}
-              />
+        <div className="flex flex-col gap-4">
+          <div className="card-native overflow-hidden">
+            {paginatedCustomers.map((c) => (
+              <CustomerCard key={c.id} customer={c} onEdit={openEdit} />
             ))}
           </div>
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="flex flex-col gap-3 border-t border-border/60 pt-4 font-assistant text-xs sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 border-t border-border/60 pt-4 font-assistant text-[13px] sm:flex-row sm:items-center sm:justify-between">
               <div className="text-muted-foreground">
                 מציג {((safePage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(safePage * ITEMS_PER_PAGE, filteredCustomers.length)} מתוך {filteredCustomers.length} לקוחות
               </div>
@@ -200,7 +204,7 @@ export const CustomersPage: React.FC = () => {
                   type="button"
                   onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
                   disabled={safePage === 1}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted transition-colors cursor-pointer"
+                  className="flex cursor-pointer items-center gap-1 rounded-xl border border-border/80 bg-card px-3 py-1.5 text-foreground transition-colors duration-100 active:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <ChevronRight size={14} /> הקודם
                 </button>
@@ -216,10 +220,10 @@ export const CustomersPage: React.FC = () => {
                       key={pageNum}
                       type="button"
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`h-7 w-7 cursor-pointer rounded-lg text-xs font-bold transition-colors active:scale-95 ${
+                      className={`h-7 w-7 cursor-pointer rounded-lg text-[13px] font-bold transition-transform duration-150 ease-native active:scale-95 ${
                         pageNum === safePage
                           ? 'bg-primary text-primary-foreground'
-                          : 'border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground'
+                          : 'border border-border/80 bg-card text-muted-foreground active:bg-muted'
                       }`}
                     >
                       {pageNum}
@@ -231,7 +235,7 @@ export const CustomersPage: React.FC = () => {
                   type="button"
                   onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
                   disabled={safePage === totalPages}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted transition-colors cursor-pointer"
+                  className="flex cursor-pointer items-center gap-1 rounded-xl border border-border/80 bg-card px-3 py-1.5 text-foreground transition-colors duration-100 active:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   הבא <ChevronLeft size={14} />
                 </button>
@@ -240,7 +244,7 @@ export const CustomersPage: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="h-44 flex items-center justify-center text-xs font-semibold text-muted-foreground border border-dashed border-border rounded-2xl">
+        <div className="flex h-44 items-center justify-center rounded-2xl border border-dashed border-border text-sm font-semibold text-muted-foreground">
           לא נמצאו לקוחות במאגר
         </div>
       )}
@@ -265,6 +269,14 @@ export const CustomersPage: React.FC = () => {
         formError={formError}
         onSubmit={submitEdit}
         isSaving={updateCustomerMutation.isPending}
+        onDelete={
+          editingCustomer
+            ? () => {
+                deleteCustomerMutation.mutate(editingCustomer.id)
+                setEditingCustomer(null)
+              }
+            : undefined
+        }
       />
     </div>
   )

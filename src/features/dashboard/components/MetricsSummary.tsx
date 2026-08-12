@@ -6,48 +6,32 @@ interface MetricsSummaryProps {
   totalLeads: number
 }
 
+const TILES = [
+  { key: 'appointments', label: 'תורים היום', icon: CalendarDays, chip: 'bg-success/12 text-success' },
+  { key: 'leads', label: 'פניות חדשות', icon: Zap, chip: 'bg-primary/10 text-primary' },
+  { key: 'active', label: 'לידים פעילים', icon: Users, chip: 'bg-warning/12 text-warning' },
+] as const
+
 export function MetricsSummary({ appointmentsTodayCount, newLeadsCount, totalLeads }: MetricsSummaryProps) {
+  const values: Record<(typeof TILES)[number]['key'], number> = {
+    appointments: appointmentsTodayCount,
+    leads: newLeadsCount,
+    active: totalLeads,
+  }
+
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-6">
-      <div className="flex h-24 flex-col justify-between rounded-2xl border border-border bg-card p-4 md:h-36 md:p-6">
-        <div className="flex items-center justify-between">
-          <span className="font-assistant text-sm font-bold text-muted-foreground">תורים היום</span>
-          <span className="rounded-xl border border-border bg-muted p-2 text-emerald-500">
-            <CalendarDays size={18} />
+    <div className="grid grid-cols-3 gap-3 lg:gap-4">
+      {TILES.map((tile) => (
+        <div key={tile.key} className="stat-native lg:p-[22px]">
+          <span className={`flex size-[34px] shrink-0 items-center justify-center rounded-[12px] lg:size-10 ${tile.chip}`}>
+            <tile.icon size={17} />
           </span>
+          <div>
+            <div className="stat-value lg:text-[38px]">{values[tile.key]}</div>
+            <div className="stat-label">{tile.label}</div>
+          </div>
         </div>
-        <div>
-          <div className="font-assistant text-2xl font-black text-foreground md:text-3xl">{appointmentsTodayCount}</div>
-          <div className="mt-1 font-assistant text-micro text-muted-foreground hidden md:block">תורים מאושרים/פעילים להיום</div>
-        </div>
-      </div>
-
-      <div className="flex h-24 flex-col justify-between rounded-2xl border border-border bg-card p-4 md:h-36 md:p-6">
-        <div className="flex items-center justify-between">
-          <span className="font-assistant text-sm font-bold text-muted-foreground">פניות חדשות</span>
-          <span className="rounded-xl border border-border bg-muted p-2 text-primary">
-            <Zap size={18} />
-          </span>
-        </div>
-        <div>
-          <div className="font-assistant text-2xl font-black text-foreground md:text-3xl">{newLeadsCount}</div>
-          <div className="mt-1 font-assistant text-micro text-muted-foreground hidden md:block">לידים חדשים שממתינים לטיפול</div>
-        </div>
-      </div>
-
-      {/* Odd tile out in the 2-col mobile grid — span the row rather than leave a gap. */}
-      <div className="flex h-24 flex-col justify-between rounded-2xl border border-border bg-card p-4 max-md:col-span-2 md:h-36 md:p-6">
-        <div className="flex items-center justify-between">
-          <span className="font-assistant text-sm font-bold text-muted-foreground">לידים פעילים</span>
-          <span className="rounded-xl border border-border bg-muted p-2 text-purple-500">
-            <Users size={18} />
-          </span>
-        </div>
-        <div>
-          <div className="font-assistant text-2xl font-black text-foreground md:text-3xl">{totalLeads}</div>
-          <div className="mt-1 font-assistant text-micro text-muted-foreground hidden md:block">לידים שלא הסתיימו במעקב</div>
-        </div>
-      </div>
+      ))}
     </div>
   )
 }

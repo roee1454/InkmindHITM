@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Send } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Button } from '@/components/ui/button'
 import { AppointmentFormFields } from './AppointmentFormFields'
 import type { ApiAppointment, ApiGoogleConnection, AppointmentFormValues } from '../types'
@@ -20,7 +20,7 @@ interface EditAppointmentDialogProps {
   onSave: (data: AppointmentFormValues) => void
   isSaving: boolean
   error: string | null
-  onSendQuote: (priceIls: number, depositAmount: number) => void
+  onSendQuote: (priceMinIls: number, priceMaxIls: number, depositAmount: number, durationMinutes: number) => void
   isSendingQuote: boolean
 }
 
@@ -52,9 +52,10 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
       date: appointment.date,
       timeSlot: appointment.timeSlot,
       staffId: appointment.staffId,
-      durationHours: appointment.durationHours ?? 2.0,
+      durationMinutes: appointment.durationMinutes ?? 120,
       tattooDescription: appointment.style ?? '',
-      priceIls: appointment.price,
+      priceMinIls: appointment.priceMin,
+      priceMaxIls: appointment.priceMax,
       depositAmount: appointment.depositAmount,
       status: appointment.status,
       depositPaid: appointment.hasDeposit,
@@ -71,7 +72,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
     values?.staffId ?? null,
     values?.date ?? '',
     values?.timeSlot ?? '',
-    values?.durationHours ?? 2,
+    (values?.durationMinutes ?? 120) / 60,
   )
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -95,14 +96,15 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   const displayError = error || localError
 
   return (
-    <Dialog open={appointment !== null} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg rounded-2xl text-right font-assistant max-h-[90vh] overflow-y-auto" dir="rtl">
-        <DialogHeader>
-          <DialogTitle>עריכת תור</DialogTitle>
-          <DialogDescription>עדכן את פרטי הלקוח, מועד התור, המקעקע והסטטוס.</DialogDescription>
-        </DialogHeader>
-
-        {displayError && <p className="text-xs font-semibold text-rose-400">{displayError}</p>}
+    <>
+      <ResponsiveDialog
+        open={appointment !== null}
+        onOpenChange={onOpenChange}
+        title="עריכת תור"
+        description="עדכן את פרטי הלקוח, מועד התור, המקעקע והסטטוס."
+        contentClassName="sm:max-w-lg max-h-[90vh] overflow-y-auto"
+      >
+        {displayError && <p className="text-[13px] font-bold text-destructive">{displayError}</p>}
 
         {values && (
           <form onSubmit={handleSubmit} className="mt-2 space-y-4">
@@ -115,19 +117,24 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
             />
 
             {appointment?.source === 'ai_bot' && appointment.status === 'pending' && (
-              <div className="space-y-2 rounded-xl border border-primary/20 bg-primary/5 p-3">
-                <p className="text-xs font-semibold text-foreground">
+              <div className="space-y-2 rounded-2xl border border-primary/20 bg-primary/5 p-3.5">
+                <p className="text-[13px] font-bold text-foreground">
                   בקשת הזמנה מהבוט — ממתינה להצעת מחיר
                 </p>
-                <p className="text-mini text-muted-foreground">
-                  מלא/י מחיר ומקדמה למעלה ואז שלח/י ללקוח את הצעת המחיר בוואטסאפ.
+                <p className="text-[12.5px] text-muted-foreground">
+                  מלא/י טווח מחיר ומקדמה למעלה ואז שלח/י ללקוח את הצעת המחיר בוואטסאפ.
                 </p>
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={isSendingQuote || values.priceIls == null || values.depositAmount == null}
-                  onClick={() => values.priceIls != null && values.depositAmount != null && onSendQuote(values.priceIls, values.depositAmount)}
-                  className="w-full rounded-xl cursor-pointer"
+                  disabled={isSendingQuote || values.priceMinIls == null || values.priceMaxIls == null || values.depositAmount == null}
+                  onClick={() =>
+                    values.priceMinIls != null &&
+                    values.priceMaxIls != null &&
+                    values.depositAmount != null &&
+                    onSendQuote(values.priceMinIls, values.priceMaxIls, values.depositAmount, values.durationMinutes)
+                  }
+                  className="w-full"
                 >
                   <Send size={14} className="ml-1.5" />
                   {isSendingQuote ? 'שולח הצעת מחיר…' : 'שלח הצעת מחיר ללקוח'}
@@ -136,14 +143,14 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
             )}
 
             {appointment?.referenceImages && appointment.referenceImages.length > 0 && (
-              <div className="space-y-2 mt-4 border-t border-border pt-3">
-                <span className="text-xs font-semibold text-muted-foreground">תמונות התייחסות</span>
+              <div className="space-y-2 mt-4 border-t border-border/60 pt-3">
+                <span className="text-[13px] font-bold text-muted-foreground">תמונות התייחסות</span>
                 <div className="flex gap-2 overflow-x-auto py-1">
                   {appointment.referenceImages.map((img, idx) => (
                     <div
                       key={idx}
                       onClick={() => setSelectedGallery({ images: appointment.referenceImages!, index: idx })}
-                      className="relative w-16 h-16 rounded-lg overflow-hidden border border-border shrink-0 bg-muted cursor-pointer hover:border-primary transition-colors"
+                      className="relative w-16 h-16 rounded-2xl overflow-hidden border border-border/80 shrink-0 bg-muted cursor-pointer"
                     >
                       <img src={img} alt={`Reference ${idx + 1}`} className="w-full h-full object-cover" />
                     </div>
@@ -153,21 +160,16 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
             )}
 
             <div className="grid grid-cols-2 gap-3 pt-2">
-              <Button type="submit" disabled={isSaving} className="rounded-xl font-bold cursor-pointer">
+              <Button type="submit" disabled={isSaving}>
                 {isSaving ? 'שומר…' : 'שמור'}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="rounded-xl font-bold cursor-pointer"
-              >
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 ביטול
               </Button>
             </div>
           </form>
         )}
-      </DialogContent>
+      </ResponsiveDialog>
 
       {selectedGallery && (
         <ImageGalleryDialog
@@ -177,7 +179,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
           onOpenChange={(open) => !open && setSelectedGallery(null)}
         />
       )}
-    </Dialog>
+    </>
   )
 }
 

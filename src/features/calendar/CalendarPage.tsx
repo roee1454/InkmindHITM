@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { AlertCircle } from 'lucide-react'
+import { useLocation, useNavigate } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { WorkingHoursWindow } from '@/lib/working-hours'
 import type {
@@ -15,6 +16,7 @@ import { AppointmentTable } from './components/AppointmentTable'
 import { CalendarHeader } from './components/CalendarHeader'
 import { CalendarFilters } from './components/CalendarFilters'
 import { CalendarGrid } from './components/CalendarGrid'
+import { CalendarSkeleton } from './components/CalendarSkeleton'
 import { toYmd } from './date-utils'
 import {
   getAppointments,
@@ -31,6 +33,8 @@ import { useIsMobile } from '@/hooks/use-media-query'
 
 export const CalendarPage: React.FC = () => {
   const queryClient = useQueryClient()
+  const location = useLocation()
+  const navigate = useNavigate()
   const {
     viewMode,
     calendarMode,
@@ -68,6 +72,16 @@ export const CalendarPage: React.FC = () => {
     queryKey: ['currentStaff'],
     queryFn: () => getCurrentStaffInfo(),
   })
+
+  // The mobile top bar's "+" action navigates here with `?new=1` since it lives outside this
+  // component's tree — pick it up once, then clear it so back-navigation doesn't reopen it.
+  useEffect(() => {
+    if ((location.search as Record<string, unknown>)?.new === '1') {
+      openCreate()
+      navigate({ to: '/dashboard/calendar', search: {}, replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search])
 
   // Set filter to current logged-in staff on initial entry
   useEffect(() => {
@@ -123,9 +137,10 @@ export const CalendarPage: React.FC = () => {
           date: body.date,
           timeSlot: body.timeSlot,
           staffId: body.staffId,
-          durationHours: body.durationHours,
+          durationMinutes: body.durationMinutes,
           tattooDescription: body.tattooDescription,
-          priceIls: body.priceIls,
+          priceMinIls: body.priceMinIls,
+          priceMaxIls: body.priceMaxIls,
           status: body.status,
           depositPaid: body.depositPaid,
           notes: body.notes,
@@ -156,9 +171,10 @@ export const CalendarPage: React.FC = () => {
           date: body.date,
           timeSlot: body.timeSlot,
           staffId: body.staffId,
-          durationHours: body.durationHours,
+          durationMinutes: body.durationMinutes,
           tattooDescription: body.tattooDescription,
-          priceIls: body.priceIls,
+          priceMinIls: body.priceMinIls,
+          priceMaxIls: body.priceMaxIls,
           status: body.status,
           depositPaid: body.depositPaid,
           notes: body.notes,
@@ -185,7 +201,7 @@ export const CalendarPage: React.FC = () => {
   })
 
   const sendQuoteMutation = useMutation({
-    mutationFn: (body: { appointmentId: string; priceIls: number; depositAmount: number }) =>
+    mutationFn: (body: { appointmentId: string; priceMinIls: number; priceMaxIls: number; depositAmount: number; durationMinutes: number }) =>
       sendPriceQuoteToCustomer({ data: body }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
@@ -219,9 +235,9 @@ export const CalendarPage: React.FC = () => {
     }
   }
 
-  const handleSendQuote = (priceIls: number, depositAmount: number) => {
+  const handleSendQuote = (priceMinIls: number, priceMaxIls: number, depositAmount: number, durationMinutes: number) => {
     if (!editingAppointment) return
-    sendQuoteMutation.mutate({ appointmentId: editingAppointment.id, priceIls, depositAmount })
+    sendQuoteMutation.mutate({ appointmentId: editingAppointment.id, priceMinIls, priceMaxIls, depositAmount, durationMinutes })
   }
 
 
@@ -259,7 +275,7 @@ export const CalendarPage: React.FC = () => {
   const upcomingCount = appointments.filter((a) => a.status === 'confirmed' && a.date >= todayString).length
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-4 md:space-y-6 text-right font-assistant py-3 md:py-6" dir="rtl">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-[18px] font-assistant lg:gap-6" dir="rtl">
       <CalendarHeader
         todayCount={todayCount}
         upcomingCount={upcomingCount}
@@ -269,7 +285,7 @@ export const CalendarPage: React.FC = () => {
       />
 
       {error && (
-        <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold px-4 py-3 rounded-xl">
+        <div className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-[13px] font-semibold text-destructive">
           <AlertCircle size={15} />
           {error}
         </div>
@@ -287,11 +303,9 @@ export const CalendarPage: React.FC = () => {
       />
 
       {loading && !appointments.length ? (
-        <div className="h-44 flex items-center justify-center text-xs text-muted-foreground font-semibold">
-          טוען תורים…
-        </div>
+        <CalendarSkeleton />
       ) : effectiveViewMode === 'calendar' ? (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           <CalendarGrid
             mode={effectiveCalendarMode}
             onModeChange={setCalendarMode}
@@ -303,6 +317,7 @@ export const CalendarPage: React.FC = () => {
             workingHours={selectedArtist !== 'all' ? selectedArtistWorkingHours : null}
             onSelectAppointment={openEdit}
             onSelectSlot={(date, timeSlot) => openCreate({ date, timeSlot })}
+            onDeleteAppointment={(id) => deleteAppointmentMutation.mutate(id)}
           />
         </div>
       ) : (
@@ -315,7 +330,7 @@ export const CalendarPage: React.FC = () => {
               onStatusChange={handleStatusChange}
             />
           ) : (
-            <div className="h-44 flex items-center justify-center text-xs text-muted-foreground font-semibold border border-dashed border-border rounded-2xl">
+            <div className="flex h-44 items-center justify-center rounded-2xl border border-dashed border-border text-sm font-semibold text-muted-foreground">
               אין תורים שעונים לסינון שנבחר
             </div>
           )}

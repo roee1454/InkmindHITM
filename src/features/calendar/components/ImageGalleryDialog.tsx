@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog'
-import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface ImageGalleryDialogProps {
   images: string[]
@@ -34,76 +34,67 @@ export const ImageGalleryDialog: React.FC<ImageGalleryDialogProps> = ({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-2xl bg-card border border-border text-foreground rounded-2xl flex flex-col p-6 items-center outline-none select-none max-h-[95vh] overflow-y-auto font-assistant"
-        dir="rtl"
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="גלריית תמונות"
+      description="תצוגת תמונות התייחסות לתור"
+      hideHeader
+      contentClassName="sm:max-w-2xl items-center outline-none select-none max-h-[95vh] overflow-y-auto"
+    >
+      <div className="text-xs font-bold text-muted-foreground mb-3 select-none">
+        תמונה {activeIndex + 1} מתוך {images.length}
+      </div>
+
+      <div
+        className="w-full aspect-square flex items-center justify-center bg-muted/30 border border-border rounded-xl overflow-hidden relative group"
+        style={{ maxHeight: 'min(380px, 45vh)' }}
       >
-        <DialogTitle className="sr-only">גלריית תמונות</DialogTitle>
-        <DialogDescription className="sr-only">תצוגת תמונות התייחסות לתור</DialogDescription>
-
-        <button
-          type="button"
-          onClick={() => onOpenChange(false)}
-          className="absolute top-4 left-4 p-1.5 rounded-full bg-muted hover:bg-muted/80 border border-border transition cursor-pointer text-foreground z-20"
-        >
-          <X size={16} />
-        </button>
-
-        <div className="text-xs font-bold text-muted-foreground mb-3 select-none">
-          תמונה {activeIndex + 1} מתוך {images.length}
-        </div>
-
-        <div
-          className="w-full aspect-square flex items-center justify-center bg-muted/30 border border-border rounded-xl overflow-hidden relative group"
-          style={{ maxHeight: 'min(380px, 45vh)' }}
-        >
-          <img
-            src={images[activeIndex]}
-            alt="Reference Preview"
-            className="max-w-full max-h-full object-contain select-none"
-          />
-
-          {images.length > 1 && (
-            <>
-              <button
-                type="button"
-                onClick={handlePrev}
-                className="absolute right-3 top-1/2 -translate-y-1/2 bg-card/90 border border-border hover:bg-muted text-foreground p-2.5 rounded-full transition cursor-pointer z-10 shadow-sm"
-              >
-                <ChevronRight size={22} />
-              </button>
-
-              <button
-                type="button"
-                onClick={handleNext}
-                className="absolute left-3 top-1/2 -translate-y-1/2 bg-card/90 border border-border hover:bg-muted text-foreground p-2.5 rounded-full transition cursor-pointer z-10 shadow-sm"
-              >
-                <ChevronLeft size={22} />
-              </button>
-            </>
-          )}
-        </div>
+        <img
+          src={images[activeIndex]}
+          alt="Reference Preview"
+          className="max-w-full max-h-full object-contain select-none"
+        />
 
         {images.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto max-w-full mt-4 py-2 px-2 bg-muted/30 border border-border rounded-xl">
-            {images.map((img, idx) => (
-              <div
-                key={idx}
-                onClick={() => setActiveIndex(idx)}
-                className={`w-12 h-12 rounded-lg overflow-hidden border-2 cursor-pointer transition-all shrink-0 ${
-                  idx === activeIndex
-                    ? 'border-primary scale-105 shadow-sm'
-                    : 'border-transparent opacity-50 hover:opacity-100'
-                }`}
-              >
-                <img src={img} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover select-none" />
-              </div>
-            ))}
-          </div>
+          <>
+            <button
+              type="button"
+              onClick={handlePrev}
+              className="absolute right-3 top-1/2 -translate-y-1/2 bg-card/90 border border-border hover:bg-muted text-foreground p-2.5 rounded-full transition cursor-pointer z-10 shadow-sm"
+            >
+              <ChevronRight size={22} />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleNext}
+              className="absolute left-3 top-1/2 -translate-y-1/2 bg-card/90 border border-border hover:bg-muted text-foreground p-2.5 rounded-full transition cursor-pointer z-10 shadow-sm"
+            >
+              <ChevronLeft size={22} />
+            </button>
+          </>
         )}
-      </DialogContent>
-    </Dialog>
+      </div>
+
+      {images.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto max-w-full mt-4 py-2 px-2 bg-muted/30 border border-border rounded-xl">
+          {images.map((img, idx) => (
+            <div
+              key={idx}
+              onClick={() => setActiveIndex(idx)}
+              className={`w-12 h-12 rounded-lg overflow-hidden border-2 cursor-pointer transition-all shrink-0 ${
+                idx === activeIndex
+                  ? 'border-primary scale-105 shadow-sm'
+                  : 'border-transparent opacity-50 hover:opacity-100'
+              }`}
+            >
+              <img src={img} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover select-none" />
+            </div>
+          ))}
+        </div>
+      )}
+    </ResponsiveDialog>
   )
 }
 

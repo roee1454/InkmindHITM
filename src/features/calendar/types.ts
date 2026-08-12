@@ -13,10 +13,12 @@ export interface ApiAppointment {
   leadPhone: string | null
   staffName: string | null
   style: string | null
-  price: number | null
+  priceMin: number | null
+  priceMax: number | null
   depositAmount: number | null
   hasDeposit: boolean
-  durationHours: number
+  durationMinutes: number
+  slotConfirmed: boolean
   notes: string | null
   isException: boolean
   source: 'ai_bot' | 'staff_manual'
@@ -31,9 +33,10 @@ export interface AppointmentFormValues {
   date: string
   timeSlot: string
   staffId: string | null
-  durationHours: number
+  durationMinutes: number
   tattooDescription: string
-  priceIls: number | null
+  priceMinIls: number | null
+  priceMaxIls: number | null
   depositAmount: number | null
   status: AppointmentStatus
   depositPaid: boolean

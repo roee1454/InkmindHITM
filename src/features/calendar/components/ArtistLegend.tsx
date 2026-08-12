@@ -57,10 +57,10 @@ export const ArtistLegend: React.FC<ArtistLegendProps> = ({
             key={artist.id}
             type="button"
             onClick={() => onSelectedArtistChange(active ? 'all' : artist.id)}
-            className={`flex items-center gap-2 border px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer rounded-xl ${
+            className={`flex h-9 items-center gap-2 border px-3.5 text-[13px] font-bold transition-all duration-150 ease-native cursor-pointer rounded-full active:scale-[0.97] ${
               active
-                ? 'border-primary bg-primary/10 text-foreground font-bold shadow-sm'
-                : 'border-border bg-card text-muted-foreground hover:text-foreground'
+                ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                : 'border-border/80 bg-card text-muted-foreground'
             }`}
             aria-pressed={active}
           >

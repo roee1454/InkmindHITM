@@ -70,24 +70,24 @@ export const ModelSearchSelect: React.FC<ModelSearchSelectProps> = ({ value, onC
   }
 
   return (
-    <div ref={containerRef} className="relative w-full font-assistant md:w-96" dir="rtl">
+    <div ref={containerRef} className="relative w-full font-assistant" dir="rtl">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-input bg-muted px-4 py-2.5 text-right text-sm text-foreground transition-colors hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+        className="flex h-12 w-full cursor-pointer items-center justify-between gap-2 rounded-2xl border border-input/80 bg-card px-4 text-right text-base text-foreground shadow-xs outline-none transition-all duration-150 ease-native active:scale-[0.99] focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 md:h-11 md:text-[15px]"
       >
         <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
           <Sparkles size={16} className="shrink-0 text-primary" />
-          <span className="truncate font-semibold min-w-0">
+          <span className="truncate font-bold min-w-0">
             {selectedModelObj ? selectedModelObj.name : value || 'בחר מודל AI…'}
           </span>
           {selectedModelObj?.badge && (
-            <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-micro font-bold text-primary">
+            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-micro font-bold text-primary">
               {selectedModelObj.badge}
             </span>
           )}
           {isCustomModel && (
-            <span className="shrink-0 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-micro font-bold text-amber-400">
+            <span className="shrink-0 rounded-full bg-amber-500/10 px-2 py-0.5 text-micro font-bold text-amber-500">
               מותאם אישית
             </span>
           )}
@@ -101,8 +101,8 @@ export const ModelSearchSelect: React.FC<ModelSearchSelectProps> = ({ value, onC
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-card shadow-2xl backdrop-blur-xl">
-          <div className="border-b border-border bg-muted/40 p-2">
+        <div className="absolute z-50 mt-1.5 w-full overflow-hidden rounded-2xl border border-border/80 bg-popover shadow-lg">
+          <div className="border-b border-border/60 p-2">
             <div className="relative flex items-center">
               <Search size={15} className="pointer-events-none absolute right-3 text-muted-foreground" />
               <input
@@ -111,7 +111,7 @@ export const ModelSearchSelect: React.FC<ModelSearchSelectProps> = ({ value, onC
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="חפש מודל (למשל: gpt-4o, gpt-5, o3…)"
-                className="w-full rounded-lg border border-input bg-background py-1.5 pr-9 pl-8 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary/50 focus:outline-none"
+                className="w-full rounded-xl border border-input/80 bg-card py-1.5 pr-9 pl-8 text-xs text-foreground placeholder:text-muted-foreground/60 outline-none focus:border-primary/50"
               />
               {search && (
                 <button

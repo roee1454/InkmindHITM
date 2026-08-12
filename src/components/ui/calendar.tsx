@@ -66,30 +66,30 @@ export const Calendar: React.FC<CalendarProps> = ({ selected, onSelect, disabled
   const weeks = buildMonthMatrix(anchor)
 
   return (
-    <div className={cn("w-64 font-assistant", className)}>
+    <div className={cn("w-80 font-assistant", className)}>
       <div className="mb-2 flex items-center justify-between">
         <button
           type="button"
           onClick={() => setAnchor((a) => addMonths(a, -1))}
-          className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+          className="flex size-9 cursor-pointer items-center justify-center rounded-xl text-muted-foreground transition-colors duration-100 active:bg-muted"
           aria-label="חודש קודם"
         >
-          <ChevronRight size={16} />
+          <ChevronRight size={18} />
         </button>
-        <span className="text-xs font-bold text-foreground">{formatMonthTitle(anchor)}</span>
+        <span className="text-[15px] font-extrabold text-foreground">{formatMonthTitle(anchor)}</span>
         <button
           type="button"
           onClick={() => setAnchor((a) => addMonths(a, 1))}
-          className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+          className="flex size-9 cursor-pointer items-center justify-center rounded-xl text-muted-foreground transition-colors duration-100 active:bg-muted"
           aria-label="חודש הבא"
         >
-          <ChevronLeft size={16} />
+          <ChevronLeft size={18} />
         </button>
       </div>
 
       <div className="grid grid-cols-7 gap-y-1" onKeyDown={handleKeyDown}>
         {HEBREW_DAYS_SHORT.map((label) => (
-          <div key={label} className="flex h-7 items-center justify-center text-micro text-muted-foreground">
+          <div key={label} className="flex h-9 items-center justify-center text-[11.5px] font-bold text-muted-foreground">
             {label}
           </div>
         ))}
@@ -112,11 +112,11 @@ export const Calendar: React.FC<CalendarProps> = ({ selected, onSelect, disabled
               onFocus={() => setFocused(day)}
               onClick={() => onSelect(ymd)}
               className={cn(
-                "flex h-8 w-8 cursor-pointer items-center justify-center justify-self-center rounded-lg text-xs transition-colors hover:bg-primary/10",
-                inMonth ? "text-foreground" : "text-muted-foreground/40",
-                isToday(day) && !isSelected && "border border-primary/50 font-bold",
-                isSelected && "bg-primary font-bold text-primary-foreground hover:bg-primary",
-                isDisabled && "cursor-not-allowed opacity-30 hover:bg-transparent"
+                "flex size-11 cursor-pointer items-center justify-center justify-self-center rounded-xl text-[15px] font-medium transition-colors duration-100 active:bg-primary/10",
+                inMonth ? "text-foreground" : "opacity-40",
+                isToday(day) && !isSelected && "border border-primary font-bold",
+                isSelected && "bg-primary font-extrabold text-primary-foreground active:bg-primary",
+                isDisabled && "cursor-not-allowed opacity-30 active:bg-transparent"
               )}
             >
               {day.getDate()}
