@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { AlertCircle } from 'lucide-react'
@@ -33,6 +33,7 @@ export function LeadsBoardPage({ staff }: LeadsBoardPageProps) {
   const scrollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const isPanningRef = useRef(false)
   const panStartRef = useRef({ x: 0, scrollLeft: 0 })
+  const [selectedStage, setSelectedStage] = useState<LeadStage>(COLUMNS[0]?.stage ?? 'new')
 
   const {
     draggingId,
@@ -148,9 +149,15 @@ export function LeadsBoardPage({ staff }: LeadsBoardPageProps) {
 
   const isInitialLoading = (!leadsQuery.data || !staffQuery.data) && (leadsQuery.isLoading || staffQuery.isLoading)
 
+  const scrollToStage = (stage: LeadStage) => {
+    setSelectedStage(stage)
+    const el = boardRef.current?.querySelector<HTMLElement>(`[data-stage="${stage}"]`)
+    el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+  }
+
   if (isInitialLoading) {
     return (
-      <div className="flex h-full flex-col gap-4">
+      <div className="flex h-full flex-col gap-4 px-4 pt-4 lg:px-0">
         <LeadsHeader onRefresh={() => void leadsQuery.refetch()} />
         <LeadsBoardSkeleton />
       </div>
@@ -158,11 +165,29 @@ export function LeadsBoardPage({ staff }: LeadsBoardPageProps) {
   }
 
   return (
-    <div className="flex h-full flex-col gap-4">
-      <LeadsHeader onRefresh={() => void leadsQuery.refetch()} />
+    <div className="flex h-full min-h-0 flex-col gap-3 lg:gap-4 lg:px-0 lg:pt-0">
+      <div className="px-4 pt-4 lg:px-0 lg:pt-0">
+        <LeadsHeader onRefresh={() => void leadsQuery.refetch()} />
+      </div>
+
+      {/* Stage chips — mobile only, jump the horizontal-scroll board to a stage. */}
+      <div className="scrollbar-none flex gap-2 overflow-x-auto px-4 lg:hidden">
+        {COLUMNS.map((col) => (
+          <button
+            key={col.stage}
+            type="button"
+            onClick={() => scrollToStage(col.stage)}
+            className={`h-9 shrink-0 cursor-pointer select-none whitespace-nowrap rounded-full px-3.5 text-[13px] font-bold transition-all duration-150 ease-native active:scale-[0.97] ${
+              selectedStage === col.stage ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            {col.label}
+          </button>
+        ))}
+      </div>
 
       {moveLeadMutation.isError ? (
-        <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <div className="mx-4 flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive lg:mx-0">
           <AlertCircle className="size-4 shrink-0" />
           {moveLeadMutation.error instanceof Error
             ? moveLeadMutation.error.message
@@ -184,7 +209,7 @@ export function LeadsBoardPage({ staff }: LeadsBoardPageProps) {
         onMouseUp={isCoarsePointer ? undefined : handleMouseUp}
         onMouseLeave={isCoarsePointer ? undefined : handleMouseUp}
         // Scroll-snap gives the phone one column per swipe; grab-to-pan stays desktop-only.
-        className={`scrollbar-none flex flex-1 snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 select-none lg:snap-none lg:gap-4 ${
+        className={`scrollbar-none flex flex-1 snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 select-none lg:snap-none lg:gap-4 lg:px-0 ${
           isPanning ? 'cursor-grabbing' : 'lg:cursor-grab'
         }`}
       >
@@ -193,6 +218,7 @@ export function LeadsBoardPage({ staff }: LeadsBoardPageProps) {
           return (
             <LeadColumn
               key={col.stage}
+              stage={col.stage}
               label={col.label}
               color={col.color}
               count={colLeads.length}

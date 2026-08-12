@@ -34,17 +34,17 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         <button
           type="button"
           className={cn(
-            "flex h-10 w-full cursor-pointer items-center gap-2 rounded-xl border border-input bg-muted px-3 py-2 font-assistant text-xs text-foreground focus-visible:border-primary/50 focus-visible:outline-none",
+            "flex h-12 w-full cursor-pointer items-center gap-2 rounded-2xl border border-input/80 bg-card px-4 font-assistant text-base text-foreground shadow-xs transition-all duration-150 ease-native outline-none focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 md:h-11 md:text-[15px]",
             className
           )}
         >
-          <CalendarIcon size={14} className="shrink-0 text-muted-foreground" />
-          <span className={cn("truncate", !value && "text-muted-foreground")}>
+          <CalendarIcon size={18} className="shrink-0 text-muted-foreground" />
+          <span className={cn("truncate", !value && "text-muted-foreground/50")}>
             {value ? formatDisplay(value) : placeholder}
           </span>
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto">
+      <PopoverContent className="w-auto rounded-2xl border-border/80 p-2 shadow-lg">
         <Calendar
           selected={value || null}
           onSelect={(ymd) => {

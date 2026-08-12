@@ -52,28 +52,28 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         dir="rtl"
       >
         {toasts.map((t) => {
-          let bgClass = 'bg-card border-border'
-          let icon = <Info className="text-blue-500 shrink-0" size={22} />
+          let bgClass = 'bg-card border-border/80'
+          let icon = <Info className="text-primary shrink-0" size={22} />
           if (t.type === 'success') {
-            bgClass = 'bg-emerald-500/10 border-emerald-500/20 text-emerald-950 dark:text-emerald-50'
-            icon = <CheckCircle className="text-emerald-500 shrink-0" size={22} />
+            bgClass = 'bg-success/10 border-success/20'
+            icon = <CheckCircle className="text-success shrink-0" size={22} />
           } else if (t.type === 'error') {
-            bgClass = 'bg-rose-500/10 border-rose-500/20 text-rose-950 dark:text-rose-50'
-            icon = <AlertCircle className="text-rose-500 shrink-0" size={22} />
+            bgClass = 'bg-destructive/10 border-destructive/20'
+            icon = <AlertCircle className="text-destructive shrink-0" size={22} />
           } else if (t.type === 'warning') {
-            bgClass = 'bg-amber-500/10 border-amber-500/20 text-amber-950 dark:text-amber-50'
-            icon = <AlertTriangle className="text-amber-500 shrink-0" size={22} />
+            bgClass = 'bg-warning/10 border-warning/20'
+            icon = <AlertTriangle className="text-warning shrink-0" size={22} />
           }
 
           return (
             <div
               key={t.id}
               onClick={t.onClick}
-              className={`pointer-events-auto flex items-start gap-3 rounded-2xl border p-4 shadow-xl animate-slide-in backdrop-blur-md transition-all duration-300 sm:gap-4 sm:p-5 ${t.onClick ? 'cursor-pointer hover:scale-[1.01] hover:brightness-[0.98] active:scale-[0.99]' : ''} ${bgClass}`}
+              className={`pointer-events-auto flex items-start gap-3 rounded-2xl border p-4 shadow-lg animate-in slide-in-from-top fade-in duration-300 ease-native backdrop-blur-md transition-all sm:gap-4 sm:p-5 ${t.onClick ? 'cursor-pointer active:scale-[0.99]' : ''} ${bgClass}`}
             >
               {icon}
               <div className="flex-1 min-w-0 font-assistant">
-                <div className="text-base font-bold">{t.title}</div>
+                <div className="text-base font-bold text-foreground">{t.title}</div>
                 <div className="text-sm text-muted-foreground mt-1 leading-relaxed">{t.message}</div>
               </div>
               <button

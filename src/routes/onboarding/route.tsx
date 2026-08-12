@@ -1,18 +1,9 @@
-import { createFileRoute, Outlet, redirect, useRouterState } from '@tanstack/react-router'
+import { createFileRoute, Outlet, redirect, useNavigate, useRouterState } from '@tanstack/react-router'
+import { ChevronRight } from 'lucide-react'
 import { getCurrentSession } from '@/features/auth/server/auth'
 import { getSettings } from '@/features/onboarding/server/onboarding'
-import { User, Clock, MessageSquare, Users, Sparkles, CheckCircle2, CalendarDays, Building2 } from 'lucide-react'
 import { ConfirmProvider } from '@/hooks/use-confirm'
-import { BrandMark } from '@/components/BrandMark'
-
-const STEPS = [
-  { path: '/onboarding/whatsapp', label: 'WhatsApp', icon: MessageSquare, desc: 'חיבור Cloud API' },
-  { path: '/onboarding/profile', label: 'זהות הסטודיו', icon: Building2, desc: 'שם, לוגו ומדיניות' },
-  { path: '/onboarding/artist-profile', label: 'פרופיל אמן', icon: User, desc: 'סגנונות וקישורים' },
-  { path: '/onboarding/hours', label: 'שעות פעילות', icon: Clock, desc: 'לוח זמנים שבועי' },
-  { path: '/onboarding/team', label: 'צוות', icon: Users, desc: 'ניהול חברי צוות' },
-  { path: '/onboarding/calendar', label: 'יומנים', icon: CalendarDays, desc: 'חיבור Google Calendar' },
-] as const
+import { ONBOARDING_STEPS, nextStep, previousStep, progressPercent, stepIndex } from '@/features/onboarding/onboarding-steps'
 
 export const Route = createFileRoute('/onboarding')({
   beforeLoad: async () => {
@@ -26,106 +17,51 @@ export const Route = createFileRoute('/onboarding')({
 
 function OnboardingLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const activeIndex = Math.max(0, STEPS.findIndex((s) => s.path === pathname))
-  const currentStep = STEPS[activeIndex] || STEPS[0]
-  const progressPercent = Math.round(((activeIndex + 1) / STEPS.length) * 100)
+  const navigate = useNavigate()
+  const idx = stepIndex(pathname)
+  const back = previousStep(pathname)
+  const skipTarget = nextStep(pathname)
 
   return (
     <ConfirmProvider>
-    <div
-      className="relative min-h-svh overflow-hidden bg-background font-assistant text-foreground antialiased selection:bg-primary/20 selection:text-primary"
-      dir="rtl"
-    >
-      {/* Ambient background glows. `absolute` inside an `overflow-hidden` root rather than
-          `fixed`, matching auth/route.tsx — removes any chance of them widening the page. */}
-      <div className="pointer-events-none absolute -top-32 right-1/3 size-80 rounded-full bg-primary/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 left-1/4 size-96 rounded-full bg-indigo-500/8 blur-3xl" />
-
-      {/* Gradient top bar */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-l from-primary via-indigo-400 to-primary/40" />
-
-      <div className="relative mx-auto max-w-2xl px-4 py-8 md:py-14">
-        {/* Brand + Badge */}
-        <div className="mb-8 flex flex-col items-center text-center gap-3">
-          <BrandMark size="md" />
-
-          <div>
-            <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-mini font-bold text-primary">
-              <Sparkles size={11} className="animate-pulse" />
-              <span>אשף הגדרת מערכת INKMIND</span>
-            </div>
-            <h1 className="text-xl font-black text-foreground md:text-2xl">הקמת הסטודיו שלך</h1>
-            <p className="mt-1 text-xs text-muted-foreground">
-              נגדיר יחד את הפרטים הבסיסיים כדי שהעוזר הדיגיטלי שלך יעבוד מושלם
-            </p>
-          </div>
+      <div className="step-shell font-assistant" dir="rtl">
+        <div className="step-progress">
+          <div className="step-progress-fill" style={{ width: `${progressPercent(pathname)}%` }} />
         </div>
 
-        {/* Progress Card */}
-        <div className="mb-8 rounded-2xl border border-border/60 bg-card/80 p-4 shadow-md backdrop-blur-md">
-          {/* Step label + percent */}
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="flex size-8 items-center justify-center rounded-xl bg-primary font-black text-sm text-primary-foreground shadow-sm">
-                {activeIndex + 1}
-              </div>
-              <div>
-                <div className="text-sm font-bold text-foreground leading-tight">{currentStep.label}</div>
-                <div className="text-micro text-muted-foreground">{currentStep.desc}</div>
-              </div>
-            </div>
-            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary font-mono">
-              {progressPercent}%
-            </span>
-          </div>
+        <div className="flex h-[52px] shrink-0 items-center justify-between px-4">
+          {back ? (
+            <button
+              type="button"
+              onClick={() => navigate({ to: back.route })}
+              aria-label="חזרה"
+              className="tap-target text-foreground"
+            >
+              <ChevronRight size={22} />
+            </button>
+          ) : (
+            <div className="size-11" />
+          )}
 
-          {/* Step Indicators */}
-          <div
-            className="grid gap-1 sm:gap-2"
-            style={{ gridTemplateColumns: `repeat(${STEPS.length}, minmax(0, 1fr))` }}
-          >
-            {STEPS.map((step, i) => {
-              const Icon = step.icon
-              const isDone = i < activeIndex
-              const isCurrent = i === activeIndex
+          <span className="text-[14px] font-bold text-muted-foreground">
+            {idx >= 0 ? idx + 1 : 1} מתוך {ONBOARDING_STEPS.length}
+          </span>
 
-              return (
-                <div key={step.path} className="flex flex-col items-center gap-1.5">
-                  {/* Segment bar */}
-                  <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted/60">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        isDone ? 'bg-emerald-500' : isCurrent ? 'bg-primary' : 'bg-transparent'
-                      }`}
-                      style={{ width: isDone || isCurrent ? '100%' : '0%' }}
-                    />
-                  </div>
-
-                  {/* Step icon label */}
-                  <div
-                    className={`hidden sm:flex min-w-0 items-center gap-1 text-micro font-bold transition-colors ${
-                      isCurrent
-                        ? 'text-primary'
-                        : isDone
-                          ? 'text-emerald-500'
-                          : 'text-muted-foreground/40'
-                    }`}
-                  >
-                    {isDone ? <CheckCircle2 size={10} /> : <Icon size={10} />}
-                    <span className="truncate">{step.label}</span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          {skipTarget ? (
+            <button
+              type="button"
+              onClick={() => navigate({ to: skipTarget.route })}
+              className="cursor-pointer text-[14.5px] font-bold text-muted-foreground"
+            >
+              דלג
+            </button>
+          ) : (
+            <div className="size-11" />
+          )}
         </div>
 
-        {/* Step Content */}
-        <main>
-          <Outlet />
-        </main>
+        <Outlet />
       </div>
-    </div>
     </ConfirmProvider>
   )
 }

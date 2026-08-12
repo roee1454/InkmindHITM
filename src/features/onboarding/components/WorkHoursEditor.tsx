@@ -1,48 +1,43 @@
 import { Switch } from '@/components/ui/switch'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import type { WorkHoursWindow } from '@/integrations/pocketbase/types'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import type { WorkingHoursWindow } from '@/features/settings/server/profiles'
 import { DAY_LABELS, TIME_OPTIONS, findWindow } from './work-hours'
 
 interface WorkHoursEditorProps {
-  value: WorkHoursWindow[]
-  onChange: (next: WorkHoursWindow[]) => void
+  value: WorkingHoursWindow[]
+  onChange: (next: WorkingHoursWindow[]) => void
 }
 
+/** The "עריכת יום ספציפי" detail view behind onboarding's confirm-the-default hours screen —
+ *  also reusable anywhere a per-day hours editor is needed. Operates on the same camelCase
+ *  `WorkingHoursWindow` shape as `features/settings/server/profiles.ts`'s
+ *  `getWorkingHours`/`saveWorkingHours`, the single source of truth for working hours. */
 export function WorkHoursEditor({ value, onChange }: WorkHoursEditorProps) {
   function toggleDay(dayOfWeek: number, enabled: boolean) {
     if (enabled) {
-      onChange([...value, { day_of_week: dayOfWeek, start_time: '09:00', end_time: '17:00' }])
+      onChange([...value, { dayOfWeek, startTime: '10:00', endTime: '18:00' }])
     } else {
-      onChange(value.filter((w) => w.day_of_week !== dayOfWeek))
+      onChange(value.filter((w) => w.dayOfWeek !== dayOfWeek))
     }
   }
 
-  function updateTime(dayOfWeek: number, field: 'start_time' | 'end_time', time: string) {
-    onChange(value.map((w) => (w.day_of_week === dayOfWeek ? { ...w, [field]: time } : w)))
+  function updateTime(dayOfWeek: number, field: 'startTime' | 'endTime', time: string) {
+    onChange(value.map((w) => (w.dayOfWeek === dayOfWeek ? { ...w, [field]: time } : w)))
   }
 
   return (
-    <div className="space-y-2">
+    <div className="card-native overflow-hidden">
       {DAY_LABELS.map((label, dayOfWeek) => {
         const window = findWindow(value, dayOfWeek)
         const enabled = Boolean(window)
         return (
-          <div key={dayOfWeek} className="flex items-center gap-3 py-1.5">
+          <div key={dayOfWeek} className="row-native h-12">
             <Switch checked={enabled} onCheckedChange={(checked) => toggleDay(dayOfWeek, checked)} />
-            <span className="w-24 text-sm">{label}</span>
+            <span className="w-16 shrink-0 text-[15px] font-bold text-foreground">{label}</span>
             {enabled && window ? (
-              <div className="flex items-center gap-2">
-                <Select
-                  value={window.start_time}
-                  onValueChange={(time) => updateTime(dayOfWeek, 'start_time', time)}
-                >
-                  <SelectTrigger className="w-28">
+              <div className="flex flex-1 items-center justify-end gap-2">
+                <Select value={window.startTime} onValueChange={(time) => updateTime(dayOfWeek, 'startTime', time)}>
+                  <SelectTrigger className="h-10 w-28">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -53,12 +48,9 @@ export function WorkHoursEditor({ value, onChange }: WorkHoursEditorProps) {
                     ))}
                   </SelectContent>
                 </Select>
-                <span className="text-sm text-muted-foreground">עד</span>
-                <Select
-                  value={window.end_time}
-                  onValueChange={(time) => updateTime(dayOfWeek, 'end_time', time)}
-                >
-                  <SelectTrigger className="w-28">
+                <span className="text-[13px] font-bold text-muted-foreground">עד</span>
+                <Select value={window.endTime} onValueChange={(time) => updateTime(dayOfWeek, 'endTime', time)}>
+                  <SelectTrigger className="h-10 w-28">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -71,7 +63,7 @@ export function WorkHoursEditor({ value, onChange }: WorkHoursEditorProps) {
                 </Select>
               </div>
             ) : (
-              <span className="text-sm text-muted-foreground">סגור</span>
+              <span className="flex-1 text-end text-[13px] font-medium text-muted-foreground">סגור</span>
             )}
           </div>
         )

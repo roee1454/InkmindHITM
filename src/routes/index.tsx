@@ -13,7 +13,7 @@ export const Route = createFileRoute('/')({
     }
     const settings = await getSettings()
     if (!settings?.onboarding_completed) {
-      throw redirect({ to: '/onboarding/profile' })
+      throw redirect({ to: '/onboarding/studio' })
     }
     throw redirect({ to: '/dashboard' })
   },

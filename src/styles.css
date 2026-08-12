@@ -1,112 +1,478 @@
-@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&display=swap');
 @import 'tailwindcss';
-@plugin '@tailwindcss/typography';
-
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================================
+   1. THEME — tokens Tailwind turns into utilities
+   ========================================================================= */
 @theme {
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-2xl: 20px;
-  --radius-3xl: 24px;
   --font-assistant: 'Assistant', sans-serif;
+
+  /* Native OS curvature — halfway between shadcn defaults and the design bundle's original "+1 notch" scale */
+  --radius-xs: 4px;
+  --radius-sm: 7px;
+  --radius-md: 10px;
+  --radius-lg: 13px;
+  --radius-xl: 17px;
+  --radius-2xl: 21px;
+  --radius-3xl: 28px;
+
+  /* Soft, mobile-OS elevation. Never a hard drop shadow. */
+  --shadow-xs: 0 1px 2px 0 rgb(16 24 40 / 0.04);
+  --shadow-sm: 0 1px 3px 0 rgb(16 24 40 / 0.06), 0 1px 2px -1px rgb(16 24 40 / 0.04);
+  --shadow-md: 0 4px 16px -4px rgb(16 24 40 / 0.10);
+  --shadow-lg: 0 12px 32px -8px rgb(16 24 40 / 0.14);
+
+  /* Motion */
+  --ease-native: cubic-bezier(0.16, 1, 0.3, 1);
+  --default-transition-duration: 150ms;
 
   /* Density-aware micro type. Hebrew has no ascender/descender cues, so Assistant below
      ~12px is genuinely unreadable on a phone. These give a legible floor on touch and
      collapse back to the original desktop density at `lg` (see the override below).
      A normal fluid `clamp()` scale would be the *wrong* direction here — it grows with the
      viewport, making phone text smaller still. */
-  --text-micro: 0.75rem; /* 12px mobile → 10px desktop */
+  --text-micro: 0.75rem;
   --text-micro--line-height: 1.15;
-  --text-mini: 0.8125rem; /* 13px mobile → 11px desktop */
+  --text-mini: 0.8125rem;
   --text-mini--line-height: 1.2;
 }
 
-:root {
-  --color-brand-bg: #f8fafc;
-  --color-brand-bg-muted: #f1f5f9;
-  --color-brand-card: #ffffff;
-  --color-brand-card-hover: #f8fafc;
-  --color-brand-border: #e2e8f0;
-  --color-brand-text: #0f172a;
-  --color-brand-text-muted: #64748b;
-  --color-brand-primary: #4f46e5;
-  --color-brand-secondary: #0ea5e9;
-  --color-brand-destructive: #ef4444;
-
-  --background: var(--color-brand-bg);
-  --foreground: var(--color-brand-text);
-  --card: var(--color-brand-card);
-  --card-foreground: var(--color-brand-text);
-  --popover: var(--color-brand-card);
-  --popover-foreground: var(--color-brand-text);
-  --primary: var(--color-brand-primary);
-  --primary-foreground: #ffffff;
-  --secondary: var(--color-brand-secondary);
-  --secondary-foreground: #ffffff;
-  --muted: var(--color-brand-bg-muted);
-  --muted-foreground: var(--color-brand-text-muted);
-  --accent: var(--color-brand-bg-muted);
-  --accent-foreground: var(--color-brand-text);
-  --destructive: var(--color-brand-destructive);
+/* ============================================================================
+   2. ALIAS LAYER — written ONCE. Palettes below only swap --brand-*.
+   ========================================================================= */
+:root,
+.dark {
+  --background: var(--brand-bg);
+  --foreground: var(--brand-text);
+  --card: var(--brand-card);
+  --card-foreground: var(--brand-text);
+  --popover: var(--brand-card);
+  --popover-foreground: var(--brand-text);
+  --primary: var(--brand-primary);
+  --primary-foreground: var(--brand-primary-fg);
+  --secondary: var(--brand-secondary);
+  --secondary-foreground: var(--brand-primary-fg);
+  --muted: var(--brand-muted);
+  --muted-foreground: var(--brand-text-muted);
+  --accent: var(--brand-muted);
+  --accent-foreground: var(--brand-text);
+  --destructive: var(--brand-destructive);
   --destructive-foreground: #ffffff;
-  --border: var(--color-brand-border);
-  --input: var(--color-brand-border);
-  --ring: var(--color-brand-primary);
+  --success: var(--brand-success);
+  --warning: var(--brand-warning);
+  --border: var(--brand-border);
+  --input: var(--brand-border);
+  --ring: var(--brand-primary);
+  --sidebar: var(--brand-card);
+  --sidebar-foreground: var(--brand-text);
+  --sidebar-primary: var(--brand-primary);
+  --sidebar-primary-foreground: var(--brand-primary-fg);
+  --sidebar-accent: var(--brand-muted);
+  --sidebar-accent-foreground: var(--brand-text);
+  --sidebar-border: var(--brand-border);
+  --sidebar-ring: var(--brand-primary);
   /* Fallback: no chart usage ported yet — left as shadcn's stock OKLCH defaults. */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: var(--color-brand-card);
-  --sidebar-foreground: var(--color-brand-text);
-  --sidebar-primary: var(--color-brand-primary);
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: var(--color-brand-bg-muted);
-  --sidebar-accent-foreground: var(--color-brand-text);
-  --sidebar-border: var(--color-brand-border);
-  --sidebar-ring: var(--color-brand-primary);
 }
 
-/* Fallback: WAHA has no dark theme — these are the untouched pre-migration shadcn defaults, kept
-   only so `.dark` isn't visually broken if a theme toggle is ever added. Expect them to clash
-   with the brand palette above; this needs real design attention before dark mode ships. */
-.dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.141 0.005 285.823);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.141 0.005 285.823);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.274 0.006 286.033);
-  --input: oklch(0.274 0.006 286.033);
-  --ring: oklch(0.442 0.017 285.786);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.274 0.006 286.033);
-  --sidebar-ring: oklch(0.442 0.017 285.786);
+/* ============================================================================
+   3. FOUR PALETTES — set data-theme on <html>, toggle .dark as today
+   ========================================================================= */
+
+/* ---- 1. Vibrant Indigo Modern  <html data-theme="indigo">  (default) ---- */
+[data-theme='indigo'] {
+  --brand-bg: #f5f7fb;
+  --brand-muted: #eef1f7;
+  --brand-card: #ffffff;
+  --brand-card-hover: #f7f9fc;
+  --brand-border: #e3e8f0;
+  --brand-text: #0b1220;
+  --brand-text-muted: #64748b;
+  --brand-primary: #4f46e5;
+  --brand-primary-fg: #ffffff;
+  --brand-secondary: #0ea5e9;
+  --brand-destructive: #e11d48;
+  --brand-success: #10b981;
+  --brand-warning: #f59e0b;
+}
+[data-theme='indigo'].dark {
+  --brand-bg: #0a0f1c;
+  --brand-muted: #1a2338;
+  --brand-card: #121a2b;
+  --brand-card-hover: #18213a;
+  --brand-border: #243049;
+  --brand-text: #eef2f8;
+  --brand-text-muted: #93a2ba;
+  --brand-primary: #7c7bf7;
+  --brand-primary-fg: #0a0f1c;
+  --brand-secondary: #38bdf8;
+  --brand-destructive: #fb7185;
+  --brand-success: #34d399;
+  --brand-warning: #fbbf24;
 }
 
+/* ---- 2. Nordic Minimalist Slate  <html data-theme="nordic"> ---- */
+[data-theme='nordic'] {
+  --brand-bg: #f7f6f3;
+  --brand-muted: #efeeea;
+  --brand-card: #ffffff;
+  --brand-card-hover: #faf9f7;
+  --brand-border: #e4e2db;
+  --brand-text: #1b1f1c;
+  --brand-text-muted: #77776d;
+  --brand-primary: #4c7a5b;
+  --brand-primary-fg: #ffffff;
+  --brand-secondary: #7d9b86;
+  --brand-destructive: #b4544a;
+  --brand-success: #4c7a5b;
+  --brand-warning: #c08a3e;
+}
+[data-theme='nordic'].dark {
+  --brand-bg: #12150f;
+  --brand-muted: #242a20;
+  --brand-card: #1a1e17;
+  --brand-card-hover: #202519;
+  --brand-border: #30372b;
+  --brand-text: #edefe8;
+  --brand-text-muted: #9aa394;
+  --brand-primary: #8ab897;
+  --brand-primary-fg: #12150f;
+  --brand-secondary: #a9c2b0;
+  --brand-destructive: #d98b80;
+  --brand-success: #8ab897;
+  --brand-warning: #dcae6c;
+}
+
+/* ---- 3. Deep Space Obsidian  <html data-theme="obsidian"> ---- */
+[data-theme='obsidian'] {
+  --brand-bg: #f2f5f7;
+  --brand-muted: #e7ecef;
+  --brand-card: #ffffff;
+  --brand-card-hover: #f7fafb;
+  --brand-border: #dbe3e7;
+  --brand-text: #0b1114;
+  --brand-text-muted: #5f6f7a;
+  --brand-primary: #0e8fa8;
+  --brand-primary-fg: #ffffff;
+  --brand-secondary: #0b6b7f;
+  --brand-destructive: #e0455e;
+  --brand-success: #12a594;
+  --brand-warning: #d08700;
+}
+[data-theme='obsidian'].dark {
+  --brand-bg: #07080a;
+  --brand-muted: #171a20;
+  --brand-card: #0e1013;
+  --brand-card-hover: #14171c;
+  --brand-border: #222730;
+  --brand-text: #f1f5f7;
+  --brand-text-muted: #8894a1;
+  --brand-primary: #22d3ee;
+  --brand-primary-fg: #04212a;
+  --brand-secondary: #67e8f9;
+  --brand-destructive: #fb7185;
+  --brand-success: #2dd4bf;
+  --brand-warning: #fbbf24;
+}
+
+/* ---- 4. Terracotta Sunset  <html data-theme="terracotta"> ---- */
+[data-theme='terracotta'] {
+  --brand-bg: #fbf6f1;
+  --brand-muted: #f3ebe3;
+  --brand-card: #ffffff;
+  --brand-card-hover: #fdf9f5;
+  --brand-border: #ebe0d4;
+  --brand-text: #291d16;
+  --brand-text-muted: #8a7566;
+  --brand-primary: #c0603c;
+  --brand-primary-fg: #ffffff;
+  --brand-secondary: #d98b62;
+  --brand-destructive: #c0392b;
+  --brand-success: #6f8f5e;
+  --brand-warning: #d99441;
+}
+[data-theme='terracotta'].dark {
+  --brand-bg: #16100d;
+  --brand-muted: #2a201a;
+  --brand-card: #1e1712;
+  --brand-card-hover: #251c16;
+  --brand-border: #372a22;
+  --brand-text: #f8efe8;
+  --brand-text-muted: #b09a8a;
+  --brand-primary: #e2825c;
+  --brand-primary-fg: #241009;
+  --brand-secondary: #edaa87;
+  --brand-destructive: #e8705f;
+  --brand-success: #9ab887;
+  --brand-warning: #eab26a;
+}
+
+/* ---- 5. Noir  <html data-theme="noir"> ---- */
+[data-theme='noir'] {
+  --brand-bg: #f6f6f5;
+  --brand-muted: #ececea;
+  --brand-card: #ffffff;
+  --brand-card-hover: #ececeb;
+  --brand-border: #e2e2df;
+  --brand-text: #101010;
+  --brand-text-muted: #6e6e6b;
+  --brand-primary: #171717;
+  --brand-primary-fg: #ffffff;
+  --brand-secondary: #171717;
+  --brand-destructive: #b3453c;
+  --brand-success: #4b7d5a;
+  --brand-warning: #b08130;
+}
+[data-theme='noir'].dark {
+  --brand-bg: #0b0b0b;
+  --brand-muted: #1e1e1e;
+  --brand-card: #141414;
+  --brand-card-hover: #202020;
+  --brand-border: #2a2a2a;
+  --brand-text: #f5f5f4;
+  --brand-text-muted: #9a9a96;
+  --brand-primary: #fafafa;
+  --brand-primary-fg: #0b0b0b;
+  --brand-secondary: #fafafa;
+  --brand-destructive: #f08a80;
+  --brand-success: #6fbf8f;
+  --brand-warning: #e0b45f;
+}
+
+/* ---- 6. Amethyst  <html data-theme="amethyst"> ---- */
+[data-theme='amethyst'] {
+  --brand-bg: #f8f6fc;
+  --brand-muted: #f0ecf8;
+  --brand-card: #ffffff;
+  --brand-card-hover: #f0ebf7;
+  --brand-border: #e6e0f0;
+  --brand-text: #1b1327;
+  --brand-text-muted: #6f6482;
+  --brand-primary: #7c3aed;
+  --brand-primary-fg: #ffffff;
+  --brand-secondary: #7c3aed;
+  --brand-destructive: #e11d48;
+  --brand-success: #10b981;
+  --brand-warning: #f59e0b;
+}
+[data-theme='amethyst'].dark {
+  --brand-bg: #0f0a19;
+  --brand-muted: #241a36;
+  --brand-card: #181026;
+  --brand-card-hover: #221a34;
+  --brand-border: #2e2244;
+  --brand-text: #f2edfa;
+  --brand-text-muted: #a294bd;
+  --brand-primary: #a78bfa;
+  --brand-primary-fg: #17092b;
+  --brand-secondary: #a78bfa;
+  --brand-destructive: #fb7185;
+  --brand-success: #34d399;
+  --brand-warning: #fbbf24;
+}
+
+/* ---- 7. Gold  <html data-theme="gold"> ---- */
+[data-theme='gold'] {
+  --brand-bg: #f7f6f2;
+  --brand-muted: #efece4;
+  --brand-card: #ffffff;
+  --brand-card-hover: #f0ece3;
+  --brand-border: #e6e1d5;
+  --brand-text: #16181d;
+  --brand-text-muted: #6f6f66;
+  --brand-primary: #a67c26;
+  --brand-primary-fg: #ffffff;
+  --brand-secondary: #a67c26;
+  --brand-destructive: #b3453c;
+  --brand-success: #4c7a5b;
+  --brand-warning: #c2871f;
+}
+[data-theme='gold'].dark {
+  --brand-bg: #0c0e14;
+  --brand-muted: #1c2029;
+  --brand-card: #12151c;
+  --brand-card-hover: #1a1e26;
+  --brand-border: #262b36;
+  --brand-text: #f3f1ea;
+  --brand-text-muted: #99a0ad;
+  --brand-primary: #d9b264;
+  --brand-primary-fg: #14100a;
+  --brand-secondary: #d9b264;
+  --brand-destructive: #ef8b7c;
+  --brand-success: #7fbb96;
+  --brand-warning: #e5c07b;
+}
+
+/* ---- 8. Crimson  <html data-theme="crimson"> ---- */
+[data-theme='crimson'] {
+  --brand-bg: #faf7f5;
+  --brand-muted: #f2eae7;
+  --brand-card: #ffffff;
+  --brand-card-hover: #f3ebe8;
+  --brand-border: #ebdedb;
+  --brand-text: #22110f;
+  --brand-text-muted: #856a66;
+  --brand-primary: #9b2226;
+  --brand-primary-fg: #ffffff;
+  --brand-secondary: #9b2226;
+  --brand-destructive: #9b2226;
+  --brand-success: #4c7a5b;
+  --brand-warning: #c2871f;
+}
+[data-theme='crimson'].dark {
+  --brand-bg: #140c0c;
+  --brand-muted: #2a1a1a;
+  --brand-card: #1b1111;
+  --brand-card-hover: #241616;
+  --brand-border: #382222;
+  --brand-text: #f8ecec;
+  --brand-text-muted: #b0908d;
+  --brand-primary: #e05b5f;
+  --brand-primary-fg: #1a0708;
+  --brand-secondary: #e05b5f;
+  --brand-destructive: #f0817f;
+  --brand-success: #8ab897;
+  --brand-warning: #e5b06a;
+}
+
+/* ---- 9. Teal  <html data-theme="teal"> ---- */
+[data-theme='teal'] {
+  --brand-bg: #f3f8f8;
+  --brand-muted: #e8f0f0;
+  --brand-card: #ffffff;
+  --brand-card-hover: #e9f1f1;
+  --brand-border: #dbe8e8;
+  --brand-text: #08201f;
+  --brand-text-muted: #5c7877;
+  --brand-primary: #0f766e;
+  --brand-primary-fg: #ffffff;
+  --brand-secondary: #0f766e;
+  --brand-destructive: #d8455c;
+  --brand-success: #12a594;
+  --brand-warning: #c98a17;
+}
+[data-theme='teal'].dark {
+  --brand-bg: #05100f;
+  --brand-muted: #162623;
+  --brand-card: #0b1817;
+  --brand-card-hover: #142322;
+  --brand-border: #1f312e;
+  --brand-text: #eaf5f3;
+  --brand-text-muted: #86a29e;
+  --brand-primary: #2dd4bf;
+  --brand-primary-fg: #04201d;
+  --brand-secondary: #2dd4bf;
+  --brand-destructive: #fb7185;
+  --brand-success: #4ade80;
+  --brand-warning: #fbbf24;
+}
+
+/* ---- 10. Rose  <html data-theme="rose"> ---- */
+[data-theme='rose'] {
+  --brand-bg: #fbf6f7;
+  --brand-muted: #f4eaed;
+  --brand-card: #ffffff;
+  --brand-card-hover: #f4ecee;
+  --brand-border: #ecdde1;
+  --brand-text: #26161b;
+  --brand-text-muted: #8a6f77;
+  --brand-primary: #b05a72;
+  --brand-primary-fg: #ffffff;
+  --brand-secondary: #b05a72;
+  --brand-destructive: #c0392b;
+  --brand-success: #6f8f5e;
+  --brand-warning: #cf9448;
+}
+[data-theme='rose'].dark {
+  --brand-bg: #150e11;
+  --brand-muted: #2a1c21;
+  --brand-card: #1d1418;
+  --brand-card-hover: #271a1f;
+  --brand-border: #372630;
+  --brand-text: #f9edf0;
+  --brand-text-muted: #b394a0;
+  --brand-primary: #e28ba2;
+  --brand-primary-fg: #24101a;
+  --brand-secondary: #e28ba2;
+  --brand-destructive: #ef8080;
+  --brand-success: #9ab887;
+  --brand-warning: #e6b877;
+}
+
+/* ---- 11. Olive  <html data-theme="olive"> ---- */
+[data-theme='olive'] {
+  --brand-bg: #f8f7f0;
+  --brand-muted: #efeee2;
+  --brand-card: #ffffff;
+  --brand-card-hover: #f0efe4;
+  --brand-border: #e5e3d2;
+  --brand-text: #1d1e13;
+  --brand-text-muted: #75765f;
+  --brand-primary: #6b7a3a;
+  --brand-primary-fg: #ffffff;
+  --brand-secondary: #6b7a3a;
+  --brand-destructive: #b4544a;
+  --brand-success: #5f8f4e;
+  --brand-warning: #c08a3e;
+}
+[data-theme='olive'].dark {
+  --brand-bg: #12130c;
+  --brand-muted: #24261a;
+  --brand-card: #191b11;
+  --brand-card-hover: #202216;
+  --brand-border: #303323;
+  --brand-text: #f0f1e4;
+  --brand-text-muted: #9b9d84;
+  --brand-primary: #a9bb6b;
+  --brand-primary-fg: #131608;
+  --brand-secondary: #a9bb6b;
+  --brand-destructive: #de8b7f;
+  --brand-success: #9fc98a;
+  --brand-warning: #dfb96c;
+}
+
+/* ---- 12. Steel  <html data-theme="steel"> ---- */
+[data-theme='steel'] {
+  --brand-bg: #f4f7fa;
+  --brand-muted: #e9eff5;
+  --brand-card: #ffffff;
+  --brand-card-hover: #eaf0f5;
+  --brand-border: #dce5ee;
+  --brand-text: #0d1620;
+  --brand-text-muted: #61748a;
+  --brand-primary: #3b6ea5;
+  --brand-primary-fg: #ffffff;
+  --brand-secondary: #3b6ea5;
+  --brand-destructive: #d8455c;
+  --brand-success: #10a37f;
+  --brand-warning: #d08700;
+}
+[data-theme='steel'].dark {
+  --brand-bg: #070d14;
+  --brand-muted: #182432;
+  --brand-card: #0e1620;
+  --brand-card-hover: #16202c;
+  --brand-border: #21303f;
+  --brand-text: #eef4fa;
+  --brand-text-muted: #8ba0b6;
+  --brand-primary: #7fb0e0;
+  --brand-primary-fg: #07131f;
+  --brand-secondary: #7fb0e0;
+  --brand-destructive: #fb7185;
+  --brand-success: #34d399;
+  --brand-warning: #fbbf24;
+}
+
+/* ============================================================================
+   4. COLOR MAPPING
+   ========================================================================= */
 @theme inline {
   --font-sans: 'Assistant', ui-sans-serif, system-ui, sans-serif;
   --color-background: var(--background);
@@ -125,6 +491,8 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -143,13 +511,15 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* ============================================================================
+   5. BASE LAYER
+   ========================================================================= */
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
 
   html {
-    /* Stop mobile Safari/Chrome inflating text when the device rotates. */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
@@ -162,11 +532,19 @@
     font-family: var(--font-assistant);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Kill the grey flash on every tap — the clearest "this is a web page" tell. */
     -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+    text-wrap: pretty;
   }
 
-  /* Removes the legacy 300ms double-tap-zoom delay on every interactive element. */
+  /* 16px floor on every control. Anything smaller makes iOS Safari zoom the
+     page on focus — the single loudest "this is a website" tell. */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
   button,
   a,
   [role='button'],
@@ -178,26 +556,189 @@
     touch-action: manipulation;
   }
 
-  /* App chrome is furniture, not a document — long-press shouldn't start a text selection. */
+  /* Chrome is furniture, not a document. Text stays selectable in fields only. */
   nav,
   header,
-  [data-app-chrome] {
+  aside,
+  [data-app-chrome],
+  [role='tablist'] {
     -webkit-user-select: none;
     user-select: none;
   }
+
+  a {
+    color: var(--primary);
+    text-decoration: none;
+  }
+  a:hover {
+    color: var(--primary);
+    text-decoration: underline;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 16%, transparent);
+  }
+
+  /* Latin numerals that don't jitter, for times/prices/counters */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
+/* ============================================================================
+   6. COMPONENT UTILITIES — the classes to reach for in screens
+   ========================================================================= */
+@layer components {
+  /* ---- Primary CTA. Full-width on mobile (auth, onboarding, sheets). ---- */
+  .btn-native {
+    @apply inline-flex h-14 w-full cursor-pointer select-none items-center justify-center gap-2
+           rounded-2xl bg-primary px-6 text-[17px] font-bold text-primary-foreground
+           shadow-md outline-none transition-all duration-150 ease-native
+           active:scale-[0.97] active:shadow-sm
+           focus-visible:ring-4 focus-visible:ring-primary/15
+           disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100
+           md:h-12 md:w-auto md:text-base;
+  }
+  .btn-native-ghost {
+    @apply inline-flex h-14 w-full cursor-pointer select-none items-center justify-center gap-2
+           rounded-2xl bg-muted px-6 text-[17px] font-bold text-foreground
+           outline-none transition-all duration-150 ease-native
+           active:scale-[0.97] focus-visible:ring-4 focus-visible:ring-primary/15
+           disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100
+           md:h-12 md:w-auto md:text-base;
+  }
 
-/* ---------------------------------------------------------------------------
-   Layout chrome
-   ---------------------------------------------------------------------------
-   Both default to 0 so every calc() that references them is a no-op on desktop. They are
-   turned on only when the mobile shell is actually mounted — the dashboard shell sets
-   data-mobile-chrome="on"/"off", so a full-screen route (an open chat thread) can opt out
-   even on a phone. One calc() expression then stays correct in all four states:
-   desktop, mobile-with-chrome, mobile-chat-detail, desktop-chat.
+  /* ---- The one card treatment. No nested cards, ever. ---- */
+  .card-native {
+    @apply rounded-3xl border border-border/80 bg-card shadow-sm;
+  }
 
-   --app-bottom-nav-h must stay in sync with MobileBottomNav's `h-16`. */
+  /* ---- Wrapper for inputs/selects/pickers/date fields ---- */
+  .field-native {
+    @apply flex h-12 w-full items-center rounded-2xl border border-input/80 bg-card px-4
+           text-base text-foreground shadow-xs outline-none
+           transition-all duration-150 ease-native
+           placeholder:text-muted-foreground/50
+           focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10
+           md:h-11 md:text-[15px];
+  }
+
+  /* ---- A single list row inside .card-native ---- */
+  .row-native {
+    @apply flex select-none items-center gap-3 border-t border-border/60 px-4 py-3
+           transition-colors duration-100 first:border-t-0 active:bg-muted;
+  }
+
+  /* ---- Soft status indicator. See README §6 for the five colors. ---- */
+  .pill {
+    @apply inline-flex shrink-0 select-none items-center rounded-full px-3 py-1.5
+           text-[12.5px] leading-none font-bold whitespace-nowrap;
+  }
+
+  /* ---- Bolt onto anything that should feel pressable ---- */
+  .tap {
+    @apply cursor-pointer select-none transition-transform duration-150 ease-native
+           active:scale-[0.97];
+  }
+
+  /* ---- 44pt minimum, for icon-only chrome buttons ---- */
+  .tap-target {
+    @apply flex size-11 shrink-0 cursor-pointer select-none items-center justify-center
+           rounded-2xl transition-colors duration-100 active:bg-muted;
+  }
+
+  /* ---- Avatar / monogram circle ---- */
+  .avatar-native {
+    @apply flex size-[42px] shrink-0 items-center justify-center rounded-full
+           bg-primary/10 text-base font-extrabold text-primary;
+  }
+
+  /* ---- Auth & onboarding shell: centred, spacious, no card-in-card ---- */
+  .auth-shell {
+    @apply flex min-h-svh flex-col justify-center bg-background px-6 py-10;
+  }
+  .auth-stack {
+    @apply mx-auto flex w-full max-w-sm flex-col gap-8 md:max-w-md;
+  }
+  .auth-badge {
+    @apply flex size-18 items-center justify-center rounded-full bg-primary
+           text-2xl font-extrabold text-primary-foreground shadow-md;
+  }
+  .auth-title {
+    @apply text-center text-[25px] font-extrabold tracking-tight text-foreground;
+  }
+  .auth-sub {
+    @apply text-center text-[15px] font-medium text-muted-foreground;
+  }
+  .form-stack {
+    @apply flex flex-col gap-3.5;
+  }
+  .form-label {
+    @apply ps-1 text-sm font-bold text-foreground;
+  }
+
+  /* ---- Onboarding: one decision per screen, sticky footer, no scroll ---- */
+  .step-shell {
+    @apply flex h-svh flex-col bg-background;
+  }
+  .step-progress {
+    @apply h-[3px] w-full bg-muted;
+  }
+  .step-progress-fill {
+    @apply h-full bg-primary transition-[width] duration-300 ease-native;
+  }
+  .step-body {
+    @apply flex flex-1 flex-col gap-6 overflow-y-auto px-6 pt-5;
+  }
+  .step-question {
+    @apply text-[29px] leading-[1.2] font-extrabold tracking-tight text-foreground;
+  }
+  .step-hint {
+    @apply text-base leading-relaxed font-medium text-muted-foreground;
+  }
+  .step-footer {
+    @apply flex flex-col gap-3 px-6 pt-3.5 pb-[calc(1.125rem+env(safe-area-inset-bottom,0px))];
+  }
+
+  /* ---- Dashboard: flat header, no boxed page title ---- */
+  .page-head {
+    @apply flex flex-col gap-0.5 px-1;
+  }
+  .page-head h1 {
+    @apply text-[23px] font-extrabold tracking-tight text-foreground;
+  }
+  .page-head p {
+    @apply text-sm font-medium text-muted-foreground;
+  }
+
+  /* ---- Stat tile — small, quiet, three-up on a phone ---- */
+  .stat-native {
+    @apply flex flex-col gap-2.5 rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs;
+  }
+  .stat-native .stat-value {
+    @apply text-[26px] leading-none font-extrabold text-foreground;
+  }
+  .stat-native .stat-label {
+    @apply text-[12.5px] font-bold text-muted-foreground;
+  }
+
+  /* ---- Conversation HITL action row (quote / slot / receipt / final) ---- */
+  .hitl-row {
+    @apply flex select-none items-center gap-2 rounded-2xl border border-primary bg-card px-2.5 py-2;
+  }
+  .hitl-row-success {
+    @apply flex select-none items-center gap-2 rounded-2xl border border-emerald-500 bg-card px-2.5 py-2;
+  }
+  .hitl-action {
+    @apply flex h-8 shrink-0 cursor-pointer select-none items-center justify-center rounded-xl
+           bg-primary px-3 text-xs font-extrabold text-primary-foreground
+           transition-transform duration-150 ease-native active:scale-[0.97];
+  }
+}
+
+/* ============================================================================
+   7. APP SHELL GEOMETRY — unchanged contract, retuned numbers
+   ========================================================================= */
 :root {
   --app-top-bar-h: 0rem;
   --app-bottom-nav-h: 0rem;
@@ -205,31 +746,18 @@
 
 @media (width < 64rem) {
   [data-mobile-chrome='on'] {
-    --app-top-bar-h: 4rem; /* h-16 — MobileTopBar */
-    --app-bottom-nav-h: calc(4rem + env(safe-area-inset-bottom, 0px)); /* h-16 + home indicator */
-  }
-
-  /* Restore desktop micro-type density only at lg and up; see @theme above. */
-}
-
-@media (width >= 64rem) {
-  :root {
-    --text-micro: 0.625rem; /* 10px — the pre-refactor value */
-    --text-mini: 0.6875rem; /* 11px — the pre-refactor value */
+    --app-top-bar-h: 3.5rem;
+    --app-bottom-nav-h: calc(4rem + env(safe-area-inset-bottom, 0px));
   }
 }
 
-/* Custom Design System Utilities (ported from WAHA/apps/ui/src/index.css) */
 .page-container {
-  /* Flex column so pages can fill the viewport with `flex-1 min-h-0` instead of the magic
-     `h-[calc(100svh-7.5rem)]` that used to hardcode this element's own padding. */
   display: flex;
   flex-direction: column;
-  background-color: var(--color-brand-bg);
   padding-inline: 1rem;
-  padding-block-start: 1rem;
-  /* Keep content clear of the fixed bottom tab bar (0 on desktop). */
+  padding-block-start: 1.25rem;
   padding-block-end: calc(1.5rem + var(--app-bottom-nav-h));
+  gap: 1.125rem;
 }
 
 @media (width < 64rem) {
@@ -237,47 +765,40 @@
     height: calc(100svh - var(--app-top-bar-h) - var(--app-bottom-nav-h));
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: auto;
-  }
-}
-
-@media (width >= 48rem) {
-  .page-container {
-    padding-inline: 1.5rem;
-    padding-block-start: 1.5rem;
   }
 }
 
 @media (width >= 64rem) {
   .page-container {
-    /* Byte-identical to the pre-refactor desktop value. */
-    padding: 2rem 2.5rem 3rem 2.5rem;
+    padding: 2rem 2.5rem 3rem;
+    gap: 1.5rem;
   }
 }
 
-.text-glow {
-  text-shadow: 0 0 15px rgba(79, 70, 229, 0.2);
+/* Full-bleed screens that own their own scroll (chat thread, kanban) */
+.page-container--flush {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
 }
 
-.box-glow {
-  box-shadow: 0 0 20px rgba(79, 70, 229, 0.08);
-}
+/* ============================================================================
+   8. APP-SPECIFIC ADDITIONS — not part of the design bundle, kept from the
+      pre-redesign stylesheet because screens outside this pass's scope
+      (settings, onboarding, conversations) still depend on them.
+   ========================================================================= */
 
-.glass-panel {
-  background-color: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(79, 70, 229, 0.15);
-}
-
-.periwinkle-gradient {
-  background: linear-gradient(to right, transparent, rgba(79, 70, 229, 0.2), transparent);
+/* Restore desktop micro-type density only at lg and up — matches the
+   pre-redesign behavior every `text-micro`/`text-mini` call site expects. */
+@media (width >= 64rem) {
+  :root {
+    --text-micro: 0.625rem;
+    --text-mini: 0.6875rem;
+  }
 }
 
 /* Scrollbars are fully hidden everywhere — scrolling still works (wheel, touch, keyboard,
-   scrollbar-gutter is not reserved), there is just no visible track or thumb. In this RTL
-   document the browser places the vertical scrollbar on the inline-end edge, i.e. the left,
-   so nothing needs to be flipped; `scrollbar-width: none` means it occupies no layout width
-   on either side. */
+   scrollbar-gutter is not reserved), there is just no visible track or thumb. */
 * {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -289,8 +810,6 @@
   height: 0;
 }
 
-/* Kept so the explicit `.scrollbar-none` call sites (filter strips, kanban board) stay
-   meaningful even if the global rule above is ever relaxed. */
 .scrollbar-none {
   scrollbar-width: none;
 }
@@ -299,24 +818,7 @@
   display: none;
 }
 
-/* Animations */
-/* Enters from the inline-start (right) edge — the document is RTL, and the toast stack is
-   anchored to `start`. Was -100% (left edge), which slid in from the wrong side. */
-@keyframes slide-in {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.animate-slide-in {
-  animation: slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
+/* Used by AiAgentTab (not yet migrated to the new design system this pass). */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -332,7 +834,9 @@
   animation: fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Disable text selection on mobile devices (< 1024px) for a native feel, except for input fields */
+/* Disable text selection on mobile devices (< 1024px) for a native feel, except in fields.
+   Broader than the base-layer chrome rule above — kept so screens not yet migrated to the
+   new component classes (which carry their own select-none) don't regress. */
 @media (max-width: 1023px) {
   body, body * {
     -webkit-user-select: none;

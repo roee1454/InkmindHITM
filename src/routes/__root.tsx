@@ -12,6 +12,12 @@ import { ServiceWorkerRegistrar } from '../components/ServiceWorkerRegistrar'
 
 import type { QueryClient } from '@tanstack/react-query'
 
+// Runs before first paint (blocking inline script, not a React effect) so a returning visitor
+// never sees the hardcoded indigo/light default flash before the real theme applies. Written to
+// by `dashboard/route.tsx` on every load, from the already-fetched `settings` record — this
+// script itself makes no network request, it only reads the local cache.
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('ui-theme');var d=localStorage.getItem('ui-dark-mode');if(t)document.documentElement.setAttribute('data-theme',t);if(d==='1')document.documentElement.classList.add('dark');}catch(e){}})();`
+
 interface MyRouterContext {
   queryClient: QueryClient
 }
@@ -69,8 +75,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <html lang="he" dir="rtl">
+    <html lang="he" dir="rtl" data-theme="indigo">
       <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
       <body>

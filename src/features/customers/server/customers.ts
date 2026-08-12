@@ -21,7 +21,7 @@ export const getCustomers = createServerFn({ method: 'GET' }).handler(
       if (!statsMap[custId]) statsMap[custId] = { visits: 0, totalSpend: 0 }
       if (appt.status !== 'cancelled') {
         statsMap[custId].visits += 1
-        statsMap[custId].totalSpend += Number(appt.price || appt.price_quoted || 0)
+        statsMap[custId].totalSpend += Number(appt.price_max || appt.price_min || 0)
       }
     }
 

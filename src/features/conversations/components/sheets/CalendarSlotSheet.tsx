@@ -8,7 +8,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetHandle,
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui/ToastProvider'
@@ -46,13 +45,7 @@ export function CalendarSlotSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="bottom"
-        className="mx-auto w-full max-w-lg rounded-t-[28px] border-t border-border bg-card p-6 shadow-2xl max-h-[90svh] overflow-y-auto font-assistant space-y-5 select-none"
-        dir="rtl"
-      >
-        <SheetHandle />
-
+      <SheetContent className="mx-auto w-full max-w-lg font-assistant space-y-5" dir="rtl">
         <SheetHeader className="text-right space-y-1">
           <SheetTitle className="text-lg font-extrabold text-foreground">
             בחירת מועד ביומן
@@ -100,7 +93,7 @@ export function CalendarSlotSheet({
                 className={cn(
                   'py-3 rounded-xl border text-center font-assistant text-xs font-extrabold transition-all cursor-pointer',
                   selectedSlot === slot
-                    ? 'border-primary bg-primary/10 text-primary font-black'
+                    ? 'border-primary bg-primary/10 text-primary'
                     : 'border-border bg-card text-muted-foreground hover:bg-muted',
                 )}
               >
@@ -132,7 +125,7 @@ export function CalendarSlotSheet({
           </Button>
           <Button
             type="button"
-            variant="takeover"
+            variant="outline"
             className="h-13 px-4 rounded-2xl text-sm font-bold gap-1.5"
             disabled={isTakingOver}
             onClick={onTakeover}

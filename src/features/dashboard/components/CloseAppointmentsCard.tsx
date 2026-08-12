@@ -1,11 +1,11 @@
 type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show'
 
-const APPOINTMENT_STATUS_TRANSLATIONS: Record<AppointmentStatus, { label: string; color: string }> = {
-  pending: { label: 'ממתין לאישור', color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
-  confirmed: { label: 'מאושר', color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' },
-  completed: { label: 'הושלם', color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
-  cancelled: { label: 'בוטל', color: 'bg-rose-500/10 text-rose-500 border-rose-500/20' },
-  no_show: { label: 'לא הגיע', color: 'bg-muted text-muted-foreground border-border' },
+const APPOINTMENT_STATUS_TRANSLATIONS: Record<AppointmentStatus, { label: string; pill: string }> = {
+  pending: { label: 'ממתין לאישור', pill: 'bg-warning/12 text-warning' },
+  confirmed: { label: 'מאושר', pill: 'bg-success/12 text-success' },
+  completed: { label: 'הושלם', pill: 'bg-primary/10 text-primary' },
+  cancelled: { label: 'בוטל', pill: 'bg-destructive/10 text-destructive' },
+  no_show: { label: 'לא הגיע', pill: 'bg-muted text-muted-foreground' },
 }
 
 interface CloseAppointmentsCardProps {
@@ -21,56 +21,41 @@ interface CloseAppointmentsCardProps {
 }
 
 export function CloseAppointmentsCard({ appointments, onViewAll }: CloseAppointmentsCardProps) {
+  const visibleAppointments = appointments.slice(0, 4)
+
   return (
-    <div className="flex h-[18rem] md:h-[22rem] lg:h-[30rem] flex-col rounded-2xl border border-border bg-card py-6">
-      <div className="mb-6 flex items-center justify-between px-6">
-        <h3 className="font-assistant text-xl font-bold text-foreground">תורים קרובים</h3>
-        <button
-          type="button"
-          onClick={onViewAll}
-          className="cursor-pointer font-assistant text-xs font-bold text-primary hover:underline"
-        >
-          כל התורים
+    <div className="card-native flex flex-col">
+      <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3">
+        <h3 className="text-[16.5px] font-extrabold text-foreground">תורים קרובים</h3>
+        <button type="button" onClick={onViewAll} className="cursor-pointer text-[13.5px] font-bold text-primary">
+          הכל
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-1">
-        {appointments.length > 0 ? (
-          appointments.map((apt) => {
-            const translation = APPOINTMENT_STATUS_TRANSLATIONS[apt.status]
-            const dayNum = apt.date.split('-')[2] || apt.date
+      {visibleAppointments.length > 0 ? (
+        visibleAppointments.map((apt) => {
+          const translation = APPOINTMENT_STATUS_TRANSLATIONS[apt.status]
+          const dayNum = apt.date.split('-')[2] || apt.date
 
-            return (
-              <div
-                key={apt.id}
-                className="flex items-center justify-between border-b border-border/45 bg-transparent px-6 py-3 transition-colors last:border-b-0 hover:bg-muted/15"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center leading-tight">
-                    <span className="font-assistant text-base font-black text-foreground">{dayNum}</span>
-                    <span className="font-assistant text-micro text-muted-foreground">{apt.timeSlot}</span>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="truncate font-assistant text-sm font-bold text-foreground">
-                      {apt.leadName || 'לקוח ללא שם'}
-                    </div>
-                    <div className="max-w-[60vw] md:max-w-[200px] truncate font-assistant text-mini text-muted-foreground/70 hidden md:block">
-                      {apt.style || 'פנייה כללית'}
-                    </div>
-                  </div>
-                </div>
-                <span className={`inline-block shrink-0 border px-2 py-0.5 font-assistant text-micro font-bold ${translation.color}`}>
-                  {translation.label}
-                </span>
+          return (
+            <div key={apt.id} className="row-native">
+              <div className="flex w-9 shrink-0 flex-col items-center justify-center leading-tight tabular-nums">
+                <span className="text-base font-extrabold text-foreground">{dayNum}</span>
+                <span className="text-[11px] text-muted-foreground">{apt.timeSlot}</span>
               </div>
-            )
-          })
-        ) : (
-          <div className="flex h-full items-center justify-center font-assistant text-sm text-muted-foreground">
-            אין תורים קרובים ביומן
-          </div>
-        )}
-      </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[15px] font-bold text-foreground">{apt.leadName || 'לקוח ללא שם'}</div>
+                <div className="truncate text-[13px] text-muted-foreground">{apt.style || 'פנייה כללית'}</div>
+              </div>
+              <span className={`pill shrink-0 ${translation.pill}`}>{translation.label}</span>
+            </div>
+          )
+        })
+      ) : (
+        <div className="flex items-center justify-center px-5 py-8 text-sm text-muted-foreground">
+          אין תורים קרובים ביומן
+        </div>
+      )}
     </div>
   )
 }

@@ -25,10 +25,12 @@ export interface UIAppointmentSummary {
   staffName: string | null
   date: string // YYYY-MM-DD
   timeSlot: string // HH:MM
-  durationHours: number
-  priceIls: number | null
+  durationMinutes: number
+  priceMinIls: number | null
+  priceMaxIls: number | null
   depositAmount: number | null
   depositPaid: boolean
+  slotConfirmed: boolean
 }
 
 /** Flattened message for the thread view. `mediaFilename` + `id` let the browser build

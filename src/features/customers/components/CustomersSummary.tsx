@@ -1,45 +1,26 @@
 import React from 'react'
-import { Users, UserCheck, Star } from 'lucide-react'
 
 interface CustomersSummaryProps {
   totalCustomers: number
-  returningCustomers: number
-  reviewsCount: number
+  returningOnly: boolean
+  onToggleReturning: () => void
 }
 
 export const CustomersSummary: React.FC<CustomersSummaryProps> = ({
   totalCustomers,
-  returningCustomers,
-  reviewsCount,
+  returningOnly,
+  onToggleReturning,
 }) => {
   return (
-    <div className="grid grid-cols-3 gap-2 md:gap-4 font-assistant" dir="rtl">
-      {/* Card 1: סה"כ לקוחות */}
-      <div className="flex h-24 flex-col justify-between rounded-2xl border border-border bg-card p-3 shadow-sm md:h-28 md:p-5">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-muted-foreground">סה"כ לקוחות במאגר</span>
-          <Users size={16} className="text-primary" />
-        </div>
-        <div className="text-xl font-bold text-foreground md:text-3xl">{totalCustomers}</div>
-      </div>
-
-      {/* Card 2: לקוחות חוזרים */}
-      <div className="flex h-24 flex-col justify-between rounded-2xl border border-border bg-card p-3 shadow-sm md:h-28 md:p-5">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-muted-foreground">לקוחות חוזרים</span>
-          <UserCheck size={16} className="text-indigo-400" />
-        </div>
-        <div className="text-xl font-bold text-foreground md:text-3xl">{returningCustomers}</div>
-      </div>
-
-      {/* Card 3: ביקורים ודירוגים */}
-      <div className="flex h-24 flex-col justify-between rounded-2xl border border-border bg-card p-3 shadow-sm md:h-28 md:p-5">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-muted-foreground">דירוגים וביקורים</span>
-          <Star size={16} className="text-amber-400 fill-amber-400" />
-        </div>
-        <div className="text-xl font-bold text-foreground md:text-3xl">{reviewsCount}</div>
-      </div>
+    <div className="flex items-center gap-3 px-1 font-assistant" dir="rtl">
+      <span className="text-[13px] font-extrabold text-muted-foreground">{totalCustomers} לקוחות</span>
+      <button
+        type="button"
+        onClick={onToggleReturning}
+        className={`cursor-pointer text-[13px] font-bold ${returningOnly ? 'text-primary underline' : 'text-primary'}`}
+      >
+        חוזרים בלבד
+      </button>
     </div>
   )
 }

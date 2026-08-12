@@ -1,10 +1,12 @@
-const STAGE_TRANSLATIONS: Record<string, { label: string; color: string }> = {
-  new: { label: 'פנייה חדשה', color: 'bg-muted-foreground/10 text-muted-foreground border-muted-foreground/20' },
-  intake: { label: 'איסוף פרטים', color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
-  awaiting_price: { label: 'ממתין להצעת מחיר', color: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' },
-  awaiting_payment: { label: 'ממתין למקדמה', color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
-  booked: { label: 'נקבע תור', color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' },
-  expired: { label: 'פג תוקף', color: 'bg-rose-500/10 text-rose-500 border-rose-500/20' },
+import { useIsMobile } from '@/hooks/use-media-query'
+
+const STAGE_TRANSLATIONS: Record<string, { label: string; pill: string }> = {
+  new: { label: 'פנייה חדשה', pill: 'bg-muted text-muted-foreground' },
+  intake: { label: 'איסוף פרטים', pill: 'bg-muted text-muted-foreground' },
+  awaiting_price: { label: 'ממתין להצעת מחיר', pill: 'bg-primary/10 text-primary' },
+  awaiting_payment: { label: 'ממתין למקדמה', pill: 'bg-warning/12 text-warning' },
+  booked: { label: 'נקבע תור', pill: 'bg-success/12 text-success' },
+  expired: { label: 'פג תוקף', pill: 'bg-destructive/10 text-destructive' },
 }
 
 interface RecentLeadsCardProps {
@@ -19,57 +21,40 @@ interface RecentLeadsCardProps {
 }
 
 export function RecentLeadsCard({ leads, onViewAll, onLeadClick }: RecentLeadsCardProps) {
+  const isMobile = useIsMobile()
+  const visibleLeads = leads.slice(0, isMobile ? 3 : 4)
+
   return (
-    <div className="flex h-[18rem] md:h-[22rem] lg:h-[30rem] flex-col rounded-2xl border border-border bg-card py-6">
-      <div className="mb-6 flex items-center justify-between px-6">
-        <h3 className="font-assistant text-xl font-bold text-foreground">פניות אחרונות</h3>
-        <button
-          type="button"
-          onClick={onViewAll}
-          className="cursor-pointer font-assistant text-xs font-bold text-primary hover:underline"
-        >
-          כל הפניות
+    <div className="card-native flex flex-col">
+      <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3">
+        <h3 className="text-[16.5px] font-extrabold text-foreground">פניות אחרונות</h3>
+        <button type="button" onClick={onViewAll} className="cursor-pointer text-[13.5px] font-bold text-primary">
+          הכל
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-1">
-        {leads.length > 0 ? (
-          leads.map((lead) => {
-            const translation =
-              STAGE_TRANSLATIONS[lead.stage] ??
-              { label: lead.stage, color: 'bg-muted-foreground/10 text-muted-foreground border-muted-foreground/20' }
-            const displayName = lead.name || 'לקוח ללא שם'
-            const initial = displayName.charAt(0)
+      {visibleLeads.length > 0 ? (
+        visibleLeads.map((lead) => {
+          const translation = STAGE_TRANSLATIONS[lead.stage] ?? { label: lead.stage, pill: 'bg-muted text-muted-foreground' }
+          const displayName = lead.name || 'לקוח ללא שם'
+          const initial = displayName.charAt(0)
 
-            return (
-              <div
-                key={lead.chatId}
-                onClick={() => onLeadClick(lead.chatId)}
-                className="flex cursor-pointer items-center justify-between border-b border-border/45 bg-transparent px-6 py-3 transition-colors last:border-b-0 hover:bg-muted/15"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/15 font-assistant text-sm font-bold text-primary">
-                    {initial}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="truncate font-assistant text-sm font-bold text-foreground">{displayName}</div>
-                    <div className="max-w-[60vw] md:max-w-[200px] truncate font-assistant text-mini text-muted-foreground/70 hidden md:block">
-                      {lead.style || 'פנייה כללית'}
-                    </div>
-                  </div>
-                </div>
-                <span className={`inline-block shrink-0 border px-2 py-0.5 font-assistant text-micro font-bold ${translation.color}`}>
-                  {translation.label}
-                </span>
+          return (
+            <div key={lead.chatId} onClick={() => onLeadClick(lead.chatId)} className="row-native cursor-pointer">
+              <div className="avatar-native">{initial}</div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[15px] font-bold text-foreground">{displayName}</div>
+                <div className="truncate text-[13px] text-muted-foreground">{lead.style || 'פנייה כללית'}</div>
               </div>
-            )
-          })
-        ) : (
-          <div className="flex h-full items-center justify-center font-assistant text-sm text-muted-foreground">
-            אין פניות אחרונות במערכת
-          </div>
-        )}
-      </div>
+              <span className={`pill shrink-0 ${translation.pill}`}>{translation.label}</span>
+            </div>
+          )
+        })
+      ) : (
+        <div className="flex items-center justify-center px-5 py-8 text-sm text-muted-foreground">
+          אין פניות אחרונות במערכת
+        </div>
+      )}
     </div>
   )
 }

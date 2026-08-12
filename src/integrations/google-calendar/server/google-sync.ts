@@ -75,11 +75,11 @@ export async function syncAppointmentToGoogle(appointmentId: string): Promise<vo
       const input = buildEventInput({
         date: dateStr,
         timeSlot: timeSlotStr,
-        durationHours: Number(record.duration_hours || 2),
+        durationHours: Number(record.duration_minutes || 120) / 60,
         leadName,
         leadPhone,
         tattooDescription: (record.tattoo_description as string) || null,
-        priceIls: record.price_amount != null ? Number(record.price_amount) : null,
+        priceIls: record.price_max != null ? Number(record.price_max) : record.price_min != null ? Number(record.price_min) : null,
         notes: (record.notes as string) || null,
       })
 

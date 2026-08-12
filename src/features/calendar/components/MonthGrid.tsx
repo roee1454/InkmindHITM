@@ -91,7 +91,7 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
                   </div>
                 ))}
                 {dayAppointments.map((appointment) => {
-                  const durationHours = appointment.durationHours || 2
+                  const durationHours = (appointment.durationMinutes || 120) / 60
                   const startMinutes = timeToMinutes(appointment.timeSlot)
                   const endMinutes = startMinutes + durationHours * 60
                   const timeRange = `${appointment.timeSlot} - ${minutesToTime(endMinutes)}`

@@ -5,14 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { getHebcalHolidays, addStudioClosure } from '../server/settings'
+import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { getHebcalHolidays, addStudioClosure } from '../server/closures'
 import type { HebcalHoliday } from '@/integrations/hebcal/hebcal.server'
 
 interface AddClosureDialogProps {
@@ -20,10 +14,15 @@ interface AddClosureDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
+interface GroupedHoliday {
+  title: string
+  hebrew: string
+  years: number
+}
+
 export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) {
   const queryClient = useQueryClient()
-  const currentYear = new Date().getFullYear()
-  const [year, setYear] = useState(currentYear)
+  const [includeMinor, setIncludeMinor] = useState(false)
   const [selectedTitles, setSelectedTitles] = useState<Set<string>>(new Set())
 
   const [customDate, setCustomDate] = useState('')
@@ -31,10 +30,22 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
   const [customRecurring, setCustomRecurring] = useState(false)
 
   const holidaysQuery = useQuery<HebcalHoliday[]>({
-    queryKey: ['hebcal-holidays', year],
-    queryFn: () => getHebcalHolidays({ data: { year } }),
+    queryKey: ['hebcal-holidays', includeMinor],
+    queryFn: () => getHebcalHolidays({ data: { includeMinor } }),
     enabled: open,
   })
+
+  // Each entry in holidaysQuery.data is one specific year's occurrence — group by title for the
+  // picker so "יום כיפור" is one row, not one row per year.
+  const groupedHolidays = useMemo<GroupedHoliday[]>(() => {
+    const map = new Map<string, GroupedHoliday>()
+    for (const h of holidaysQuery.data ?? []) {
+      const existing = map.get(h.title)
+      if (existing) existing.years += 1
+      else map.set(h.title, { title: h.title, hebrew: h.hebrew || h.title, years: 1 })
+    }
+    return Array.from(map.values())
+  }, [holidaysQuery.data])
 
   const toggleHoliday = (title: string) => {
     setSelectedTitles((prev) => {
@@ -45,6 +56,11 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
     })
   }
 
+  const allSelected = groupedHolidays.length > 0 && groupedHolidays.every((h) => selectedTitles.has(h.title))
+  const toggleSelectAll = (checked: boolean) => {
+    setSelectedTitles(checked ? new Set(groupedHolidays.map((h) => h.title)) : new Set())
+  }
+
   const selectedHolidays = useMemo(
     () => (holidaysQuery.data ?? []).filter((h) => selectedTitles.has(h.title)),
     [holidaysQuery.data, selectedTitles],
@@ -52,11 +68,15 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
 
   const addHolidaysMutation = useMutation({
     mutationFn: async () => {
-      for (const holiday of selectedHolidays) {
-        await addStudioClosure({
-          data: { date: holiday.date, reason: holiday.hebrew || holiday.title, isRecurring: true, source: 'hebcal' },
-        })
-      }
+      // One closure per (holiday, year) pair — the actual dated occurrence, not a synthetic
+      // month/day-matching "recurring" flag that would be wrong for Hebrew lunisolar holidays.
+      await Promise.all(
+        selectedHolidays.map((holiday) =>
+          addStudioClosure({
+            data: { date: holiday.date, reason: holiday.hebrew || holiday.title, isRecurring: false, source: 'hebcal' },
+          }),
+        ),
+      )
     },
     onSuccess: () => {
       setSelectedTitles(new Set())
@@ -78,53 +98,54 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
   })
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent dir="rtl" className="sm:max-w-lg max-h-[85vh] overflow-y-auto font-assistant text-right">
-        <DialogHeader>
-          <DialogTitle>הוספת ימי סגירה</DialogTitle>
-          <DialogDescription>
-            בחרו חגים מהלוח היהודי לסגירה קבועה מדי שנה, או הוסיפו תאריך מותאם אישית.
-          </DialogDescription>
-        </DialogHeader>
-
-        {/* Hebcal holiday picker */}
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="הוספת ימי סגירה"
+      description="בחרו חגים מהלוח היהודי לסגירה קבועה מדי שנה, או הוסיפו תאריך מותאם אישית."
+      contentClassName="sm:max-w-lg max-h-[85vh] overflow-y-auto"
+    >
+      {/* Hebcal holiday picker */}
         <div className="space-y-3 border-b border-border/60 pb-5">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-              <Sparkles size={14} className="text-primary" />
-              חגים ומועדים יהודיים
-            </div>
-            <Input
-              type="number"
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value) || currentYear)}
-              className="w-24 rounded-xl text-xs"
-              dir="ltr"
-            />
+          <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+            <Sparkles size={14} className="text-primary" />
+            חגים ומועדים יהודיים
           </div>
+
+          <label className="flex cursor-pointer items-center justify-between rounded-xl border border-border bg-card px-3 py-2.5">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xs font-bold text-foreground">כלול גם מועדים קטנים וצומות</span>
+              <span className="text-micro text-muted-foreground">כבוי = חגים מרכזיים בלבד</span>
+            </div>
+            <Switch checked={includeMinor} onCheckedChange={setIncludeMinor} />
+          </label>
 
           {holidaysQuery.isLoading ? (
             <p className="text-xs text-muted-foreground">טוען חגים…</p>
           ) : holidaysQuery.isError ? (
             <p className="text-xs font-semibold text-destructive">שגיאה בטעינת החגים מ-Hebcal.com</p>
           ) : (
-            <div className="max-h-52 space-y-1 overflow-y-auto rounded-xl border border-border p-2">
-              {(holidaysQuery.data ?? []).map((holiday) => (
-                <label
-                  key={`${holiday.title}-${holiday.date}`}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-xs hover:bg-muted/60"
-                >
-                  <Checkbox
-                    checked={selectedTitles.has(holiday.title)}
-                    onCheckedChange={() => toggleHoliday(holiday.title)}
-                  />
-                  <span className="font-semibold text-foreground">{holiday.hebrew || holiday.title}</span>
-                  <span className="text-micro text-muted-foreground" dir="ltr">
-                    {holiday.date}
-                  </span>
-                </label>
-              ))}
-            </div>
+            <>
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-bold text-foreground">
+                <Checkbox checked={allSelected} onCheckedChange={(checked) => toggleSelectAll(Boolean(checked))} />
+                בחר הכל
+              </label>
+              <div className="max-h-52 space-y-1 overflow-y-auto rounded-xl border border-border p-2">
+                {groupedHolidays.map((holiday) => (
+                  <label
+                    key={holiday.title}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-xs hover:bg-muted/60"
+                  >
+                    <Checkbox
+                      checked={selectedTitles.has(holiday.title)}
+                      onCheckedChange={() => toggleHoliday(holiday.title)}
+                    />
+                    <span className="flex-1 font-semibold text-foreground">{holiday.hebrew}</span>
+                    <span className="text-micro text-muted-foreground">כל שנה</span>
+                  </label>
+                ))}
+              </div>
+            </>
           )}
 
           <p className="text-micro text-muted-foreground">
@@ -132,7 +153,7 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
             <a href="https://www.hebcal.com" target="_blank" rel="noreferrer" className="underline">
               Hebcal.com
             </a>
-            . חגים שנבחרו יתווספו כסגירה קבועה מדי שנה (לצמיתות).
+            . חגים שנבחרו יתווספו כסגירה קבועה בכל שנה, לפי התאריך היהודי המדויק בעשור הקרוב.
           </p>
 
           <Button
@@ -161,7 +182,7 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
                 type="date"
                 value={customDate}
                 onChange={(e) => setCustomDate(e.target.value)}
-                className="w-40 bg-white text-foreground border-input"
+                className="w-40"
               />
             </div>
             <div className="min-w-[140px] flex-1 space-y-1">
@@ -170,7 +191,6 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
                 value={customReason}
                 onChange={(e) => setCustomReason(e.target.value)}
                 placeholder="יום נישואין"
-                className="bg-white text-foreground border-input"
               />
             </div>
           </div>
@@ -195,8 +215,7 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
             {addCustomMutation.isPending ? 'מוסיף…' : 'הוסף תאריך'}
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+    </ResponsiveDialog>
   )
 }
 

@@ -106,7 +106,7 @@ function ConversationRow({
           <span className="truncate text-xs text-muted-foreground">{conversation.customerPhone}</span>
           <div className="flex items-center gap-1.5 shrink-0">
             {conversation.unreadCount > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-micro font-black text-white leading-none">
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-micro font-extrabold text-white leading-none">
                 {conversation.unreadCount}
               </span>
             )}

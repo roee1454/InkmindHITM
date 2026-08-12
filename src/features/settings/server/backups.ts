@@ -109,3 +109,14 @@ export const deleteBackup = createServerFn({ method: 'POST' })
     await su.backups.delete(data.key)
     return { ok: true }
   })
+
+/** Restores the full PocketBase data directory from the given backup and restarts the server
+ *  process — native PocketBase behavior, not something this handler orchestrates itself. */
+export const restoreBackup = createServerFn({ method: 'POST' })
+  .validator(z.object({ key: z.string() }))
+  .handler(async ({ data }) => {
+    await requireAdmin()
+    const { su } = await getSettingsRecord()
+    await su.backups.restore(data.key)
+    return { ok: true }
+  })

@@ -4,7 +4,9 @@ import { MetricsSummary } from '@/features/dashboard/components/MetricsSummary'
 import { RecentLeadsCard } from '@/features/dashboard/components/RecentLeadsCard'
 import { CloseAppointmentsCard } from '@/features/dashboard/components/CloseAppointmentsCard'
 import { AlertBanners } from '@/features/dashboard/components/AlertBanners'
+import { DashboardSkeleton } from '@/features/dashboard/components/DashboardSkeleton'
 import { getDashboardData } from '@/features/dashboard/server/dashboard'
+import { SetupChecklist, useSetupChecklist } from '@/features/onboarding/components/SetupChecklist'
 
 const dashboardRoute = getRouteApi('/dashboard')
 
@@ -51,42 +53,60 @@ function DashboardHome() {
   const recentLeads = dashboardData?.recentLeads ?? []
   const closeAppointments = dashboardData?.closeAppointments ?? []
 
+  const { items: checklistItems, isLoading: checklistLoading, cardDismissed } = useSetupChecklist()
+  const checklistIncomplete = !checklistLoading && !cardDismissed && checklistItems.some((i) => !i.done)
+
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-4 py-3 font-assistant md:space-y-6 md:py-6 lg:space-y-8" dir="rtl">
-      <div>
-        {/* Unlike the other pages' titles this is real content, not a repeat of the top bar's
-            "בית" — so it stays on mobile, just at a smaller size. */}
-        <h1 className="text-xl font-bold text-foreground md:text-2xl lg:text-3xl">
-          {getGreeting()}, {session?.staff.name || 'אורח'} 👋
-        </h1>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {getHebrewDayName(today)}, {getFormattedDate(today)} — {isLoading ? 'טוען…' : `${appointmentsTodayCount} תורים היום`}
-        </p>
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-[18px] font-assistant lg:gap-6" dir="rtl">
+      <div className="page-head flex-row items-start justify-between gap-3 lg:items-center">
+        <div className="flex flex-col gap-0.5">
+          <h1>
+            {getGreeting()}, {session?.staff.name || 'אורח'}
+          </h1>
+          <p>
+            {getHebrewDayName(today)}, {getFormattedDate(today)} — {isLoading ? 'טוען…' : `${appointmentsTodayCount} תורים היום`}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => navigate({ to: '/dashboard/calendar' })}
+          className="hidden h-[46px] shrink-0 cursor-pointer select-none items-center justify-center rounded-2xl bg-primary px-5 text-[15px] font-bold text-primary-foreground shadow-md transition-transform duration-150 ease-native active:scale-[0.97] lg:flex"
+        >
+          תור חדש
+        </button>
       </div>
 
-      <MetricsSummary
-        appointmentsTodayCount={appointmentsTodayCount}
-        newLeadsCount={newLeadsCount}
-        totalLeads={totalActiveLeads}
-      />
+      {checklistIncomplete && <SetupChecklist maxRows={3} showFooterLink />}
 
-      <AlertBanners
-        receiptApprovalCount={0}
-        awaitingPriceCount={awaitingPriceCount}
-        onNavigateToLeads={() => navigate({ to: '/dashboard/leads' })}
-      />
+      {isLoading ? (
+        <DashboardSkeleton />
+      ) : (
+        <>
+          <MetricsSummary
+            appointmentsTodayCount={appointmentsTodayCount}
+            newLeadsCount={newLeadsCount}
+            totalLeads={totalActiveLeads}
+          />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <RecentLeadsCard
-          leads={recentLeads}
-          onViewAll={() => navigate({ to: '/dashboard/leads' })}
-          onLeadClick={() => navigate({ to: '/dashboard/conversations' })}
-        />
-        <CloseAppointmentsCard
-          appointments={closeAppointments}
-          onViewAll={() => navigate({ to: '/dashboard/calendar' })}
-        />
-      </div>
+          <AlertBanners
+            receiptApprovalCount={0}
+            awaitingPriceCount={awaitingPriceCount}
+            onNavigateToLeads={() => navigate({ to: '/dashboard/leads' })}
+          />
+
+          <div className="grid grid-cols-1 gap-[18px] lg:grid-cols-2 lg:gap-6">
+            <RecentLeadsCard
+              leads={recentLeads}
+              onViewAll={() => navigate({ to: '/dashboard/leads' })}
+              onLeadClick={() => navigate({ to: '/dashboard/conversations' })}
+            />
+            <CloseAppointmentsCard
+              appointments={closeAppointments}
+              onViewAll={() => navigate({ to: '/dashboard/calendar' })}
+            />
+          </div>
+        </>
+      )}
     </div>
   )
 }

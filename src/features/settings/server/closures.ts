@@ -70,12 +70,23 @@ export const deleteStudioClosure = createServerFn({ method: 'POST' })
     return { ok: true }
   })
 
-/** Read-only pass-through for the Add-closure modal's Hebcal holiday picker. */
+/** Years the Add-closure modal's "close forever" picker covers — Hebrew holidays don't fall on
+ *  the same Gregorian date every year, so "forever" means listing out each year's actual date
+ *  rather than a single recurring month/day match (see `isStudioClosedOn`'s doc comment). Ten
+ *  years forward reads as permanent without generating an unbounded number of closure rows. */
+const HOLIDAY_YEARS_AHEAD = 10
+
+/** Read-only pass-through for the Add-closure modal's Hebcal holiday picker — fetches a multi-
+ *  year window in parallel so selecting a holiday can create one correctly-dated closure per
+ *  year instead of a single date that only happens to be right once. */
 export const getHebcalHolidays = createServerFn({ method: 'GET' })
-  .validator(z.object({ year: z.number().int() }))
+  .validator(z.object({ includeMinor: z.boolean().default(false) }))
   .handler(async ({ data }): Promise<HebcalHoliday[]> => {
     await requireAuth()
-    return fetchJewishHolidays(data.year)
+    const currentYear = new Date().getFullYear()
+    const years = Array.from({ length: HOLIDAY_YEARS_AHEAD }, (_, i) => currentYear + i)
+    const perYear = await Promise.all(years.map((year) => fetchJewishHolidays(year, data.includeMinor)))
+    return perYear.flat()
   })
 
 /**

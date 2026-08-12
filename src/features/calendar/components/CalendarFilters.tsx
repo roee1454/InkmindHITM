@@ -67,32 +67,14 @@ export const CalendarFilters: React.FC<CalendarFiltersProps> = ({
   googleConnections = [],
 }) => {
   return (
-    <div className="mb-4 flex flex-col justify-between gap-3 font-assistant md:mb-6 md:flex-row md:items-center md:gap-4" dir="rtl">
-      {/* Status pills. Below md these bleed to the screen edge as a single scrollable row —
-          six wrapped pills would otherwise eat ~3 rows of vertical space on a phone. */}
-      {/* Mobile Status Selectable Dropdown */}
-      <div className="md:hidden w-full" dir="rtl">
-        <Select value={selectedStatus} onValueChange={onSelectedStatusChange}>
-          <SelectTrigger className="h-11 rounded-xl bg-card border-border hover:border-primary/50 text-foreground transition-all duration-150 text-xs font-semibold">
-            <SelectValue placeholder="סנן לפי סטטוס…" />
-          </SelectTrigger>
-          <SelectContent className="font-assistant">
-            <SelectItem value="all" className="text-xs font-semibold">הכל ({filterCounts.all})</SelectItem>
-            <SelectItem value="confirmed" className="text-xs font-semibold">מאושר ({filterCounts.confirmed})</SelectItem>
-            <SelectItem value="pending" className="text-xs font-semibold">ממתין לאישור ({filterCounts.pending})</SelectItem>
-            <SelectItem value="cancelled" className="text-xs font-semibold">בוטל ({filterCounts.cancelled})</SelectItem>
-            <SelectItem value="completed" className="text-xs font-semibold">הושלם ({filterCounts.completed})</SelectItem>
-            <SelectItem value="no_show" className="text-xs font-semibold">לא הגיע ({filterCounts.no_show})</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Status pills (desktop only) */}
-      <div className="hidden md:flex scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
+    <div className="flex flex-col gap-3 font-assistant lg:flex-row lg:items-center lg:justify-between" dir="rtl">
+      {/* Status chips — horizontal scroll at every width, six wrapped pills would otherwise eat
+          ~3 rows of vertical space on a phone. */}
+      <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0 lg:pb-0">
         {[
           { id: 'all', label: 'הכל', count: filterCounts.all },
           { id: 'confirmed', label: 'מאושר', count: filterCounts.confirmed },
-          { id: 'pending', label: 'ממתין לאישור', count: filterCounts.pending },
+          { id: 'pending', label: 'ממתין', count: filterCounts.pending },
           { id: 'cancelled', label: 'בוטל', count: filterCounts.cancelled },
           { id: 'completed', label: 'הושלם', count: filterCounts.completed },
           { id: 'no_show', label: 'לא הגיע', count: filterCounts.no_show },
@@ -102,20 +84,20 @@ export const CalendarFilters: React.FC<CalendarFiltersProps> = ({
             <button
               key={pill.id}
               onClick={() => onSelectedStatusChange(pill.id)}
-              className={`shrink-0 cursor-pointer whitespace-nowrap rounded-xl border px-3 py-1.5 font-assistant text-xs font-semibold transition-colors active:scale-[0.97] ${
+              className={`h-[38px] shrink-0 cursor-pointer select-none whitespace-nowrap rounded-full px-3.5 font-assistant text-[13.5px] font-bold transition-all duration-150 ease-native active:scale-[0.97] ${
                 active
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-muted text-muted-foreground'
               }`}
             >
-              {pill.label} ({pill.count})
+              {pill.label} · {pill.count}
             </button>
           )
         })}
       </div>
 
       {/* Artist Filter Dropdown */}
-      <div className="w-full md:w-64 md:shrink-0" dir="rtl">
+      <div className="flex w-full lg:w-64 lg:shrink-0" dir="rtl">
         <Select value={selectedArtist} onValueChange={onSelectedArtistChange}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="לפי מקעקעים (כל הצוות)" />

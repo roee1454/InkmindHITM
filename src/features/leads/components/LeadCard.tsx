@@ -53,20 +53,23 @@ export function LeadCard({
                 e.preventDefault()
                 return
               }
+              // Center the drag image on the cursor regardless of where on the card it was
+              // grabbed — the browser's default drag image otherwise offsets from the grab point.
+              const card = e.currentTarget
+              const rect = card.getBoundingClientRect()
+              e.dataTransfer.setDragImage(card, rect.width / 2, rect.height / 2)
               onDragStart()
             }
           : undefined
       }
       onDragEnd={canDrag ? onDragEnd : undefined}
       title={editable ? undefined : 'הליד הזה משויך לאיש צוות אחר — אין הרשאת עריכה'}
-      className={`lead-card group relative rounded-xl border border-border bg-card p-4 shadow-sm transition-all ${
-        editable
-          ? 'hover:border-primary/50 hover:shadow-md lg:cursor-grab lg:active:cursor-grabbing'
-          : 'cursor-not-allowed opacity-70'
+      className={`lead-card group relative flex flex-col gap-2.5 rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs transition-all duration-150 ease-native ${
+        editable ? 'lg:cursor-grab lg:active:cursor-grabbing' : 'cursor-not-allowed opacity-65'
       } ${isDragging ? 'opacity-40' : ''}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5 text-[12.5px] font-bold text-muted-foreground">
           <MessageSquare className="size-3.5" />
           {(lead.source && SOURCE_LABELS[lead.source]) || lead.source || 'מקור לא ידוע'}
         </span>
@@ -79,23 +82,19 @@ export function LeadCard({
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon-sm"
+                  size="icon"
                   aria-label="העברה לשלב אחר"
                   draggable={false}
                   onPointerDown={(e) => e.stopPropagation()}
-                  className="-me-1 lg:hidden"
+                  className="-me-2 -my-1 size-8 lg:hidden"
                 >
                   <EllipsisVertical className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="font-assistant">
-                <DropdownMenuLabel className="text-xs">העברה לשלב</DropdownMenuLabel>
+                <DropdownMenuLabel>העברה לשלב</DropdownMenuLabel>
                 {COLUMNS.filter((c) => c.stage !== lead.stage).map((c) => (
-                  <DropdownMenuItem
-                    key={c.stage}
-                    onSelect={() => onMoveToStage(c.stage)}
-                    className="text-xs"
-                  >
+                  <DropdownMenuItem key={c.stage} onSelect={() => onMoveToStage(c.stage)}>
                     {c.label}
                   </DropdownMenuItem>
                 ))}
@@ -105,23 +104,22 @@ export function LeadCard({
         </div>
       </div>
 
-      <h4 className="mt-2 font-assistant text-sm font-bold text-foreground">
+      <h4 className="font-assistant text-[16px] font-extrabold text-foreground">
         {lead.name || lead.phone}
       </h4>
 
-      <p className="mt-1 text-xs text-muted-foreground">מקעקע: {artistName}</p>
+      <p className="text-[13px] text-muted-foreground">מקעקע: {artistName}</p>
 
-      <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-2">
-        <span className="text-micro text-muted-foreground">{formatLeadDate(lead.updatedAt)}</span>
-        <Button
+      <div className="flex items-center justify-between gap-2 border-t border-border/60 pt-2.5">
+        <span className="text-[12.5px] text-muted-foreground">{formatLeadDate(lead.updatedAt)}</span>
+        <button
           type="button"
-          variant="ghost"
-          size="xs"
           disabled={!lead.conversationId}
           onClick={onOpenChat}
+          className="cursor-pointer text-[13.5px] font-bold text-primary disabled:cursor-not-allowed disabled:opacity-40"
         >
           פתח שיחה
-        </Button>
+        </button>
       </div>
     </div>
   )
