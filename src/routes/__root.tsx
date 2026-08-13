@@ -75,7 +75,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <html lang="he" dir="rtl" data-theme="indigo">
+    // The inline THEME_INIT_SCRIPT below rewrites data-theme (and toggles .dark) from
+    // localStorage before hydration, on purpose, so returning visitors don't flash the
+    // hardcoded default — React must be told not to reconcile that intentional mismatch.
+    <html lang="he" dir="rtl" data-theme="indigo" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />

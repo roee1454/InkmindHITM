@@ -15,7 +15,9 @@ import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as OnboardingRouteRouteImport } from './routes/onboarding/route'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api/whatsapp-webhook'
+import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
 import { Route as AuthSetupRouteImport } from './routes/auth/setup'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardCalendarRouteImport } from './routes/dashboard/calendar'
@@ -72,9 +74,19 @@ const ApiWhatsappWebhookRoute = ApiWhatsappWebhookRouteImport.update({
   path: '/api/whatsapp-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => AuthRouteRoute,
 } as any)
 const AuthSetupRoute = AuthSetupRouteImport.update({
@@ -218,7 +230,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings': typeof DashboardSettingsRouteRouteWithChildren
   '/api/ping': typeof ApiPingRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/setup': typeof AuthSetupRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/conversations': typeof DashboardConversationsRoute
@@ -250,7 +264,9 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRouteRouteWithChildren
   '/api/ping': typeof ApiPingRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/setup': typeof AuthSetupRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/conversations': typeof DashboardConversationsRoute
@@ -285,7 +301,9 @@ export interface FileRoutesById {
   '/dashboard/settings': typeof DashboardSettingsRouteRouteWithChildren
   '/api/ping': typeof ApiPingRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/setup': typeof AuthSetupRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/conversations': typeof DashboardConversationsRoute
@@ -321,7 +339,9 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/api/ping'
     | '/api/whatsapp-webhook'
+    | '/auth/forgot-password'
     | '/auth/login'
+    | '/auth/reset-password'
     | '/auth/setup'
     | '/dashboard/calendar'
     | '/dashboard/conversations'
@@ -353,7 +373,9 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/api/ping'
     | '/api/whatsapp-webhook'
+    | '/auth/forgot-password'
     | '/auth/login'
+    | '/auth/reset-password'
     | '/auth/setup'
     | '/dashboard/calendar'
     | '/dashboard/conversations'
@@ -387,7 +409,9 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/api/ping'
     | '/api/whatsapp-webhook'
+    | '/auth/forgot-password'
     | '/auth/login'
+    | '/auth/reset-password'
     | '/auth/setup'
     | '/dashboard/calendar'
     | '/dashboard/conversations'
@@ -471,11 +495,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWhatsappWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/forgot-password': {
+      id: '/auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
     '/auth/login': {
       id: '/auth/login'
       path: '/login'
       fullPath: '/auth/login'
       preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/auth/reset-password': {
+      id: '/auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
       parentRoute: typeof AuthRouteRoute
     }
     '/auth/setup': {
@@ -657,12 +695,16 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthRouteRouteChildren {
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSetupRoute: typeof AuthSetupRoute
 }
 
 const AuthRouteRouteChildren: AuthRouteRouteChildren = {
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSetupRoute: AuthSetupRoute,
 }
 
