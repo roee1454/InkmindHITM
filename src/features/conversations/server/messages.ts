@@ -388,6 +388,61 @@ export const confirmDepositReceived = createServerFn({ method: 'POST' })
     return { ok: true }
   })
 
+/** Manual staff override to lock the appointment directly and transition the conversation to AWAITING_APPOINTMENT. */
+export const manualFinalBookingConfirm = createServerFn({ method: 'POST' })
+  .validator(z.object({ conversationId: z.string() }))
+  .handler(async ({ data }) => {
+    await requireSession()
+    const su = await getSuperuserClient()
+
+    const conversation = await su.collection('conversations').getOne(data.conversationId, { expand: 'customer' })
+    const customer = conversation.expand?.customer as RecordModel | undefined
+    if (!customer?.phone) throw new Error('לשיחה אין לקוח עם מספר טלפון תקין.')
+
+    const appointment = await getActiveAppointmentForBot(su, customer.id)
+    if (!appointment) throw new Error('לא נמצא תור פעיל ללקוח.')
+
+    await su.collection('appointments').update(appointment.id, { status: 'confirmed' })
+
+    const settings = await getWhatsAppSettings()
+    if (settings?.phoneNumberId && settings.accessToken) {
+      const client = createWhatsAppClient({
+        phoneNumberId: settings.phoneNumberId,
+        accessToken: settings.accessToken,
+      })
+      const messageBody = 'התור שלך אושר סופית! מחכים לך בסטודיו 🎉'
+      try {
+        const { wamid } = await client.sendText({ to: customer.phone as string, body: messageBody })
+        const nowIso = new Date().toISOString()
+        await su.collection('messages').create({
+          conversation: conversation.id,
+          whatsapp_message_id: wamid,
+          direction: 'outbound',
+          sender_type: 'ai_bot',
+          type: 'text',
+          body: messageBody,
+          status: 'sent',
+          timestamp: nowIso,
+          seen: true,
+        })
+      } catch (err) {
+        console.warn('[manualFinalBookingConfirm] failed to send text message:', err)
+      }
+    }
+
+    await transition(su, conversation.id, 'AWAITING_APPOINTMENT', {
+      actor: 'staff',
+      reason: 'manualFinalBookingConfirm',
+      extraFields: {
+        status: 'bot_active',
+        is_staff_called: false,
+        staff_call_reason: '',
+      },
+    })
+
+    return { ok: true }
+  })
+
 /** The muted "דחייה" action on the receipt-approve HITL block — the screenshot didn't hold up
  *  (wrong amount, wrong method, unreadable). No state change: stays in AWAIT_PAYMENT (a legal
  *  self-transition) and hands back to the bot so it can watch for a re-sent receipt. */
