@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@plugin '@tailwindcss/typography';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -574,6 +575,20 @@
     color: var(--primary);
     text-decoration: underline;
   }
+  nav a,
+  nav a:hover,
+  nav a:active,
+  aside a,
+  aside a:hover,
+  aside a:active,
+  header a,
+  header a:hover,
+  header a:active,
+  [data-app-chrome] a,
+  [data-app-chrome] a:hover,
+  [data-app-chrome] a:active {
+    text-decoration: none !important;
+  }
 
   ::selection {
     background: color-mix(in oklab, var(--primary) 16%, transparent);
@@ -765,7 +780,19 @@
     height: calc(100svh - var(--app-top-bar-h) - var(--app-bottom-nav-h));
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    /* Without this, Safari's rubber-band bounce at the scroll boundary chains up to the
+       document and drags the sticky top bar/bottom nav along with it. Keeps the bounce
+       inside the page's own scroll region. */
+    overscroll-behavior-y: contain;
   }
+}
+
+/* Same rubber-band containment for every other scrollable region that lives under the
+   mobile top bar / bottom nav (conversation list & thread, lead columns, drawers, dialogs,
+   dropdowns, …) — anything using the overflow-y-auto/overflow-auto utilities. */
+.overflow-y-auto,
+.overflow-auto {
+  overscroll-behavior: contain;
 }
 
 @media (width >= 64rem) {
@@ -832,6 +859,28 @@
 
 .animate-fade-in {
   animation: fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Tailwind Typography color tokens, remapped from the plugin's own gray scale onto this
+   app's theme tokens so markdown-rendered MCP assistant answers match the rest of the UI
+   instead of visibly mismatching in dark mode / alternate palettes. */
+.prose {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-lead: var(--muted-foreground);
+  --tw-prose-links: var(--primary);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-counters: var(--muted-foreground);
+  --tw-prose-bullets: var(--muted-foreground);
+  --tw-prose-hr: var(--border);
+  --tw-prose-quotes: var(--foreground);
+  --tw-prose-quote-borders: var(--border);
+  --tw-prose-captions: var(--muted-foreground);
+  --tw-prose-code: var(--foreground);
+  --tw-prose-pre-code: var(--foreground);
+  --tw-prose-pre-bg: var(--muted);
+  --tw-prose-th-borders: var(--border);
+  --tw-prose-td-borders: var(--border);
 }
 
 /* Disable text selection on mobile devices (< 1024px) for a native feel, except in fields.

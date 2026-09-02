@@ -1,5 +1,6 @@
-import * as React from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { cn } from '#/lib/utils.ts'
+import { getSettings } from '#/features/onboarding/server/onboarding.ts'
 
 const SIZES = {
   sm: { box: 'size-[38px]', text: 'text-sm' },
@@ -12,21 +13,24 @@ interface BrandMarkProps {
   className?: string
 }
 
+/** Builds the browser-reachable Pocketbase file URL for the studio's uploaded logo. */
+function logoUrl(recordId: string, filename: string): string {
+  const base = import.meta.env.VITE_POCKETBASE_URL ?? 'http://127.0.0.1:8090'
+  return `${base}/api/files/settings/${recordId}/${encodeURIComponent(filename)}`
+}
+
 /**
  * The studio's logo, falling back to the "IM" wordmark. Replaces four hand-duplicated copies
  * of this block (auth/login, auth/setup, onboarding/route, Sidebar). Solid circle badge — no
  * gradient, sparkle, or glow.
  *
- * The logo is a base64 data URL in localStorage (written by the onboarding profile step), so
- * it must be read in an effect — reading during render would desync the SSR markup from the
- * client and trip a hydration mismatch.
+ * The logo is stored on the `settings` singleton record (uploaded via GeneralSettingsTab), so
+ * it's fetched through the same `['settings']` query used there — cache is shared, no extra
+ * request on pages where settings are already loaded.
  */
 export function BrandMark({ size = 'md', className }: BrandMarkProps) {
-  const [logo, setLogo] = React.useState<string | null>(null)
-
-  React.useEffect(() => {
-    setLogo(localStorage.getItem('studio_logo'))
-  }, [])
+  const { data } = useQuery({ queryKey: ['settings'], queryFn: () => getSettings() })
+  const logo = data?.id && data.logo ? logoUrl(data.id, data.logo as string) : null
 
   const s = SIZES[size]
 

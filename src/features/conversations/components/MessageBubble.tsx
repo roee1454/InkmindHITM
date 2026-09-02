@@ -22,14 +22,17 @@ export function MessageBubble({ message, onReply, onImageClick, onCategoryToggle
   const StatusIcon = message.status ? (STATUS_ICON[message.status] ?? Clock) : null
 
   return (
-    <div className={`group relative flex ${outbound ? 'justify-end' : 'justify-start'} items-center gap-2`}>
+    // Under this thread's dir="rtl" ancestor, `justify-start`/`justify-end` resolve relative to
+    // reading direction (start = right) — so outbound (own) messages need `justify-start` to
+    // land on the visual right, and inbound (customer) messages `justify-end` for the left.
+    <div className={`group relative flex ${outbound ? 'justify-start' : 'justify-end'} items-center gap-2`}>
       {/* Reply trigger button */}
       {onReply && (
         <button
           type="button"
           onClick={() => onReply(message)}
           className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 text-muted-foreground hover:text-foreground cursor-pointer ${
-            outbound ? 'order-first' : 'order-last'
+            outbound ? 'order-last' : 'order-first'
           }`}
           title="השב להודעה זו"
         >

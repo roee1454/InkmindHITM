@@ -12,7 +12,9 @@ import { getStaffList } from '@/features/settings/server/staff'
 import { getBrowserClient } from '@/integrations/pocketbase/client'
 import { useToast } from '@/components/ui/ToastProvider'
 import { ConfirmProvider } from '@/hooks/use-confirm'
+import { McpAssistant } from '@/features/mcp-assistant/components/McpAssistant'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { sendPwaNotification } from '@/features/notifications/lib/pwa-notifications'
 
 let cachedSession: any = null
 let cachedSettings: any = null
@@ -56,7 +58,6 @@ function DashboardLayout() {
   const location = useLocation()
   const navigate = useNavigate()
   const isConversations = location.pathname.startsWith('/dashboard/conversations')
-  const isLeads = location.pathname.startsWith('/dashboard/leads')
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
@@ -271,9 +272,13 @@ function DashboardLayout() {
     // Subscribe to system notifications
     pb.collection('notifications').subscribe('*', (data) => {
       if (data.action === 'create') {
+        const notifTitle = data.record.title || 'התראת מערכת'
+        const notifMessage = data.record.message || ''
+        const notifLink = (data.record.link as string) || undefined
+
         toast(
-          data.record.title || 'התראת מערכת',
-          data.record.message || '',
+          notifTitle,
+          notifMessage,
           data.record.type || 'info',
           4000,
           () => {
@@ -284,13 +289,20 @@ function DashboardLayout() {
           }
         )
 
+        // Dispatch PWA / OS Notification
+        void sendPwaNotification(notifTitle, {
+          body: notifMessage,
+          link: notifLink || `/dashboard/notifications?highlightId=${data.record.id}`,
+          tag: `notif-${data.record.id}`,
+        })
+
         const newNotification = {
           id: data.record.id,
           title: (data.record.title as string) || '',
           message: (data.record.message as string) || '',
           type: (data.record.type as any) || 'info',
           read: Boolean(data.record.read),
-          link: (data.record.link as string) || undefined,
+          link: notifLink,
           created: data.record.created,
         }
 
@@ -306,6 +318,29 @@ function DashboardLayout() {
           if (old === undefined) return old
           return old + (newNotification.read ? 0 : 1)
         })
+      } else if (data.action === 'delete') {
+        queryClient.setQueryData(['notifications'], (oldNotifs: any) => {
+          if (!oldNotifs) return []
+          return oldNotifs.filter((n: any) => n.id !== data.record.id)
+        })
+        queryClient.invalidateQueries({ queryKey: ['unread-notifications-count'] })
+      } else if (data.action === 'update') {
+        queryClient.setQueryData(['notifications'], (oldNotifs: any) => {
+          if (!oldNotifs) return []
+          return oldNotifs.map((n: any) =>
+            n.id === data.record.id
+              ? {
+                  ...n,
+                  title: (data.record.title as string) || n.title,
+                  message: (data.record.message as string) || n.message,
+                  read: Boolean(data.record.read),
+                  type: (data.record.type as any) || n.type,
+                  link: (data.record.link as string) || n.link,
+                }
+              : n,
+          )
+        })
+        queryClient.invalidateQueries({ queryKey: ['unread-notifications-count'] })
       }
     })
 
@@ -345,9 +380,7 @@ function DashboardLayout() {
                   // grow:1, which overrides this height — the fixed bottom nav would then
                   // overlay the last 64px of the thread, hiding the composer.
                   'page-container--flush h-[calc(100svh-var(--app-top-bar-h)-var(--app-bottom-nav-h))] min-w-0 shrink-0'
-                : isLeads
-                  ? 'page-container--flush flex min-h-0 min-w-0 flex-1 flex-col h-[calc(100svh-var(--app-top-bar-h)-var(--app-bottom-nav-h))] lg:h-auto lg:min-h-[calc(100vh-4rem)]'
-                  : 'page-container min-w-0 flex-1'
+                : 'page-container min-w-0 flex-1'
             }
           >
             <Outlet />
@@ -356,6 +389,9 @@ function DashboardLayout() {
 
         {showMobileChrome && <MobileBottomNav className="lg:hidden" />}
         <AppDrawer open={menuOpen} onOpenChange={setMenuOpen} staff={session.staff} />
+        {/* Hidden during the full-screen chat detail view for the same reason the bottom nav
+            is — the bubble would otherwise float on top of a screen that has no chrome. */}
+        {showMobileChrome && <McpAssistant />}
       </div>
     </ConfirmProvider>
   )

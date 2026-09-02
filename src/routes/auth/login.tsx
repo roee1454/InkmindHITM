@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { LoginForm } from '@/features/auth/components/LoginForm'
 import { getCurrentSession, needsBootstrap } from '@/features/auth/server/auth'
 import { BrandMark } from '@/components/BrandMark'

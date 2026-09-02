@@ -10,10 +10,10 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PB_DIR="$SCRIPT_DIR/pocketbase"
-PB_BIN="$PB_DIR/pocketbase-bin"
+PB_DIR="$(dirname "$SCRIPT_DIR")"
+PB_BIN="$PB_DIR/pocketbase"
 PB_DATA="$PB_DIR/pb_data"
-ENV_FILE="$SCRIPT_DIR/.env"
+ENV_FILE="$(dirname "$PB_DIR")/.env"
 
 # ─── Load .env ───────────────────────────────────────────
 if [[ -f "$ENV_FILE" ]]; then
@@ -33,9 +33,9 @@ echo ""
 echo "🗑️  מוחק את ה-DB של PocketBase..."
 
 # ─── Kill running PocketBase ─────────────────────────────
-if pgrep -f "pocketbase-bin" > /dev/null 2>&1; then
+if pgrep -f "$PB_BIN serve" > /dev/null 2>&1; then
   echo "   ⏹  מכבה את תהליך PocketBase..."
-  pkill -f "pocketbase-bin" || true
+  pkill -f "$PB_BIN serve" || true
   sleep 1
 fi
 
@@ -85,7 +85,7 @@ if [[ "$MODE" == "bg" ]]; then
   echo "✅ DB אופס! PocketBase רץ ב-background (PID: $PB_PID)"
   echo "   PocketBase URL: $PB_URL"
   echo "   לוגים:          /tmp/pb_reset_startup.log"
-  echo "   לעצירה:         pkill -f pocketbase-bin"
+  echo "   לעצירה:         pkill -f '$PB_BIN serve'"
 else
   # Foreground — keep PB alive, kill bg process and run in fg
   kill $PB_PID 2>/dev/null || true

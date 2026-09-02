@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { listConversations } from '../server/messages'
-import { formatListTimestamp } from '../lib/format'
+import { formatListTimestamp, formatWindowRemaining } from '../lib/format'
 import type { UIConversation } from '../types'
 import { useConversationsUiStore } from '../store/conversationsUiStore'
 
@@ -87,6 +87,13 @@ function ConversationRow({
   onSelect: () => void
 }) {
   const title = conversation.customerName || conversation.customerPhone || 'לא ידוע'
+  const windowInfo = formatWindowRemaining(conversation.windowExpiresAt)
+  const windowDotColor =
+    windowInfo.status === 'open'
+      ? 'bg-emerald-500'
+      : windowInfo.status === 'closing-soon'
+        ? 'bg-amber-500'
+        : 'bg-muted-foreground/30'
   return (
     <li>
       <button
@@ -103,7 +110,13 @@ function ConversationRow({
           </span>
         </div>
         <div className="flex w-full items-center justify-between gap-2">
-          <span className="truncate text-xs text-muted-foreground">{conversation.customerPhone}</span>
+          <span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground">
+            <span
+              className={`size-1.5 shrink-0 rounded-full ${windowDotColor}`}
+              title={`חלון 24 שעות: ${windowInfo.label}`}
+            />
+            {conversation.customerPhone}
+          </span>
           <div className="flex items-center gap-1.5 shrink-0">
             {conversation.unreadCount > 0 && (
               <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-micro font-extrabold text-white leading-none">

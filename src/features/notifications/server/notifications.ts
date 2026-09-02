@@ -74,6 +74,27 @@ export const markAllNotificationsAsRead = createServerFn({ method: 'POST' }).han
   },
 )
 
+export const deleteNotification = createServerFn({ method: 'POST' })
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
+    await requireSession()
+    const { getSuperuserClient } = await import('@/integrations/pocketbase/superuser.server')
+    const su = await getSuperuserClient()
+    await su.collection('notifications').delete(data.id)
+    return { ok: true }
+  })
+
+export const clearAllNotifications = createServerFn({ method: 'POST' }).handler(
+  async () => {
+    await requireSession()
+    const { getSuperuserClient } = await import('@/integrations/pocketbase/superuser.server')
+    const su = await getSuperuserClient()
+    const all = await su.collection('notifications').getFullList({ fields: 'id' })
+    await Promise.all(all.map((item) => su.collection('notifications').delete(item.id)))
+    return { ok: true }
+  },
+)
+
 /** Helper to add a system notification from the server side. Only ever called from other
  *  server modules (appointments/state-machine/AI agent) — `createServerOnlyFn` guarantees it
  *  can't be pulled into the client bundle even via a dynamic import. */

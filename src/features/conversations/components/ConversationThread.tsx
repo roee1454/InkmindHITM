@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Paperclip, SendHorizontal, X, Bot, BotOff, EllipsisVertical, ChevronRight } from 'lucide-react'
+import { Paperclip, SendHorizontal, X, Bot, BotOff, EllipsisVertical, ChevronRight, Clock, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
@@ -12,6 +12,20 @@ import { useConversationsUiStore } from '../store/conversationsUiStore'
 import { ImageGalleryDialog } from '@/features/calendar/components/ImageGalleryDialog'
 import { InspirationGalleryDialog, type ReceiptEntry } from './InspirationGalleryDialog'
 import { messageMediaUrl } from '../lib/media'
+import { formatWindowRemaining } from '../lib/format'
+
+const WINDOW_BADGE_STYLES: Record<string, string> = {
+  open: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+  'closing-soon': 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400',
+  expired: 'border-destructive/30 bg-destructive/10 text-destructive',
+}
+
+/** `wa.me` needs digits only (no `+`, spaces, or dashes). */
+function waMeLink(phone: string, draft: string): string {
+  const digits = phone.replace(/\D/g, '')
+  const text = draft.trim()
+  return `https://wa.me/${digits}${text ? `?text=${encodeURIComponent(text)}` : ''}`
+}
 
 /** Hebrew labels for staff_call_reason — until now the reason was stored but shown
  *  nowhere, leaving staff to reverse-engineer WHY the bot stopped from the transcript
@@ -63,6 +77,18 @@ export function ConversationThread({
     resetThread()
     shouldStickToBottom.current = true
   }, [conversation.id, resetThread])
+
+  // The 24h countdown badge and the disabled-composer state below both depend on "now", which
+  // `windowExpiresAt` alone doesn't re-derive on its own — this forces a re-render every minute
+  // so both stay live without needing a data refetch.
+  const [, forceTick] = useState(0)
+  useEffect(() => {
+    const interval = window.setInterval(() => forceTick((n) => n + 1), 60_000)
+    return () => window.clearInterval(interval)
+  }, [])
+
+  const windowInfo = formatWindowRemaining(conversation.windowExpiresAt)
+  const windowExpired = windowInfo.status === 'expired'
 
   const { data, isLoading } = useQuery({
     queryKey: ['messages', conversation.id, messagesLimit],
@@ -269,6 +295,14 @@ export function ConversationThread({
         </div>
         <div className="flex flex-col items-end gap-1">
           <div className="flex flex-wrap items-center justify-end gap-1.5">
+            <Badge
+              variant="outline"
+              className={`rounded-lg font-assistant gap-1 ${WINDOW_BADGE_STYLES[windowInfo.status]}`}
+              title="חלון 24 השעות של וואטסאפ להודעות חופשיות"
+            >
+              <Clock className="size-3" />
+              {windowInfo.label}
+            </Badge>
             {conversation.status === 'escalated' && conversation.staffCallReason ? (
               <Badge
                 variant="outline"
@@ -289,7 +323,11 @@ export function ConversationThread({
                 className="rounded-xl cursor-pointer gap-1.5"
                 disabled={takeOverMutation.isPending}
                 onClick={() => takeOverMutation.mutate()}
-                title="עצירת הבוט ומעבר לטיפול ידני, בלי לשלוח הודעה"
+                title={
+                  windowExpired
+                    ? 'החלון סגור — הבוט לא באמת יכול להגיב כרגע. מומלץ לקחת שליטה.'
+                    : 'עצירת הבוט ומעבר לטיפול ידני, בלי לשלוח הודעה'
+                }
               >
                 <BotOff className="size-4" />
                 {takeOverMutation.isPending ? 'עוצר בוט…' : 'קח שליטה'}
@@ -300,8 +338,11 @@ export function ConversationThread({
                 variant="outline"
                 size="sm"
                 className="rounded-xl cursor-pointer gap-1.5"
-                disabled={resumeBotMutation.isPending}
+                // Outside the window the bot can't send free-text replies either — resuming it
+                // would just leave the conversation silently stuck, so keep a human in control.
+                disabled={resumeBotMutation.isPending || windowExpired}
                 onClick={() => resumeBotMutation.mutate()}
+                title={windowExpired ? 'לא ניתן להפעיל את הבוט מחוץ לחלון 24 השעות' : undefined}
               >
                 <Bot className="size-4" />
                 {resumeBotMutation.isPending ? 'מחזיר לבוט…' : 'החזרה לבוט'}
@@ -428,42 +469,60 @@ export function ConversationThread({
           onChange={handleFileSelect}
         />
 
-        <div className="flex items-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            className="rounded-xl shrink-0 cursor-pointer"
-            title="צרף תמונה או קובץ"
-          >
-            <Paperclip className="size-4" />
-          </Button>
+        {windowExpired ? (
+          <div className="flex items-center gap-2.5 rounded-xl border border-destructive/30 bg-destructive/5 p-2.5">
+            <p className="min-w-0 flex-1 text-xs font-semibold leading-snug text-destructive">
+              חלון 24 השעות פג — אי אפשר לשלוח הודעה חופשית עד שהלקוח/ה יכתוב/תכתוב.
+              <span className="block font-normal text-muted-foreground">בקרוב: שליחת תבנית מאושרת מכאן.</span>
+            </p>
+            <a
+              href={waMeLink(conversation.customerPhone, draft)}
+              target="_blank"
+              rel="noreferrer"
+              className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-2.5 py-1.5 text-xs font-bold text-primary-foreground"
+            >
+              <ExternalLink className="size-3.5" />
+              וואטסאפ
+            </a>
+          </div>
+        ) : (
+          <div className="flex items-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              className="rounded-xl shrink-0 cursor-pointer"
+              title="צרף תמונה או קובץ"
+            >
+              <Paperclip className="size-4" />
+            </Button>
 
-          <Textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                submit()
-              }
-            }}
-            placeholder="כתיבת הודעה…"
-            className="max-h-32 min-h-10 flex-1 resize-none font-assistant text-sm"
-            rows={1}
-          />
+            <Textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  submit()
+                }
+              }}
+              placeholder="כתיבת הודעה…"
+              className="max-h-32 min-h-10 flex-1 resize-none font-assistant text-sm"
+              rows={1}
+            />
 
-          <Button
-            type="button"
-            onClick={submit}
-            disabled={(!draft.trim() && !selectedFile) || sendMutation.isPending}
-            className="shrink-0 rounded-xl cursor-pointer"
-          >
-            <SendHorizontal className="size-4" />
-            {sendMutation.isPending ? 'שולח…' : 'שליחה'}
-          </Button>
-        </div>
+            <Button
+              type="button"
+              onClick={submit}
+              disabled={(!draft.trim() && !selectedFile) || sendMutation.isPending}
+              className="shrink-0 rounded-xl cursor-pointer"
+            >
+              <SendHorizontal className="size-4" />
+              {sendMutation.isPending ? 'שולח…' : 'שליחה'}
+            </Button>
+          </div>
+        )}
       </div>
       <ImageGalleryDialog
         images={galleryImages}

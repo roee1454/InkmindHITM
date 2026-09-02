@@ -1,5 +1,3 @@
-import { CalendarDays, Users, Zap } from 'lucide-react'
-
 interface MetricsSummaryProps {
   appointmentsTodayCount: number
   newLeadsCount: number
@@ -7,32 +5,35 @@ interface MetricsSummaryProps {
 }
 
 const TILES = [
-  { key: 'appointments', label: 'תורים היום', icon: CalendarDays, chip: 'bg-success/12 text-success' },
-  { key: 'leads', label: 'פניות חדשות', icon: Zap, chip: 'bg-primary/10 text-primary' },
-  { key: 'active', label: 'לידים פעילים', icon: Users, chip: 'bg-warning/12 text-warning' },
+  { key: 'appointments', label: 'תורים היום' },
+  { key: 'leads', label: 'פניות חדשות' },
+  { key: 'active', label: 'לידים פעילים' },
 ] as const
 
 export function MetricsSummary({ appointmentsTodayCount, newLeadsCount, totalLeads }: MetricsSummaryProps) {
-  const values: Record<(typeof TILES)[number]['key'], number> = {
+  const values = {
     appointments: appointmentsTodayCount,
     leads: newLeadsCount,
     active: totalLeads,
   }
 
   return (
-    <div className="grid grid-cols-3 gap-3 lg:gap-4">
+    <div className="grid grid-cols-3 gap-3 font-assistant lg:gap-4" dir="rtl">
       {TILES.map((tile) => (
-        <div key={tile.key} className="stat-native lg:p-[22px]">
-          <span className={`flex size-[34px] shrink-0 items-center justify-center rounded-[12px] lg:size-10 ${tile.chip}`}>
-            <tile.icon size={17} />
+        <div
+          key={tile.key}
+          className="flex flex-col justify-center rounded-2xl border border-border/80 bg-card p-3.5 shadow-2xs transition-shadow duration-150 sm:p-5 lg:rounded-3xl lg:p-6"
+        >
+          <span className="text-2xl font-extrabold tracking-tight text-foreground tabular-nums sm:text-3xl lg:text-4xl">
+            {values[tile.key]}
           </span>
-          <div>
-            <div className="stat-value lg:text-[38px]">{values[tile.key]}</div>
-            <div className="stat-label">{tile.label}</div>
-          </div>
+          <span className="mt-1 text-xs font-semibold text-muted-foreground sm:text-sm">
+            {tile.label}
+          </span>
         </div>
       ))}
     </div>
   )
 }
+
 export default MetricsSummary

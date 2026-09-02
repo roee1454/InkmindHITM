@@ -1,23 +1,29 @@
 import { create } from 'zustand'
-import type { LeadStage } from '../types'
 
 interface LeadsUiState {
-  draggingId: string | null
-  dropTarget: LeadStage | null
-  isPanning: boolean
+  searchQuery: string
+  selectedStage: string
+  selectedArtist: string
+  currentPage: number
 
   // Actions
-  setDraggingId: (draggingId: string | null) => void
-  setDropTarget: (dropTarget: LeadStage | null) => void
-  setIsPanning: (isPanning: boolean) => void
+  setSearchQuery: (query: string) => void
+  setSelectedStage: (stage: string) => void
+  setSelectedArtist: (artistId: string) => void
+  setCurrentPage: (page: number) => void
+  resetFilters: () => void
 }
 
 export const useLeadsUiStore = create<LeadsUiState>((set) => ({
-  draggingId: null,
-  dropTarget: null,
-  isPanning: false,
+  searchQuery: '',
+  selectedStage: 'all',
+  selectedArtist: 'all',
+  currentPage: 1,
 
-  setDraggingId: (draggingId) => set({ draggingId }),
-  setDropTarget: (dropTarget) => set({ dropTarget }),
-  setIsPanning: (isPanning) => set({ isPanning }),
+  setSearchQuery: (searchQuery) => set({ searchQuery, currentPage: 1 }),
+  setSelectedStage: (selectedStage) => set({ selectedStage, currentPage: 1 }),
+  setSelectedArtist: (selectedArtist) => set({ selectedArtist, currentPage: 1 }),
+  setCurrentPage: (currentPage) => set({ currentPage }),
+  resetFilters: () => set({ searchQuery: '', selectedStage: 'all', selectedArtist: 'all', currentPage: 1 }),
 }))
+

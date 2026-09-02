@@ -37,7 +37,6 @@ function getGreeting() {
 function DashboardHome() {
   const session = dashboardRoute.useLoaderData()
   const navigate = useNavigate()
-
   const today = new Date()
 
   const { data: dashboardData, isLoading } = useQuery({
@@ -57,23 +56,30 @@ function DashboardHome() {
   const checklistIncomplete = !checklistLoading && !cardDismissed && checklistItems.some((i) => !i.done)
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-[18px] font-assistant lg:gap-6" dir="rtl">
-      <div className="page-head flex-row items-start justify-between gap-3 lg:items-center">
-        <div className="flex flex-col gap-0.5">
-          <h1>
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 font-assistant lg:gap-6" dir="rtl">
+      <div className="flex items-start justify-between gap-4 sm:items-center">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
             {getGreeting()}, {session?.staff.name || 'אורח'}
           </h1>
-          <p>
-            {getHebrewDayName(today)}, {getFormattedDate(today)} — {isLoading ? 'טוען…' : `${appointmentsTodayCount} תורים היום`}
+          <p className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground sm:text-sm">
+            <span>יום {getHebrewDayName(today)}</span>
+            <span>•</span>
+            <span>{getFormattedDate(today)}</span>
+            {!isLoading && (
+              <>
+                <span>•</span>
+                <span className="font-extrabold text-primary">
+                  {appointmentsTodayCount === 0
+                    ? 'אין תורים להיום'
+                    : appointmentsTodayCount === 1
+                      ? 'תור אחד היום'
+                      : `${appointmentsTodayCount} תורים היום`}
+                </span>
+              </>
+            )}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => navigate({ to: '/dashboard/calendar' })}
-          className="hidden h-[46px] shrink-0 cursor-pointer select-none items-center justify-center rounded-2xl bg-primary px-5 text-[15px] font-bold text-primary-foreground shadow-md transition-transform duration-150 ease-native active:scale-[0.97] lg:flex"
-        >
-          תור חדש
-        </button>
       </div>
 
       {checklistIncomplete && <SetupChecklist maxRows={3} showFooterLink />}

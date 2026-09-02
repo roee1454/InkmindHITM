@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        if: always()
+        run: pnpm exec tsc --noEmit
+
+      # Non-blocking for now: the repo has ~200 pre-existing lint errors unrelated to any
+      # single change (confirmed while building this CI workflow), so a hard-fail here would be
+      # permanently red and stop being a useful signal. Reporting still surfaces in the log —
+      # flip this to blocking once the existing backlog is cleaned up.
+      - name: Lint
+        if: always()
+        run: pnpm lint
+        continue-on-error: true
+
+      - name: Unit tests
+        if: always()
+        run: pnpm test

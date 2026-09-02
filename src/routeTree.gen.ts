@@ -31,6 +31,7 @@ import { Route as OnboardingDoneRouteImport } from './routes/onboarding/done'
 import { Route as OnboardingHoursRouteImport } from './routes/onboarding/hours'
 import { Route as OnboardingProfileLinksRouteImport } from './routes/onboarding/profile-links'
 import { Route as OnboardingStudioRouteImport } from './routes/onboarding/studio'
+import { Route as ApiInternalAppointmentFreedRouteImport } from './routes/api/internal.appointment-freed'
 import { Route as ApiInternalAppointmentSyncRouteImport } from './routes/api/internal.appointment-sync'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardSettingsAiRouteImport } from './routes/dashboard/settings/ai'
@@ -154,6 +155,12 @@ const OnboardingStudioRoute = OnboardingStudioRouteImport.update({
   path: '/studio',
   getParentRoute: () => OnboardingRouteRoute,
 } as any)
+const ApiInternalAppointmentFreedRoute =
+  ApiInternalAppointmentFreedRouteImport.update({
+    id: '/api/internal/appointment-freed',
+    path: '/api/internal/appointment-freed',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiInternalAppointmentSyncRoute =
   ApiInternalAppointmentSyncRouteImport.update({
     id: '/api/internal/appointment-sync',
@@ -245,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/profile-links': typeof OnboardingProfileLinksRoute
   '/onboarding/studio': typeof OnboardingStudioRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/api/internal/appointment-freed': typeof ApiInternalAppointmentFreedRoute
   '/api/internal/appointment-sync': typeof ApiInternalAppointmentSyncRoute
   '/dashboard/settings/ai': typeof DashboardSettingsAiRoute
   '/dashboard/settings/backups': typeof DashboardSettingsBackupsRoute
@@ -279,6 +287,7 @@ export interface FileRoutesByTo {
   '/onboarding/profile-links': typeof OnboardingProfileLinksRoute
   '/onboarding/studio': typeof OnboardingStudioRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/api/internal/appointment-freed': typeof ApiInternalAppointmentFreedRoute
   '/api/internal/appointment-sync': typeof ApiInternalAppointmentSyncRoute
   '/dashboard/settings/ai': typeof DashboardSettingsAiRoute
   '/dashboard/settings/backups': typeof DashboardSettingsBackupsRoute
@@ -316,6 +325,7 @@ export interface FileRoutesById {
   '/onboarding/profile-links': typeof OnboardingProfileLinksRoute
   '/onboarding/studio': typeof OnboardingStudioRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/api/internal/appointment-freed': typeof ApiInternalAppointmentFreedRoute
   '/api/internal/appointment-sync': typeof ApiInternalAppointmentSyncRoute
   '/dashboard/settings/ai': typeof DashboardSettingsAiRoute
   '/dashboard/settings/backups': typeof DashboardSettingsBackupsRoute
@@ -354,6 +364,7 @@ export interface FileRouteTypes {
     | '/onboarding/profile-links'
     | '/onboarding/studio'
     | '/dashboard/'
+    | '/api/internal/appointment-freed'
     | '/api/internal/appointment-sync'
     | '/dashboard/settings/ai'
     | '/dashboard/settings/backups'
@@ -388,6 +399,7 @@ export interface FileRouteTypes {
     | '/onboarding/profile-links'
     | '/onboarding/studio'
     | '/dashboard'
+    | '/api/internal/appointment-freed'
     | '/api/internal/appointment-sync'
     | '/dashboard/settings/ai'
     | '/dashboard/settings/backups'
@@ -424,6 +436,7 @@ export interface FileRouteTypes {
     | '/onboarding/profile-links'
     | '/onboarding/studio'
     | '/dashboard/'
+    | '/api/internal/appointment-freed'
     | '/api/internal/appointment-sync'
     | '/dashboard/settings/ai'
     | '/dashboard/settings/backups'
@@ -445,6 +458,7 @@ export interface RootRouteChildren {
   OnboardingRouteRoute: typeof OnboardingRouteRouteWithChildren
   ApiPingRoute: typeof ApiPingRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
+  ApiInternalAppointmentFreedRoute: typeof ApiInternalAppointmentFreedRoute
   ApiInternalAppointmentSyncRoute: typeof ApiInternalAppointmentSyncRoute
   ApiGoogleCalendarOauthCallbackRoute: typeof ApiGoogleCalendarOauthCallbackRoute
   ApiSettingsBackupsKeyDownloadRoute: typeof ApiSettingsBackupsKeyDownloadRoute
@@ -606,6 +620,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/onboarding/studio'
       preLoaderRoute: typeof OnboardingStudioRouteImport
       parentRoute: typeof OnboardingRouteRoute
+    }
+    '/api/internal/appointment-freed': {
+      id: '/api/internal/appointment-freed'
+      path: '/api/internal/appointment-freed'
+      fullPath: '/api/internal/appointment-freed'
+      preLoaderRoute: typeof ApiInternalAppointmentFreedRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/internal/appointment-sync': {
       id: '/api/internal/appointment-sync'
@@ -791,6 +812,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRouteRoute: OnboardingRouteRouteWithChildren,
   ApiPingRoute: ApiPingRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
+  ApiInternalAppointmentFreedRoute: ApiInternalAppointmentFreedRoute,
   ApiInternalAppointmentSyncRoute: ApiInternalAppointmentSyncRoute,
   ApiGoogleCalendarOauthCallbackRoute: ApiGoogleCalendarOauthCallbackRoute,
   ApiSettingsBackupsKeyDownloadRoute: ApiSettingsBackupsKeyDownloadRoute,

@@ -7,7 +7,7 @@
  * Not processed by Vite (it lives in public/ and is copied verbatim), so: plain JS only, no
  * imports, no import.meta.env. Bump VERSION on every change to this file.
  */
-const VERSION = 'v1'
+const VERSION = 'v2'
 const CACHE = `inkmind-${VERSION}`
 const OFFLINE_URL = '/offline.html'
 
@@ -88,4 +88,29 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Everything else falls through to the network untouched.
+})
+
+// Handle notification click on PC / Mobile device
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+
+  const targetUrl = event.notification.data?.url || '/dashboard/notifications'
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // If a CRM window is already open, focus it and navigate
+      for (const client of windowClients) {
+        if (client.url && 'focus' in client) {
+          if ('navigate' in client) {
+            client.navigate(targetUrl)
+          }
+          return client.focus()
+        }
+      }
+      // Otherwise open a new window
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl)
+      }
+    }),
+  )
 })

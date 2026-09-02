@@ -6,26 +6,62 @@ export type LeadStage =
   | 'booked'
   | 'expired'
 
-/** Fixed 6-column board, ported verbatim from WAHA's `COLUMNS` — always rendered in full
- *  regardless of what stages actually appear in the data. Text shade bumped from WAHA's
- *  dark-theme `-400` to `-600`: inkmind's tokens are a light theme, so `-400` text on a
- *  ~10%-opacity light tint would be nearly invisible. Same six hues otherwise. */
-export const COLUMNS: { stage: LeadStage; label: string; color: string }[] = [
-  { stage: 'new', label: 'ליד חדש', color: 'bg-stone-500/10 text-stone-600 border-stone-500/20' },
-  { stage: 'intake', label: 'איסוף פרטים', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
-  {
+export interface StageDefinition {
+  stage: LeadStage
+  label: string
+  /** Badge color classes for light and dark themes */
+  badgeClass: string
+  /** Dot / indicator color */
+  dotClass: string
+}
+
+export const STAGE_CONFIG: Record<LeadStage, StageDefinition> = {
+  new: {
+    stage: 'new',
+    label: 'ליד חדש',
+    badgeClass: 'bg-stone-500/15 text-stone-700 dark:text-stone-300 border-stone-500/30 hover:bg-stone-500/20',
+    dotClass: 'bg-stone-400',
+  },
+  intake: {
+    stage: 'intake',
+    label: 'איסוף פרטים',
+    badgeClass: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30 hover:bg-blue-500/20',
+    dotClass: 'bg-blue-500',
+  },
+  awaiting_price: {
     stage: 'awaiting_price',
     label: 'ממתין להצעת מחיר',
-    color: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20',
+    badgeClass: 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/20',
+    dotClass: 'bg-indigo-500',
   },
-  {
+  awaiting_payment: {
     stage: 'awaiting_payment',
     label: 'ממתין למקדמה',
-    color: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+    badgeClass: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/20',
+    dotClass: 'bg-amber-500',
   },
-  { stage: 'booked', label: 'נקבע תור', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
-  { stage: 'expired', label: 'פג תוקף', color: 'bg-rose-500/10 text-rose-600 border-rose-500/20' },
-]
+  booked: {
+    stage: 'booked',
+    label: 'נקבע תור',
+    badgeClass: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20',
+    dotClass: 'bg-emerald-500',
+  },
+  expired: {
+    stage: 'expired',
+    label: 'פג תוקף',
+    badgeClass: 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30 hover:bg-rose-500/20',
+    dotClass: 'bg-rose-500',
+  },
+}
+
+export const STAGE_OPTIONS: StageDefinition[] = Object.values(STAGE_CONFIG)
+
+/** Kept for backward compatibility with any column-keyed references */
+export const COLUMNS: { stage: LeadStage; label: string; color: string }[] = STAGE_OPTIONS.map((s) => ({
+  stage: s.stage,
+  label: s.label,
+  color: s.badgeClass,
+}))
 
 /** WAHA's source-detection keywords, plus 'whatsapp' — the only source the webhook sets
  *  today (see conversations/server/webhook.ts). */

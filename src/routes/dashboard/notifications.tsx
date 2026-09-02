@@ -1,14 +1,32 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Bell, CheckCheck, AlertCircle, Info, CheckCircle2, AlertTriangle, ExternalLink } from 'lucide-react'
+import {
+  Bell,
+  BellRing,
+  CheckCheck,
+  AlertCircle,
+  Info,
+  CheckCircle2,
+  AlertTriangle,
+  ExternalLink,
+  Trash2,
+} from 'lucide-react'
 import {
   getNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
+  deleteNotification,
+  clearAllNotifications,
   type ApiNotification,
 } from '@/features/notifications/server/notifications'
+import {
+  getNotificationPermission,
+  requestNotificationPermission,
+  sendPwaNotification,
+} from '@/features/notifications/lib/pwa-notifications'
+import { useConfirm } from '@/hooks/use-confirm'
 import { z } from 'zod'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 const notificationsSearchSchema = z.object({
@@ -22,19 +40,76 @@ export const Route = createFileRoute('/dashboard/notifications')({
 
 function NotificationsPage() {
   const queryClient = useQueryClient()
+  const confirm = useConfirm()
   const { highlightId } = Route.useSearch()
+
+  const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('unsupported')
+
+  useEffect(() => {
+    setPermission(getNotificationPermission())
+  }, [])
+
+  const handleEnableNotifications = async () => {
+    const res = await requestNotificationPermission()
+    setPermission(res)
+    if (res === 'granted') {
+      void sendPwaNotification('התראות הופעלו בהצלחה!', {
+        body: 'מעכשיו תקבל התראות מערכת ועדכונים בזמן אמת',
+      })
+    }
+  }
 
   const { data: notifications = [], isLoading } = useQuery<ApiNotification[]>({
     queryKey: ['notifications'],
     queryFn: () => getNotifications(),
-    // Realtime subscription (dashboard route) inserts new notifications directly;
-    // long-interval fallback only.
     refetchInterval: 60000,
   })
 
   const markAsReadMutation = useMutation({
     mutationFn: (id: string) => markNotificationAsRead({ data: { id } }),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      queryClient.invalidateQueries({ queryKey: ['unread-notifications-count'] })
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteNotification({ data: { id } }),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['notifications'] })
+      const previous = queryClient.getQueryData<ApiNotification[]>(['notifications'])
+      queryClient.setQueryData<ApiNotification[]>(['notifications'], (old) =>
+        old ? old.filter((n) => n.id !== id) : [],
+      )
+      queryClient.invalidateQueries({ queryKey: ['unread-notifications-count'] })
+      return { previous }
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['notifications'], context.previous)
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      queryClient.invalidateQueries({ queryKey: ['unread-notifications-count'] })
+    },
+  })
+
+  const clearAllMutation = useMutation({
+    mutationFn: () => clearAllNotifications(),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['notifications'] })
+      const previous = queryClient.getQueryData<ApiNotification[]>(['notifications'])
+      queryClient.setQueryData<ApiNotification[]>(['notifications'], () => [])
+      queryClient.setQueryData(['unread-notifications-count'], () => 0)
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['notifications'], context.previous)
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
       queryClient.invalidateQueries({ queryKey: ['unread-notifications-count'] })
     },
@@ -67,6 +142,23 @@ function NotificationsPage() {
 
   const handleMarkAllRead = () => {
     markAllReadMutation.mutate()
+  }
+
+  const handleDeleteNotification = (id: string) => {
+    deleteMutation.mutate(id)
+  }
+
+  const handleClearAll = async () => {
+    const ok = await confirm({
+      title: 'מחיקת כל ההתראות',
+      description: 'האם אתה בטוח שברצונך למחוק את כל ההתראות? פעולה זו אינה ניתנת לביטול.',
+      confirmLabel: 'מחק הכל',
+      cancelLabel: 'ביטול',
+      variant: 'destructive',
+    })
+    if (ok) {
+      clearAllMutation.mutate()
+    }
   }
 
   const formatRelativeTime = (isoString: string) => {
@@ -126,24 +218,62 @@ function NotificationsPage() {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-[18px] font-assistant lg:gap-6" dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="page-head">
           <h1>התראות מערכת</h1>
           <p>{isLoading ? 'טוען התראות…' : `יש לך ${unreadCount} התראות שלא נקראו`}</p>
         </div>
 
-        {unreadCount > 0 && (
+        <div className="flex items-center gap-3">
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={handleMarkAllRead}
+              disabled={markAllReadMutation.isPending}
+              className="flex shrink-0 cursor-pointer items-center gap-1 text-[13.5px] font-bold text-primary transition-colors hover:underline disabled:opacity-50"
+            >
+              <CheckCheck size={14} />
+              <span>סמן הכל כנקרא</span>
+            </button>
+          )}
+
+          {notifications.length > 0 && (
+            <button
+              type="button"
+              onClick={handleClearAll}
+              disabled={clearAllMutation.isPending}
+              className="flex shrink-0 cursor-pointer items-center gap-1 text-[13.5px] font-bold text-destructive transition-colors hover:underline disabled:opacity-50"
+            >
+              <Trash2 size={14} />
+              <span>מחק הכל</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* PWA Notification Permission Banner */}
+      {permission === 'default' && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between sm:rounded-3xl">
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <BellRing size={18} />
+            </div>
+            <div>
+              <div className="text-sm font-extrabold text-foreground">הפעל התראות מכשיר ו-PWA</div>
+              <div className="text-xs font-medium text-muted-foreground">
+                קבל התראות קופצות בזמן אמת במחשב ובנייד על תורים, לידים ופניות חדשות
+              </div>
+            </div>
+          </div>
           <button
             type="button"
-            onClick={handleMarkAllRead}
-            disabled={markAllReadMutation.isPending}
-            className="shrink-0 cursor-pointer text-[13.5px] font-bold text-primary disabled:opacity-50"
+            onClick={handleEnableNotifications}
+            className="mt-1 h-9 shrink-0 cursor-pointer select-none rounded-xl bg-primary px-4 text-xs font-extrabold text-primary-foreground shadow-2xs transition-all duration-150 ease-native hover:bg-primary/90 active:scale-95 sm:mt-0"
           >
-            <CheckCheck size={14} className="me-1 inline" />
-            סמן הכל כנקרא
+            הפעל התראות
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Notifications List */}
       {isLoading ? (
@@ -169,7 +299,7 @@ function NotificationsPage() {
                     ref={notification.id === highlightId ? highlightRef : undefined}
                     onClick={() => !notification.read && handleMarkAsRead(notification.id)}
                     className={cn(
-                      'row-native relative',
+                      'row-native group relative items-center gap-3',
                       !notification.read && 'bg-primary/5',
                       !notification.read && 'cursor-pointer',
                       notification.id === highlightId && 'ring-2 ring-primary/40',
@@ -207,6 +337,19 @@ function NotificationsPage() {
                         </a>
                       )}
                     </div>
+
+                    {/* Single notification delete button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteNotification(notification.id)
+                      }}
+                      title="מחק התראה"
+                      className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground opacity-70 transition-all hover:bg-destructive/10 hover:text-destructive hover:opacity-100 active:scale-90"
+                    >
+                      <Trash2 size={15} />
+                    </button>
                   </div>
                 ))}
               </div>

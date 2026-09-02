@@ -22,10 +22,19 @@ export function AlertBanners({ receiptApprovalCount, awaitingPriceCount, onNavig
   return (
     <div
       onClick={onNavigateToLeads}
-      className="flex h-13 shrink-0 cursor-pointer select-none items-center justify-between rounded-2xl bg-primary px-5 shadow-md transition-transform duration-150 ease-native active:scale-[0.98] md:h-14"
+      className="group flex cursor-pointer select-none items-center justify-between rounded-2xl border border-primary/25 bg-primary/10 px-5 py-3.5 shadow-2xs transition-all duration-150 ease-native hover:bg-primary/15 hover:border-primary/40 active:scale-[0.99] md:rounded-3xl"
     >
-      <span className="text-[15px] font-bold text-primary-foreground">{message}</span>
-      <ArrowLeft size={18} className="shrink-0 text-primary-foreground" />
+      <div className="flex items-center gap-3">
+        <span className="relative flex size-2.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+          <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
+        </span>
+        <span className="text-[14.5px] font-bold text-foreground">{message}</span>
+      </div>
+      <div className="flex items-center gap-1 text-[13px] font-extrabold text-primary transition-transform group-hover:translate-x-[-2px]">
+        <span>לטיפול</span>
+        <ArrowLeft size={16} />
+      </div>
     </div>
   )
 }

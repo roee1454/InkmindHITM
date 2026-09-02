@@ -42,7 +42,7 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
               activeOptions={{ exact: item.exact }}
               activeProps={{ className: 'text-primary font-extrabold' }}
               inactiveProps={{ className: 'text-muted-foreground font-bold' }}
-              className="relative flex h-full flex-col items-center justify-center gap-1 font-assistant text-[11.5px] transition-colors duration-150 active:bg-muted"
+              className="relative flex h-full flex-col items-center justify-center gap-1 font-assistant text-[11.5px] no-underline transition-colors duration-150 hover:no-underline active:no-underline active:bg-muted"
             >
               {({ isActive }) => (
                 <>

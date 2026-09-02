@@ -224,6 +224,7 @@ const TOOL_EXPLANATIONS: Partial<Record<string, string>> = {
   request_reschedule: "- 'request_reschedule': הלקוח רוצה להזיז תור? שאל אותו קודם מה המועד המועדף עליו, ואז קרא לכלי כדי להעביר את הבקשה לצוות.",
   request_cancel: "- 'request_cancel': הלקוח מבקש לבטל את התור? קרא לכלי הזה מיד.",
   record_nps_score: "- 'record_nps_score': קרא לכלי עם הציון (1-10) שפירשת מהודעת הלקוח. אל תמציא ציון אם התשובה אינה מספר.",
+  flag_earlier_preference: "- 'flag_earlier_preference': הלקוח מביע רצון למועד מוקדם יותר מהתור הקיים שלו (למשל 'יש משהו יותר מוקדם?')? קרא לכלי הזה כדי להוסיף אותו לרשימת המתנה — אל תבטיח מועד מדויק, רק שניצור קשר אם יתפנה.",
 }
 
 function toolExplanations(names: readonly string[]): string {
@@ -236,7 +237,7 @@ export const STATE_TOOLS: Record<ConversationState, string[]> = {
   AWAIT_PRICE_OFFER: ['answer_faq', 'call_staff', 'request_cancel'],
   AWAIT_PAYMENT: ['call_staff', 'answer_faq', 'request_cancel'],
   AWAIT_FINAL_CONFIRMATION: ['confirm_booking_final', 'call_staff', 'answer_faq'],
-  AWAITING_APPOINTMENT: ['request_reschedule', 'request_cancel', 'answer_faq', 'call_staff', 'send_message', 'suggest_artists', 'check_availability', 'get_artist_schedule', 'resolve_date', 'save_client_name'],
+  AWAITING_APPOINTMENT: ['request_reschedule', 'request_cancel', 'flag_earlier_preference', 'answer_faq', 'call_staff', 'send_message', 'suggest_artists', 'check_availability', 'get_artist_schedule', 'resolve_date', 'save_client_name'],
   AWAIT_NPS_SCORE: ['record_nps_score', 'call_staff', 'answer_faq'],
   COMPLETED: ['start_conversation', 'answer_faq'],
 }
@@ -309,7 +310,7 @@ const STATE_PROMPTS: Record<ConversationState, () => string> = {
   AWAITING_APPOINTMENT: () => `
 
 שלב תור מתואם (AWAITING_APPOINTMENT):
-ללקוח יש תור מאושר ומתוזמן בסטודיו. אי אפשר לתאם לו תור חדש או נוסף עד שהתור הנוכחי יעבור. הוא רוצה לשנות מועד? שאל קודם מה המועד המועדף עליו, ואז השתמש ב-'request_reschedule'.`,
+ללקוח יש תור מאושר ומתוזמן בסטודיו. אי אפשר לתאם לו תור חדש או נוסף עד שהתור הנוכחי יעבור. הוא רוצה לשנות מועד? שאל קודם מה המועד המועדף עליו, ואז השתמש ב-'request_reschedule'. הוא מביע רצון למועד מוקדם יותר מבלי לבקש לשנות באופן פעיל (למשל "חבל שאין יותר מוקדם")? השתמש ב-'flag_earlier_preference'.`,
 
   AWAIT_NPS_SCORE: () => `
 
