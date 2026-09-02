@@ -79,7 +79,11 @@ function SheetContent({
           // enter keyframe's *start* (fully off-screen), so if the animation is ever skipped
           // or interrupted — background tab, frozen compositor, a UA that disables animation
           // — the drawer would be unreachable. Holding the final frame makes that safe.
-          "fixed z-50 flex flex-col gap-4 bg-card font-assistant shadow-lg fill-mode-both data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=open]:animate-in data-[state=open]:duration-300",
+          //
+          // `outline-none` — `onOpenAutoFocus` below focuses this element itself (not a
+          // keyboard interaction), which would otherwise leave the browser's default focus
+          // ring drawn around the whole panel.
+          "fixed z-50 flex flex-col gap-4 bg-card font-assistant shadow-lg outline-none fill-mode-both data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=open]:animate-in data-[state=open]:duration-300",
           side === "right" &&
             "inset-y-0 right-0 h-svh w-[85vw] max-w-sm rounded-e-3xl border-e border-border/80 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
           side === "left" &&

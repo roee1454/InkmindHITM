@@ -2,12 +2,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 function StatTileSkeleton() {
   return (
-    <div className="stat-native lg:p-[22px]">
-      <Skeleton className="size-[34px] shrink-0 rounded-[12px] lg:size-10" />
-      <div className="flex flex-col gap-1.5">
-        <Skeleton className="h-6 w-10 lg:h-9" />
-        <Skeleton className="h-3 w-14" />
-      </div>
+    <div className="flex flex-col justify-center gap-1.5 rounded-2xl border border-border/80 bg-card p-3.5 shadow-2xs sm:p-5 lg:rounded-3xl lg:p-6">
+      <Skeleton className="h-7 w-12 sm:h-9 sm:w-16 lg:h-10 lg:w-20" />
+      <Skeleton className="h-3.5 w-16 sm:h-4 sm:w-24" />
     </div>
   )
 }

@@ -268,5 +268,36 @@ export function buildBookingTools(ctx: ToolFactoryContext) {
         }
       }
     ),
+
+    flag_earlier_preference: botTool(
+      'מוסיף את הלקוח לרשימת המתנה למשבצת מוקדמת יותר מהתור הקיים שלו. יש להשתמש בכלי זה כשהלקוח מביע רצון למועד מוקדם יותר מהתור שכבר נקבע לו, גם אם כרגע אין משבצת כזו פנויה — אם תתפנה משבצת מתאימה, הצוות ייצור איתו קשר.',
+      z.object({
+        notBefore: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('לא לפני תאריך זה בפורמט YYYY-MM-DD — אם לא צוין, מהיום'),
+      }),
+      async ({ notBefore }) => {
+        const appointment = await getActiveAppointmentForBot(su, customerId)
+        if (!appointment) {
+          return { status: 'error', message: 'לא נמצא תור פעיל ללקוח הזה כרגע — אי אפשר להוסיף לרשימת המתנה.' }
+        }
+        const existing = await su
+          .collection('waitlist_entries')
+          .getFirstListItem(`customer = "${customerId}" && status = "watching"`)
+          .catch(() => null)
+        if (existing) {
+          return { status: 'success', message: 'הלקוח כבר ברשימת ההמתנה למשבצת מוקדמת יותר — אין צורך להוסיף שוב.' }
+        }
+        await su.collection('waitlist_entries').create({
+          customer: customerId,
+          current_appointment: appointment.id,
+          status: 'watching',
+          source: 'ai_bot',
+          not_before: notBefore ? new Date(`${notBefore}T00:00:00`).toISOString() : null,
+        })
+        return {
+          status: 'success',
+          message: 'הלקוח נוסף לרשימת ההמתנה למשבצת מוקדמת יותר. הודע/י לו בנימוס שניצור איתו קשר אם תתפנה משבצת מתאימה — אין הבטחה למועד מדויק.',
+        }
+      }
+    ),
   }
 }

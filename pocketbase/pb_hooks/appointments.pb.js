@@ -52,6 +52,26 @@ onRecordAfterUpdateSuccess((e) => {
   } catch (err) {
     console.error("[appointments-hook:update] failed to notify sync endpoint:", err);
   }
+  // Second, independent notification: a slot just freed up (status became 'cancelled') —
+  // wake the earlier-slot waitlist matcher. Deliberately a second self-contained $http.send
+  // block (not a shared helper) for the same reason as the sync notification above — this
+  // callback's scope can't see top-level functions in this JSVM runtime.
+  if (e.record.get("status") === "cancelled") {
+    try {
+      const freedRes = $http.send({
+        url: baseUrl + "/api/internal/appointment-freed",
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-PB-Hook-Secret": secret },
+        body: JSON.stringify({ event: "update", appointmentId: e.record.get("id") }),
+        timeout: 5,
+      });
+      if (freedRes.statusCode >= 400) {
+        console.error("[appointments-hook:update] freed-slot endpoint returned", freedRes.statusCode, freedRes.body);
+      }
+    } catch (err) {
+      console.error("[appointments-hook:update] failed to notify freed-slot endpoint:", err);
+    }
+  }
   e.next();
 }, "appointments");
 

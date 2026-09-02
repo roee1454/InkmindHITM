@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #eceef2; }
+  body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  a { color: var(--ip, #4f46e5); text-decoration: none; }
+  a:hover { color: var(--ip, #4f46e5); text-decoration: underline; }
+  ::selection { background: rgba(79,70,229,.16); }
+  @keyframes ink-fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+
+<div dir="rtl" style="min-height:100vh;background:#eceef2;font-family:'Assistant',sans-serif;color:#0f172a;padding:40px 28px 96px;-webkit-user-select:none;user-select:none">
+
+  <div style="max-width:1360px;margin:0 auto;display:flex;flex-direction:column;gap:40px">
+
+    <header style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:48px;height:48px;border-radius:999px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;letter-spacing:.02em">IM</div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <h1 style="margin:0;font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.1">Inkmind — עוזר MCP</h1>
+          <p style="margin:0;font-size:15px;color:#64748b;font-weight:500">בועת צ׳אט גלובלית · גיליון תחתון במובייל, פופאובר במחשב, היסטוריה מהכותרת</p>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <span style="font-size:12px;font-weight:700;color:#475569;background:#fff;border:1px solid #dde1e8;border-radius:999px;padding:6px 12px">Tailwind v4 · @theme</span>
+        <span style="font-size:12px;font-weight:700;color:#475569;background:#fff;border:1px solid #dde1e8;border-radius:999px;padding:6px 12px">RTL · Assistant</span>
+        <span style="font-size:12px;font-weight:700;color:#475569;background:#fff;border:1px solid #dde1e8;border-radius:999px;padding:6px 12px">MCP · read אוטומטי / write באישור</span>
+        <span style="font-size:12px;font-weight:700;color:#475569;background:#fff;border:1px solid #dde1e8;border-radius:999px;padding:6px 12px">6 מסכים</span>
+      </div>
+    </header>
+
+    <section style="background:#fff;border:1px solid #dde1e8;border-radius:24px;padding:20px;display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;box-shadow:0 1px 3px rgba(16,24,40,.05)">
+      <div style="display:flex;flex-direction:column;gap:10px;flex:1 1 520px;min-width:300px">
+        <span style="font-size:12px;font-weight:800;color:#94a3b8;letter-spacing:.06em">שבלונות צבע · 12</span>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:9px">
+          <button type="button" data-pal="indigo" onClick="{{ pickPalette }}" style="cursor:pointer;text-align:right;display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:18px;border:1.5px solid var(--sel-indigo-b,#e2e8f0);background:var(--sel-indigo-g,#fff);transition:all .16s cubic-bezier(.16,1,.3,1);font-family:inherit">
+            <span style="width:26px;height:26px;border-radius:999px;background:#4f46e5;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);flex-shrink:0"></span>
+            <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+              <span style="font-size:13.5px;font-weight:800;color:#0f172a;white-space:nowrap">אינדיגו מודרני</span>
+              <span style="font-size:11px;font-weight:600;color:#94a3b8">Vibrant Indigo</span>
+            </span>
+          </button>
+          <button type="button" data-pal="nordic" onClick="{{ pickPalette }}" style="cursor:pointer;text-align:right;display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:18px;border:1.5px solid var(--sel-nordic-b,#e2e8f0);background:var(--sel-nordic-g,#fff);transition:all .16s cubic-bezier(.16,1,.3,1);font-family:inherit">
+            <span style="width:26px;height:26px;border-radius:999px;background:#4c7a5b;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);flex-shrink:0"></span>
+            <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+              <span style="font-size:13.5px;font-weight:800;color:#0f172a;white-space:nowrap">נורדי מינימלי</span>
+              <span style="font-size:11px;font-weight:600;color:#94a3b8">Nordic Slate</span>
+            </span>
+          </button>
+          <button type="button" data-pal="obsidian" onClick="{{ pickPalette }}" style="cursor:pointer;text-align:right;display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:18px;border:1.5px solid var(--sel-obsidian-b,#e2e8f0);background:var(--sel-obsidian-g,#fff);transition:all .16s cubic-bezier(.16,1,.3,1);font-family:inherit">
+            <span style="width:26px;height:26px;border-radius:999px;background:#0f1216;box-shadow:inset 0 0 0 2px #22d3ee;flex-shrink:0"></span>
+            <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+              <span style="font-size:13.5px;font-weight:800;color:#0f172a;white-space:nowrap">אובסידיאן עמוק</span>
+              <span style="font-size:11px;font-weight:600;color:#94a3b8">Deep Space</span>
+            </span>
+          </button>
+          <button type="button" data-pal="terracotta" onClick="{{ pickPalette }}" style="cursor:pointer;text-align:right;display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:18px;border:1.5px solid var(--sel-terracotta-b,#e2e8f0);background:var(--sel-terracotta-g,#fff);transition:all .16s cubic-bezier(.16,1,.3,1);font-family:inherit">
+            <span style="width:26px;height:26px;border-radius:999px;background:#c0603c;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);flex-shrink:0"></span>
+            <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+              <span style="font-size:13.5px;font-weight:800;color:#0f172a;white-space:nowrap">טרהקוטה חמימה</span>
+              <span style="font-size:11px;font-weight:600;color:#94a3b8">Terracotta Sunset</span>
+            </span>
+          </button>
+          <button type="button" data-pal="noir" onClick="{{ pickPalette }}" style="cursor:pointer;text-align:right;display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:18px;border:1.5px solid var(--sel-noir-b,#e2e8f0);background:var(--sel-noir-g,#fff);transition:all .16s cubic-bezier(.16,1,.3,1);font-family:inherit">
+            <span style="width:26px;height:26px;border-radius:999px;background:#171717;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);flex-shrink:0"></span>
+            <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+              <span style="font-size:13.5px;font-weight:800;color:#0f172a;white-space:nowrap">דיו שחור</span>
+              <span style="font-size:11px;font-weight:600;color:#94a3b8">Ink Noir</span>
+            </span>
+          </button>
+          <button type="button" data-pal="amethyst" onClick="{{ pickPalette }}" style="cursor:pointer;text-align:right;display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:18px;border:1.5px solid var(--sel-amethyst-b,#e2e8f0);background:var(--sel-amethyst-g,#fff);transition:all .16s cubic-bezier(.16,1,.3,1);font-family:inherit">
+            <span style="width:26px;height:26px;border-radius:999px;background:#7c3aed;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);flex-shrink:0"></span>
+            <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+              <span style="font-size:13.5px;font-weight:800;color:#0f172a;white-space:nowrap">סגול מלכותי</span>
+              <span style="font-size:11px;font-weight:600;color:#94a3b8">Royal Amethyst</span>
+            </span>
+          </button>
+          <button type="button" data-pal="gold" onClick="{{ pickPalette }}" style="cursor:pointer;text-align:right;display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:18px;border:1.5px solid var(--sel-gold-b,#e2e8f0);background:var(--sel-gold-g,#fff);transition:all .16s cubic-bezier(.16,1,.3,1);font-family:inherit">
+            <span style="width:26px;height:26px;border-radius:999px;background:#0c0e14;box-shadow:inset 0 0 0 2px #d9b264;flex-shrink:0"></span>
+            <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+              <span style="font-size:13.5px;font-weight:800;color:#0f172a;white-space:nowrap">זהב חצות</span>
+              <span style="font-size:11px;font-weight:600;color:#94a3b8">Midnight Gold</span>
+            </span>
+          </button>
+          <button type="button" data-pal="crimson" onClick="{{ pickPalette }}" style="cursor:pointer;text-align:right;display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:18px;border:1.5px solid var(--sel-crimson-b,#e2e8f0);background:var(--sel-crimson-g,#fff);transition:all .16s cubic-bezier(.16,1,.3,1);font-family:inherit">
+            <span style="width:26px;height:26px;border-radius:999px;background:#9b2226;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);flex-shrink:0"></span>
+            <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+              <span style="font-size:13.5px;font-weight:800;color:#0f172a;white-space:nowrap">ארגמן</span>
+              <span style="font-size:11px;font-weight:600;color:#94a3b8">Crimson Ink</span>
+            </span>
+          </button>
+          <button type="button" data-pal="teal" onClick="{{ pickPalette }}" style="cursor:pointer;text-align:right;display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:18px;border:1.5px solid var(--sel-teal-b,#e2e8f0);background:var(--sel-teal-g,#fff);transition:all .16s cubic-bezier(.16,1,.3,1);font-family:inherit">
+            <span style="width:26px;height:26px;border-radius:999px;background:#0f766e;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);flex-shrink:0"></span>
+            <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+              <span style="font-size:13.5px;font-weight:800;color:#0f172a;white-space:nowrap">טורקיז עמוק</span>
+              <span style="font-size:11px;font-weight:600;color:#94a3b8">Ocean Teal</span>
+            </span>
+          </button>
+          <button type="button" data-pal="rose" onClick="{{ pickPalette }}" style="cursor:pointer;text-align:right;display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:18px;border:1.5px solid var(--sel-rose-b,#e2e8f0);background:var(--sel-rose-g,#fff);transition:all .16s cubic-bezier(.16,1,.3,1);font-family:inherit">
+            <span style="width:26px;height:26px;border-radius:999px;background:#b05a72;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);flex-shrink:0"></span>
+            <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+              <span style="font-size:13.5px;font-weight:800;color:#0f172a;white-space:nowrap">ורד עתיק</span>
+              <span style="font-size:11px;font-weight:600;color:#94a3b8">Rose Quartz</span>
+            </span>
+          </button>
+          <button type="button" data-pal="olive" onClick="{{ pickPalette }}" style="cursor:pointer;text-align:right;display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:18px;border:1.5px solid var(--sel-olive-b,#e2e8f0);background:var(--sel-olive-g,#fff);transition:all .16s cubic-bezier(.16,1,.3,1);font-family:inherit">
+            <span style="width:26px;height:26px;border-radius:999px;background:#6b7a3a;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);flex-shrink:0"></span>
+            <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+              <span style="font-size:13.5px;font-weight:800;color:#0f172a;white-space:nowrap">זית סטודיו</span>
+              <span style="font-size:11px;font-weight:600;color:#94a3b8">Olive Studio</span>
+            </span>
+          </button>
+          <button type="button" data-pal="steel" onClick="{{ pickPalette }}" style="cursor:pointer;text-align:right;display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:18px;border:1.5px solid var(--sel-steel-b,#e2e8f0);background:var(--sel-steel-g,#fff);transition:all .16s cubic-bezier(.16,1,.3,1);font-family:inherit">
+            <span style="width:26px;height:26px;border-radius:999px;background:#3b6ea5;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);flex-shrink:0"></span>
+            <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+              <span style="font-size:13.5px;font-weight:800;color:#0f172a;white-space:nowrap">פלדה ארקטית</span>
+              <span style="font-size:11px;font-weight:600;color:#94a3b8">Arctic Steel</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-size:12px;font-weight:800;color:#94a3b8;letter-spacing:.06em">מצב תצוגה</span>
+        <div style="display:flex;gap:4px;padding:4px;background:#f1f3f7;border:1px solid #e2e6ec;border-radius:16px">
+          <button type="button" data-mode="light" onClick="{{ pickMode }}" style="cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;padding:9px 20px;border-radius:12px;border:none;color:var(--sel-light-t,#64748b);background:var(--sel-light-g,transparent);box-shadow:var(--sel-light-s,none);transition:all .16s cubic-bezier(.16,1,.3,1)">בהיר</button>
+          <button type="button" data-mode="dark" onClick="{{ pickMode }}" style="cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;padding:9px 20px;border-radius:12px;border:none;color:var(--sel-dark-t,#64748b);background:var(--sel-dark-g,transparent);box-shadow:var(--sel-dark-s,none);transition:all .16s cubic-bezier(.16,1,.3,1)">כהה</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="mcp" style="display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+        <h2 style="margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em">עוזר MCP — בועה גלובלית</h2>
+        <span style="font-size:13px;color:#64748b;font-weight:500">בועה קבועה בכל מסך · במובייל גיליון תחתון, במחשב פופאובר · היסטוריה נפתחת מהכותרת</span>
+        <span style="font-size:11px;font-weight:800;color:#fff;background:#4f46e5;border-radius:999px;padding:4px 10px;letter-spacing:.04em">חדש</span>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <span style="font-size:12px;font-weight:700;color:#475569;background:#fff;border:1px solid #dde1e8;border-radius:999px;padding:6px 12px">בועה 58pt · <span style="font-family:'JetBrains Mono',monospace;font-size:11px">z-50</span> · מעל הניווט התחתון</span>
+        <span style="font-size:12px;font-weight:700;color:#475569;background:#fff;border:1px solid #dde1e8;border-radius:999px;padding:6px 12px">מובייל: גיליון עד <span style="font-family:'JetBrains Mono',monospace;font-size:11px">88svh</span></span>
+        <span style="font-size:12px;font-weight:700;color:#475569;background:#fff;border:1px solid #dde1e8;border-radius:999px;padding:6px 12px">מחשב: פופאובר 420×560</span>
+        <span style="font-size:12px;font-weight:700;color:#475569;background:#fff;border:1px solid #dde1e8;border-radius:999px;padding:6px 12px">הכותרת = כפתור היסטוריה</span>
+        <span style="font-size:12px;font-weight:700;color:#475569;background:#fff;border:1px solid #dde1e8;border-radius:999px;padding:6px 12px">קיצור <span style="font-family:'JetBrains Mono',monospace;font-size:11px">⌘K</span></span>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+
+        <div data-screen-label="MCP-01" style="width:390px;flex-shrink:0;display:flex;flex-direction:column;gap:10px">
+          <div style="border-radius:44px;padding:10px;background:#1c1f26;box-shadow:0 24px 60px -20px rgba(16,24,40,.45)">
+            <div style="border-radius:36px;overflow:hidden;background:var(--ib,#f5f7fb);height:790px;display:flex;flex-direction:column;position:relative">
+              <div style="height:46px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;font-size:13px;font-weight:700;color:var(--it,#0b1220);background:var(--ic,#fff)">
+                <span style="font-variant-numeric:tabular-nums">9:41</span>
+                <span style="width:16px;height:9px;border:1.4px solid var(--it,#0b1220);border-radius:3px;opacity:.85;display:block"></span>
+              </div>
+
+              <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:16px;padding:14px 18px 0;overflow:hidden">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                  <div style="display:flex;flex-direction:column;gap:2px">
+                    <span style="font-size:22px;font-weight:800;color:var(--it,#0b1220);letter-spacing:-.02em">בוקר טוב, רועי</span>
+                    <span style="font-size:13px;font-weight:500;color:var(--itm,#64748b)">שני, 10/08/2026 — 4 תורים היום</span>
+                  </div>
+                  <span style="width:44px;height:44px;border-radius:15px;border:1px solid var(--ibd,#e3e8f0);background:var(--ic,#fff);display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b)"><i data-lucide="bell" style="width:19px;height:19px"></i></span>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div style="background:var(--ic,#fff);border:1px solid var(--ibd,#e3e8f0);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:14px">
+                    <span style="width:38px;height:38px;border-radius:13px;background:var(--iok-s,rgba(16,185,129,.12));color:var(--iok,#10b981);display:flex;align-items:center;justify-content:center"><i data-lucide="calendar-days" style="width:18px;height:18px"></i></span>
+                    <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:30px;font-weight:800;color:var(--it,#0b1220);line-height:1">4</span><span style="font-size:12.5px;font-weight:600;color:var(--itm,#64748b)">תורים היום</span></div>
+                  </div>
+                  <div style="background:var(--ic,#fff);border:1px solid var(--ibd,#e3e8f0);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:14px">
+                    <span style="width:38px;height:38px;border-radius:13px;background:var(--ips,rgba(79,70,229,.1));color:var(--ip,#4f46e5);display:flex;align-items:center;justify-content:center"><i data-lucide="zap" style="width:18px;height:18px"></i></span>
+                    <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:30px;font-weight:800;color:var(--it,#0b1220);line-height:1">7</span><span style="font-size:12.5px;font-weight:600;color:var(--itm,#64748b)">פניות חדשות</span></div>
+                  </div>
+                </div>
+
+                <div style="background:var(--ic,#fff);border:1px solid var(--ibd,#e3e8f0);border-radius:22px;display:flex;flex-direction:column">
+                  <div style="padding:15px 16px 11px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:16px;font-weight:800;color:var(--it,#0b1220)">התורים של היום</span><span style="font-size:13px;font-weight:700;color:var(--ip,#4f46e5)">הכל</span></div>
+                  <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--ibd,#e3e8f0)">
+                    <span style="width:42px;height:42px;border-radius:999px;background:var(--im,#eef1f7);color:var(--it,#0b1220);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800">מ</span>
+                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font-size:14.5px;font-weight:700;color:var(--it,#0b1220)">מיכל לוי</span><span style="font-size:12.5px;font-weight:500;color:var(--itm,#64748b)">שרוול — סשן שני</span></div>
+                    <span style="font-size:14px;font-weight:800;color:var(--it,#0b1220);font-variant-numeric:tabular-nums">11:00</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--ibd,#e3e8f0)">
+                    <span style="width:42px;height:42px;border-radius:999px;background:var(--im,#eef1f7);color:var(--it,#0b1220);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800">א</span>
+                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font-size:14.5px;font-weight:700;color:var(--it,#0b1220)">אורי שגב</span><span style="font-size:12.5px;font-weight:500;color:var(--itm,#64748b)">פיינליין — אמה</span></div>
+                    <span style="font-size:14px;font-weight:800;color:var(--it,#0b1220);font-variant-numeric:tabular-nums">14:30</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="position:absolute;inset-inline-end:18px;bottom:104px;display:flex;flex-direction:column;align-items:flex-end;gap:9px">
+                <span style="background:var(--it,#0b1220);color:var(--ic,#fff);font-size:12.5px;font-weight:700;padding:8px 12px;border-radius:13px;box-shadow:0 10px 24px -10px rgba(16,24,40,.5)">שאל אותי על הסטודיו</span>
+                <span style="width:58px;height:58px;border-radius:999px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;justify-content:center;box-shadow:0 14px 30px -10px var(--ipsh,rgba(79,70,229,.6));position:relative">
+                  <i data-lucide="sparkles" style="width:25px;height:25px"></i>
+                  <span style="position:absolute;top:-2px;inset-inline-start:-2px;width:15px;height:15px;border-radius:999px;background:var(--iok,#10b981);border:2.5px solid var(--ib,#f5f7fb);display:block"></span>
+                </span>
+              </div>
+
+              <div style="height:78px;background:var(--ic,#fff);border-top:1px solid var(--ibd,#e3e8f0);display:flex;align-items:flex-start;padding:9px 6px 0">
+                <span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ip,#4f46e5)"><i data-lucide="house" style="width:22px;height:22px"></i><span style="font-size:11px;font-weight:800">בית</span></span>
+                <span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--itm,#64748b)"><i data-lucide="calendar-days" style="width:22px;height:22px"></i><span style="font-size:11px;font-weight:600">תורים</span></span>
+                <span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--itm,#64748b)"><i data-lucide="message-square" style="width:22px;height:22px"></i><span style="font-size:11px;font-weight:600">שיחות</span></span>
+                <span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--itm,#64748b)"><i data-lucide="square-kanban" style="width:22px;height:22px"></i><span style="font-size:11px;font-weight:600">לידים</span></span>
+                <span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--itm,#64748b)"><i data-lucide="settings" style="width:22px;height:22px"></i><span style="font-size:11px;font-weight:600">הגדרות</span></span>
+              </div>
+            </div>
+          </div>
+          <span style="font-size:12.5px;font-weight:700;color:#64748b;text-align:center">בועה סגורה · 58pt מעל הניווט, נקודה ירוקה = MCP מחובר</span>
+        </div>
+
+        <div data-screen-label="MCP-02" style="width:390px;flex-shrink:0;display:flex;flex-direction:column;gap:10px">
+          <div style="border-radius:44px;padding:10px;background:#1c1f26;box-shadow:0 24px 60px -20px rgba(16,24,40,.45)">
+            <div style="border-radius:36px;overflow:hidden;background:var(--ib,#f5f7fb);height:790px;display:flex;flex-direction:column;position:relative">
+              <div style="height:46px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;font-size:13px;font-weight:700;color:var(--it,#0b1220);background:var(--ic,#fff)">
+                <span style="font-variant-numeric:tabular-nums">9:41</span>
+                <span style="width:16px;height:9px;border:1.4px solid var(--it,#0b1220);border-radius:3px;opacity:.85;display:block"></span>
+              </div>
+
+              <div style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-end;position:relative">
+                <div style="position:absolute;inset:0;background:rgba(15,18,24,.45)"></div>
+
+                <div style="position:relative;height:660px;background:var(--ic,#fff);border-radius:26px 26px 0 0;padding:8px 0 0;display:flex;flex-direction:column;box-shadow:0 -12px 34px -12px rgba(16,24,40,.35)">
+                  <span style="align-self:center;width:40px;height:5px;border-radius:999px;background:var(--ibd,#e3e8f0);display:block;flex-shrink:0"></span>
+
+                  <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:10px 14px 12px 12px;border-bottom:1px solid var(--ibd,#e3e8f0)">
+                    <span style="width:36px;height:36px;border-radius:12px;background:var(--ips,rgba(79,70,229,.1));color:var(--ip,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="sparkles" style="width:18px;height:18px"></i></span>
+                    <span style="flex:1;min-width:0;height:38px;display:flex;align-items:center;gap:6px;padding:0 9px;margin-inline-start:-3px;border-radius:12px;background:var(--im,#eef1f7)">
+                      <span style="font-size:15.5px;font-weight:800;color:var(--it,#0b1220);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">מקדמות שלא שולמו</span>
+                      <i data-lucide="chevron-down" style="width:16px;height:16px;color:var(--itm,#64748b);flex-shrink:0"></i>
+                    </span>
+                    <span style="width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="message-square-plus" style="width:19px;height:19px"></i></span>
+                    <span style="width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="x" style="width:19px;height:19px"></i></span>
+                  </div>
+
+                  <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:16px 16px 6px;overflow:hidden">
+                    <span style="align-self:flex-end;max-width:82%;background:var(--ip,#4f46e5);color:var(--ipf,#fff);font-size:14.5px;font-weight:600;line-height:1.45;padding:11px 14px;border-radius:18px 18px 6px 18px">למי מהלקוחות של השבוע עוד לא קיבלתי מקדמה?</span>
+
+                    <div style="align-self:flex-start;width:100%;border:1px solid var(--ibd,#e3e8f0);border-radius:16px;padding:11px 12px;display:flex;flex-direction:column;gap:9px;background:var(--ic,#fff)">
+                      <div style="display:flex;align-items:center;gap:9px">
+                        <span style="width:30px;height:30px;border-radius:10px;background:var(--ips,rgba(79,70,229,.1));color:var(--ip,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="database" style="width:15px;height:15px"></i></span>
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                          <span style="font-size:13.5px;font-weight:800;color:var(--it,#0b1220)">שליפת תשלומים</span>
+                          <span dir="ltr" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--itm,#64748b);text-align:right">payments.list · week=current</span>
+                        </div>
+                        <span style="font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;background:var(--iok-s,rgba(16,185,129,.12));color:var(--iok,#10b981);flex-shrink:0">הושלם</span>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:7px;padding-top:8px;border-top:1px solid var(--ibd,#e3e8f0)">
+                        <span style="font-size:12px;font-weight:700;color:var(--itm,#64748b)">3 רשומות · 0.8 שנ׳</span>
+                        <span style="margin-inline-start:auto;font-size:12px;font-weight:800;color:var(--ip,#4f46e5)">הצג נתונים</span>
+                      </div>
+                    </div>
+
+                    <div style="align-self:flex-start;max-width:100%;background:var(--im,#eef1f7);border-radius:18px 18px 18px 6px;padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+                      <span style="font-size:14.5px;font-weight:600;color:var(--it,#0b1220);line-height:1.5">שלושה לקוחות בלי מקדמה לשבוע הזה:</span>
+                      <div style="display:flex;flex-direction:column;gap:7px">
+                        <div style="display:flex;align-items:center;gap:9px;background:var(--ic,#fff);border-radius:13px;padding:9px 11px">
+                          <span style="width:30px;height:30px;border-radius:999px;background:var(--im,#eef1f7);color:var(--it,#0b1220);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">נ</span>
+                          <span style="flex:1;font-size:13.5px;font-weight:700;color:var(--it,#0b1220)">נועה ברק</span>
+                          <span style="font-size:13px;font-weight:800;color:var(--iwr,#f59e0b);font-variant-numeric:tabular-nums">₪300</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:9px;background:var(--ic,#fff);border-radius:13px;padding:9px 11px">
+                          <span style="width:30px;height:30px;border-radius:999px;background:var(--im,#eef1f7);color:var(--it,#0b1220);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">י</span>
+                          <span style="flex:1;font-size:13.5px;font-weight:700;color:var(--it,#0b1220)">יונתן פרץ</span>
+                          <span style="font-size:13px;font-weight:800;color:var(--iwr,#f59e0b);font-variant-numeric:tabular-nums">₪450</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:9px;background:var(--ic,#fff);border-radius:13px;padding:9px 11px">
+                          <span style="width:30px;height:30px;border-radius:999px;background:var(--im,#eef1f7);color:var(--it,#0b1220);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">ש</span>
+                          <span style="flex:1;font-size:13.5px;font-weight:700;color:var(--it,#0b1220)">שירה אלון</span>
+                          <span style="font-size:13px;font-weight:800;color:var(--iwr,#f59e0b);font-variant-numeric:tabular-nums">₪300</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style="display:flex;gap:7px;flex-wrap:wrap">
+                      <span style="font-size:12.5px;font-weight:700;color:var(--ip,#4f46e5);background:var(--ips,rgba(79,70,229,.1));border-radius:999px;padding:7px 12px">שלח תזכורת לשלושתם</span>
+                      <span style="font-size:12.5px;font-weight:700;color:var(--ip,#4f46e5);background:var(--ips,rgba(79,70,229,.1));border-radius:999px;padding:7px 12px">רק לנועה</span>
+                    </div>
+                  </div>
+
+                  <div style="flex-shrink:0;padding:10px 14px calc(14px + 8px);border-top:1px solid var(--ibd,#e3e8f0);display:flex;align-items:center;gap:9px">
+                    <span style="width:44px;height:48px;border-radius:16px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="paperclip" style="width:20px;height:20px"></i></span>
+                    <span style="flex:1;height:48px;border-radius:16px;background:var(--im,#eef1f7);display:flex;align-items:center;padding:0 14px;font-size:14.5px;font-weight:500;color:var(--itm,#64748b)">שאל כל דבר על הסטודיו…</span>
+                    <span style="width:48px;height:48px;border-radius:999px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 8px 20px -8px var(--ipsh,rgba(79,70,229,.6))"><i data-lucide="arrow-up" style="width:21px;height:21px"></i></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <span style="font-size:12.5px;font-weight:700;color:#64748b;text-align:center">גיליון תחתון · כרטיס קריאת MCP + הצעות המשך</span>
+        </div>
+
+        <div data-screen-label="MCP-03" style="width:390px;flex-shrink:0;display:flex;flex-direction:column;gap:10px">
+          <div style="border-radius:44px;padding:10px;background:#1c1f26;box-shadow:0 24px 60px -20px rgba(16,24,40,.45)">
+            <div style="border-radius:36px;overflow:hidden;background:var(--ib,#f5f7fb);height:790px;display:flex;flex-direction:column;position:relative">
+              <div style="height:46px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;font-size:13px;font-weight:700;color:var(--it,#0b1220);background:var(--ic,#fff)">
+                <span style="font-variant-numeric:tabular-nums">9:41</span>
+                <span style="width:16px;height:9px;border:1.4px solid var(--it,#0b1220);border-radius:3px;opacity:.85;display:block"></span>
+              </div>
+
+              <div style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-end;position:relative">
+                <div style="position:absolute;inset:0;background:rgba(15,18,24,.45)"></div>
+
+                <div style="position:relative;height:660px;background:var(--ic,#fff);border-radius:26px 26px 0 0;padding:8px 0 0;display:flex;flex-direction:column;box-shadow:0 -12px 34px -12px rgba(16,24,40,.35)">
+                  <span style="align-self:center;width:40px;height:5px;border-radius:999px;background:var(--ibd,#e3e8f0);display:block;flex-shrink:0"></span>
+
+                  <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:10px 14px 12px 12px">
+                    <span style="width:36px;height:36px;border-radius:12px;background:var(--ips,rgba(79,70,229,.1));color:var(--ip,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="sparkles" style="width:18px;height:18px"></i></span>
+                    <span style="flex:1;min-width:0;height:38px;display:flex;align-items:center;gap:6px;padding:0 9px;margin-inline-start:-3px;border-radius:12px;background:var(--ips,rgba(79,70,229,.1))">
+                      <span style="font-size:15.5px;font-weight:800;color:var(--ip,#4f46e5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">היסטוריית שיחות</span>
+                      <i data-lucide="chevron-up" style="width:16px;height:16px;color:var(--ip,#4f46e5);flex-shrink:0"></i>
+                    </span>
+                    <span style="width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="message-square-plus" style="width:19px;height:19px"></i></span>
+                    <span style="width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="x" style="width:19px;height:19px"></i></span>
+                  </div>
+
+                  <div style="flex-shrink:0;padding:0 16px 12px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--ibd,#e3e8f0)">
+                    <span style="height:44px;border-radius:15px;background:var(--im,#eef1f7);display:flex;align-items:center;gap:9px;padding:0 13px;font-size:14.5px;font-weight:500;color:var(--itm,#64748b)"><i data-lucide="search" style="width:17px;height:17px"></i>חיפוש בשיחות</span>
+                    <span style="height:48px;border-radius:15px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:800;box-shadow:0 8px 20px -10px var(--ipsh,rgba(79,70,229,.6))"><i data-lucide="plus" style="width:18px;height:18px"></i>שיחה חדשה</span>
+                  </div>
+
+                  <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:4px;padding:12px 10px;overflow:hidden">
+                    <span style="font-size:11.5px;font-weight:800;color:var(--itm,#64748b);letter-spacing:.06em;padding:0 8px 4px">היום</span>
+
+                    <div style="display:flex;align-items:center;gap:10px;padding:11px 10px;border-radius:15px;background:var(--ips,rgba(79,70,229,.1))">
+                      <span style="width:34px;height:34px;border-radius:11px;background:var(--ic,#fff);color:var(--ip,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="message-circle" style="width:16px;height:16px"></i></span>
+                      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                        <span style="font-size:14.5px;font-weight:800;color:var(--ip,#4f46e5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">מקדמות שלא שולמו</span>
+                        <span style="font-size:12.5px;font-weight:500;color:var(--itm,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">שלושה לקוחות בלי מקדמה…</span>
+                      </div>
+                      <span style="font-size:11.5px;font-weight:700;color:var(--itm,#64748b);flex-shrink:0;font-variant-numeric:tabular-nums">09:38</span>
+                    </div>
+
+                    <div style="display:flex;align-items:center;gap:10px;padding:11px 10px;border-radius:15px">
+                      <span style="width:34px;height:34px;border-radius:11px;background:var(--im,#eef1f7);color:var(--itm,#64748b);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="calendar-check" style="width:16px;height:16px"></i></span>
+                      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                        <span style="font-size:14.5px;font-weight:700;color:var(--it,#0b1220);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">פינוי יום חמישי</span>
+                        <span style="font-size:12.5px;font-weight:500;color:var(--itm,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">העברתי 2 תורים לשבוע הבא</span>
+                      </div>
+                      <span style="font-size:11.5px;font-weight:700;color:var(--itm,#64748b);flex-shrink:0;font-variant-numeric:tabular-nums">08:12</span>
+                    </div>
+
+                    <span style="font-size:11.5px;font-weight:800;color:var(--itm,#64748b);letter-spacing:.06em;padding:12px 8px 4px">7 הימים האחרונים</span>
+
+                    <div style="display:flex;align-items:center;gap:10px;padding:11px 10px;border-radius:15px">
+                      <span style="width:34px;height:34px;border-radius:11px;background:var(--im,#eef1f7);color:var(--itm,#64748b);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="chart-no-axes-column" style="width:16px;height:16px"></i></span>
+                      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                        <span style="font-size:14.5px;font-weight:700;color:var(--it,#0b1220);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">סיכום הכנסות יולי</span>
+                        <span style="font-size:12.5px;font-weight:500;color:var(--itm,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">₪48,200 · 31 סשנים</span>
+                      </div>
+                      <span style="font-size:11.5px;font-weight:700;color:var(--itm,#64748b);flex-shrink:0">חמישי</span>
+                    </div>
+
+                    <div style="display:flex;align-items:center;gap:10px;padding:11px 10px;border-radius:15px">
+                      <span style="width:34px;height:34px;border-radius:11px;background:var(--im,#eef1f7);color:var(--itm,#64748b);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="users" style="width:16px;height:16px"></i></span>
+                      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                        <span style="font-size:14.5px;font-weight:700;color:var(--it,#0b1220);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">לידים שנתקעו בהצעת מחיר</span>
+                        <span style="font-size:12.5px;font-weight:500;color:var(--itm,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">5 לידים מעל 4 ימים</span>
+                      </div>
+                      <span style="font-size:11.5px;font-weight:700;color:var(--itm,#64748b);flex-shrink:0">שלישי</span>
+                    </div>
+
+                    <div style="display:flex;align-items:center;gap:10px;padding:11px 10px;border-radius:15px;opacity:.85">
+                      <span style="width:34px;height:34px;border-radius:11px;background:var(--im,#eef1f7);color:var(--itm,#64748b);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="image" style="width:16px;height:16px"></i></span>
+                      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                        <span style="font-size:14.5px;font-weight:700;color:var(--it,#0b1220);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">תמונות השראה של דניאל</span>
+                        <span style="font-size:12.5px;font-weight:500;color:var(--itm,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">אספתי 6 תמונות מהצ׳אט</span>
+                      </div>
+                      <span style="font-size:11.5px;font-weight:700;color:var(--itm,#64748b);flex-shrink:0">ראשון</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <span style="font-size:12.5px;font-weight:700;color:#64748b;text-align:center">היסטוריה · נפתחת בלחיצה על הכותרת, אותו גיליון</span>
+        </div>
+
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+          <h3 style="margin:0;font-size:16.5px;font-weight:800;color:#0f172a">מחשב — פופאובר</h3>
+          <span style="font-size:13px;color:#64748b;font-weight:500">עוגן בפינה התחתונה־שמאלית, 420×560, לא חוסם את הסיידבר</span>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+
+          <div data-screen-label="MCP-04" style="display:flex;flex-direction:column;gap:10px">
+            <div style="width:1000px;flex-shrink:0;border-radius:16px;overflow:hidden;background:#20242c;box-shadow:0 24px 60px -20px rgba(16,24,40,.4)">
+              <div style="height:40px;display:flex;align-items:center;gap:9px;padding:0 14px">
+                <span style="width:11px;height:11px;border-radius:999px;background:#ff5f57;display:block"></span>
+                <span style="width:11px;height:11px;border-radius:999px;background:#febc2e;display:block"></span>
+                <span style="width:11px;height:11px;border-radius:999px;background:#28c840;display:block"></span>
+                <span dir="ltr" style="flex:1;max-width:320px;margin:0 auto;height:24px;border-radius:7px;background:#2c313a;color:#8b94a3;font-family:'JetBrains Mono',monospace;font-size:11px;display:flex;align-items:center;justify-content:center">inkmind.co.il/leads</span>
+              </div>
+              <div dir="rtl" style="display:flex;height:700px;background:var(--ib,#f5f7fb);overflow:hidden;position:relative">
+
+                <aside style="width:250px;flex-shrink:0;background:var(--ic,#fff);border-inline-end:1px solid var(--ibd,#e3e8f0);display:flex;flex-direction:column">
+                  <div style="padding:18px;border-bottom:1px solid var(--ibd,#e3e8f0);display:flex;align-items:center;gap:11px">
+                    <span style="width:36px;height:36px;border-radius:999px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:800">IM</span>
+                    <div style="display:flex;flex-direction:column;gap:1px">
+                      <span style="font-size:14px;font-weight:800;color:var(--it,#0b1220);letter-spacing:.01em">INKMIND</span>
+                      <span style="font-size:11.5px;font-weight:700;color:var(--ip,#4f46e5)">ניהול סטודיו</span>
+                    </div>
+                  </div>
+                  <nav style="flex:1;padding:16px;display:flex;flex-direction:column;gap:5px">
+                    <span style="height:44px;border-radius:14px;color:var(--itm,#64748b);display:flex;align-items:center;gap:11px;padding:0 13px;font-size:14.5px;font-weight:600"><i data-lucide="house" style="width:18px;height:18px"></i>בית</span>
+                    <span style="height:44px;border-radius:14px;color:var(--itm,#64748b);display:flex;align-items:center;gap:11px;padding:0 13px;font-size:14.5px;font-weight:600"><i data-lucide="calendar-days" style="width:18px;height:18px"></i>תורים</span>
+                    <span style="height:44px;border-radius:14px;background:var(--ips,rgba(79,70,229,.1));color:var(--ip,#4f46e5);display:flex;align-items:center;gap:11px;padding:0 13px;font-size:14.5px;font-weight:800"><i data-lucide="square-kanban" style="width:18px;height:18px"></i>לידים</span>
+                    <span style="height:44px;border-radius:14px;color:var(--itm,#64748b);display:flex;align-items:center;gap:11px;padding:0 13px;font-size:14.5px;font-weight:600"><i data-lucide="message-square" style="width:18px;height:18px"></i>שיחות</span>
+                    <span style="height:44px;border-radius:14px;color:var(--itm,#64748b);display:flex;align-items:center;gap:11px;padding:0 13px;font-size:14.5px;font-weight:600"><i data-lucide="settings" style="width:18px;height:18px"></i>הגדרות</span>
+                  </nav>
+                </aside>
+
+                <main style="flex:1;min-width:0;padding:26px 30px;display:flex;flex-direction:column;gap:20px;overflow:hidden">
+                  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px">
+                    <div style="display:flex;flex-direction:column;gap:3px">
+                      <h4 style="margin:0;font-size:26px;font-weight:800;color:var(--it,#0b1220);letter-spacing:-.02em">לידים</h4>
+                      <span style="font-size:14px;font-weight:500;color:var(--itm,#64748b)">18 פניות פתוחות · 7 חדשות</span>
+                    </div>
+                    <span style="height:42px;padding:0 18px;border-radius:15px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:800"><i data-lucide="plus" style="width:17px;height:17px"></i>ליד חדש</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;flex:1;min-height:0">
+                    <div style="background:var(--ic,#fff);border:1px solid var(--ibd,#e3e8f0);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px">
+                      <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:14px;font-weight:800;color:var(--it,#0b1220)">חדש</span><span style="font-size:12px;font-weight:800;color:var(--itm,#64748b)">7</span></div>
+                      <div style="height:74px;border-radius:14px;background:var(--im,#eef1f7)"></div>
+                      <div style="height:74px;border-radius:14px;background:var(--im,#eef1f7)"></div>
+                      <div style="height:74px;border-radius:14px;background:var(--im,#eef1f7)"></div>
+                    </div>
+                    <div style="background:var(--ic,#fff);border:1px solid var(--ibd,#e3e8f0);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px">
+                      <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:14px;font-weight:800;color:var(--it,#0b1220)">הצעת מחיר</span><span style="font-size:12px;font-weight:800;color:var(--itm,#64748b)">6</span></div>
+                      <div style="height:74px;border-radius:14px;background:var(--im,#eef1f7)"></div>
+                      <div style="height:74px;border-radius:14px;background:var(--im,#eef1f7)"></div>
+                    </div>
+                    <div style="background:var(--ic,#fff);border:1px solid var(--ibd,#e3e8f0);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px">
+                      <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:14px;font-weight:800;color:var(--it,#0b1220)">נקבע תור</span><span style="font-size:12px;font-weight:800;color:var(--itm,#64748b)">5</span></div>
+                      <div style="height:74px;border-radius:14px;background:var(--im,#eef1f7)"></div>
+                    </div>
+                  </div>
+                </main>
+
+                <div style="position:absolute;inset-inline-end:24px;bottom:24px;display:flex;flex-direction:column;align-items:flex-start;gap:12px;z-index:5">
+                  <div style="width:420px;height:520px;background:var(--ic,#fff);border:1px solid var(--ibd,#e3e8f0);border-radius:24px;box-shadow:0 30px 70px -22px rgba(16,24,40,.42);display:flex;flex-direction:column;overflow:hidden">
+                    <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--ibd,#e3e8f0)">
+                      <span style="width:34px;height:34px;border-radius:11px;background:var(--ips,rgba(79,70,229,.1));color:var(--ip,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="sparkles" style="width:17px;height:17px"></i></span>
+                      <span style="flex:1;min-width:0;height:36px;display:flex;align-items:center;gap:6px;padding:0 9px;border-radius:11px;background:var(--im,#eef1f7)">
+                        <span style="font-size:14.5px;font-weight:800;color:var(--it,#0b1220);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">שיחה חדשה</span>
+                        <i data-lucide="chevron-down" style="width:15px;height:15px;color:var(--itm,#64748b);flex-shrink:0"></i>
+                      </span>
+                      <span style="width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="message-square-plus" style="width:17px;height:17px"></i></span>
+                      <span style="width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="x" style="width:17px;height:17px"></i></span>
+                    </div>
+
+                    <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:18px 16px;overflow:hidden">
+                      <div style="display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center;padding:10px 12px 6px">
+                        <span style="width:52px;height:52px;border-radius:18px;background:var(--ips,rgba(79,70,229,.1));color:var(--ip,#4f46e5);display:flex;align-items:center;justify-content:center"><i data-lucide="sparkles" style="width:24px;height:24px"></i></span>
+                        <span style="font-size:17px;font-weight:800;color:var(--it,#0b1220)">מה נעשה עכשיו?</span>
+                        <span style="font-size:13.5px;font-weight:500;color:var(--itm,#64748b);line-height:1.5;max-width:280px">אני רואה תורים, לידים, שיחות ותשלומים — ויכול גם לבצע פעולות באישורך.</span>
+                      </div>
+                      <div style="display:flex;flex-direction:column;gap:8px">
+                        <span style="display:flex;align-items:center;gap:10px;border:1px solid var(--ibd,#e3e8f0);border-radius:14px;padding:11px 12px;font-size:13.5px;font-weight:700;color:var(--it,#0b1220)"><i data-lucide="calendar-days" style="width:16px;height:16px;color:var(--ip,#4f46e5)"></i>מה פנוי לי מחר אחרי 16:00?<i data-lucide="chevron-left" style="width:15px;height:15px;color:var(--itm,#64748b);margin-inline-start:auto"></i></span>
+                        <span style="display:flex;align-items:center;gap:10px;border:1px solid var(--ibd,#e3e8f0);border-radius:14px;padding:11px 12px;font-size:13.5px;font-weight:700;color:var(--it,#0b1220)"><i data-lucide="message-square" style="width:16px;height:16px;color:var(--ip,#4f46e5)"></i>סכם לי את הפניות מהיומיים האחרונים<i data-lucide="chevron-left" style="width:15px;height:15px;color:var(--itm,#64748b);margin-inline-start:auto"></i></span>
+                        <span style="display:flex;align-items:center;gap:10px;border:1px solid var(--ibd,#e3e8f0);border-radius:14px;padding:11px 12px;font-size:13.5px;font-weight:700;color:var(--it,#0b1220)"><i data-lucide="banknote" style="width:16px;height:16px;color:var(--ip,#4f46e5)"></i>מי לא שילם מקדמה השבוע?<i data-lucide="chevron-left" style="width:15px;height:15px;color:var(--itm,#64748b);margin-inline-start:auto"></i></span>
+                      </div>
+                      <div style="margin-top:auto;display:flex;align-items:center;gap:7px;padding:9px 11px;border-radius:13px;background:var(--im,#eef1f7)">
+                        <span style="width:8px;height:8px;border-radius:999px;background:var(--iok,#10b981);display:block;flex-shrink:0"></span>
+                        <span style="font-size:12px;font-weight:700;color:var(--itm,#64748b)">4 שרתי MCP מחוברים</span>
+                        <span dir="ltr" style="margin-inline-start:auto;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--itm,#64748b)">calendar · leads · chat · payments</span>
+                      </div>
+                    </div>
+
+                    <div style="flex-shrink:0;padding:10px 12px;border-top:1px solid var(--ibd,#e3e8f0);display:flex;align-items:center;gap:8px">
+                      <span style="width:40px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="paperclip" style="width:18px;height:18px"></i></span>
+                      <span style="flex:1;height:44px;border-radius:14px;background:var(--im,#eef1f7);display:flex;align-items:center;padding:0 13px;font-size:14px;font-weight:500;color:var(--itm,#64748b)">שאל כל דבר על הסטודיו…</span>
+                      <span style="width:44px;height:44px;border-radius:999px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="arrow-up" style="width:19px;height:19px"></i></span>
+                    </div>
+                  </div>
+
+                  <span style="width:56px;height:56px;border-radius:999px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;justify-content:center;box-shadow:0 14px 30px -10px var(--ipsh,rgba(79,70,229,.6))"><i data-lucide="x" style="width:23px;height:23px"></i></span>
+                </div>
+              </div>
+            </div>
+            <span style="font-size:12.5px;font-weight:700;color:#64748b;text-align:center">פופאובר · מצב ריק עם הצעות ושרתי MCP מחוברים</span>
+          </div>
+
+          <div data-screen-label="MCP-05" style="display:flex;flex-direction:column;gap:10px">
+            <div style="width:420px;height:520px;background:var(--ic,#fff);border:1px solid var(--ibd,#e3e8f0);border-radius:24px;box-shadow:0 30px 70px -22px rgba(16,24,40,.3);display:flex;flex-direction:column;overflow:hidden">
+              <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:10px 12px">
+                <span style="width:34px;height:34px;border-radius:11px;background:var(--ips,rgba(79,70,229,.1));color:var(--ip,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="sparkles" style="width:17px;height:17px"></i></span>
+                <span style="flex:1;min-width:0;height:36px;display:flex;align-items:center;gap:6px;padding:0 9px;border-radius:11px;background:var(--ips,rgba(79,70,229,.1))">
+                  <span style="font-size:14.5px;font-weight:800;color:var(--ip,#4f46e5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">היסטוריית שיחות</span>
+                  <i data-lucide="chevron-up" style="width:15px;height:15px;color:var(--ip,#4f46e5);flex-shrink:0"></i>
+                </span>
+                <span style="width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="message-square-plus" style="width:17px;height:17px"></i></span>
+                <span style="width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="x" style="width:17px;height:17px"></i></span>
+              </div>
+
+              <div style="flex-shrink:0;padding:0 14px 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--ibd,#e3e8f0)">
+                <span style="flex:1;height:40px;border-radius:13px;background:var(--im,#eef1f7);display:flex;align-items:center;gap:9px;padding:0 12px;font-size:14px;font-weight:500;color:var(--itm,#64748b)"><i data-lucide="search" style="width:16px;height:16px"></i>חיפוש בשיחות</span>
+                <span style="height:40px;padding:0 14px;border-radius:13px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:800;flex-shrink:0"><i data-lucide="plus" style="width:16px;height:16px"></i>שיחה חדשה</span>
+              </div>
+
+              <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:3px;padding:10px 8px;overflow:hidden">
+                <span style="font-size:11px;font-weight:800;color:var(--itm,#64748b);letter-spacing:.06em;padding:0 8px 3px">היום</span>
+                <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:13px;background:var(--ips,rgba(79,70,229,.1))">
+                  <span style="width:32px;height:32px;border-radius:10px;background:var(--ic,#fff);color:var(--ip,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="message-circle" style="width:15px;height:15px"></i></span>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                    <span style="font-size:14px;font-weight:800;color:var(--ip,#4f46e5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">מקדמות שלא שולמו</span>
+                    <span style="font-size:12px;font-weight:500;color:var(--itm,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">שלושה לקוחות בלי מקדמה…</span>
+                  </div>
+                  <span style="font-size:11px;font-weight:700;color:var(--itm,#64748b);flex-shrink:0;font-variant-numeric:tabular-nums">09:38</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:13px">
+                  <span style="width:32px;height:32px;border-radius:10px;background:var(--im,#eef1f7);color:var(--itm,#64748b);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="calendar-check" style="width:15px;height:15px"></i></span>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                    <span style="font-size:14px;font-weight:700;color:var(--it,#0b1220);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">פינוי יום חמישי</span>
+                    <span style="font-size:12px;font-weight:500;color:var(--itm,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">העברתי 2 תורים לשבוע הבא</span>
+                  </div>
+                  <span style="font-size:11px;font-weight:700;color:var(--itm,#64748b);flex-shrink:0;font-variant-numeric:tabular-nums">08:12</span>
+                </div>
+                <span style="font-size:11px;font-weight:800;color:var(--itm,#64748b);letter-spacing:.06em;padding:10px 8px 3px">7 הימים האחרונים</span>
+                <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:13px">
+                  <span style="width:32px;height:32px;border-radius:10px;background:var(--im,#eef1f7);color:var(--itm,#64748b);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="chart-no-axes-column" style="width:15px;height:15px"></i></span>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                    <span style="font-size:14px;font-weight:700;color:var(--it,#0b1220);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">סיכום הכנסות יולי</span>
+                    <span style="font-size:12px;font-weight:500;color:var(--itm,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">₪48,200 · 31 סשנים</span>
+                  </div>
+                  <span style="font-size:11px;font-weight:700;color:var(--itm,#64748b);flex-shrink:0">חמישי</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:13px">
+                  <span style="width:32px;height:32px;border-radius:10px;background:var(--im,#eef1f7);color:var(--itm,#64748b);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="users" style="width:15px;height:15px"></i></span>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                    <span style="font-size:14px;font-weight:700;color:var(--it,#0b1220);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">לידים שנתקעו בהצעת מחיר</span>
+                    <span style="font-size:12px;font-weight:500;color:var(--itm,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">5 לידים מעל 4 ימים</span>
+                  </div>
+                  <span style="font-size:11px;font-weight:700;color:var(--itm,#64748b);flex-shrink:0">שלישי</span>
+                </div>
+                <span style="margin-top:auto;font-size:11.5px;font-weight:600;color:var(--itm,#64748b);text-align:center;padding:8px 0 2px">נשמרות 30 השיחות האחרונות · מחיקה בהחלקה</span>
+              </div>
+            </div>
+            <span style="font-size:12.5px;font-weight:700;color:#64748b;text-align:center">אותו פופאובר · היסטוריה מהכותרת (1:1)</span>
+          </div>
+
+          <div data-screen-label="MCP-06" style="display:flex;flex-direction:column;gap:10px">
+            <div style="width:420px;height:520px;background:var(--ic,#fff);border:1px solid var(--ibd,#e3e8f0);border-radius:24px;box-shadow:0 30px 70px -22px rgba(16,24,40,.3);display:flex;flex-direction:column;overflow:hidden">
+              <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--ibd,#e3e8f0)">
+                <span style="width:34px;height:34px;border-radius:11px;background:var(--ips,rgba(79,70,229,.1));color:var(--ip,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="sparkles" style="width:17px;height:17px"></i></span>
+                <span style="flex:1;min-width:0;height:36px;display:flex;align-items:center;gap:6px;padding:0 9px;border-radius:11px;background:var(--im,#eef1f7)">
+                  <span style="font-size:14.5px;font-weight:800;color:var(--it,#0b1220);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">פינוי יום חמישי</span>
+                  <i data-lucide="chevron-down" style="width:15px;height:15px;color:var(--itm,#64748b);flex-shrink:0"></i>
+                </span>
+                <span style="width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="message-square-plus" style="width:17px;height:17px"></i></span>
+                <span style="width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="x" style="width:17px;height:17px"></i></span>
+              </div>
+
+              <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:11px;padding:16px 14px;overflow:hidden">
+                <span style="align-self:flex-end;max-width:84%;background:var(--ip,#4f46e5);color:var(--ipf,#fff);font-size:14px;font-weight:600;line-height:1.45;padding:10px 13px;border-radius:16px 16px 6px 16px">תפנה לי את חמישי אחר הצהריים, יש לי טיסה</span>
+
+                <div style="align-self:flex-start;width:100%;border:1.5px solid var(--ip,#4f46e5);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:11px;background:var(--ips,rgba(79,70,229,.1))">
+                  <div style="display:flex;align-items:center;gap:9px">
+                    <span style="width:30px;height:30px;border-radius:10px;background:var(--ic,#fff);color:var(--ip,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="calendar-cog" style="width:15px;height:15px"></i></span>
+                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                      <span style="font-size:13.5px;font-weight:800;color:var(--it,#0b1220)">העברת 2 תורים</span>
+                      <span dir="ltr" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--itm,#64748b);text-align:right">calendar.reschedule</span>
+                    </div>
+                    <span style="font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;background:var(--iwr-s,rgba(245,158,11,.12));color:var(--iwr,#f59e0b);flex-shrink:0">דורש אישור</span>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="display:flex;align-items:center;gap:8px;background:var(--ic,#fff);border-radius:12px;padding:9px 11px">
+                      <span style="flex:1;font-size:13px;font-weight:700;color:var(--it,#0b1220)">אורי שגב</span>
+                      <span style="font-size:12.5px;font-weight:600;color:var(--itm,#64748b);text-decoration:line-through;font-variant-numeric:tabular-nums">חמישי 16:30</span>
+                      <i data-lucide="arrow-left" style="width:14px;height:14px;color:var(--itm,#64748b)"></i>
+                      <span style="font-size:12.5px;font-weight:800;color:var(--ip,#4f46e5);font-variant-numeric:tabular-nums">שני 11:00</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;background:var(--ic,#fff);border-radius:12px;padding:9px 11px">
+                      <span style="flex:1;font-size:13px;font-weight:700;color:var(--it,#0b1220)">תמר גל</span>
+                      <span style="font-size:12.5px;font-weight:600;color:var(--itm,#64748b);text-decoration:line-through;font-variant-numeric:tabular-nums">חמישי 18:00</span>
+                      <i data-lucide="arrow-left" style="width:14px;height:14px;color:var(--itm,#64748b)"></i>
+                      <span style="font-size:12.5px;font-weight:800;color:var(--ip,#4f46e5);font-variant-numeric:tabular-nums">שלישי 17:00</span>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="flex:1;height:42px;border-radius:13px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;justify-content:center;gap:7px;font-size:14px;font-weight:800"><i data-lucide="check" style="width:16px;height:16px"></i>אשר ושלח הודעות</span>
+                    <span style="height:42px;padding:0 14px;border-radius:13px;background:var(--ic,#fff);border:1px solid var(--ibd,#e3e8f0);color:var(--it,#0b1220);display:flex;align-items:center;font-size:14px;font-weight:700">עריכה</span>
+                  </div>
+                </div>
+
+                <div style="align-self:flex-start;display:flex;align-items:center;gap:8px;background:var(--im,#eef1f7);border-radius:16px 16px 16px 6px;padding:11px 13px">
+                  <span style="display:flex;gap:3px">
+                    <span style="width:6px;height:6px;border-radius:999px;background:var(--itm,#64748b);opacity:.9;display:block"></span>
+                    <span style="width:6px;height:6px;border-radius:999px;background:var(--itm,#64748b);opacity:.6;display:block"></span>
+                    <span style="width:6px;height:6px;border-radius:999px;background:var(--itm,#64748b);opacity:.35;display:block"></span>
+                  </span>
+                  <span style="font-size:13px;font-weight:700;color:var(--itm,#64748b)">בודק חלונות פנויים…</span>
+                </div>
+              </div>
+
+              <div style="flex-shrink:0;padding:10px 12px;border-top:1px solid var(--ibd,#e3e8f0);display:flex;align-items:center;gap:8px">
+                <span style="width:40px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="paperclip" style="width:18px;height:18px"></i></span>
+                <span style="flex:1;height:44px;border-radius:14px;background:var(--im,#eef1f7);display:flex;align-items:center;padding:0 13px;font-size:14px;font-weight:500;color:var(--itm,#64748b)">שאל כל דבר על הסטודיו…</span>
+                <span style="width:44px;height:44px;border-radius:999px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="arrow-up" style="width:19px;height:19px"></i></span>
+              </div>
+            </div>
+            <span style="font-size:12.5px;font-weight:700;color:#64748b;text-align:center">כתיבה = אישור מפורש · לפני ביצוע כל פעולה</span>
+          </div>
+
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+          <h3 style="margin:0;font-size:16.5px;font-weight:800;color:#0f172a">עריכה לפני אישור</h3>
+          <span style="font-size:13px;color:#64748b;font-weight:500">״עריכה״ הופך את הכרטיס לטופס במקום — אותו כרטיס, בלי לצאת מהשיחה ובלי מסך חדש</span>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+
+          <div data-screen-label="MCP-07" style="width:390px;flex-shrink:0;display:flex;flex-direction:column;gap:10px">
+            <div style="border-radius:44px;padding:10px;background:#1c1f26;box-shadow:0 24px 60px -20px rgba(16,24,40,.45)">
+              <div style="border-radius:36px;overflow:hidden;background:var(--ib,#f5f7fb);height:790px;display:flex;flex-direction:column;position:relative">
+                <div style="height:46px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;font-size:13px;font-weight:700;color:var(--it,#0b1220);background:var(--ic,#fff)">
+                  <span style="font-variant-numeric:tabular-nums">9:41</span>
+                  <span style="width:16px;height:9px;border:1.4px solid var(--it,#0b1220);border-radius:3px;opacity:.85;display:block"></span>
+                </div>
+
+                <div style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-end;position:relative">
+                  <div style="position:absolute;inset:0;background:rgba(15,18,24,.45)"></div>
+
+                  <div style="position:relative;height:690px;background:var(--ic,#fff);border-radius:26px 26px 0 0;padding:8px 0 0;display:flex;flex-direction:column;box-shadow:0 -12px 34px -12px rgba(16,24,40,.35)">
+                    <span style="align-self:center;width:40px;height:5px;border-radius:999px;background:var(--ibd,#e3e8f0);display:block;flex-shrink:0"></span>
+
+                    <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:10px 14px 12px 12px;border-bottom:1px solid var(--ibd,#e3e8f0)">
+                      <span style="width:36px;height:36px;border-radius:12px;background:var(--ips,rgba(79,70,229,.1));color:var(--ip,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="sparkles" style="width:18px;height:18px"></i></span>
+                      <span style="flex:1;min-width:0;height:38px;display:flex;align-items:center;gap:6px;padding:0 9px;margin-inline-start:-3px;border-radius:12px;background:var(--im,#eef1f7)">
+                        <span style="font-size:15.5px;font-weight:800;color:var(--it,#0b1220);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">פינוי יום חמישי</span>
+                        <i data-lucide="chevron-down" style="width:16px;height:16px;color:var(--itm,#64748b);flex-shrink:0"></i>
+                      </span>
+                      <span style="width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="message-square-plus" style="width:19px;height:19px"></i></span>
+                      <span style="width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="x" style="width:19px;height:19px"></i></span>
+                    </div>
+
+                    <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:14px 16px 6px;overflow:hidden">
+                      <span style="align-self:flex-end;max-width:82%;background:var(--ip,#4f46e5);color:var(--ipf,#fff);font-size:14.5px;font-weight:600;line-height:1.45;padding:11px 14px;border-radius:18px 18px 6px 18px">תפנה לי את חמישי אחר הצהריים, יש לי טיסה</span>
+
+                      <div style="align-self:flex-start;width:100%;border:1.5px solid var(--ip,#4f46e5);border-radius:18px;background:var(--ic,#fff);box-shadow:0 10px 26px -14px var(--ipsh,rgba(79,70,229,.5));display:flex;flex-direction:column;overflow:hidden">
+                        <div style="display:flex;align-items:center;gap:9px;padding:12px;background:var(--ips,rgba(79,70,229,.1))">
+                          <span style="width:30px;height:30px;border-radius:10px;background:var(--ic,#fff);color:var(--ip,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="pencil" style="width:15px;height:15px"></i></span>
+                          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                            <span style="font-size:13.5px;font-weight:800;color:var(--it,#0b1220)">העברת תורים — עריכה</span>
+                            <span dir="ltr" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--itm,#64748b);text-align:right">calendar.reschedule · draft</span>
+                          </div>
+                          <span style="font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;background:var(--ic,#fff);color:var(--ip,#4f46e5);flex-shrink:0">טרם בוצע</span>
+                        </div>
+
+                        <div style="padding:12px;display:flex;flex-direction:column;gap:10px">
+                          <div style="display:flex;flex-direction:column;gap:7px">
+                            <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--ibd,#e3e8f0);border-radius:14px;padding:9px 10px">
+                              <span style="width:28px;height:28px;border-radius:999px;background:var(--im,#eef1f7);color:var(--it,#0b1220);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex-shrink:0">א</span>
+                              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                                <span style="font-size:13.5px;font-weight:800;color:var(--it,#0b1220)">אורי שגב</span>
+                                <span style="font-size:11.5px;font-weight:600;color:var(--itm,#64748b);text-decoration:line-through;font-variant-numeric:tabular-nums">חמישי 16:30</span>
+                              </div>
+                              <span style="height:36px;padding:0 10px;border-radius:11px;border:1.5px solid var(--ip,#4f46e5);background:var(--ic,#fff);color:var(--ip,#4f46e5);display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;flex-shrink:0;font-variant-numeric:tabular-nums">שני 11:00<i data-lucide="chevron-down" style="width:14px;height:14px"></i></span>
+                              <span style="width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="x" style="width:15px;height:15px"></i></span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--ibd,#e3e8f0);border-radius:14px;padding:9px 10px">
+                              <span style="width:28px;height:28px;border-radius:999px;background:var(--im,#eef1f7);color:var(--it,#0b1220);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex-shrink:0">ת</span>
+                              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                                <span style="font-size:13.5px;font-weight:800;color:var(--it,#0b1220)">תמר גל</span>
+                                <span style="font-size:11.5px;font-weight:600;color:var(--itm,#64748b);text-decoration:line-through;font-variant-numeric:tabular-nums">חמישי 18:00</span>
+                              </div>
+                              <span style="height:36px;padding:0 10px;border-radius:11px;border:1.5px solid var(--ibd,#e3e8f0);background:var(--ic,#fff);color:var(--it,#0b1220);display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;flex-shrink:0;font-variant-numeric:tabular-nums">שלישי 17:00<i data-lucide="chevron-down" style="width:14px;height:14px;color:var(--itm,#64748b)"></i></span>
+                              <span style="width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="x" style="width:15px;height:15px"></i></span>
+                            </div>
+                          </div>
+
+                          <div style="display:flex;align-items:center;gap:10px;padding:2px 2px 0">
+                            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                              <span style="font-size:13.5px;font-weight:800;color:var(--it,#0b1220)">שליחת הודעת עדכון</span>
+                              <span style="font-size:11.5px;font-weight:500;color:var(--itm,#64748b)">2 נמענים · וואטסאפ</span>
+                            </div>
+                            <span style="width:50px;height:30px;border-radius:999px;background:var(--ip,#4f46e5);padding:3px;display:flex;align-items:center;flex-shrink:0"><span style="width:24px;height:24px;border-radius:999px;background:#fff;margin-inline-start:auto;display:block;box-shadow:0 1px 2px rgba(16,24,40,.2)"></span></span>
+                          </div>
+
+                          <div style="border:1px solid var(--ibd,#e3e8f0);border-radius:14px;padding:10px 11px;display:flex;flex-direction:column;gap:7px">
+                            <span style="font-size:13.5px;font-weight:600;color:var(--it,#0b1220);line-height:1.5">היי {שם}, נאלצתי להזיז את התור מיום חמישי. קבעתי לך ל{תאריך חדש} — מתאים?<span style="display:inline-block;width:1.5px;height:15px;background:var(--ip,#4f46e5);vertical-align:-3px;margin-inline-start:2px"></span></span>
+                            <div style="display:flex;align-items:center;gap:10px;padding-top:7px;border-top:1px solid var(--ibd,#e3e8f0)">
+                              <span dir="ltr" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--itm,#64748b)">124 / 480</span>
+                              <span style="margin-inline-start:auto;font-size:12px;font-weight:800;color:var(--ip,#4f46e5)">שחזור נוסח מקורי</span>
+                            </div>
+                          </div>
+
+                          <div style="display:flex;align-items:center;gap:8px">
+                            <span style="flex:1;height:48px;border-radius:15px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;justify-content:center;gap:7px;font-size:15px;font-weight:800;box-shadow:0 8px 20px -10px var(--ipsh,rgba(79,70,229,.6))"><i data-lucide="check" style="width:17px;height:17px"></i>אשר ובצע</span>
+                            <span style="height:48px;padding:0 16px;border-radius:15px;border:1px solid var(--ibd,#e3e8f0);color:var(--it,#0b1220);display:flex;align-items:center;font-size:14.5px;font-weight:700;flex-shrink:0">ביטול</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style="flex-shrink:0;padding:10px 14px 22px;border-top:1px solid var(--ibd,#e3e8f0);display:flex;align-items:center;gap:9px;opacity:.55">
+                      <span style="width:44px;height:48px;border-radius:16px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="paperclip" style="width:20px;height:20px"></i></span>
+                      <span style="flex:1;height:48px;border-radius:16px;background:var(--im,#eef1f7);display:flex;align-items:center;padding:0 14px;font-size:14.5px;font-weight:500;color:var(--itm,#64748b)">סיים את העריכה כדי להמשיך…</span>
+                      <span style="width:48px;height:48px;border-radius:999px;background:var(--im,#eef1f7);color:var(--itm,#64748b);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="arrow-up" style="width:21px;height:21px"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <span style="font-size:12.5px;font-weight:700;color:#64748b;text-align:center">מובייל · הכרטיס הופך לטופס, הקלדה בשיחה נחסמת עד סיום</span>
+          </div>
+
+          <div data-screen-label="MCP-08" style="display:flex;flex-direction:column;gap:10px">
+            <div style="width:420px;height:520px;background:var(--ic,#fff);border:1px solid var(--ibd,#e3e8f0);border-radius:24px;box-shadow:0 30px 70px -22px rgba(16,24,40,.3);display:flex;flex-direction:column;overflow:hidden;position:relative">
+              <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--ibd,#e3e8f0)">
+                <span style="width:34px;height:34px;border-radius:11px;background:var(--ips,rgba(79,70,229,.1));color:var(--ip,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="sparkles" style="width:17px;height:17px"></i></span>
+                <span style="flex:1;min-width:0;height:36px;display:flex;align-items:center;gap:6px;padding:0 9px;border-radius:11px;background:var(--im,#eef1f7)">
+                  <span style="font-size:14.5px;font-weight:800;color:var(--it,#0b1220);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">פינוי יום חמישי</span>
+                  <i data-lucide="chevron-down" style="width:15px;height:15px;color:var(--itm,#64748b);flex-shrink:0"></i>
+                </span>
+                <span style="width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="message-square-plus" style="width:17px;height:17px"></i></span>
+                <span style="width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="x" style="width:17px;height:17px"></i></span>
+              </div>
+
+              <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:11px;padding:14px;overflow:hidden">
+                <div style="width:100%;border:1.5px solid var(--ip,#4f46e5);border-radius:16px;background:var(--ic,#fff);display:flex;flex-direction:column;overflow:hidden">
+                  <div style="display:flex;align-items:center;gap:9px;padding:11px;background:var(--ips,rgba(79,70,229,.1))">
+                    <span style="width:28px;height:28px;border-radius:9px;background:var(--ic,#fff);color:var(--ip,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="pencil" style="width:14px;height:14px"></i></span>
+                    <span style="flex:1;font-size:13.5px;font-weight:800;color:var(--it,#0b1220)">העברת תורים — עריכה</span>
+                    <span style="font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;background:var(--ic,#fff);color:var(--ip,#4f46e5)">טרם בוצע</span>
+                  </div>
+                  <div style="padding:11px;display:flex;flex-direction:column;gap:9px">
+                    <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--ibd,#e3e8f0);border-radius:13px;padding:8px 10px">
+                      <span style="flex:1;font-size:13px;font-weight:700;color:var(--it,#0b1220)">אורי שגב</span>
+                      <span style="font-size:12px;font-weight:600;color:var(--itm,#64748b);text-decoration:line-through;font-variant-numeric:tabular-nums">חמישי 16:30</span>
+                      <span style="height:32px;padding:0 9px;border-radius:10px;border:1.5px solid var(--ip,#4f46e5);color:var(--ip,#4f46e5);display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums">שני 11:00<i data-lucide="chevron-down" style="width:13px;height:13px"></i></span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--ibd,#e3e8f0);border-radius:13px;padding:8px 10px">
+                      <span style="flex:1;font-size:13px;font-weight:700;color:var(--it,#0b1220)">תמר גל</span>
+                      <span style="font-size:12px;font-weight:600;color:var(--itm,#64748b);text-decoration:line-through;font-variant-numeric:tabular-nums">חמישי 18:00</span>
+                      <span style="height:32px;padding:0 9px;border-radius:10px;border:1.5px solid var(--ibd,#e3e8f0);color:var(--it,#0b1220);display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums">שלישי 17:00<i data-lucide="chevron-down" style="width:13px;height:13px;color:var(--itm,#64748b)"></i></span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;padding-top:2px">
+                      <span style="flex:1;font-size:13px;font-weight:800;color:var(--it,#0b1220)">שליחת הודעת עדכון ללקוחות</span>
+                      <span style="width:46px;height:28px;border-radius:999px;background:var(--ip,#4f46e5);padding:3px;display:flex;align-items:center;flex-shrink:0"><span style="width:22px;height:22px;border-radius:999px;background:#fff;margin-inline-start:auto;display:block"></span></span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span style="flex:1;height:42px;border-radius:13px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;justify-content:center;gap:7px;font-size:14px;font-weight:800"><i data-lucide="check" style="width:16px;height:16px"></i>אשר ובצע</span>
+                      <span style="height:42px;padding:0 14px;border-radius:13px;border:1px solid var(--ibd,#e3e8f0);color:var(--it,#0b1220);display:flex;align-items:center;font-size:14px;font-weight:700">ביטול</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="position:absolute;inset-inline-end:24px;top:182px;width:214px;background:var(--ic,#fff);border:1px solid var(--ibd,#e3e8f0);border-radius:16px;box-shadow:0 22px 50px -16px rgba(16,24,40,.4);padding:9px;display:flex;flex-direction:column;gap:6px;z-index:3">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px">
+                  <span style="font-size:12.5px;font-weight:800;color:var(--it,#0b1220)">שני, 14/08</span>
+                  <span style="display:flex;gap:3px"><i data-lucide="chevron-right" style="width:15px;height:15px;color:var(--itm,#64748b)"></i><i data-lucide="chevron-left" style="width:15px;height:15px;color:var(--itm,#64748b)"></i></span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px">
+                  <span style="height:34px;border-radius:10px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums">11:00</span>
+                  <span style="height:34px;border-radius:10px;border:1px solid var(--ibd,#e3e8f0);color:var(--it,#0b1220);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums">12:30</span>
+                  <span style="height:34px;border-radius:10px;background:var(--im,#eef1f7);color:var(--itm,#64748b);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;text-decoration:line-through">14:00</span>
+                </div>
+                <span style="font-size:11px;font-weight:600;color:var(--itm,#64748b);padding:0 2px">רק חלונות פנויים ביומן</span>
+              </div>
+
+              <div style="flex-shrink:0;padding:10px 12px;border-top:1px solid var(--ibd,#e3e8f0);display:flex;align-items:center;gap:8px;opacity:.55">
+                <span style="width:40px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--itm,#64748b);flex-shrink:0"><i data-lucide="paperclip" style="width:18px;height:18px"></i></span>
+                <span style="flex:1;height:44px;border-radius:14px;background:var(--im,#eef1f7);display:flex;align-items:center;padding:0 13px;font-size:14px;font-weight:500;color:var(--itm,#64748b)">סיים את העריכה כדי להמשיך…</span>
+                <span style="width:44px;height:44px;border-radius:999px;background:var(--im,#eef1f7);color:var(--itm,#64748b);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="arrow-up" style="width:19px;height:19px"></i></span>
+              </div>
+            </div>
+            <span style="font-size:12.5px;font-weight:700;color:#64748b;text-align:center">מחשב · בחירת שעה חלופית מתוך חלונות פנויים בלבד</span>
+          </div>
+
+          <div data-screen-label="MCP-09" style="display:flex;flex-direction:column;gap:10px">
+            <div style="width:420px;background:#fff;border:1px solid #dde1e8;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(16,24,40,.05)">
+              <span style="font-size:12px;font-weight:800;color:#94a3b8;letter-spacing:.06em">אחרי אישור · אותו כרטיס, נעול</span>
+
+              <div style="border:1px solid #dde1e8;border-radius:16px;overflow:hidden">
+                <div style="display:flex;align-items:center;gap:9px;padding:11px;background:var(--iok-s,rgba(16,185,129,.12))">
+                  <span style="width:28px;height:28px;border-radius:9px;background:#fff;color:var(--iok,#10b981);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="check" style="width:15px;height:15px"></i></span>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                    <span style="font-size:13.5px;font-weight:800;color:#0f172a">2 תורים הועברו</span>
+                    <span dir="ltr" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#64748b;text-align:right">calendar.reschedule · chat.send</span>
+                  </div>
+                  <span style="font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;background:#fff;color:var(--iok,#10b981);flex-shrink:0">בוצע 09:41</span>
+                </div>
+                <div style="padding:11px;display:flex;flex-direction:column;gap:7px">
+                  <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#0f172a"><span style="flex:1">אורי שגב</span><span style="font-weight:800;color:var(--iok,#10b981);font-variant-numeric:tabular-nums">שני 11:00</span></div>
+                  <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#0f172a"><span style="flex:1">תמר גל</span><span style="font-weight:800;color:var(--iok,#10b981);font-variant-numeric:tabular-nums">שלישי 17:00</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding-top:9px;margin-top:2px;border-top:1px solid #dde1e8">
+                    <span style="font-size:12px;font-weight:700;color:#64748b">2 הודעות נשלחו</span>
+                    <span style="margin-inline-start:auto;font-size:12.5px;font-weight:800;color:var(--ip,#4f46e5)">ביטול הפעולה</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <span style="font-size:12px;font-weight:800;color:#94a3b8;letter-spacing:.06em">חוקי המצב</span>
+                <span style="font-size:12.5px;font-weight:600;color:#64748b;line-height:1.6">״עריכה״ נועל את שורת ההקלדה — אין שליחת הודעה חדשה באמצע טופס פתוח.<br />שדה שנגעת בו נשמר כטיוטה על השיחה; יציאה מהבועה חוזרת לאותו טופס.<br />ביטול מחזיר את הכרטיס למצב ״דורש אישור״ עם הערכים המקוריים.<br />אחרי ביצוע הכרטיס נעול לקריאה עם חלון ביטול של 5 דקות.</span>
+              </div>
+            </div>
+            <span style="font-size:12.5px;font-weight:700;color:#64748b;text-align:center">מצב מאושר + החוקים</span>
+          </div>
+
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid #dde1e8;border-radius:24px;padding:20px;display:flex;flex-wrap:wrap;gap:26px;box-shadow:0 1px 3px rgba(16,24,40,.05)">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <span style="font-size:12px;font-weight:800;color:#94a3b8;letter-spacing:.06em">מצבי הבועה</span>
+          <div style="display:flex;gap:18px;align-items:flex-start">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:7px">
+              <span style="width:58px;height:58px;border-radius:999px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 26px -10px var(--ipsh,rgba(79,70,229,.6))"><i data-lucide="sparkles" style="width:25px;height:25px"></i></span>
+              <span style="font-size:11.5px;font-weight:700;color:#64748b">רגיל</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:7px">
+              <span style="width:58px;height:58px;border-radius:999px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 6px var(--ips,rgba(79,70,229,.1)),0 12px 26px -10px var(--ipsh,rgba(79,70,229,.6))"><span style="display:flex;gap:3px"><span style="width:6px;height:6px;border-radius:999px;background:currentColor;display:block"></span><span style="width:6px;height:6px;border-radius:999px;background:currentColor;opacity:.6;display:block"></span><span style="width:6px;height:6px;border-radius:999px;background:currentColor;opacity:.3;display:block"></span></span></span>
+              <span style="font-size:11.5px;font-weight:700;color:#64748b">עובד</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:7px">
+              <span style="width:58px;height:58px;border-radius:999px;background:var(--ip,#4f46e5);color:var(--ipf,#fff);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 26px -10px var(--ipsh,rgba(79,70,229,.6));position:relative"><i data-lucide="sparkles" style="width:25px;height:25px"></i><span style="position:absolute;top:-3px;inset-inline-start:-3px;min-width:22px;height:22px;padding:0 5px;border-radius:999px;background:var(--idg,#e11d48);color:#fff;font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2.5px solid #fff">1</span></span>
+              <span style="font-size:11.5px;font-weight:700;color:#64748b">דורש אישור</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:7px">
+              <span style="width:58px;height:58px;border-radius:999px;background:var(--im,#eef1f7);color:var(--itm,#64748b);display:flex;align-items:center;justify-content:center;position:relative"><i data-lucide="sparkles" style="width:25px;height:25px"></i><span style="position:absolute;top:-2px;inset-inline-start:-2px;width:15px;height:15px;border-radius:999px;background:#94a3b8;border:2.5px solid #fff;display:block"></span></span>
+              <span style="font-size:11.5px;font-weight:700;color:#64748b">לא מחובר</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px;flex:1 1 420px;min-width:320px">
+          <span style="font-size:12px;font-weight:800;color:#94a3b8;letter-spacing:.06em">כרטיס קריאת MCP · שלושה מצבים</span>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <div style="display:flex;align-items:center;gap:9px;border:1px solid #dde1e8;border-radius:16px;padding:10px 12px">
+              <span style="width:30px;height:30px;border-radius:10px;background:var(--ips,rgba(79,70,229,.1));color:var(--ip,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="loader" style="width:15px;height:15px"></i></span>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:800;color:#0f172a">חיפוש לידים</span><span dir="ltr" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#64748b;text-align:right">leads.search · stage=quote</span></div>
+              <span style="font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;background:var(--ips,rgba(79,70,229,.1));color:var(--ip,#4f46e5);flex-shrink:0">מריץ</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:9px;border:1px solid #dde1e8;border-radius:16px;padding:10px 12px">
+              <span style="width:30px;height:30px;border-radius:10px;background:var(--iok-s,rgba(16,185,129,.12));color:var(--iok,#10b981);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="check" style="width:15px;height:15px"></i></span>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:800;color:#0f172a">שליפת תשלומים</span><span dir="ltr" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#64748b;text-align:right">payments.list · 3 רשומות</span></div>
+              <span style="font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;background:var(--iok-s,rgba(16,185,129,.12));color:var(--iok,#10b981);flex-shrink:0">הושלם</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:9px;border:1.5px solid var(--ip,#4f46e5);border-radius:16px;padding:10px 12px;background:var(--ips,rgba(79,70,229,.1))">
+              <span style="width:30px;height:30px;border-radius:10px;background:#fff;color:var(--iwr,#f59e0b);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="shield-check" style="width:15px;height:15px"></i></span>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:800;color:#0f172a">שליחת הודעה ללקוח</span><span dir="ltr" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#64748b;text-align:right">chat.send · 3 נמענים</span></div>
+              <span style="font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;background:var(--iwr-s,rgba(245,158,11,.12));color:var(--iwr,#f59e0b);flex-shrink:0">דורש אישור</span>
+            </div>
+          </div>
+          <span style="font-size:12px;font-weight:600;color:#64748b;line-height:1.5">קריאות קריאה (<span style="font-family:'JetBrains Mono',monospace;font-size:11px">list/search/get</span>) רצות אוטומטית; כל כתיבה (<span style="font-family:'JetBrains Mono',monospace;font-size:11px">send/create/reschedule/refund</span>) חוסמת עד אישור מפורש.</span>
+        </div>
+      </div>
+    </section>
+
+
+
+    <footer style="display:flex;flex-wrap:wrap;gap:10px;padding-top:8px;border-top:1px solid #dde1e8">
+      <span style="font-size:13px;color:#64748b;font-weight:500">פיצ׳ר חדש · נשען על מערכת העיצוב <span style="font-family:'JetBrains Mono',monospace;font-size:12px">Inkmind Native</span> — אותם טוקנים, רדיוסים וגבהי מגע. שרתי MCP: calendar · leads · chat · payments</span>
+    </footer>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1100}}">
+const PALETTES = {
+  indigo: {
+    light: { ib:'#f5f7fb', im:'#eef1f7', ic:'#ffffff', ibd:'#e3e8f0', ibdS:'#eef1f6', it:'#0b1220', itm:'#64748b', ip:'#4f46e5', ipf:'#ffffff', ips:'rgba(79,70,229,.10)', ipr:'rgba(79,70,229,.10)', ipsh:'rgba(79,70,229,.5)', iok:'#10b981', iokS:'rgba(16,185,129,.12)', iwr:'#f59e0b', iwrS:'rgba(245,158,11,.12)', idg:'#e11d48' },
+    dark:  { ib:'#0a0f1c', im:'#1a2338', ic:'#121a2b', ibd:'#243049', ibdS:'#1c2740', it:'#eef2f8', itm:'#93a2ba', ip:'#7c7bf7', ipf:'#0a0f1c', ips:'rgba(124,123,247,.16)', ipr:'rgba(124,123,247,.18)', ipsh:'rgba(124,123,247,.45)', iok:'#34d399', iokS:'rgba(52,211,153,.16)', iwr:'#fbbf24', iwrS:'rgba(251,191,36,.16)', idg:'#fb7185' },
+  },
+  nordic: {
+    light: { ib:'#f7f6f3', im:'#efeeea', ic:'#ffffff', ibd:'#e4e2db', ibdS:'#efeee9', it:'#1b1f1c', itm:'#77776d', ip:'#4c7a5b', ipf:'#ffffff', ips:'rgba(76,122,91,.10)', ipr:'rgba(76,122,91,.12)', ipsh:'rgba(76,122,91,.45)', iok:'#4c7a5b', iokS:'rgba(76,122,91,.12)', iwr:'#c08a3e', iwrS:'rgba(192,138,62,.13)', idg:'#b4544a' },
+    dark:  { ib:'#12150f', im:'#242a20', ic:'#1a1e17', ibd:'#30372b', ibdS:'#262d21', it:'#edefe8', itm:'#9aa394', ip:'#8ab897', ipf:'#12150f', ips:'rgba(138,184,151,.16)', ipr:'rgba(138,184,151,.18)', ipsh:'rgba(138,184,151,.4)', iok:'#8ab897', iokS:'rgba(138,184,151,.16)', iwr:'#dcae6c', iwrS:'rgba(220,174,108,.16)', idg:'#d98b80' },
+  },
+  obsidian: {
+    light: { ib:'#f2f5f7', im:'#e7ecef', ic:'#ffffff', ibd:'#dbe3e7', ibdS:'#e9eef1', it:'#0b1114', itm:'#5f6f7a', ip:'#0e8fa8', ipf:'#ffffff', ips:'rgba(14,143,168,.10)', ipr:'rgba(14,143,168,.13)', ipsh:'rgba(14,143,168,.45)', iok:'#12a594', iokS:'rgba(18,165,148,.12)', iwr:'#d08700', iwrS:'rgba(208,135,0,.13)', idg:'#e0455e' },
+    dark:  { ib:'#07080a', im:'#171a20', ic:'#0e1013', ibd:'#222730', ibdS:'#1a1e25', it:'#f1f5f7', itm:'#8894a1', ip:'#22d3ee', ipf:'#04212a', ips:'rgba(34,211,238,.14)', ipr:'rgba(34,211,238,.18)', ipsh:'rgba(34,211,238,.4)', iok:'#2dd4bf', iokS:'rgba(45,212,191,.15)', iwr:'#fbbf24', iwrS:'rgba(251,191,36,.15)', idg:'#fb7185' },
+  },
+  terracotta: {
+    light: { ib:'#fbf6f1', im:'#f3ebe3', ic:'#ffffff', ibd:'#ebe0d4', ibdS:'#f3ebe2', it:'#291d16', itm:'#8a7566', ip:'#c0603c', ipf:'#ffffff', ips:'rgba(192,96,60,.10)', ipr:'rgba(192,96,60,.13)', ipsh:'rgba(192,96,60,.45)', iok:'#6f8f5e', iokS:'rgba(111,143,94,.13)', iwr:'#d99441', iwrS:'rgba(217,148,65,.14)', idg:'#c0392b' },
+    dark:  { ib:'#16100d', im:'#2a201a', ic:'#1e1712', ibd:'#372a22', ibdS:'#2b211a', it:'#f8efe8', itm:'#b09a8a', ip:'#e2825c', ipf:'#241009', ips:'rgba(226,130,92,.16)', ipr:'rgba(226,130,92,.18)', ipsh:'rgba(226,130,92,.4)', iok:'#9ab887', iokS:'rgba(154,184,135,.16)', iwr:'#eab26a', iwrS:'rgba(234,178,106,.16)', idg:'#e8705f' },
+  },
+  noir: {
+    light: { ib:'#f6f6f5', im:'#ececea', ic:'#ffffff', ibd:'#e2e2df', ibdS:'#ececeb', it:'#101010', itm:'#6e6e6b', ip:'#171717', ipf:'#ffffff', ips:'rgba(23,23,23,.08)', ipr:'rgba(23,23,23,.10)', ipsh:'rgba(0,0,0,.35)', iok:'#4b7d5a', iokS:'rgba(75,125,90,.11)', iwr:'#b08130', iwrS:'rgba(176,129,48,.12)', idg:'#b3453c' },
+    dark:  { ib:'#0b0b0b', im:'#1e1e1e', ic:'#141414', ibd:'#2a2a2a', ibdS:'#202020', it:'#f5f5f4', itm:'#9a9a96', ip:'#fafafa', ipf:'#0b0b0b', ips:'rgba(250,250,250,.12)', ipr:'rgba(250,250,250,.14)', ipsh:'rgba(0,0,0,.6)', iok:'#6fbf8f', iokS:'rgba(111,191,143,.14)', iwr:'#e0b45f', iwrS:'rgba(224,180,95,.14)', idg:'#f08a80' },
+  },
+  amethyst: {
+    light: { ib:'#f8f6fc', im:'#f0ecf8', ic:'#ffffff', ibd:'#e6e0f0', ibdS:'#f0ebf7', it:'#1b1327', itm:'#6f6482', ip:'#7c3aed', ipf:'#ffffff', ips:'rgba(124,58,237,.10)', ipr:'rgba(124,58,237,.12)', ipsh:'rgba(124,58,237,.45)', iok:'#10b981', iokS:'rgba(16,185,129,.12)', iwr:'#f59e0b', iwrS:'rgba(245,158,11,.12)', idg:'#e11d48' },
+    dark:  { ib:'#0f0a19', im:'#241a36', ic:'#181026', ibd:'#2e2244', ibdS:'#221a34', it:'#f2edfa', itm:'#a294bd', ip:'#a78bfa', ipf:'#17092b', ips:'rgba(167,139,250,.16)', ipr:'rgba(167,139,250,.18)', ipsh:'rgba(167,139,250,.4)', iok:'#34d399', iokS:'rgba(52,211,153,.15)', iwr:'#fbbf24', iwrS:'rgba(251,191,36,.15)', idg:'#fb7185' },
+  },
+  gold: {
+    light: { ib:'#f7f6f2', im:'#efece4', ic:'#ffffff', ibd:'#e6e1d5', ibdS:'#f0ece3', it:'#16181d', itm:'#6f6f66', ip:'#a67c26', ipf:'#ffffff', ips:'rgba(166,124,38,.10)', ipr:'rgba(166,124,38,.13)', ipsh:'rgba(166,124,38,.4)', iok:'#4c7a5b', iokS:'rgba(76,122,91,.12)', iwr:'#c2871f', iwrS:'rgba(194,135,31,.13)', idg:'#b3453c' },
+    dark:  { ib:'#0c0e14', im:'#1c2029', ic:'#12151c', ibd:'#262b36', ibdS:'#1a1e26', it:'#f3f1ea', itm:'#99a0ad', ip:'#d9b264', ipf:'#14100a', ips:'rgba(217,178,100,.14)', ipr:'rgba(217,178,100,.17)', ipsh:'rgba(217,178,100,.35)', iok:'#7fbb96', iokS:'rgba(127,187,150,.14)', iwr:'#e5c07b', iwrS:'rgba(229,192,123,.14)', idg:'#ef8b7c' },
+  },
+  crimson: {
+    light: { ib:'#faf7f5', im:'#f2eae7', ic:'#ffffff', ibd:'#ebdedb', ibdS:'#f3ebe8', it:'#22110f', itm:'#856a66', ip:'#9b2226', ipf:'#ffffff', ips:'rgba(155,34,38,.09)', ipr:'rgba(155,34,38,.12)', ipsh:'rgba(155,34,38,.4)', iok:'#4c7a5b', iokS:'rgba(76,122,91,.12)', iwr:'#c2871f', iwrS:'rgba(194,135,31,.13)', idg:'#9b2226' },
+    dark:  { ib:'#140c0c', im:'#2a1a1a', ic:'#1b1111', ibd:'#382222', ibdS:'#241616', it:'#f8ecec', itm:'#b0908d', ip:'#e05b5f', ipf:'#1a0708', ips:'rgba(224,91,95,.15)', ipr:'rgba(224,91,95,.18)', ipsh:'rgba(224,91,95,.38)', iok:'#8ab897', iokS:'rgba(138,184,151,.14)', iwr:'#e5b06a', iwrS:'rgba(229,176,106,.14)', idg:'#f0817f' },
+  },
+  teal: {
+    light: { ib:'#f3f8f8', im:'#e8f0f0', ic:'#ffffff', ibd:'#dbe8e8', ibdS:'#e9f1f1', it:'#08201f', itm:'#5c7877', ip:'#0f766e', ipf:'#ffffff', ips:'rgba(15,118,110,.10)', ipr:'rgba(15,118,110,.13)', ipsh:'rgba(15,118,110,.4)', iok:'#12a594', iokS:'rgba(18,165,148,.12)', iwr:'#c98a17', iwrS:'rgba(201,138,23,.13)', idg:'#d8455c' },
+    dark:  { ib:'#05100f', im:'#162623', ic:'#0b1817', ibd:'#1f312e', ibdS:'#142322', it:'#eaf5f3', itm:'#86a29e', ip:'#2dd4bf', ipf:'#04201d', ips:'rgba(45,212,191,.14)', ipr:'rgba(45,212,191,.18)', ipsh:'rgba(45,212,191,.35)', iok:'#4ade80', iokS:'rgba(74,222,128,.14)', iwr:'#fbbf24', iwrS:'rgba(251,191,36,.14)', idg:'#fb7185' },
+  },
+  rose: {
+    light: { ib:'#fbf6f7', im:'#f4eaed', ic:'#ffffff', ibd:'#ecdde1', ibdS:'#f4ecee', it:'#26161b', itm:'#8a6f77', ip:'#b05a72', ipf:'#ffffff', ips:'rgba(176,90,114,.10)', ipr:'rgba(176,90,114,.13)', ipsh:'rgba(176,90,114,.4)', iok:'#6f8f5e', iokS:'rgba(111,143,94,.12)', iwr:'#cf9448', iwrS:'rgba(207,148,72,.13)', idg:'#c0392b' },
+    dark:  { ib:'#150e11', im:'#2a1c21', ic:'#1d1418', ibd:'#372630', ibdS:'#271a1f', it:'#f9edf0', itm:'#b394a0', ip:'#e28ba2', ipf:'#24101a', ips:'rgba(226,139,162,.15)', ipr:'rgba(226,139,162,.18)', ipsh:'rgba(226,139,162,.35)', iok:'#9ab887', iokS:'rgba(154,184,135,.14)', iwr:'#e6b877', iwrS:'rgba(230,184,119,.14)', idg:'#ef8080' },
+  },
+  olive: {
+    light: { ib:'#f8f7f0', im:'#efeee2', ic:'#ffffff', ibd:'#e5e3d2', ibdS:'#f0efe4', it:'#1d1e13', itm:'#75765f', ip:'#6b7a3a', ipf:'#ffffff', ips:'rgba(107,122,58,.10)', ipr:'rgba(107,122,58,.13)', ipsh:'rgba(107,122,58,.4)', iok:'#5f8f4e', iokS:'rgba(95,143,78,.12)', iwr:'#c08a3e', iwrS:'rgba(192,138,62,.13)', idg:'#b4544a' },
+    dark:  { ib:'#12130c', im:'#24261a', ic:'#191b11', ibd:'#303323', ibdS:'#202216', it:'#f0f1e4', itm:'#9b9d84', ip:'#a9bb6b', ipf:'#131608', ips:'rgba(169,187,107,.15)', ipr:'rgba(169,187,107,.18)', ipsh:'rgba(169,187,107,.32)', iok:'#9fc98a', iokS:'rgba(159,201,138,.14)', iwr:'#dfb96c', iwrS:'rgba(223,185,108,.14)', idg:'#de8b7f' },
+  },
+  steel: {
+    light: { ib:'#f4f7fa', im:'#e9eff5', ic:'#ffffff', ibd:'#dce5ee', ibdS:'#eaf0f5', it:'#0d1620', itm:'#61748a', ip:'#3b6ea5', ipf:'#ffffff', ips:'rgba(59,110,165,.10)', ipr:'rgba(59,110,165,.13)', ipsh:'rgba(59,110,165,.4)', iok:'#10a37f', iokS:'rgba(16,163,127,.12)', iwr:'#d08700', iwrS:'rgba(208,135,0,.13)', idg:'#d8455c' },
+    dark:  { ib:'#070d14', im:'#182432', ic:'#0e1620', ibd:'#21303f', ibdS:'#16202c', it:'#eef4fa', itm:'#8ba0b6', ip:'#7fb0e0', ipf:'#07131f', ips:'rgba(127,176,224,.14)', ipr:'rgba(127,176,224,.18)', ipsh:'rgba(127,176,224,.32)', iok:'#34d399', iokS:'rgba(52,211,153,.14)', iwr:'#fbbf24', iwrS:'rgba(251,191,36,.14)', idg:'#fb7185' },
+  },
+};
+
+const KEYS = ['indigo', 'nordic', 'obsidian', 'terracotta', 'noir', 'amethyst', 'gold', 'crimson', 'teal', 'rose', 'olive', 'steel'];
+
+class Component extends DCLogic {
+  state = { pal: 'indigo', mode: 'light' };
+
+  apply() {
+    const p = PALETTES[this.state.pal][this.state.mode];
+    const r = document.documentElement.style;
+    r.setProperty('--ib', p.ib); r.setProperty('--im', p.im); r.setProperty('--ic', p.ic);
+    r.setProperty('--ibd', p.ibd); r.setProperty('--ibd-s', p.ibdS);
+    r.setProperty('--it', p.it); r.setProperty('--itm', p.itm);
+    r.setProperty('--ip', p.ip); r.setProperty('--ipf', p.ipf); r.setProperty('--ips', p.ips);
+    r.setProperty('--ipr', p.ipr); r.setProperty('--ipsh', p.ipsh);
+    r.setProperty('--iok', p.iok); r.setProperty('--iok-s', p.iokS);
+    r.setProperty('--iwr', p.iwr); r.setProperty('--iwr-s', p.iwrS);
+    r.setProperty('--idg', p.idg);
+
+    KEYS.forEach((k) => {
+      const on = k === this.state.pal;
+      const accent = PALETTES[k].light.ip;
+      r.setProperty('--sel-' + k + '-b', on ? accent : '#e2e8f0');
+      r.setProperty('--sel-' + k + '-g', on ? PALETTES[k].light.ips : '#ffffff');
+    });
+    ['light', 'dark'].forEach((m) => {
+      const on = m === this.state.mode;
+      r.setProperty('--sel-' + m + '-g', on ? '#ffffff' : 'transparent');
+      r.setProperty('--sel-' + m + '-t', on ? '#0f172a' : '#64748b');
+      r.setProperty('--sel-' + m + '-s', on ? '0 1px 3px rgba(16,24,40,.12)' : 'none');
+    });
+  }
+
+  icons() {
+    const run = () => { if (window.lucide) window.lucide.createIcons(); };
+    run();
+    if (!window.lucide) setTimeout(run, 400);
+    setTimeout(run, 1200);
+  }
+
+  componentDidMount() { this.apply(); this.icons(); }
+  componentDidUpdate() { this.apply(); this.icons(); }
+
+  renderVals() {
+    return {
+      leads: [
+        { initial: 'ד', name: 'דניאל כהן', style: 'בלאק־אנד־גריי, אמה', stage: 'ממתין למחיר' },
+        { initial: 'מ', name: 'מאיה לוי', style: 'פיין־ליין, שורש כף יד', stage: 'נקבע תור' },
+        { initial: 'א', name: 'אורי שרון', style: 'פנייה כללית', stage: 'פנייה חדשה' },
+      ],
+      customers: [
+        { initial: 'ד', name: 'דניאל כהן', meta: '₪2,400 • 3 ביקורים' },
+        { initial: 'מ', name: 'מאיה לוי', meta: '₪5,150 • 7 ביקורים' },
+        { initial: 'א', name: 'אורי שרון', meta: '₪800 • ביקור אחד' },
+        { initial: 'ט', name: 'טל אברהם', meta: '₪3,900 • 4 ביקורים' },
+        { initial: 'נ', name: 'נועה בר־און', meta: '₪1,250 • 2 ביקורים' },
+        { initial: 'י', name: 'יונתן פרץ', meta: '₪6,700 • 9 ביקורים' },
+      ],
+      pickPalette: (e) => {
+        const k = e.currentTarget.getAttribute('data-pal');
+        if (k) this.setState({ pal: k });
+      },
+      pickMode: (e) => {
+        const m = e.currentTarget.getAttribute('data-mode');
+        if (m) this.setState({ mode: m });
+      },
+      copyCode: (e) => {
+        const btn = e.currentTarget;
+        const el = document.getElementById(btn.getAttribute('data-code'));
+        if (!el) return;
+        navigator.clipboard.writeText(el.textContent || '').then(() => {
+          const prev = btn.textContent;
+          btn.textContent = 'הועתק ✓';
+          setTimeout(() => { btn.textContent = prev; }, 1400);
+        }).catch(() => {});
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>
