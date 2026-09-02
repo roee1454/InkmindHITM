@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { BadgeCheck, CalendarClock, HandCoins, ReceiptText, Send } from 'lucide-react'
+import { CalendarClock, HandCoins, ReceiptText, Send } from 'lucide-react'
 import { confirmSlot } from '@/features/calendar/server/appointments'
-import { sendMessage, takeOverConversation, getActiveAppointmentSummary } from '../server/messages'
+import { takeOverConversation, getActiveAppointmentSummary } from '../server/messages'
 import { formatDuration, formatPriceRange } from '../lib/format'
 import { PriceQuoteSheet } from './sheets/PriceQuoteSheet'
 import { ReceiptVerificationSheet } from './sheets/ReceiptVerificationSheet'
@@ -31,7 +31,6 @@ export function BookingActionCard({
   const showQuote = conversation.state === 'AWAIT_PRICE_OFFER'
   const showReceiptApprove =
     conversation.state === 'AWAIT_PAYMENT' && conversation.staffCallReason === 'receipt_verification'
-  const showFinalConfirm = conversation.state === 'AWAIT_FINAL_CONFIRMATION'
 
   const { data: appointment } = useQuery<UIAppointmentSummary | null>({
     queryKey: ['appointment-summary', conversation.id],
@@ -57,18 +56,7 @@ export function BookingActionCard({
     onSuccess: invalidateAll,
   })
 
-  const finalConfirmMutation = useMutation({
-    mutationFn: () =>
-      sendMessage({
-        data: {
-          conversationId: conversation.id,
-          body: 'התור שלך אושר סופית! מחכים לך בסטודיו 🎉',
-        },
-      }),
-    onSuccess: invalidateAll,
-  })
-
-  if (!showQuote && !showReceiptApprove && !showFinalConfirm && !showSlotConfirm) return null
+  if (!showQuote && !showReceiptApprove && !showSlotConfirm) return null
 
   return (
     <div className="flex flex-col gap-2 border-b border-border/60 bg-card px-3.5 py-3">
@@ -134,24 +122,9 @@ export function BookingActionCard({
         </div>
       )}
 
-      {showFinalConfirm && (
-        <div className="hitl-row-success">
-          <BadgeCheck size={14} className="shrink-0 text-emerald-600" />
-          <span className="flex-1 truncate text-[11.5px] font-bold text-foreground">אישור סופי — התור נקבע</span>
-          <button
-            type="button"
-            disabled={finalConfirmMutation.isPending}
-            onClick={() => finalConfirmMutation.mutate()}
-            className="hitl-action bg-emerald-600 hover:bg-emerald-600/90"
-          >
-            {finalConfirmMutation.isPending ? 'שולח…' : 'שליחה'}
-          </button>
-        </div>
-      )}
-
-      {(takeOverMutation.error || confirmSlotMutation.error || finalConfirmMutation.error) && (
+      {(takeOverMutation.error || confirmSlotMutation.error) && (
         <p className="text-[12px] font-bold text-destructive">
-          {(takeOverMutation.error ?? confirmSlotMutation.error ?? finalConfirmMutation.error)?.message}
+          {(takeOverMutation.error ?? confirmSlotMutation.error)?.message}
         </p>
       )}
 

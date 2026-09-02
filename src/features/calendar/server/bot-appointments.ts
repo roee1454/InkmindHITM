@@ -190,17 +190,72 @@ export async function createPendingHoldForBot(
   })
 }
 
-/** The customer's currently active (pending/confirmed) appointment, if any — used to resolve
- *  "the appointment" for cancel/reschedule tools without relying on session-carried state that
- *  could go stale. Most-recently-created wins if somehow more than one exists. */
+/** The customer's currently active upcoming (pending or confirmed in the future / today) appointment, if any — used to resolve
+ *  "the appointment" for cancel/reschedule tools without picking up a past appointment that already finished. */
 export async function getActiveAppointmentForBot(
   su: PocketBase,
   customerId: string,
 ): Promise<RecordModel | null> {
+  // A 3-hour grace window so that during the appointment itself it's still considered active
+  const activeThreshold = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
   return su.collection('appointments').getFirstListItem(
-    `customer = "${customerId}" && ${ACTIVE_STATUSES}`,
-    { sort: '-created' },
+    `customer = "${customerId}" && ${ACTIVE_STATUSES} && start_time >= "${activeThreshold}"`,
+    { sort: 'start_time' },
   ).catch(() => null)
+}
+
+export interface PastCustomerAppointmentsInfo {
+  isReturning: boolean
+  totalPastAppointments: number
+  lastAppointmentDate: string | null
+  lastStaffName: string | null
+  lastTattooDescription: string | null
+}
+
+/** Information about a customer's past completed/historical appointments to provide
+ *  context to the bot when a returning client messages again. */
+export async function getPastCustomerAppointmentsInfo(
+  su: PocketBase,
+  customerId: string,
+): Promise<PastCustomerAppointmentsInfo> {
+  const nowIso = new Date().toISOString()
+  const pastList = await su.collection('appointments').getList(1, 10, {
+    filter: `customer = "${customerId}" && (status = "completed" || (status = "confirmed" && start_time < "${nowIso}"))`,
+    sort: '-start_time',
+    expand: 'staff',
+  }).catch(() => null)
+
+  if (!pastList || pastList.items.length === 0) {
+    return {
+      isReturning: false,
+      totalPastAppointments: 0,
+      lastAppointmentDate: null,
+      lastStaffName: null,
+      lastTattooDescription: null,
+    }
+  }
+
+  const latest = pastList.items[0]
+  if (!latest) {
+    return {
+      isReturning: false,
+      totalPastAppointments: 0,
+      lastAppointmentDate: null,
+      lastStaffName: null,
+      lastTattooDescription: null,
+    }
+  }
+
+  const latestStart = new Date(latest.start_time as string)
+  const staffObj = (latest as any).expand?.staff
+
+  return {
+    isReturning: true,
+    totalPastAppointments: pastList.totalItems,
+    lastAppointmentDate: toYmd(latestStart),
+    lastStaffName: (staffObj?.name as string) || null,
+    lastTattooDescription: (latest.tattoo_description as string) || null,
+  }
 }
 
 /** The customer's most recently completed appointment without a recorded NPS score yet —

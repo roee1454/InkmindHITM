@@ -147,9 +147,19 @@ function DashboardLayout() {
           } catch {}
         }
 
+        const msgBody =
+          (data.record.body as string) ||
+          (data.record.type === 'image'
+            ? '📷 שלח/ה תמונה'
+            : data.record.type === 'document'
+              ? '📄 שלח/ה מסמך'
+              : 'שלח/ה מדיה')
+        const notifTitle = `הודעה חדשה מ-${senderName}`
+        const notifLink = `/dashboard/conversations?chatId=${convId}`
+
         toast(
-          `הודעה חדשה מ-${senderName}`,
-          data.record.body || 'שלח/ה מדיה',
+          notifTitle,
+          msgBody,
           'info',
           4000,
           () => {
@@ -159,6 +169,13 @@ function DashboardLayout() {
             })
           }
         )
+
+        // Dispatch PWA / OS Notification
+        void sendPwaNotification(notifTitle, {
+          body: msgBody,
+          link: notifLink,
+          tag: `msg-${data.record.id}`,
+        })
       }
 
       // 1. Direct cache update for the message thread

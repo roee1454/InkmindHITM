@@ -273,92 +273,98 @@ export function ConversationThread({
 
   return (
     <div className="flex h-full flex-1 flex-col bg-background" dir="rtl">
-      <header className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-2.5 lg:px-5 lg:py-3">
-        <div className="flex min-w-0 items-center gap-1">
+      <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-3 lg:px-5">
+        <div className="flex min-w-0 items-center gap-1.5">
           {onBack && (
             <button
               type="button"
               onClick={onBack}
               aria-label="חזרה לרשימת השיחות"
               // RTL: "back" points right, matching CalendarGrid's prev control.
-              className="-ms-1 flex size-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors duration-150 hover:bg-accent active:bg-accent lg:hidden"
+              className="-ms-1 flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-150 hover:bg-accent active:bg-accent lg:hidden cursor-pointer"
             >
               <ChevronRight className="size-5" />
             </button>
           )}
           <div className="flex min-w-0 flex-col">
-            <span className="truncate font-assistant text-sm font-bold text-foreground">{title}</span>
-            <span className="font-assistant text-xs text-muted-foreground dir-ltr text-right">
+            <span className="truncate font-assistant text-sm font-bold text-foreground leading-tight">{title}</span>
+            <span className="font-assistant text-xs text-muted-foreground dir-ltr text-right leading-tight">
               {conversation.customerPhone}
             </span>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <div className="flex flex-wrap items-center justify-end gap-1.5">
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Badge
+            variant="outline"
+            className={`h-7 px-2 text-[11px] font-semibold gap-1 shrink-0 rounded-lg ${WINDOW_BADGE_STYLES[windowInfo.status]}`}
+            title={windowInfo.label}
+          >
+            <Clock className="size-3 shrink-0" />
+            <span className="hidden md:inline">{windowInfo.label}</span>
+            <span className="md:hidden">{windowInfo.shortLabel}</span>
+          </Badge>
+
+          {conversation.status === 'escalated' && conversation.staffCallReason ? (
             <Badge
               variant="outline"
-              className={`rounded-lg font-assistant gap-1 ${WINDOW_BADGE_STYLES[windowInfo.status]}`}
-              title="חלון 24 השעות של וואטסאפ להודעות חופשיות"
+              className={`h-7 px-2 text-[11px] font-semibold gap-1 shrink-0 rounded-lg max-w-[120px] sm:max-w-none truncate ${
+                conversation.staffCallReason === 'security_alert' || conversation.staffCallReason.startsWith('system_')
+                  ? 'border-destructive/30 bg-destructive/10 text-destructive'
+                  : 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400'
+              }`}
+              title={`עצירת בוט: ${REASON_LABELS[conversation.staffCallReason] ?? conversation.staffCallReason}`}
             >
-              <Clock className="size-3" />
-              {windowInfo.label}
+              <span className="size-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+              <span className="truncate">{REASON_LABELS[conversation.staffCallReason] ?? conversation.staffCallReason}</span>
             </Badge>
-            {conversation.status === 'escalated' && conversation.staffCallReason ? (
-              <Badge
-                variant="outline"
-                className={
-                  conversation.staffCallReason === 'security_alert' || conversation.staffCallReason.startsWith('system_')
-                    ? 'rounded-lg border-destructive/30 bg-destructive/10 font-assistant text-destructive'
-                    : 'rounded-lg border-amber-500/30 bg-amber-500/10 font-assistant text-amber-700 dark:text-amber-400'
-                }
-              >
-                הבוט עצר: {REASON_LABELS[conversation.staffCallReason] ?? conversation.staffCallReason}
-              </Badge>
-            ) : null}
-            {conversation.status === 'bot_active' ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="rounded-xl cursor-pointer gap-1.5"
-                disabled={takeOverMutation.isPending}
-                onClick={() => takeOverMutation.mutate()}
-                title={
-                  windowExpired
-                    ? 'החלון סגור — הבוט לא באמת יכול להגיב כרגע. מומלץ לקחת שליטה.'
-                    : 'עצירת הבוט ומעבר לטיפול ידני, בלי לשלוח הודעה'
-                }
-              >
-                <BotOff className="size-4" />
-                {takeOverMutation.isPending ? 'עוצר בוט…' : 'קח שליטה'}
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="rounded-xl cursor-pointer gap-1.5"
-                // Outside the window the bot can't send free-text replies either — resuming it
-                // would just leave the conversation silently stuck, so keep a human in control.
-                disabled={resumeBotMutation.isPending || windowExpired}
-                onClick={() => resumeBotMutation.mutate()}
-                title={windowExpired ? 'לא ניתן להפעיל את הבוט מחוץ לחלון 24 השעות' : undefined}
-              >
-                <Bot className="size-4" />
-                {resumeBotMutation.isPending ? 'מחזיר לבוט…' : 'החזרה לבוט'}
-              </Button>
-            )}
-            {(inspirationImages.length > 0 || verificationImages.length > 0) && (
-              <button
-                type="button"
-                onClick={() => setInspirationDialogOpen(true)}
-                aria-label="גלריית שיחה"
-                className="tap-target text-foreground"
-              >
-                <EllipsisVertical className="size-5" />
-              </button>
-            )}
-          </div>
+          ) : null}
+
+          {conversation.status === 'bot_active' ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2.5 text-xs rounded-lg cursor-pointer gap-1 shrink-0 font-medium"
+              disabled={takeOverMutation.isPending}
+              onClick={() => takeOverMutation.mutate()}
+              title={
+                windowExpired
+                  ? 'החלון סגור — הבוט לא באמת יכול להגיב כרגע. מומלץ לקחת שליטה.'
+                  : 'עצירת הבוט ומעבר לטיפול ידני, בלי לשלוח הודעה'
+              }
+            >
+              <BotOff className="size-3.5 shrink-0 text-muted-foreground" />
+              <span className="hidden sm:inline">{takeOverMutation.isPending ? 'עוצר…' : 'קח שליטה'}</span>
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2.5 text-xs rounded-lg cursor-pointer gap-1 shrink-0 font-medium border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
+              // Outside the window the bot can't send free-text replies either — resuming it
+              // would just leave the conversation silently stuck, so keep a human in control.
+              disabled={resumeBotMutation.isPending || windowExpired}
+              onClick={() => resumeBotMutation.mutate()}
+              title={windowExpired ? 'לא ניתן להפעיל את הבוט מחוץ לחלון 24 השעות' : 'הפעלת הבוט מחדש'}
+            >
+              <Bot className="size-3.5 shrink-0" />
+              <span className="hidden sm:inline">{resumeBotMutation.isPending ? 'מפעיל…' : 'הפעל בוט'}</span>
+            </Button>
+          )}
+
+          {(inspirationImages.length > 0 || verificationImages.length > 0) && (
+            <button
+              type="button"
+              onClick={() => setInspirationDialogOpen(true)}
+              aria-label="גלריית שיחה"
+              className="flex size-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0 cursor-pointer"
+              title="גלריית מדיה"
+            >
+              <EllipsisVertical className="size-4" />
+            </button>
+          )}
         </div>
       </header>
 

@@ -42,29 +42,28 @@ export type WindowStatus = 'open' | 'closing-soon' | 'expired'
 
 export interface WindowRemaining {
   label: string
+  shortLabel: string
   status: WindowStatus
 }
 
-/** WhatsApp's 24h free-messaging window, phrased for staff ("14 שעות נותרו לחלון החינמי").
- *  `expiresAt` is `conversations.whatsapp_window_expires_at`, refreshed on every inbound
- *  customer message (see `server/webhook.ts`) — null means the customer never messaged in,
- *  so there's no open window at all, same as an already-expired one. */
+/** WhatsApp's 24h free-messaging window. `expiresAt` is `conversations.whatsapp_window_expires_at`,
+ *  refreshed on every inbound customer message. */
 export function formatWindowRemaining(expiresAt: string | null): WindowRemaining {
-  if (!expiresAt) return { label: 'החלון פג', status: 'expired' }
+  if (!expiresAt) return { label: 'חלון 24 השעות פג', shortLabel: 'חלון פג', status: 'expired' }
   const expires = new Date(expiresAt)
-  if (Number.isNaN(expires.getTime())) return { label: 'החלון פג', status: 'expired' }
+  if (Number.isNaN(expires.getTime())) return { label: 'חלון 24 השעות פג', shortLabel: 'חלון פג', status: 'expired' }
 
   const diffMs = expires.getTime() - Date.now()
-  if (diffMs <= 0) return { label: 'החלון פג', status: 'expired' }
+  if (diffMs <= 0) return { label: 'חלון 24 השעות פג', shortLabel: 'חלון פג', status: 'expired' }
 
   const diffHours = diffMs / (60 * 60 * 1000)
   const status: WindowStatus = diffHours >= 12 ? 'open' : 'closing-soon'
   if (diffHours < 1) {
     const minutes = Math.max(1, Math.round(diffMs / (60 * 1000)))
-    return { label: `${minutes} דקות נותרו לחלון החינמי`, status }
+    return { label: `${minutes} דקות נותרו לחלון`, shortLabel: `${minutes} דק'`, status }
   }
   const hours = Math.round(diffHours)
-  return { label: `${hours} שעות נותרו לחלון החינמי`, status }
+  return { label: `${hours} שעות נותרו לחלון`, shortLabel: `${hours} שע'`, status }
 }
 
 /** `₪1,600–2,000` — collapses to a single figure when min and max match. */
