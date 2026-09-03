@@ -33,6 +33,7 @@ import { Route as OnboardingProfileLinksRouteImport } from './routes/onboarding/
 import { Route as OnboardingStudioRouteImport } from './routes/onboarding/studio'
 import { Route as ApiInternalAppointmentFreedRouteImport } from './routes/api/internal.appointment-freed'
 import { Route as ApiInternalAppointmentSyncRouteImport } from './routes/api/internal.appointment-sync'
+import { Route as ApiInternalLifecycleTickRouteImport } from './routes/api/internal.lifecycle-tick'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardSettingsAiRouteImport } from './routes/dashboard/settings/ai'
 import { Route as DashboardSettingsBackupsRouteImport } from './routes/dashboard/settings/backups'
@@ -167,6 +168,12 @@ const ApiInternalAppointmentSyncRoute =
     path: '/api/internal/appointment-sync',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiInternalLifecycleTickRoute =
+  ApiInternalLifecycleTickRouteImport.update({
+    id: '/api/internal/lifecycle-tick',
+    path: '/api/internal/lifecycle-tick',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -254,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/api/internal/appointment-freed': typeof ApiInternalAppointmentFreedRoute
   '/api/internal/appointment-sync': typeof ApiInternalAppointmentSyncRoute
+  '/api/internal/lifecycle-tick': typeof ApiInternalLifecycleTickRoute
   '/dashboard/settings/ai': typeof DashboardSettingsAiRoute
   '/dashboard/settings/backups': typeof DashboardSettingsBackupsRoute
   '/dashboard/settings/faq': typeof DashboardSettingsFaqRoute
@@ -289,6 +297,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/api/internal/appointment-freed': typeof ApiInternalAppointmentFreedRoute
   '/api/internal/appointment-sync': typeof ApiInternalAppointmentSyncRoute
+  '/api/internal/lifecycle-tick': typeof ApiInternalLifecycleTickRoute
   '/dashboard/settings/ai': typeof DashboardSettingsAiRoute
   '/dashboard/settings/backups': typeof DashboardSettingsBackupsRoute
   '/dashboard/settings/faq': typeof DashboardSettingsFaqRoute
@@ -327,6 +336,7 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/api/internal/appointment-freed': typeof ApiInternalAppointmentFreedRoute
   '/api/internal/appointment-sync': typeof ApiInternalAppointmentSyncRoute
+  '/api/internal/lifecycle-tick': typeof ApiInternalLifecycleTickRoute
   '/dashboard/settings/ai': typeof DashboardSettingsAiRoute
   '/dashboard/settings/backups': typeof DashboardSettingsBackupsRoute
   '/dashboard/settings/faq': typeof DashboardSettingsFaqRoute
@@ -366,6 +376,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/api/internal/appointment-freed'
     | '/api/internal/appointment-sync'
+    | '/api/internal/lifecycle-tick'
     | '/dashboard/settings/ai'
     | '/dashboard/settings/backups'
     | '/dashboard/settings/faq'
@@ -401,6 +412,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/api/internal/appointment-freed'
     | '/api/internal/appointment-sync'
+    | '/api/internal/lifecycle-tick'
     | '/dashboard/settings/ai'
     | '/dashboard/settings/backups'
     | '/dashboard/settings/faq'
@@ -438,6 +450,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/api/internal/appointment-freed'
     | '/api/internal/appointment-sync'
+    | '/api/internal/lifecycle-tick'
     | '/dashboard/settings/ai'
     | '/dashboard/settings/backups'
     | '/dashboard/settings/faq'
@@ -460,6 +473,7 @@ export interface RootRouteChildren {
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
   ApiInternalAppointmentFreedRoute: typeof ApiInternalAppointmentFreedRoute
   ApiInternalAppointmentSyncRoute: typeof ApiInternalAppointmentSyncRoute
+  ApiInternalLifecycleTickRoute: typeof ApiInternalLifecycleTickRoute
   ApiGoogleCalendarOauthCallbackRoute: typeof ApiGoogleCalendarOauthCallbackRoute
   ApiSettingsBackupsKeyDownloadRoute: typeof ApiSettingsBackupsKeyDownloadRoute
   ApiStaffStaffIdGoogleCalendarConnectRoute: typeof ApiStaffStaffIdGoogleCalendarConnectRoute
@@ -633,6 +647,13 @@ declare module '@tanstack/react-router' {
       path: '/api/internal/appointment-sync'
       fullPath: '/api/internal/appointment-sync'
       preLoaderRoute: typeof ApiInternalAppointmentSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/internal/lifecycle-tick': {
+      id: '/api/internal/lifecycle-tick'
+      path: '/api/internal/lifecycle-tick'
+      fullPath: '/api/internal/lifecycle-tick'
+      preLoaderRoute: typeof ApiInternalLifecycleTickRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/settings/': {
@@ -814,6 +835,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
   ApiInternalAppointmentFreedRoute: ApiInternalAppointmentFreedRoute,
   ApiInternalAppointmentSyncRoute: ApiInternalAppointmentSyncRoute,
+  ApiInternalLifecycleTickRoute: ApiInternalLifecycleTickRoute,
   ApiGoogleCalendarOauthCallbackRoute: ApiGoogleCalendarOauthCallbackRoute,
   ApiSettingsBackupsKeyDownloadRoute: ApiSettingsBackupsKeyDownloadRoute,
   ApiStaffStaffIdGoogleCalendarConnectRoute:

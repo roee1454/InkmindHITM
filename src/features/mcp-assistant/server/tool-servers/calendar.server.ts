@@ -6,6 +6,7 @@ import {
 } from '@/features/calendar/server/bot-appointments'
 import { getWorkingHoursForStaff } from '@/features/settings/server/profiles'
 import { toYmd, minutesToTime, timeToMinutes } from '@/lib/date-utils'
+import { syncAppointmentToGoogle } from '@/integrations/google-calendar/server/google-sync'
 import { mcpReadTool, mcpWriteTool } from './shared'
 import type { McpToolContext } from './shared'
 import type { McpActionDiff } from '../types'
@@ -233,10 +234,38 @@ export function buildCalendarTools(ctx: McpToolContext) {
         } satisfies McpActionDiff
       },
     ),
+    block_artist_time: mcpWriteTool(
+      ctx,
+      'block_artist_time',
+      'חוסם זמן ספציפי ביומן של איש/אשת צוות (למשל עבור מילואים, סידורים, ישיבות או חופשה).',
+      z.object({
+        staffId: z.string().describe('מזהה איש/אשת הצוות'),
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).describe('תאריך החסימה YYYY-MM-DD'),
+        timeSlot: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).describe('שעת תחילת החסימה HH:MM'),
+        durationHours: z.number().min(0.5).max(12).default(2).describe('משך החסימה בשעות'),
+        reason: z.string().default('חסימת זמן סטודיו').describe('סיבת החסימה (למשל: מילואים, סידורים, ישיבה)'),
+      }),
+      async ({ staffId, date, timeSlot, durationHours, reason }) => {
+        const su = await getSuperuserClient()
+        const staff = await su.collection('staff').getOne(staffId).catch(() => null)
+        const staffName = (staff?.name as string) || 'איש צוות'
+        return {
+          summary: `חסימת זמן ביומן — ${staffName}`,
+          rows: [
+            {
+              label: staffName,
+              before: 'פנוי',
+              after: `${date} ${timeSlot} (${durationHours} שעות) · ${reason}`,
+            },
+          ],
+        } satisfies McpActionDiff
+      },
+    ),
   }
 }
 
 /** The only place these two write tools actually mutate the database — called from
+/** The only place these write tools actually mutate the database — called from
  *  `approval.ts` when the owner taps "אשר ובצע", never from the model's own tool call. */
 export async function commitCalendarAction(toolName: string, args: Record<string, unknown>): Promise<string> {
   const su = await getSuperuserClient()
@@ -262,11 +291,13 @@ export async function commitCalendarAction(toolName: string, args: Record<string
       start_time: newStart.toISOString(),
       ...(bypassed ? { is_exception: true } : {}),
     })
+    await syncAppointmentToGoogle(appointmentId).catch(() => null)
     return 'התור הועבר בהצלחה.'
   }
   if (toolName === 'cancel_appointment') {
     const { appointmentId } = args as { appointmentId: string }
     await su.collection('appointments').update(appointmentId, { status: 'cancelled' })
+    await syncAppointmentToGoogle(appointmentId).catch(() => null)
     return 'התור בוטל בהצלחה.'
   }
   if (toolName === 'create_appointment') {
@@ -288,7 +319,7 @@ export async function commitCalendarAction(toolName: string, args: Record<string
     const [year, month, day] = date.split('-').map(Number)
     const [hour, minute] = timeSlot.split(':').map(Number)
     const startTime = new Date(year!, month! - 1, day!, hour!, minute!)
-    await su.collection('appointments').create({
+    const created = await su.collection('appointments').create({
       customer: customerId,
       staff: staffId,
       start_time: startTime.toISOString(),
@@ -299,11 +330,50 @@ export async function commitCalendarAction(toolName: string, args: Record<string
       source: 'staff_manual',
       is_exception: bypassed,
     })
+    await syncAppointmentToGoogle(created.id).catch(() => null)
     return 'התור נקבע בהצלחה.'
+  }
+  if (toolName === 'block_artist_time') {
+    const { staffId, date, timeSlot, durationHours, reason } = args as {
+      staffId: string
+      date: string
+      timeSlot: string
+      durationHours: number
+      reason?: string
+    }
+    const [year, month, day] = date.split('-').map(Number)
+    const [hour, minute] = timeSlot.split(':').map(Number)
+    const startTimeIso = new Date(year!, month! - 1, day!, hour!, minute!).toISOString()
+    const studio = await su.collection('studios').getFirstListItem('').catch(() => null)
+
+    let studioCustomer = await su.collection('customers').getFirstListItem('phone = "0553063884"').catch(() => null)
+    if (!studioCustomer) {
+      studioCustomer = await su.collection('customers').create({
+        name: 'סטודיו Inkmind (חסימת זמן)',
+        phone: '0553063884',
+      }).catch(() => null)
+    }
+
+    const created = await su.collection('appointments').create({
+      studio: studio?.id || '',
+      customer: studioCustomer?.id || null,
+      staff: staffId,
+      start_time: startTimeIso,
+      duration_minutes: Math.round(durationHours * 60),
+      status: 'confirmed',
+      tattoo_description: `[חסימת זמן] ${reason || 'חסימת סטודיו'}`,
+      deposit_paid: true,
+      slot_confirmed: true,
+      source: 'staff_manual',
+    })
+
+    await syncAppointmentToGoogle(created.id).catch(() => null)
+    return `נחסם זמן בהצלחה ביומן עבור ${date} בשעה ${timeSlot}.`
   }
   if (toolName === 'mark_appointment_status') {
     const { appointmentId, status } = args as { appointmentId: string; status: string }
     await su.collection('appointments').update(appointmentId, { status })
+    await syncAppointmentToGoogle(appointmentId).catch(() => null)
     return 'סטטוס התור עודכן בהצלחה.'
   }
   throw new Error(`Unknown calendar action: ${toolName}`)
@@ -313,5 +383,6 @@ export const CALENDAR_WRITE_TOOLS = new Set([
   'reschedule_appointment',
   'cancel_appointment',
   'create_appointment',
+  'block_artist_time',
   'mark_appointment_status',
 ])

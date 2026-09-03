@@ -49,6 +49,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
       chatId: appointment.chatId,
       leadName: appointment.leadName ?? '',
       leadPhone: appointment.leadPhone ?? '',
+      type: appointment.type || 'tattoo',
       date: appointment.date,
       timeSlot: appointment.timeSlot,
       staffId: appointment.staffId,
@@ -61,6 +62,11 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
       depositPaid: appointment.hasDeposit,
       notes: appointment.notes ?? '',
       allowException: appointment.isException,
+      referenceImages: appointment.referenceImages,
+      paymentReceiptUrl: appointment.paymentReceiptUrl,
+      healthDeclarationSigned: appointment.healthDeclarationSigned,
+      healthDeclarationDate: appointment.healthDeclarationDate,
+      healthDeclarationFileUrl: appointment.healthDeclarationFileUrl,
     })
     setLocalError(null)
   }, [appointment])
@@ -142,22 +148,88 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
               </div>
             )}
 
-            {appointment?.referenceImages && appointment.referenceImages.length > 0 && (
-              <div className="space-y-2 mt-4 border-t border-border/60 pt-3">
-                <span className="text-[13px] font-bold text-muted-foreground">תמונות התייחסות</span>
-                <div className="flex gap-2 overflow-x-auto py-1">
-                  {appointment.referenceImages.map((img, idx) => (
-                    <div
-                      key={idx}
-                      onClick={() => setSelectedGallery({ images: appointment.referenceImages!, index: idx })}
-                      className="relative w-16 h-16 rounded-2xl overflow-hidden border border-border/80 shrink-0 bg-muted cursor-pointer"
-                    >
-                      <img src={img} alt={`Reference ${idx + 1}`} className="w-full h-full object-cover" />
-                    </div>
-                  ))}
+            {/* Linked Documents & Media Section */}
+            <div className="space-y-3 mt-4 border-t border-border/60 pt-3" dir="rtl">
+              <span className="text-[13px] font-bold text-foreground">מסמכים ומדיה מקושרים</span>
+
+              {/* Reference / Inspiration Images */}
+              {appointment?.referenceImages && appointment.referenceImages.length > 0 ? (
+                <div className="space-y-1.5 rounded-xl border border-border/70 bg-card p-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-muted-foreground">תמונות השראה ורפרנס ({appointment.referenceImages.length})</span>
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto py-1">
+                    {appointment.referenceImages.map((img, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => setSelectedGallery({ images: appointment.referenceImages!, index: idx })}
+                        className="relative w-16 h-16 rounded-xl overflow-hidden border border-border/80 shrink-0 bg-muted cursor-pointer hover:opacity-90 transition-opacity"
+                      >
+                        <img src={img} alt={`Reference ${idx + 1}`} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
+              ) : null}
+
+              {/* Payment Receipt */}
+              {appointment?.paymentReceiptUrl && (
+                <div className="flex items-center justify-between rounded-xl border border-border/70 bg-card p-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <div
+                      onClick={() => setSelectedGallery({ images: [appointment.paymentReceiptUrl!], index: 0 })}
+                      className="relative w-12 h-12 rounded-lg overflow-hidden border border-border/80 shrink-0 bg-muted cursor-pointer hover:opacity-90 transition-opacity"
+                    >
+                      <img src={appointment.paymentReceiptUrl} alt="קבלה" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-foreground">אסמכתת תשלום מקדמה</span>
+                      <span className="text-micro text-emerald-600 dark:text-emerald-400 font-medium">מאומת</span>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-8"
+                    onClick={() => setSelectedGallery({ images: [appointment.paymentReceiptUrl!], index: 0 })}
+                  >
+                    צפה בקבלה
+                  </Button>
+                </div>
+              )}
+
+              {/* Health Notice */}
+              <div className="flex items-center justify-between rounded-xl border border-border/70 bg-card p-2.5">
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-foreground">הצהרת בריאות</span>
+                    {appointment?.healthDeclarationSigned ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-micro font-bold text-emerald-600 dark:text-emerald-400">
+                        חתומה ומאושרת
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-micro font-bold text-amber-600 dark:text-amber-400">
+                        טרם נחתמה
+                      </span>
+                    )}
+                  </div>
+                  {appointment?.healthDeclarationDate && (
+                    <span className="text-micro text-muted-foreground">תאריך חתימה: {appointment.healthDeclarationDate}</span>
+                  )}
+                </div>
+                {appointment?.healthDeclarationFileUrl && (
+                  <a
+                    href={appointment.healthDeclarationFileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-xs font-bold text-primary hover:underline"
+                  >
+                    צפה במסמך
+                  </a>
+                )}
               </div>
-            )}
+            </div>
 
             <div className="grid grid-cols-2 gap-3 pt-2">
               <Button type="submit" disabled={isSaving}>

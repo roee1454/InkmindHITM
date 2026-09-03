@@ -6,11 +6,13 @@
  */
 import type PocketBase from 'pocketbase'
 import type { RecordModel } from 'pocketbase'
-import { fitsWithinWorkingHours } from '@/lib/working-hours'
-import { getWorkingHoursForStaff } from '@/features/settings/server/profiles'
+import { evaluateWorkingHoursTier } from '@/lib/working-hours'
+import { getWorkingHoursForStaff, getArtistFlexibilityForStaff } from '@/features/settings/server/profiles'
 import { isStudioClosedOn } from '@/features/settings/server/closures'
 import { minutesToTime, toYmd } from '@/lib/date-utils'
 import { bookingLock } from '@/lib/async-lock'
+import { syncAppointmentToGoogle } from '@/integrations/google-calendar/server/google-sync'
+import { runWaitlistMatching } from '@/features/mcp-assistant/server/waitlist-matcher'
 
 const ACTIVE_STATUSES = '(status = "pending" || status = "confirmed")'
 
@@ -60,6 +62,7 @@ async function staffExists(su: PocketBase, staffId: string): Promise<boolean> {
 
 export interface AvailabilityCheckResult {
   available: boolean
+  tier?: 1 | 2 | 3
   reason:
     | 'available'
     | 'outside_working_hours'
@@ -68,6 +71,7 @@ export interface AvailabilityCheckResult {
     | 'invalid_staff_id'
     | 'date_in_past'
     | 'studio_closed'
+  suggestedPhrasing?: string
 }
 
 /** Past-date gate: the model resolves relative dates ("ראשון הבא") itself, and a
@@ -91,14 +95,34 @@ export async function checkAvailabilityForBot(
   const closure = await isStudioClosedOn(su, date)
   if (closure.closed) return { available: false, reason: 'studio_closed' }
   if (!(await staffExists(su, staffId))) return { available: false, reason: 'invalid_staff_id' }
-  const windows = await getWorkingHoursForStaff(su, staffId)
+
+  const [windows, flexibility] = await Promise.all([
+    getWorkingHoursForStaff(su, staffId),
+    getArtistFlexibilityForStaff(su, staffId),
+  ])
   if (windows.length === 0) return { available: false, reason: 'no_working_hours_configured' }
-  if (!fitsWithinWorkingHours(windows, date, timeSlot, durationHours)) {
-    return { available: false, reason: 'outside_working_hours' }
+
+  const evaluation = evaluateWorkingHoursTier(windows, date, timeSlot, durationHours, flexibility)
+  if (!evaluation.fits) {
+    return { available: false, tier: evaluation.tier, reason: 'outside_working_hours' }
   }
+
   const taken = await overlapsExistingAppointment(su, staffId, date, timeSlot, durationHours)
-  if (taken) return { available: false, reason: 'slot_taken' }
-  return { available: true, reason: 'available' }
+  if (taken) return { available: false, tier: evaluation.tier, reason: 'slot_taken' }
+
+  const [slotH = 0, slotM = 0] = timeSlot.split(':').map(Number)
+  const slotEndMins = slotH * 60 + slotM + Math.round(durationHours * 60)
+  const endFormatted = minutesToTime(slotEndMins)
+
+  return {
+    available: true,
+    tier: evaluation.tier,
+    reason: 'available',
+    suggestedPhrasing:
+      evaluation.tier === 2
+        ? `המקעקע בדרך כלל מסיים ב-${evaluation.standardEndTime}, אך המשבצת אושרה במסגרת הרחבה גמישה (Tier 2 עד ${endFormatted}). יש להציג ללקוח בטבעיות: המקעקע בדרך כלל מסיים ב-${evaluation.standardEndTime}, אבל נוכל לעשות מאמץ מיוחד ולקבל אותך ב-${timeSlot} במיוחד כדי שתספיק השבוע!`
+        : undefined,
+  }
 }
 
 export interface ScheduleEntry {
@@ -139,6 +163,7 @@ export interface CreatePendingHoldInput {
   timeSlot: string
   durationHours: number
   tattooDescription: string
+  type?: 'tattoo' | 'sketch'
 }
 
 export interface CreatePendingHoldResult {
@@ -153,7 +178,7 @@ export async function createPendingHoldForBot(
   su: PocketBase,
   input: CreatePendingHoldInput,
 ): Promise<CreatePendingHoldResult> {
-  const { customerId, staffId, date, timeSlot, durationHours, tattooDescription } = input
+  const { customerId, staffId, date, timeSlot, durationHours, tattooDescription, type = 'tattoo' } = input
   if (slotIsInPast(date, timeSlot)) return { status: 'date_in_past', appointmentId: null }
   const closure = await isStudioClosedOn(su, date)
   if (closure.closed) return { status: 'studio_closed', appointmentId: null }
@@ -178,6 +203,7 @@ export async function createPendingHoldForBot(
       start_time: start.toISOString(),
       duration_minutes: durationHours * 60,
       status: 'pending',
+      type,
       tattoo_description: tattooDescription,
       source: 'ai_bot',
     })
@@ -270,11 +296,13 @@ export async function getCompletedAppointmentAwaitingNpsForBot(
   ).catch(() => null)
 }
 
-/** Soft-cancels an appointment (status='cancelled', never a DELETE — preserves booking history).
- *  Releasing it from the artist's Google Calendar happens via the appointments PocketBase hook
- *  (pocketbase/pb_hooks/appointments.pb.js) reacting to this update — syncAppointmentToGoogle
- *  already deletes the Google event when status isn't 'confirmed', so no explicit call is
- *  needed here. */
 export async function cancelAppointmentForBot(su: PocketBase, appointment: RecordModel): Promise<void> {
   await su.collection('appointments').update(appointment.id, { status: 'cancelled' })
+  await syncAppointmentToGoogle(appointment.id)
+  await runWaitlistMatching({
+    id: appointment.id,
+    staff: (appointment.staff as string) || null,
+    startTime: appointment.start_time as string,
+    durationMinutes: Number(appointment.duration_minutes) || 120,
+  }).catch((err) => console.error('[cancelAppointmentForBot] runWaitlistMatching error:', err))
 }

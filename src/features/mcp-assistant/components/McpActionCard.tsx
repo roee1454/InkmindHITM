@@ -8,6 +8,7 @@ export const TOOL_LABELS: Record<string, string> = {
   reschedule_appointment: 'העברת תור',
   cancel_appointment: 'ביטול תור',
   create_appointment: 'קביעת תור חדש',
+  block_artist_time: 'חסימת זמן ביומן',
   mark_appointment_status: 'עדכון סטטוס תור',
   update_lead_stage: 'שינוי שלב ליד',
   add_customer_note: 'הוספת הערה ללקוח/ה',

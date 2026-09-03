@@ -18,11 +18,14 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { HourPicker } from '@/components/ui/hour-picker'
 import { OptionCardButton } from '@/components/ui/option-card-button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   saveArtistProfile,
   deleteArtistProfile,
   getWorkingHours,
   saveWorkingHours,
+  saveArtistFlexibility,
+  DEFAULT_ARTIST_FLEXIBILITY,
   type ApiArtistProfile,
   type WorkingHoursWindow,
 } from '../server/settings'
@@ -114,6 +117,18 @@ export const ArtistProfileEditor: React.FC<ArtistProfileEditorProps> = ({
   const [savingHours, setSavingHours] = useState(false)
   const [hasUnsavedHours, setHasUnsavedHours] = useState(false)
 
+  const [allowTier2, setAllowTier2] = useState(profile?.flexibility?.allowTier2 ?? DEFAULT_ARTIST_FLEXIBILITY.allowTier2)
+  const [tier2ExtensionMinutes, setTier2ExtensionMinutes] = useState(profile?.flexibility?.tier2ExtensionMinutes ?? DEFAULT_ARTIST_FLEXIBILITY.tier2ExtensionMinutes)
+  const [tier2MaxSessionMinutes, setTier2MaxSessionMinutes] = useState(profile?.flexibility?.tier2MaxSessionMinutes ?? DEFAULT_ARTIST_FLEXIBILITY.tier2MaxSessionMinutes)
+
+  useEffect(() => {
+    if (profile?.flexibility) {
+      setAllowTier2(profile.flexibility.allowTier2)
+      setTier2ExtensionMinutes(profile.flexibility.tier2ExtensionMinutes)
+      setTier2MaxSessionMinutes(profile.flexibility.tier2MaxSessionMinutes)
+    }
+  }, [profile?.flexibility])
+
   const hoursQuery = useQuery<WorkingHoursWindow[]>({
     queryKey: ['working-hours', staffId],
     queryFn: () => getWorkingHours({ data: { staffId } }),
@@ -201,12 +216,24 @@ export const ArtistProfileEditor: React.FC<ArtistProfileEditorProps> = ({
     setSavingHours(true)
     setError(null)
     try {
-      const saved = await saveWorkingHours({ data: { staffId, windows } })
+      const [saved] = await Promise.all([
+        saveWorkingHours({ data: { staffId, windows } }),
+        saveArtistFlexibility({
+          data: {
+            staffId,
+            flexibility: {
+              allowTier2,
+              tier2ExtensionMinutes,
+              tier2MaxSessionMinutes,
+            },
+          },
+        }),
+      ])
       setWindows(saved)
       setHasUnsavedHours(false)
       queryClient.invalidateQueries({ queryKey: ['working-hours', staffId] })
+      queryClient.invalidateQueries({ queryKey: ['artist-profiles'] })
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'שגיאה בשמירת שעות העבודה')
     } finally {
       setSavingHours(false)
     }
@@ -475,6 +502,90 @@ export const ArtistProfileEditor: React.FC<ArtistProfileEditorProps> = ({
                     </div>
                   )
                 })}
+              </div>
+
+              {/* End-Time Flexibility Tiers Card */}
+              <div className="space-y-3.5 rounded-xl border border-border/70 bg-card p-4 text-right" dir="rtl">
+                <div className="flex items-center justify-between border-b border-border/50 pb-2.5">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-foreground">מדרגות גמישות לשעות סיום (Flexibility Tiers)</span>
+                    <span className="text-micro text-muted-foreground">הגדרת אפשרות הבוט להרחיב שעות סיום עבור תורים קצרים ופגישות סקיצה</span>
+                  </div>
+                  <Switch
+                    checked={allowTier2}
+                    onCheckedChange={(val) => {
+                      setAllowTier2(val)
+                      setHasUnsavedHours(true)
+                    }}
+                    disabled={readOnly}
+                  />
+                </div>
+
+                {allowTier2 ? (
+                  <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 pt-1">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-foreground">הרחבה מרבית מעבר לשעת הסיום (Tier 2)</label>
+                      <Select
+                        value={String(tier2ExtensionMinutes)}
+                        onValueChange={(val) => {
+                          setTier2ExtensionMinutes(Number(val))
+                          setHasUnsavedHours(true)
+                        }}
+                        disabled={readOnly}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent align="end">
+                          <SelectItem value="30">+30 דקות</SelectItem>
+                          <SelectItem value="60">+60 דקות (שעה)</SelectItem>
+                          <SelectItem value="90">+90 דקות (מומלץ)</SelectItem>
+                          <SelectItem value="120">+120 דקות (שעתיים)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <span className="text-[11.5px] text-muted-foreground">תוספת זמן מקסימלית שהבוט רשאי להציע ביוזמתו</span>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-foreground">הגבלת משך סשן להרחבה</label>
+                      <Select
+                        value={String(tier2MaxSessionMinutes)}
+                        onValueChange={(val) => {
+                          setTier2MaxSessionMinutes(Number(val))
+                          setHasUnsavedHours(true)
+                        }}
+                        disabled={readOnly}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent align="end">
+                          <SelectItem value="45">עד 45 דק׳ (סקיצה בלבד)</SelectItem>
+                          <SelectItem value="60">עד שעה (סקיצות ופלאשים קטנים)</SelectItem>
+                          <SelectItem value="90">עד שעה וחצי</SelectItem>
+                          <SelectItem value="120">עד שעתיים</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <span className="text-[11.5px] text-muted-foreground">סשנים ארוכים יותר לא יורחבו מעבר לשעות הסטנדרטיות</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    הרחבת שעות כבויה — הבוט ישבץ אך ורק בתוך שעות העבודה הסטנדרטיות (Tier 1 בלבד).
+                  </p>
+                )}
+
+                {allowTier2 && (
+                  <div className="rounded-lg bg-muted/40 p-2.5 text-micro text-muted-foreground">
+                    <span className="font-bold text-foreground">דוגמה לניסוח הבוט מול הלקוח: </span>
+                    <span>&quot;{profile?.artistName || 'המקעקע'} בדרך כלל מסיים ב-19:00, אבל נוכל לעשות מאמץ מיוחד ולקבל אותך ב-19:30 כדי שתספיק השבוע!&quot;</span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-1.5 text-micro text-muted-foreground/80 border-t border-border/40 pt-2">
+                  <span className="font-bold text-amber-500">Tier 3 (חריגה מיוחדת):</span>
+                  <span>כל חריגה מעבר להרחבה המוגדרת תיחסם משיבוץ אוטומטי ותועבר לאישור ידני של הצוות.</span>
+                </div>
               </div>
 
               {!readOnly && (
