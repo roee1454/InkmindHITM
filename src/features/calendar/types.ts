@@ -1,10 +1,12 @@
 export type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show'
+export type AppointmentType = 'tattoo' | 'sketch'
 
 export interface ApiAppointment {
   id: string
   customerId: string
   chatId: string | null
   staffId: string | null
+  type?: AppointmentType
   date: string
   timeSlot: string
   status: AppointmentStatus
@@ -23,6 +25,10 @@ export interface ApiAppointment {
   isException: boolean
   source: 'ai_bot' | 'staff_manual'
   referenceImages?: string[]
+  paymentReceiptUrl?: string | null
+  healthDeclarationSigned?: boolean
+  healthDeclarationDate?: string | null
+  healthDeclarationFileUrl?: string | null
 }
 
 export interface AppointmentFormValues {
@@ -30,6 +36,7 @@ export interface AppointmentFormValues {
   chatId: string | null
   leadName: string
   leadPhone: string
+  type?: AppointmentType
   date: string
   timeSlot: string
   staffId: string | null
@@ -43,6 +50,10 @@ export interface AppointmentFormValues {
   notes: string
   allowException: boolean
   referenceImages?: string[]
+  paymentReceiptUrl?: string | null
+  healthDeclarationSigned?: boolean
+  healthDeclarationDate?: string | null
+  healthDeclarationFileUrl?: string | null
 }
 
 export interface ApiLead {

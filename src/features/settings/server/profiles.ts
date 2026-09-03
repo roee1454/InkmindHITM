@@ -36,6 +36,18 @@ function describeArtistProfileError(err: unknown): Error {
   return err instanceof Error ? err : new Error('שגיאה בשמירת הפרופיל')
 }
 
+export interface ArtistFlexibilitySettings {
+  allowTier2: boolean
+  tier2ExtensionMinutes: number
+  tier2MaxSessionMinutes: number
+}
+
+export const DEFAULT_ARTIST_FLEXIBILITY: ArtistFlexibilitySettings = {
+  allowTier2: true,
+  tier2ExtensionMinutes: 90,
+  tier2MaxSessionMinutes: 60,
+}
+
 export interface ApiArtistProfile {
   id: string
   staffId: string
@@ -44,6 +56,7 @@ export interface ApiArtistProfile {
   websiteUrl: string | null
   bio: string | null
   artistName: string
+  flexibility?: ArtistFlexibilitySettings
 }
 
 export const getArtistProfiles = createServerFn({ method: 'GET' }).handler(
@@ -62,10 +75,17 @@ export const getArtistProfiles = createServerFn({ method: 'GET' }).handler(
         websiteUrl: (item.website_url as string) || null,
         bio: (item.bio as string) || null,
         artistName: staffObj?.name || 'מקעקע/ת',
+        flexibility: (item.flexibility as ArtistFlexibilitySettings) || DEFAULT_ARTIST_FLEXIBILITY,
       }
     })
   },
 )
+
+const flexibilitySchema = z.object({
+  allowTier2: z.boolean().default(true),
+  tier2ExtensionMinutes: z.number().default(90),
+  tier2MaxSessionMinutes: z.number().default(60),
+})
 
 const saveArtistProfileSchema = z.object({
   id: z.string().optional(),
@@ -267,4 +287,56 @@ export const saveWorkingHours = createServerFn({ method: 'POST' })
       })
     }
     return normalizedWindows
+  })
+
+export async function getArtistFlexibilityForStaff(
+  su: Awaited<ReturnType<typeof getSuperuserClient>>,
+  staffId: string,
+): Promise<ArtistFlexibilitySettings> {
+  const existing = await su.collection('artist_profiles').getList(1, 1, {
+    filter: `staff = "${staffId}"`,
+  }).catch(() => null)
+
+  const profile = existing?.items[0]
+  if (!profile || !profile.flexibility) return DEFAULT_ARTIST_FLEXIBILITY
+
+  const raw = profile.flexibility as Record<string, unknown>
+  return {
+    allowTier2: typeof raw.allowTier2 === 'boolean' ? raw.allowTier2 : true,
+    tier2ExtensionMinutes: typeof raw.tier2ExtensionMinutes === 'number' ? raw.tier2ExtensionMinutes : 90,
+    tier2MaxSessionMinutes: typeof raw.tier2MaxSessionMinutes === 'number' ? raw.tier2MaxSessionMinutes : 60,
+  }
+}
+
+const saveArtistFlexibilitySchema = z.object({
+  staffId: z.string(),
+  flexibility: flexibilitySchema,
+})
+
+export const saveArtistFlexibility = createServerFn({ method: 'POST' })
+  .validator(saveArtistFlexibilitySchema)
+  .handler(async ({ data }) => {
+    const session = await requireAuth()
+    const isAdmin = session.staff.role === 'owner' || session.staff.role === 'admin'
+    if (!isAdmin && session.staff.id !== data.staffId) {
+      throw new Error('אין הרשאה לעדכן גמישות שעות של מקעקע אחר.')
+    }
+
+    const su = await getSuperuserClient()
+    const existing = await su.collection('artist_profiles').getList(1, 1, {
+      filter: `staff = "${data.staffId}"`,
+    })
+
+    const first = existing.items[0]
+    if (first) {
+      await su.collection('artist_profiles').update(first.id, {
+        flexibility: data.flexibility,
+      })
+    } else {
+      await su.collection('artist_profiles').create({
+        staff: data.staffId,
+        flexibility: data.flexibility,
+      })
+    }
+    return data.flexibility
   })

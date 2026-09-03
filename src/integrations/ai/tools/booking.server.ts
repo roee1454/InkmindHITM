@@ -35,20 +35,28 @@ export function buildBookingTools(ctx: ToolFactoryContext) {
       async ({ staffId, date, timeSlot, durationHours }) => {
         const result = await checkAvailabilityForBot(su, { staffId, date, timeSlot, durationHours })
         const messages: Record<typeof result.reason, string> = {
-          available: 'המשבצת פנויה. ניתן להמשיך לאיסוף פרטי הקעקוע אם הלקוח מעוניין.',
-          outside_working_hours: 'המשבצת מחוץ לשעות הפעילות של האמן/ית — הצע/י ללקוח משבצת אחרת.',
+          available: result.suggestedPhrasing || 'המשבצת פנויה. ניתן להמשיך לאיסוף פרטי הקעקוע אם הלקוח מעוניין.',
+          outside_working_hours: result.tier === 3
+            ? 'המשבצת חורגת מעבר לשעות הפעילות וההרחבה המותרת (Tier 3) — יש להציע ללקוח מועד אחר או להעביר לצוות עם call_staff.'
+            : 'המשבצת מחוץ לשעות הפעילות של האמן/ית — הצע/י ללקוח משבצת אחרת.',
           slot_taken: 'המשבצת תפוסה כבר. הצע/י ללקוח משבצת אחרת ובדוק/י אותה שוב עם כלי זה.',
           no_working_hours_configured: 'לא הוגדרו שעות עבודה לאמן/ית הזה/ו — יש להעביר את הטיפול לצוות עם call_staff (סיבה: slot_conflict).',
           invalid_staff_id: 'staffId לא תקין — לעולם אל תמציאו או תעבירו שם אמן במקום מזהה. קראו ל-suggest_artists וקבלו ממנו את המזהה המדויק.',
           date_in_past: 'התאריך והשעה האלה כבר עברו! כנראה חישבת תאריך יחסי לא נכון. חזור/י לבלוק "הקשר זמן" שבהנחיות, חשב/י מחדש את התאריך שהלקוח ביקש, והצע/י מועד עתידי.',
           studio_closed: 'הסטודיו סגור בתאריך זה. הודע/י ללקוח בנימוס והצע/י מועד אחר.',
         }
-        return { status: result.available ? 'success' : 'unavailable', message: messages[result.reason], data: result }
+        return {
+          status: result.available ? 'success' : 'unavailable',
+          message: messages[result.reason],
+          tier: result.tier ?? 1,
+          suggestedPhrasing: result.suggestedPhrasing,
+          data: result,
+        }
       }
     ),
 
     get_artist_schedule: botTool(
-      'מחזיר את יומן ההזמנות הקיים של אמן/ית יחד עם שעות הפעילות המוגדרות שלו, כדי להציע ללקוח משבצות פנויות מתאימות.',
+      'מחזיר את יומן ההזמנות הקיים של אמן/ית יחד עם שעות הפעילות המוגדרות שלו, והצעות לסלוטים צמודים (tight-packing) לסגירת השבוע ל-0.',
       z.object({
         staffId: z.string().describe('מזהה איש הצוות'),
         fromDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'תאריך חייב להיות בפורמט YYYY-MM-DD').describe('תאריך התחלה בפורמט YYYY-MM-DD'),
@@ -67,12 +75,27 @@ export function buildBookingTools(ctx: ToolFactoryContext) {
           endTime: w.endTime,
         }))
 
+        // Tight-packing calculation: identify slots directly adjacent to existing bookings to "fill the week to 0"
+        const tightPackingSuggestions = schedule.map((apt) => {
+          const [h = 0, m = 0] = apt.timeSlot.split(':').map(Number)
+          const aptEndMins = h * 60 + m + Math.round(apt.durationHours * 60)
+          const aptEndH = Math.floor(aptEndMins / 60)
+          const aptEndM = aptEndMins % 60
+          const adjacentStart = `${String(aptEndH).padStart(2, '0')}:${String(aptEndM).padStart(2, '0')}`
+          return {
+            date: apt.date,
+            adjacentStart,
+            recommendedReason: 'צמוד לתור קודם שמסתיים בשעה זו (מניעת חלון מת ביומן)',
+          }
+        })
+
         return {
           status: 'success',
-          message: 'אלו המשבצות התפוסות ושעות הפעילות של האמן. כל שעה שאינה תפוסה ונמצאת בתוך שעות הפעילות נחשבת פנויה. ימים שאינם מופיעים בשעות הפעילות מוגדרים כסגורים (האמן אינו עובד בהם). יש לוודא זמינות ספציפית עם check_availability לפני הזמנה.',
+          message: 'אלו המשבצות התפוסות, שעות הפעילות והצעות לסגירת שבוע ל-0 (tight-packing). עקרון מנחה: תמיד עדיף להציע ללקוח שעות שנצמדות לתורים קיימים כדי למנוע חלונות מתים של 45 דק׳ ביומן. יש לוודא זמינות ספציפית עם check_availability לפני הזמנה.',
           data: {
             bookedAppointments: schedule,
             workingHours: formattedHours,
+            tightPackingSuggestions,
           },
         }
       }

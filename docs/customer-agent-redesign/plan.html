@@ -1,0 +1,816 @@
+<title>Customer Agent Redesign</title>
+<meta name="description" content="Working plan to rebuild Inkmind's customer-facing WhatsApp booking agent — seven workstreams, open questions, and the PocketBase-vs-Postgres call.">
+<style>
+  :root {
+    --bg: #edece8;
+    --surface: #f8f7f4;
+    --surface-2: #f1f0ec;
+    --ink: #201d1a;
+    --ink-soft: #56514b;
+    --ink-faint: #857e75;
+    --line: #d8d4cb;
+    --line-strong: #c3beb2;
+    --accent: #9c4234;
+    --accent-ink: #7d3327;
+    --accent-soft: rgba(156, 66, 52, 0.10);
+    --warn: #916321;
+    --warn-soft: rgba(145, 99, 33, 0.12);
+    --ok: #3f6b52;
+    --ok-soft: rgba(63, 107, 82, 0.12);
+    --crit: #8a2f3b;
+    --shadow: 0 1px 2px rgba(32, 29, 26, 0.05), 0 6px 20px -12px rgba(32, 29, 26, 0.18);
+    --measure: 68ch;
+    --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --font-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #171512;
+      --surface: #201e1a;
+      --surface-2: #262320;
+      --ink: #ece7df;
+      --ink-soft: #a79f93;
+      --ink-faint: #7c7469;
+      --line: #35312b;
+      --line-strong: #423d35;
+      --accent: #dd7460;
+      --accent-ink: #e79683;
+      --accent-soft: rgba(221, 116, 96, 0.14);
+      --warn: #d3a552;
+      --warn-soft: rgba(211, 165, 82, 0.15);
+      --ok: #6cae8b;
+      --ok-soft: rgba(108, 174, 139, 0.15);
+      --crit: #dc8091;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -14px rgba(0, 0, 0, 0.55);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #171512;
+    --surface: #201e1a;
+    --surface-2: #262320;
+    --ink: #ece7df;
+    --ink-soft: #a79f93;
+    --ink-faint: #7c7469;
+    --line: #35312b;
+    --line-strong: #423d35;
+    --accent: #dd7460;
+    --accent-ink: #e79683;
+    --accent-soft: rgba(221, 116, 96, 0.14);
+    --warn: #d3a552;
+    --warn-soft: rgba(211, 165, 82, 0.15);
+    --ok: #6cae8b;
+    --ok-soft: rgba(108, 174, 139, 0.15);
+    --crit: #dc8091;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -14px rgba(0, 0, 0, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation: none !important; transition: none !important; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 18px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 5rem) clamp(1.1rem, 4vw, 3rem) 6rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+  @media (min-width: 1080px) {
+    .shell {
+      grid-template-columns: 210px minmax(0, 1fr);
+      gap: 4rem;
+      align-items: start;
+    }
+  }
+
+  /* ---- side rail ---- */
+  .rail { display: none; }
+  @media (min-width: 1080px) {
+    .rail {
+      display: block;
+      position: sticky;
+      top: 2.5rem;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+  }
+  .rail-title {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-faint);
+    font-size: 10.5px;
+    margin-bottom: 0.9rem;
+  }
+  .rail a {
+    display: flex;
+    gap: 0.55rem;
+    padding: 0.42rem 0.55rem;
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-left: 2px solid var(--line);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .rail a:hover { color: var(--ink); background: var(--surface-2); }
+  .rail a.active {
+    color: var(--accent-ink);
+    border-left-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .rail a .tag { color: var(--ink-faint); flex-shrink: 0; }
+  .rail a.active .tag { color: var(--accent); }
+
+  /* ---- content column ---- */
+  .col { min-width: 0; max-width: 760px; }
+  .col > * { animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
+  .col > *:nth-child(2) { animation-delay: 0.04s; }
+  .col > *:nth-child(3) { animation-delay: 0.08s; }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  header.doc {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 2rem;
+    margin-bottom: 2.5rem;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--accent-ink);
+    margin: 0 0 1rem;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(2.1rem, 6vw, 3.05rem);
+    line-height: 1.04;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+    margin: 0 0 1rem;
+  }
+  .dek {
+    font-size: 1.16rem;
+    color: var(--ink-soft);
+    margin: 0 0 1.6rem;
+    max-width: var(--measure);
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.4rem;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+  .meta b { color: var(--ink-soft); font-weight: 500; }
+
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.02rem;
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+
+  section.ws {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+    padding: clamp(1.4rem, 3.5vw, 2.1rem);
+    margin-bottom: 1.6rem;
+    scroll-margin-top: 2rem;
+  }
+  .ws-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding-bottom: 1.1rem;
+    margin-bottom: 1.2rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .ws-tag {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1;
+    color: var(--accent-ink);
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border-radius: 3px;
+    padding: 0.4rem 0.5rem;
+    flex-shrink: 0;
+  }
+  .ws-head .titles { flex: 1; min-width: 0; }
+  .ws-head h2 { margin-bottom: 0.3rem; }
+  .ws-sub {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--ink-faint);
+  }
+
+  .pill {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    padding: 0.28rem 0.5rem;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .pill.draft { background: var(--surface-2); color: var(--ink-soft); border: 1px solid var(--line-strong); }
+  .pill.decision { background: var(--warn-soft); color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent); }
+  .pill.blocked { background: var(--accent-soft); color: var(--accent-ink); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+
+  .field { margin-bottom: 1.15rem; }
+  .field:last-child { margin-bottom: 0; }
+  .label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-faint);
+    margin-bottom: 0.4rem;
+  }
+  .field p { margin: 0 0 0.6rem; }
+  .field p:last-child { margin-bottom: 0; }
+  .field ul { margin: 0.2rem 0 0; padding-left: 1.1rem; }
+  .field li { margin-bottom: 0.35rem; }
+
+  code, .chip {
+    font-family: var(--font-mono);
+    font-size: 0.82em;
+  }
+  code {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 0.08em 0.36em;
+    color: var(--accent-ink);
+    word-break: break-word;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .chip {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 0.24rem 0.46rem;
+    color: var(--ink-soft);
+    font-size: 11.5px;
+  }
+
+  .oq {
+    border-left: 2px solid var(--warn);
+    background: var(--warn-soft);
+    border-radius: 0 3px 3px 0;
+    padding: 0.7rem 0.9rem;
+  }
+  .oq .label { color: var(--warn); }
+  .oq ul { padding-left: 1.05rem; }
+  .oq li { color: var(--ink); }
+  .oq li::marker { color: var(--warn); }
+
+  /* ---- verdict block ---- */
+  section.verdict {
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    border-radius: 0 4px 4px 0;
+    padding: clamp(1.4rem, 3.5vw, 2rem);
+    margin-bottom: 1.6rem;
+    scroll-margin-top: 2rem;
+  }
+  section.verdict h2 { margin-bottom: 1rem; font-size: 1.18rem; letter-spacing: -0.01em; }
+  .verdict h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    margin: 1.5rem 0 0.5rem;
+  }
+  .verdict .q {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-bottom: 0.3rem;
+  }
+  .verdict .a {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--accent-ink);
+    margin: 0 0 0.5rem;
+  }
+
+  /* ---- phasing table ---- */
+  .phase-wrap { overflow-x: auto; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.92rem;
+    min-width: 460px;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  th {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+  td b { font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-ink); font-weight: 500; }
+  tr:last-child td { border-bottom: none; }
+
+  h2.rule {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: -0.015em;
+    margin: 3.2rem 0 1.3rem;
+    padding-top: 1.8rem;
+    border-top: 1px solid var(--line);
+  }
+  h2.rule:first-of-type { margin-top: 0; }
+
+  .note {
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    background: var(--surface-2);
+    border: 1px dashed var(--line-strong);
+    border-radius: 4px;
+    padding: 1rem 1.2rem;
+  }
+  .note code { background: var(--surface); }
+  a.inline { color: var(--accent-ink); text-decoration-color: var(--line-strong); text-underline-offset: 2px; }
+  a.inline:hover { text-decoration-color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+
+<div class="shell">
+  <nav class="rail" aria-label="Workstreams">
+    <div class="rail-title">Workstreams</div>
+    <a href="#ws-a"><span class="tag">A</span><span>Lead status</span></a>
+    <a href="#ws-b"><span class="tag">B</span><span>Artist roster</span></a>
+    <a href="#ws-c"><span class="tag">C</span><span>Design intent</span></a>
+    <a href="#ws-d"><span class="tag">D</span><span>Image input</span></a>
+    <a href="#ws-e"><span class="tag">E</span><span>Email capture</span></a>
+    <a href="#ws-f"><span class="tag">F</span><span>Health notice</span></a>
+    <a href="#ws-g"><span class="tag">G</span><span>Calendar / PB</span></a>
+    <a href="#answers"><span class="tag">Q</span><span>Answers</span></a>
+    <a href="#phasing"><span class="tag">»</span><span>Phasing</span></a>
+  </nav>
+
+  <div class="col">
+    <header class="doc">
+      <p class="eyebrow">Inkmind CRM · Design Plan</p>
+      <h1>Customer Agent Redesign</h1>
+      <p class="dek">A working plan to rebuild the customer-facing WhatsApp booking agent — the persona that talks to studio clients, not the in-app MCP assistant. Seven parallel workstreams, each with an approach, the files it touches, and the decisions still open.</p>
+      <div class="meta">
+        <span><b>Status</b> Draft — for extension</span>
+        <span><b>Branch</b> feature/mcp</span>
+        <span><b>Scope</b> src/integrations/ai/*</span>
+        <span><b>Date</b> 2026-09-02</span>
+      </div>
+    </header>
+
+    <div class="note" style="margin-bottom:2.5rem">
+      <b>How this engine works today.</b> One inbound WhatsApp message → <code>webhook.ts</code> ingests it and debounces a bot turn → <code>runBotTurn()</code> in <code>agent.server.ts</code> loads the conversation, builds a system prompt from <code>prompts.ts</code> (base rules + a block for the current <code>ConversationState</code> + persona), maps the last 16 messages to model turns, and runs the Vercel AI SDK tool loop. Tools live in <code>src/integrations/ai/tools/*.server.ts</code>; each conversation moves through a funnel (<code>NEW → COLLECTING_INFO → AWAIT_PRICE_OFFER → AWAIT_PAYMENT → AWAIT_FINAL_CONFIRMATION → AWAITING_APPOINTMENT → AWAIT_NPS_SCORE → COMPLETED</code>) governed by the transition table in <code>state-machine.ts</code>.
+    </div>
+
+    <h2 class="rule">Workstreams</h2>
+
+    <!-- A -->
+    <section class="ws" id="ws-a">
+      <div class="ws-head">
+        <span class="ws-tag">A</span>
+        <div class="titles">
+          <h2>Lead status the agent actually maintains</h2>
+          <div class="ws-sub">customers.lead_stage · state-machine.ts</div>
+        </div>
+        <span class="pill decision">Needs decision</span>
+      </div>
+
+      <div class="field">
+        <div class="label">Problem</div>
+        <p>Two parallel tracks exist and only one moves. The agent drives <code>conversations.state</code> through the whole booking funnel, but <code>customers.lead_stage</code> — the field the Leads board renders — is written exactly twice in the codebase: set to <code>new</code> when the webhook first sees a number, and moved by hand in the Leads UI (<code>features/leads/server/leads.ts</code>). The moment automation is on, the pipeline board is stale.</p>
+      </div>
+
+      <div class="field">
+        <div class="label">Approach</div>
+        <p>Make <code>lead_stage</code> a <em>projection</em> of conversation state, written in exactly one place. Extend <code>transition()</code> in <code>state-machine.ts</code> so every state change also resolves and writes the mapped lead stage for that conversation's customer, atomically with the audit-log entry it already makes.</p>
+        <ul>
+          <li><code>NEW → new</code></li>
+          <li><code>COLLECTING_INFO → intake</code></li>
+          <li><code>AWAIT_PRICE_OFFER → awaiting_price</code></li>
+          <li><code>AWAIT_PAYMENT</code>, <code>AWAIT_FINAL_CONFIRMATION → awaiting_payment</code></li>
+          <li><code>AWAITING_APPOINTMENT → booked</code></li>
+          <li>bot-cancel / 48h pending-expiry (cron) → <code>expired</code></li>
+        </ul>
+        <p>The cron mirror in <code>pb_hooks/cron.pb.js</code> already resets stranded states directly — add the matching <code>lead_stage</code> write there too (it can't call TS).</p>
+      </div>
+
+      <div class="field">
+        <div class="label">Touches</div>
+        <div class="chips">
+          <span class="chip">src/features/conversations/server/state-machine.ts</span>
+          <span class="chip">pocketbase/pb_hooks/cron.pb.js</span>
+          <span class="chip">src/features/leads/* (realtime refresh)</span>
+        </div>
+      </div>
+
+      <div class="field oq">
+        <div class="label">Open questions</div>
+        <ul>
+          <li>Does the automated stage <b>override a manual staff change</b>? Proposal: the agent owns <code>lead_stage</code> while <code>conversations.status === 'bot_active'</code>; once escalated / staff-handling, freeze it and let staff own it. Confirm.</li>
+          <li>Keep <code>booked</code> for <code>COMPLETED</code>, or add a <code>done</code> / <code>repeat</code> stage? Current enum has no terminal-success value distinct from <code>booked</code>.</li>
+          <li>Backfill existing customers on deploy, or let them drift forward naturally?</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- B -->
+    <section class="ws" id="ws-b">
+      <div class="ws-head">
+        <span class="ws-tag">B</span>
+        <div class="titles">
+          <h2>The full artist roster, with portfolios</h2>
+          <div class="ws-sub">suggest_artists · profiles.ts · artist_profiles</div>
+        </div>
+        <span class="pill draft">Draft</span>
+      </div>
+
+      <div class="field">
+        <div class="label">Problem</div>
+        <p>On the "success" path, <code>suggest_artists</code> returns only the single named or best-matched artist, and the <code>COLLECTING_INFO</code> prompt tells the model to present that one pick as professional judgement ("אני חושב שרואי יתאים לך בול"). Clients never see the roster, and the portfolio / Instagram / website links already stored in <code>artist_profiles</code> are never surfaced. The full list only appears through the <code>fallback_all_artists</code> branch — an edge case, not the norm.</p>
+      </div>
+
+      <div class="field">
+        <div class="label">Approach</div>
+        <p>Invert the tool. <code>suggest_artists</code> always returns <em>every</em> active artist — <code>name</code>, <code>bio</code>, <code>portfolioUrl</code>, <code>instagramHandle</code>, <code>websiteUrl</code>, <code>isAdmin</code> — plus an optional <code>recommendedStaffId</code> + one-line <code>recommendationReason</code> when a brief clearly matches one bio. Fold <code>fallback_all_artists</code> into the default shape.</p>
+        <p>Rewrite the <code>COLLECTING_INFO</code> prompt block: introduce all artists briefly, offer to send each one's portfolio / Instagram as separate <code>send_message</code> bubbles, and let the client choose. The recommendation is a nudge, never a filter. Keep the anti-hallucination rule that <code>staffId</code> must come from this tool's output verbatim.</p>
+      </div>
+
+      <div class="field">
+        <div class="label">Touches</div>
+        <div class="chips">
+          <span class="chip">src/features/settings/server/profiles.ts</span>
+          <span class="chip">src/integrations/ai/tools/artist.server.ts</span>
+          <span class="chip">src/integrations/ai/prompts.ts</span>
+        </div>
+      </div>
+
+      <div class="field oq">
+        <div class="label">Open questions</div>
+        <ul>
+          <li>Send portfolio links inline as the roster is presented, or only when the client asks about a specific artist? (message-count / spam tradeoff)</li>
+          <li>Order the roster how — <code>isAdmin</code> first, alphabetical, or recommendation first?</li>
+          <li>Any artist who should be hidden from the customer-facing list (e.g. guest artists, apprentices)? No such flag today.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- C -->
+    <section class="ws" id="ws-c">
+      <div class="ws-head">
+        <span class="ws-tag">C</span>
+        <div class="titles">
+          <h2>Respect the client's design intent</h2>
+          <div class="ws-sub">prompts.ts · &lt;tattoo_integrity&gt;</div>
+        </div>
+        <span class="pill draft">Draft</span>
+      </div>
+
+      <div class="field">
+        <div class="label">Problem</div>
+        <p>The <code>&lt;tattoo_integrity&gt;</code> block currently orders the model to <em>verify facts</em> and correct misattributed references. With a request like "בובציור" (the Hebrew name for SpongeBob's DoodleBob) the model spent turns trying to identify which character it was instead of continuing the booking. The rule is too broad and it reads the client's creative choice as an error to be fixed.</p>
+      </div>
+
+      <div class="field">
+        <div class="label">Approach</div>
+        <p>Replace fact-verification with a single principle: <strong>the design is the client's decision to make.</strong> The agent takes the described design at face value and does <em>not</em> research, identify, translate, or second-guess cultural references, character names, memes, or the spelling of design <em>content</em>. Record what the client said, verbatim, into <code>designDescription</code> and move on.</p>
+        <p>The agent still pushes back — once, clearly, then proceeds or escalates, never in a loop — only on:</p>
+        <ul>
+          <li>Physically impossible anatomy (tails, gills, wings on a human placement)</li>
+          <li>Job-stopper placements (face, hands, throat) — warn, escalate if insisted</li>
+          <li>Ink that won't hold (skin-tone / UV / white-only) — explain, escalate if insisted</li>
+          <li>Age / health / safety / legal issues → <code>call_staff</code></li>
+        </ul>
+        <p>Keep exactly one spelling sanity-check, and only for explicit lettering tattoos — no lookup, no debate. Add an explicit line: "do not spend turns identifying or verifying references." Consider a per-turn guard that surfaces "you have already raised this — move on" once a concern has been voiced.</p>
+      </div>
+
+      <div class="field">
+        <div class="label">Touches</div>
+        <div class="chips">
+          <span class="chip">src/integrations/ai/prompts.ts (&lt;tattoo_integrity&gt;, few-shot, tool notes)</span>
+          <span class="chip">src/integrations/ai/tools/booking.server.ts (collect_tattoo_info description)</span>
+        </div>
+      </div>
+
+      <div class="field oq">
+        <div class="label">Open questions</div>
+        <ul>
+          <li>Where is the line between "stupid / dangerous idea" (push back) and "creative choice" (proceed)? Draft the 4-bullet list above into the studio's own words.</li>
+          <li>Should a flagged-but-insisted design still be bookable by the bot, or always escalate to a human for a permanence conversation?</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- D -->
+    <section class="ws" id="ws-d">
+      <div class="ws-head">
+        <span class="ws-tag">D</span>
+        <div class="titles">
+          <h2>The agent can see images</h2>
+          <div class="ws-sub">agent.server.ts · buildHistory · messages.media</div>
+        </div>
+        <span class="pill decision">Needs decision</span>
+      </div>
+
+      <div class="field">
+        <div class="label">Problem</div>
+        <p>Inbound images reach the model only as the literal text <code>[הלקוח שלח תמונה]</code>. The bytes are downloaded and stored on the <code>messages</code> row at ingest, but <code>mapRecordToMessage()</code> never attaches them — so the agent can't react to an inspiration photo, and can't recognise a payment screenshot it's explicitly told to escalate on.</p>
+      </div>
+
+      <div class="field">
+        <div class="label">Approach</div>
+        <p>In <code>buildHistory</code> / <code>mapRecordToMessage</code>, for inbound rows with <code>type === 'image'</code> inside the history window, attach the stored file as a multimodal <code>image</code> content part (the AI SDK Anthropic provider takes base64 / data-URL parts; <code>claude-sonnet-5</code> and <code>claude-haiku-4-5</code> are both vision models). Fetch bytes via the superuser client from <code>messages.media</code>.</p>
+        <ul>
+          <li>Cap to the newest ~3 images per turn and a per-image size ceiling; downscale server-side before encoding to bound cost and latency.</li>
+          <li>Keep the <code>[הלקוח שלח …]</code> text label for non-image media (audio, PDF) — those stay text-only, so a PDF receipt still routes through <code>call_staff</code>.</li>
+          <li>Prompt update: the agent now sees photos — react to inspiration naturally; in <code>AWAIT_PAYMENT</code> it may say "this looks like a payment screenshot" but still <code>call_staff</code> with <code>receipt_verification</code> and never approve.</li>
+          <li>Guard in <code>capabilities.ts</code>: if a non-vision model is ever selected in settings, fall back to the text-label behaviour.</li>
+        </ul>
+      </div>
+
+      <div class="field">
+        <div class="label">Touches</div>
+        <div class="chips">
+          <span class="chip">src/integrations/ai/agent.server.ts</span>
+          <span class="chip">src/integrations/ai/capabilities.ts</span>
+          <span class="chip">src/features/conversations/server/webhook.ts (optional downscaled derivative)</span>
+          <span class="chip">src/integrations/ai/prompts.ts</span>
+        </div>
+      </div>
+
+      <div class="field oq">
+        <div class="label">Open questions</div>
+        <ul>
+          <li>Re-send the same images on every subsequent turn (simple, costs tokens each turn) or only on the turn they arrive (cheaper, the model loses visual memory)? Prompt-caching makes re-sending cheaper than it looks.</li>
+          <li>Hard monthly cost ceiling for vision, or rely on the existing per-turn telemetry to watch it?</li>
+          <li>Store the client's inspiration images against the appointment / customer for staff reference, or leave them only on the message row?</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- E -->
+    <section class="ws" id="ws-e">
+      <div class="ws-head">
+        <span class="ws-tag">E</span>
+        <div class="titles">
+          <h2>Email capture into the customer profile</h2>
+          <div class="ws-sub">customers.email · new save_customer_email tool</div>
+        </div>
+        <span class="pill decision">Needs decision</span>
+      </div>
+
+      <div class="field">
+        <div class="label">Recommendation — where the ask belongs</div>
+        <p><strong>Right after the slot hold is created, as the first beat of the pre-price step — before any price is quoted.</strong> Bundle it with the health-notice step (Workstream F) into one short "onboarding" exchange.</p>
+        <p>Why here and not earlier: intake is fragile, and you don't want a form field while you're still establishing this is a real lead. Once the client has committed to a specific artist + date + time (the hold exists), the intent is real — and you need the email on file <em>before</em> the studio starts sending deposit and appointment updates anyway. Asking at final confirmation is too late for the health-notice-by-email option and for the deposit reminder.</p>
+        <p>Skip the ask entirely when <code>customers.email</code> is already set. Accept "no" gracefully and set <code>customers.email_opt_out</code> so the agent never re-asks.</p>
+      </div>
+
+      <div class="field">
+        <div class="label">Approach</div>
+        <p>New bot tool <code>save_customer_email</code> — validates format, writes <code>customers.email</code>. One prompt line in the new pre-price sub-flow: "רוצה שנשמור לך מייל? נשלח אליו עדכונים על התור, תזכורות והטבות." The purpose (appointment updates, birthdays, reminders, special discounts) is stated so the consent is meaningful — and it dovetails with the data-storage consent in the health notice.</p>
+      </div>
+
+      <div class="field">
+        <div class="label">Touches</div>
+        <div class="chips">
+          <span class="chip">pocketbase/pb_migrations (customers.email_opt_out — email field already exists)</span>
+          <span class="chip">src/integrations/ai/tools/base.server.ts (or new customer.server.ts)</span>
+          <span class="chip">src/integrations/ai/prompts.ts (pre-price block)</span>
+        </div>
+      </div>
+
+      <div class="field oq">
+        <div class="label">Open questions</div>
+        <ul>
+          <li>Is email <b>required to book</b>, or always optional? Recommendation: optional — never block a booking on it.</li>
+          <li>Who actually sends the birthday / discount / reminder emails — is there a scheduled job planned, or is this data capture for a later feature? (SMTP via Dokploy already exists per recent commit.)</li>
+          <li>Double opt-in, or is the in-chat "yes" sufficient consent for Israeli marketing rules?</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- F -->
+    <section class="ws" id="ws-f">
+      <div class="ws-head">
+        <span class="ws-tag">F</span>
+        <div class="titles">
+          <h2>Health notice for first-time clients</h2>
+          <div class="ws-sub">new: AWAIT_ONBOARDING state · settings + customers schema</div>
+        </div>
+        <span class="pill blocked">Biggest lift</span>
+      </div>
+
+      <div class="field">
+        <div class="label">Problem</div>
+        <p>No waiver / consent concept exists anywhere in the schema. First-time clients need to receive, fill, and return a health-and-liability notice (covers the studio legally, confirms 18+, fit to be tattooed, not pregnant, consents to data storage) <em>before</em> a price is offered. A client with a signed copy on file should never be asked again.</p>
+      </div>
+
+      <div class="field">
+        <div class="label">Data model</div>
+        <ul>
+          <li><code>settings.health_notice_pdf</code> — file. The blank template the studio uploads once.</li>
+          <li><code>customers.health_notice_file</code> — file. The returned, signed copy.</li>
+          <li><code>customers.health_notice_status</code> — select: <code>none → sent → received → verified</code>.</li>
+          <li><code>customers.health_notice_signed_at</code> — date.</li>
+        </ul>
+      </div>
+
+      <div class="field">
+        <div class="label">Flow</div>
+        <ul>
+          <li>Hold created → if <code>health_notice_status !== 'verified'</code>, the agent sends <code>settings.health_notice_pdf</code> via WhatsApp (<code>waClient.sendMedia</code>, document) with fill / sign / return instructions, sets status <code>sent</code>.</li>
+          <li>Client sends back a photo or PDF → in this sub-state the agent attaches it to <code>customers.health_notice_file</code>, sets <code>received</code>, and <code>call_staff</code> with a new reason <code>health_notice_review</code>.</li>
+          <li>Staff eyeball it in the conversation thread and mark <code>verified</code> via an inline card action (same HITL pattern as pricing).</li>
+          <li>Price offer is gated on <code>verified</code>; staff can waive.</li>
+          <li>Returning client with <code>verified</code> → whole step skipped.</li>
+        </ul>
+        <p>New conversation state <code>AWAIT_ONBOARDING</code> (email + health notice) between <code>COLLECTING_INFO</code> and <code>AWAIT_PRICE_OFFER</code>: update <code>TRANSITIONS</code>, the <code>cron.pb.js</code> mirror, <code>STATE_TOOLS</code>, and <code>LIGHT_STATES</code> routing.</p>
+      </div>
+
+      <div class="field">
+        <div class="label">Touches</div>
+        <div class="chips">
+          <span class="chip">pocketbase/pb_migrations (settings + customers)</span>
+          <span class="chip">src/integrations/ai/prompts.ts (new state block + persona)</span>
+          <span class="chip">src/integrations/ai/tools/* (send_health_notice, record_health_notice_response)</span>
+          <span class="chip">src/integrations/ai/agent.server.ts (inbound doc/image handling in this state)</span>
+          <span class="chip">src/features/conversations/server/state-machine.ts</span>
+          <span class="chip">pocketbase/pb_hooks/cron.pb.js</span>
+          <span class="chip">src/features/conversations/components/ConversationThread.tsx (verify card)</span>
+        </div>
+      </div>
+
+      <div class="field oq">
+        <div class="label">Open questions</div>
+        <ul>
+          <li>Always staff-verify, or let the agent auto-accept a returned form and only flag anomalies?</li>
+          <li>Also deliver the PDF by email (needs Workstream E first) or WhatsApp only?</li>
+          <li>Does the notice legally need a real signature, or is a typed-name + in-chat confirmation enough? This determines whether "send back a photo" is even required.</li>
+          <li>One combined document, or separate health declaration + data-consent + liability waiver?</li>
+          <li>Retention / deletion policy for stored signed forms.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- G -->
+    <section class="ws" id="ws-g">
+      <div class="ws-head">
+        <span class="ws-tag">G</span>
+        <div class="titles">
+          <h2>Calendar &amp; PocketBase reliability</h2>
+          <div class="ws-sub">bot-appointments.ts · appointments.pb.js · timezone.ts</div>
+        </div>
+        <span class="pill decision">Needs triage</span>
+      </div>
+
+      <div class="field">
+        <div class="label">Verdict — do not migrate to Postgres</div>
+        <p>It would not fix the actual failures. They live in application-level date logic and a fragile hook design — both of which you would re-implement verbatim on Postgres. Migrating also discards PocketBase's bundled auth, file storage, admin UI, and realtime that the entire app leans on (see CLAUDE.md's stack rationale), and "2–3 prompts" is off by an order of magnitude: PB collections <em>are</em> the schema, so it's a multi-week rewrite touching every server file, every migration, and the realtime subscriptions the dashboard uses. Fix the real issues in place.</p>
+      </div>
+
+      <div class="field">
+        <div class="label">Likely root causes, in priority order</div>
+        <ul>
+          <li><b>Timezone parity.</b> <code>src/lib/timezone.ts</code> self-heals the web process to <code>Asia/Jerusalem</code>, but <code>pocketbase/Dockerfile</code> sets no <code>ENV TZ</code>, so PB's cron and hook JS run in UTC. All booking math (<code>slotToRange</code>, <code>getArtistScheduleForBot</code>, <code>fitsWithinWorkingHours</code>) is "process-local day math, no date library" — correct only while the process clock equals the studio wall clock. Add <code>ENV TZ=Asia/Jerusalem</code> to the PB image; confirm the Dokploy web service really has it (the self-heal <em>throws</em> at boot if the runtime rejects the reassignment).</li>
+          <li><b>Blocking hook fan-out.</b> <code>appointments.pb.js</code> runs a synchronous <code>$http.send({ timeout: 5 })</code> to <code>APP_INTERNAL_URL</code> <em>before</em> <code>e.next()</code> on every create / update / delete — so every appointment write stalls up to 5s on an internal HTTP call, and errors are swallowed best-effort. After the Render → Dokploy move, <code>APP_INTERNAL_URL</code>, <code>PB_HOOK_SECRET</code>, and inter-container DNS are the prime suspects for "half-working": Google sync and the earlier-slot waitlist matcher both ride this path.</li>
+          <li><b>Split-brain double-booking.</b> The overlap check is an in-process <code>bookingLock</code>. A write from the PB admin UI, the cron hook, or a second web container bypasses it entirely.</li>
+        </ul>
+      </div>
+
+      <div class="field">
+        <div class="label">Fixes</div>
+        <ul>
+          <li>Set <code>TZ</code> on both containers; add a boot assertion in the PB image too.</li>
+          <li>Make the hook fire-and-forget: move <code>e.next()</code> ahead of the dispatch, and replace best-effort <code>$http.send</code> with a durable outbox (a <code>sync_queue</code> collection drained by a cron) so a transient network failure retries instead of vanishing.</li>
+          <li>Centralise every Node appointment write behind one <code>features/calendar/server/appointments</code> module that calls Google sync + waitlist matching explicitly; demote the PB hook to a backstop for admin-UI-only writes.</li>
+          <li>Add an <code>onRecordBeforeCreate</code> / <code>onRecordBeforeUpdate</code> PB hook that re-checks slot overlap inside the DB transaction — the one guard that survives a bypass of the Node lock.</li>
+          <li>Indexes on <code>appointments(staff, start_time, status)</code>; adopt a TZ-aware date library (Temporal polyfill or Luxon) scoped to the booking layer only.</li>
+        </ul>
+      </div>
+
+      <div class="field">
+        <div class="label">Touches</div>
+        <div class="chips">
+          <span class="chip">pocketbase/Dockerfile</span>
+          <span class="chip">pocketbase/pb_hooks/appointments.pb.js</span>
+          <span class="chip">src/features/calendar/server/bot-appointments.ts</span>
+          <span class="chip">src/features/calendar/server/appointments.ts</span>
+          <span class="chip">src/lib/working-hours.ts · src/lib/date-utils.ts</span>
+          <span class="chip">src/routes/api/internal.appointment-sync.ts</span>
+        </div>
+      </div>
+
+      <div class="field oq">
+        <div class="label">Open questions</div>
+        <ul>
+          <li><b>Which "calendar API" hurts most</b> — the dashboard calendar grid, Google Calendar sync, or the bot's availability tool? The fixes differ; a concrete list of "working halfway" symptoms would sharpen this workstream a lot.</li>
+          <li>Is realtime (PB SSE) reaching the dashboard through the Dokploy proxy? A broken subscription looks exactly like "the calendar doesn't update."</li>
+          <li>Is <code>render.yaml</code> still authoritative, or has the deploy fully moved to Dokploy and the env-var set drifted?</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ANSWERS -->
+    <h2 class="rule" id="answers">Your questions, answered</h2>
+    <section class="verdict">
+      <h2>Direct answers</h2>
+
+      <p class="q">Where should the email ask happen?</p>
+      <p class="a">After the slot hold, before the price offer — bundled with the health notice. Skip if an email is already on file.</p>
+      <p>Full reasoning in Workstream E. Short version: intake is too fragile to add a field to, final confirmation is too late for the by-email health-notice and deposit-reminder use cases, and the hold is the moment intent becomes real.</p>
+
+      <p class="q" style="margin-top:1.6rem">Is this a PocketBase problem? Should I migrate to Postgres? Is it 2–3 prompts?</p>
+      <p class="a">No, no, and no.</p>
+      <p>The bugs are in app-level date handling and a blocking best-effort hook — you'd rebuild both identically on Postgres while losing PB's auth, file storage, admin UI, and realtime. It's a multi-week rewrite, not 2–3 prompts, and it contradicts the documented stack choice. Workstream G lists the fixes that actually address "working halfway": timezone parity across both containers, a non-blocking retrying sync path, a DB-level double-booking guard.</p>
+
+      <h3>What would change my mind</h3>
+      <p>If the "half-working" symptoms turn out to be raw query performance on SQLite under concurrent load (not the timezone/hook issues above), or if you need multi-region writes — then Postgres is a real conversation. Nothing seen so far points there.</p>
+    </section>
+
+    <!-- PHASING -->
+    <h2 class="rule" id="phasing">Suggested phasing</h2>
+    <p style="color:var(--ink-soft); margin-bottom:1.3rem">The workstreams are independent, but this order front-loads pain relief and unblocks the rest. Adjust freely — this is the part most likely to change.</p>
+    <div class="phase-wrap">
+      <table>
+        <thead>
+          <tr><th>Phase</th><th>Work</th><th>Why now</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>0</b></td><td>G — timezone parity + hook audit</td><td>The whole redesign rides on a calendar that books the right slot. Cheap to check, high blast radius.</td></tr>
+          <tr><td><b>1</b></td><td>C — design intent · A — lead-stage sync</td><td>C is prompt-only and kills the most visible failure. A is a small, self-contained change to one function.</td></tr>
+          <tr><td><b>2</b></td><td>D — image input · B — artist roster</td><td>Both are contained to the agent layer, no schema or state-machine changes, and both are highly visible to clients.</td></tr>
+          <tr><td><b>3</b></td><td>E — email · F — health notice</td><td>Shared new <code>AWAIT_ONBOARDING</code> sub-flow: schema + state machine + staff verify UI. The one lift that needs coordinated changes.</td></tr>
+          <tr><td><b>4</b></td><td>G — outbox, centralised writes, overlap guard</td><td>Deeper reliability work, worth doing once the feature surface has stopped moving.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="rule">Extending this doc</h2>
+    <div class="note">
+      Each workstream is a self-contained <code>&lt;section class="ws"&gt;</code> with the same field labels — <span class="chip">Problem</span> <span class="chip">Approach</span> <span class="chip">Touches</span> <span class="chip">Open questions</span>. Add a new one by copying a section, giving it the next letter, and adding a matching <code>&lt;a&gt;</code> to the side rail. Status pills: <span class="pill draft">Draft</span> <span class="pill decision">Needs decision</span> <span class="pill blocked">Biggest lift</span>. When a decision is made, move it out of "Open questions" and into "Approach" so the open list always reflects what's genuinely undecided.
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+    var byId = {};
+    links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+    var targets = Object.keys(byId).map(function (id) { return document.getElementById(id); }).filter(Boolean);
+    if (!('IntersectionObserver' in window) || !targets.length) return;
+    var visible = new Set();
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) visible.add(e.target.id); else visible.delete(e.target.id);
+      });
+      var first = targets.find(function (t) { return visible.has(t.id); });
+      links.forEach(function (a) { a.classList.remove('active'); });
+      if (first && byId[first.id]) byId[first.id].classList.add('active');
+    }, { rootMargin: '-10% 0px -70% 0px', threshold: 0 });
+    targets.forEach(function (t) { io.observe(t); });
+  })();
+</script>

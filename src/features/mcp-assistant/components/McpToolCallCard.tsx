@@ -9,6 +9,7 @@ export const TOOL_LABELS: Record<string, string> = {
   reschedule_appointment: 'הצעת העברת תור',
   cancel_appointment: 'הצעת ביטול תור',
   create_appointment: 'הצעת קביעת תור',
+  block_artist_time: 'הצעת חסימת זמן',
   mark_appointment_status: 'הצעת עדכון סטטוס',
   search_leads: 'חיפוש לידים',
   get_lead: 'פרטי ליד',
