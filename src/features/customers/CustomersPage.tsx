@@ -10,6 +10,7 @@ import { createCustomer, updateCustomer } from './server/customers'
 import { customersQueryOptions } from './utils/customers-query'
 import { CustomersHeader } from './components/CustomersHeader'
 import { CustomersSummary } from './components/CustomersSummary'
+import type { LifecycleFilter } from './components/CustomersSummary'
 import { CustomerCard } from './components/CustomerCard'
 import { CustomersSkeleton } from './components/CustomersSkeleton'
 import { CustomerDialog } from './components/CustomerDialog'
@@ -22,7 +23,7 @@ export const CustomersPage: React.FC = () => {
   const queryClient = useQueryClient()
   const location = useLocation()
   const navigate = useNavigate()
-  const [returningOnly, setReturningOnly] = React.useState(false)
+  const [lifecycleFilter, setLifecycleFilter] = React.useState<LifecycleFilter>('all')
   const [customerToDelete, setCustomerToDelete] = React.useState<Customer | null>(null)
 
   const {
@@ -133,7 +134,7 @@ export const CustomersPage: React.FC = () => {
 
   // Global search filtering across ALL pages first
   const filteredCustomers = customers.filter((c) => {
-    if (returningOnly && c.visits < 2) return false
+    if (lifecycleFilter !== 'all' && c.lifecycle !== lifecycleFilter) return false
     const term = searchQuery.toLowerCase().trim()
     if (!term) return true
     const nameMatch = c.name?.toLowerCase().includes(term)
@@ -178,9 +179,9 @@ export const CustomersPage: React.FC = () => {
 
       <CustomersSummary
         totalCustomers={filteredCustomers.length}
-        returningOnly={returningOnly}
-        onToggleReturning={() => {
-          setReturningOnly((v) => !v)
+        filter={lifecycleFilter}
+        onFilterChange={(next) => {
+          setLifecycleFilter(next)
           setCurrentPage(1)
         }}
       />

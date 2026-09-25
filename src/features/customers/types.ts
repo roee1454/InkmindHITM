@@ -1,3 +1,5 @@
+import type { CustomerLifecycle } from './utils/lifecycle'
+
 export interface Customer {
   id: string
   name: string | null
@@ -10,6 +12,7 @@ export interface Customer {
   updatedAt: string
   visits: number
   totalSpend: number
+  lifecycle: CustomerLifecycle
   healthDeclarationSigned?: boolean
   healthDeclarationDate?: string | null
   healthDeclarationUrl?: string | null
