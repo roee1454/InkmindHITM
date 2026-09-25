@@ -158,6 +158,8 @@ Hooks that depend on a field added later stay idle until it exists: older migrat
 
 **Customer lifecycle** (lead / prospect / client / returning / dormant) is derived from the customer's projects on read (`src/features/customers/utils/lifecycle.ts`), never stored.
 
+**The conversation state machine has one writer** (`pb_hooks/conversation-state.pb.js`): a change of `conversations.state` without `state_actor` / `state_reason` is rejected (`integrity:conversation_state_unattributed`), whoever writes it, and every change is logged in `state_transitions`. Use `transition()` (`src/features/conversations/server/state-machine.ts`); only a conversation created outside `NEW` needs `stateAttribution()` directly. A customer writing again after their booking is routed by `utils/inbound-routing.ts` (pure) through `inbound-routing.server.ts`: after a consultation → `WANTS_TO_BOOK` in the same project; otherwise → `NEW`, detaching the project only if it is finished; a pending feedback answer is kept for a week. Staff can reset the bot explicitly (`bot-reset.server.ts`); the leads board never touches the bot's state. `audit_log` keeps only rejected moves and staff overrides.
+
 **Conversation after an appointment** (`src/features/conversations/server/after-appointment.server.ts`): after a finished consultation → `WANTS_TO_BOOK`, and the project stays active. After a finished session → `COMPLETED`, which clears `active_project`.
 
 **Project policy** (touch-ups, deposits across sessions, healing and follow-up timing) lives in `settings` and is read only through `src/lib/project-policy.ts` (`loadProjectPolicy` on the server). An empty setting means the studio hasn't decided yet, and the default equals the behaviour before the setting existed.
