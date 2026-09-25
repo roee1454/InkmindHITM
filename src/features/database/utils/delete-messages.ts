@@ -24,6 +24,7 @@ const COLLECTION_LABELS: Record<string, string> = {
   mcp_messages: 'הודעות בשיחות עם עוזר ה-AI',
   mcp_actions: 'פעולות שהציע עוזר ה-AI',
   audit_log: 'רשומות ביומן הפעילות',
+  payments: 'תשלומים רשומים',
 }
 
 export function collectionLabel(collection: string): string {
@@ -47,6 +48,9 @@ export function blockerMessage(blocker: DeleteBlocker): string {
     case 'self_delete':
       return 'לא ניתן למחוק את המשתמש שלך.'
     case 'restricted_relation':
+      if (blocker.collection === 'payments') {
+        return `ללקוח יש היסטוריית תשלומים (${blocker.count} ${collectionLabel('payments')}). היסטוריית תשלומים נשמרת ולא נמחקת, ולכן אי אפשר למחוק את הלקוח.`
+      }
       return `${blocker.count} ${collectionLabel(blocker.collection)} מונעים את המחיקה.`
   }
 }

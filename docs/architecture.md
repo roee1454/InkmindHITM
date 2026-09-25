@@ -107,7 +107,7 @@ PocketBase owns referential integrity. The Node server owns side effects outside
 | nullify | optional, no cascade | PocketBase unsets the reference; the record stays |
 | restrict | required, no cascade | PocketBase refuses the delete — avoid for anything the CRM deletes |
 
-`messages.conversation`, `conversations.customer`, `appointments.customer`, `credentials.staff`, `waitlist_entries.customer` and the `mcp_*` chain cascade (`1786830040_data_integrity_cascade.js`). Staff references and `audit_log.conversation` nullify. Never delete related records by hand before deleting a parent. That was non-atomic, and one failure left half-deleted data.
+`messages.conversation`, `conversations.customer`, `appointments.customer`, `credentials.staff`, `waitlist_entries.customer` and the `mcp_*` chain cascade (`1786830040_data_integrity_cascade.js`). Staff references and `audit_log.conversation` nullify. `payments.project` restricts (`1786830080_protect_payment_history.js`): a customer with payment history can't be deleted, because the delete would take their payments with it. The delete preview shows the payments as the blocker. Never delete related records by hand before deleting a parent. That was non-atomic, and one failure left half-deleted data.
 
 **Rules a cascade flag can't express go in `pocketbase/pb_hooks/data-integrity.pb.js`**, so they hold for every caller (CRM, PocketBase admin UI, MCP tools, cascades):
 - Every delete of customers/staff/appointments/conversations runs in one transaction, including the top-level record's hooks. PocketBase itself only wraps the cascade step.
@@ -153,6 +153,8 @@ Never change the machine's clock to test time-based behaviour. Everything writte
 **Closing a session** (`src/features/payments/server/close-session.server.ts`): the final price and the payments taken on the spot go in one PocketBase batch, so the write is all or nothing. The project balance (`utils/balance.ts`) is billed final prices minus verified payments. Money paid ahead (a deposit for a later session) is `credit`, never a negative amount due. Past sessions are no longer auto-completed: the lifecycle tick reminds staff once ("סשן ממתין לסגירה"), and only consultations auto-complete. Aftercare therefore goes out only for sessions that were actually closed.
 
 **Conversation after an appointment** (`src/features/conversations/server/after-appointment.server.ts`): after a finished consultation → `WANTS_TO_BOOK`, and the project stays active. After a finished session → `COMPLETED`, which clears `active_project`.
+
+**Project policy** (touch-ups, deposits across sessions, healing and follow-up timing) lives in `settings` and is read only through `src/lib/project-policy.ts` (`loadProjectPolicy` on the server). An empty setting means the studio hasn't decided yet, and the default equals the behaviour before the setting existed.
 
 **Cancellation policy wording** lives only in `src/lib/cancellation-policy.ts`. The bot never tells a customer their deposit is forfeited. Remote bookings may be refundable under consumer-protection law, so staff decide.
 

@@ -24,6 +24,12 @@ describe('delete messages', () => {
     expect(blockerMessage({ code: 'restricted_relation', collection: 'messages', count: 3 })).toBe('3 הודעות בצ׳אט מונעים את המחיקה.')
   })
 
+  it('explains that payment history is kept rather than counting it as a generic blocker', () => {
+    const message = blockerMessage({ code: 'restricted_relation', collection: 'payments', count: 2 })
+    expect(message).toContain('היסטוריית תשלומים (2 תשלומים רשומים)')
+    expect(message).toContain('אי אפשר למחוק את הלקוח')
+  })
+
   it('turns failed deletes into errors, with a stale-reference code for missing records', () => {
     const missing = describeDeleteFailure('appointments', { status: 'not_found' })
     expect(parseStaleReference(missing)).toBe('appointments')

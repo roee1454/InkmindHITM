@@ -216,11 +216,11 @@ export async function handleDeleteEntity(target: DeleteTarget, deps: DeleteDeps 
 
   // Checked here for a friendly answer; PocketBase enforces the same rules inside the transaction,
   // which also covers the race where an appointment is booked between this check and the delete.
-  const [blocker] = await findBlockers(su, actor, target, record, now)
+  const [explicitBlockers, impact] = await Promise.all([findBlockers(su, actor, target, record, now), countImpact(su, target)])
+  const [blocker] = [...explicitBlockers, ...restrictedRelationBlockers(impact)]
   if (blocker) return { status: 'blocked', blocker }
 
   const label = describeRecord(target.collection, record)
-  const impact = await countImpact(su, target)
 
   try {
     await withBotTurnStopped(su, target, () => su.collection(target.collection).delete(target.id))

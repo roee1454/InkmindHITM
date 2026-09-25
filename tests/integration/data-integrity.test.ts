@@ -5,6 +5,7 @@ import {
   createAppointment,
   createConversation,
   createCustomer,
+  createPayment,
   createStaff,
   createWaitlistEntry,
   exists,
@@ -54,6 +55,24 @@ describe('deleting a customer', () => {
     expect(await exists(pb, 'customers', customer.id)).toBe(true)
     expect(await exists(pb, 'conversations', conversation.id)).toBe(true)
     expect(await exists(pb, 'appointments', upcoming.id)).toBe(true)
+  })
+
+  // Payment history is kept (1786830080_protect_payment_history.js): payments.project restricts, so
+  // PocketBase refuses the cascade that would take a customer's payments with it — whoever deletes.
+  it('is refused while the customer has payment history, and nothing is deleted', async () => {
+    const customer = await createCustomer(pb)
+    const { conversation } = await createConversation(pb, customer.id, { messageBodies: ['שילמתי'] })
+    const past = await createAppointment(pb, { customer: customer.id, startsInHours: -72, status: 'completed' })
+    const payment = await createPayment(pb, { project: past.project })
+
+    const rejection = await tryDelete(pb, 'customers', customer.id)
+
+    expect(rejection?.status).toBe(400)
+    expect(await exists(pb, 'customers', customer.id)).toBe(true)
+    expect(await exists(pb, 'conversations', conversation.id)).toBe(true)
+    expect(await exists(pb, 'appointments', past.id)).toBe(true)
+    expect(await exists(pb, 'projects', past.project)).toBe(true)
+    expect(await exists(pb, 'payments', payment.id)).toBe(true)
   })
 
   it('goes through once the upcoming appointment is cancelled', async () => {

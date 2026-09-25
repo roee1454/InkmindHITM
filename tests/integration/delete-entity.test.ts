@@ -5,6 +5,7 @@ import {
   createAppointment,
   createConversation,
   createCustomer,
+  createPayment,
   createStaff,
   createWaitlistEntry,
   exists,
@@ -79,6 +80,18 @@ describe('delete preview', () => {
         appointments: [{ id: upcoming.id, startTime: upcoming.start_time, status: 'confirmed', staffName: 'נועה' }],
       },
     ])
+  })
+
+  it('treats a customer payment history as blocking, not as something the delete takes', async () => {
+    const customer = await createCustomer(pb)
+    const past = await createAppointment(pb, { customer: customer.id, startsInHours: -72, status: 'completed' })
+    await createPayment(pb, { project: past.project })
+    await createPayment(pb, { project: past.project, kind: 'payment', status: 'rejected' })
+
+    const impact = await handleGetDeleteImpact({ collection: 'customers', id: customer.id }, { su: pb, actor: admin })
+
+    expect(impact.status === 'ok' && impact.blockers).toEqual([{ code: 'restricted_relation', collection: 'payments', count: 2 }])
+    expect(impact.status === 'ok' && itemFor(impact.items, 'payments')).toEqual({ collection: 'payments', policy: 'restrict', count: 2 })
   })
 
   it('separates what a staff delete removes from what it only unassigns', async () => {
@@ -158,6 +171,20 @@ describe('delete', () => {
 
     expect(result).toMatchObject({ status: 'blocked', blocker: { code: 'active_appointments' } })
     expect(await exists(pb, 'customers', customer.id)).toBe(true)
+  })
+
+  it('refuses to delete a customer with payment history before touching anything', async () => {
+    const customer = await createCustomer(pb, { name: 'מיכל' })
+    const { conversation } = await createConversation(pb, customer.id, { messageBodies: ['היי'] })
+    const past = await createAppointment(pb, { customer: customer.id, startsInHours: -72, status: 'completed' })
+    const payment = await createPayment(pb, { project: past.project })
+
+    const result = await handleDeleteEntity({ collection: 'customers', id: customer.id }, { su: pb, actor: admin })
+
+    expect(result).toEqual({ status: 'blocked', blocker: { code: 'restricted_relation', collection: 'payments', count: 1 } })
+    expect(await exists(pb, 'customers', customer.id)).toBe(true)
+    expect(await exists(pb, 'conversations', conversation.id)).toBe(true)
+    expect(await exists(pb, 'payments', payment.id)).toBe(true)
   })
 
   it('blocks deleting yourself and the last owner', async () => {

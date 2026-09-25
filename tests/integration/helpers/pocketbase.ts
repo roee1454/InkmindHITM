@@ -81,6 +81,19 @@ export async function createAppointment(
   })
 }
 
+export async function createPayment(
+  pb: PocketBase,
+  input: { project: string; status?: string; kind?: string; amount?: number },
+): Promise<RecordModel> {
+  return pb.collection('payments').create({
+    project: input.project,
+    kind: input.kind ?? 'deposit',
+    method: 'bit',
+    amount: input.amount ?? 300,
+    status: input.status ?? 'verified',
+  })
+}
+
 export async function createWaitlistEntry(
   pb: PocketBase,
   input: { customer: string; currentAppointment?: string; offeredAppointment?: string; status: string; preferredStaff?: string },
