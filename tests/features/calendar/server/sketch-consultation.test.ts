@@ -31,6 +31,8 @@ vi.mock('@/integrations/whatsapp-cloud-api/client', () => ({
 
 vi.mock('@/features/conversations/server/state-machine', () => ({
   transition: vi.fn().mockResolvedValue({ from: 'AWAIT_PRICE_OFFER', to: 'AWAIT_PAYMENT' }),
+  canTransition: vi.fn().mockReturnValue(true),
+  toConversationState: vi.fn((state: unknown) => state),
 }))
 
 vi.mock('@/lib/session.server', () => ({

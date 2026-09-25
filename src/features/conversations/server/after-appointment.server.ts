@@ -19,11 +19,13 @@ export function isConsultation(appointment: RecordModel): boolean {
   return kind ? kind === 'consultation' : appointment.type === 'sketch'
 }
 
-export async function planConversationAdvance(
-  su: PocketBase,
-  appointment: RecordModel,
-  options: { upcomingAfter: Date; reason: string },
-): Promise<ConversationAdvance | null> {
+/**
+ * The customer's conversation, if it is waiting for this appointment: in AWAITING_APPOINTMENT, with
+ * no other upcoming appointment it could be waiting for instead. Anything that moves a conversation
+ * because an appointment ended (the lifecycle tick, a manual status change in the calendar) goes
+ * through this, so it never moves a conversation that's about something else.
+ */
+export async function findConversationWaitingOn(su: PocketBase, appointment: RecordModel, upcomingAfter: Date): Promise<RecordModel | null> {
   const customerId = appointment.customer as string | undefined
   if (!customerId) return null
 
@@ -35,11 +37,20 @@ export async function planConversationAdvance(
     filter: su.filter("customer = {:c} && id != {:id} && (status = 'confirmed' || status = 'pending') && start_time > {:after}", {
       c: customerId,
       id: appointment.id,
-      after: options.upcomingAfter,
+      after: upcomingAfter,
     }),
     fields: 'id',
   })
-  if (otherUpcoming.totalItems > 0) return null
+  return otherUpcoming.totalItems > 0 ? null : conversation
+}
+
+export async function planConversationAdvance(
+  su: PocketBase,
+  appointment: RecordModel,
+  options: { upcomingAfter: Date; reason: string },
+): Promise<ConversationAdvance | null> {
+  const conversation = await findConversationWaitingOn(su, appointment, options.upcomingAfter)
+  if (!conversation) return null
 
   return {
     conversationId: conversation.id,

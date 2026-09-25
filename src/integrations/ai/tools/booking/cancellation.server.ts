@@ -3,19 +3,28 @@ import { BOT_DEPOSIT_FOLLOW_UP_INSTRUCTION, depositStaffSummary } from '@/lib/ca
 import type { ToolFactoryContext } from '../types'
 import { getActiveAppointmentsForBot, cancelAppointmentForBot } from '@/features/calendar/server/bot-appointments.server'
 import { minutesToTime } from '#/features/calendar/utils/date-utils'
-import type { ConversationState } from '../../prompts'
+import { stateAfterCancellation } from '@/features/conversations/utils/after-cancellation'
 
 export function buildCancellationTools(ctx: ToolFactoryContext) {
   const {
     su,
     conversationId,
     customerId,
-    conversationState,
     updateConversation,
     transitionState,
     notifyStaff,
     botTool,
   } = ctx
+
+  /**
+   * Moves the conversation only if it was about the cancelled appointment (utils/after-cancellation.ts):
+   * a customer booking another piece keeps that flow when an older appointment is cancelled.
+   */
+  async function moveAfterCancellation(cancelled: 'pending' | 'confirmed', reason: string): Promise<void> {
+    const otherUpcoming = (await getActiveAppointmentsForBot(su, customerId)).length
+    const next = stateAfterCancellation({ state: ctx.conversationState, cancelled, otherUpcoming })
+    if (next) await transitionState(next, { reason, extraFields: { tattoo_info: null } })
+  }
 
   return {
     request_reschedule: botTool(
@@ -108,12 +117,7 @@ export function buildCancellationTools(ctx: ToolFactoryContext) {
             `הלקוח ביטל החזקה זמנית שטרם אושרה סופית.${details ? ` פירוט: ${details}` : ''}`,
             'info'
           )
-          const nextState: ConversationState =
-            conversationState === 'AWAITING_APPOINTMENT' ? 'COMPLETED' : 'COLLECTING_INFO'
-          await transitionState(nextState, {
-            reason: 'request_cancel_pending_hold',
-            extraFields: { tattoo_info: null },
-          })
+          await moveAfterCancellation('pending', 'request_cancel_pending_hold')
 
           return {
             status: 'success',
@@ -142,10 +146,7 @@ export function buildCancellationTools(ctx: ToolFactoryContext) {
             `/dashboard/conversations?chatId=${conversationId}`
           )
 
-          await transitionState('COMPLETED', {
-            reason: 'request_cancel_autonomous_confirmed',
-            extraFields: { tattoo_info: null },
-          })
+          await moveAfterCancellation('confirmed', 'request_cancel_autonomous_confirmed')
 
           return {
             status: 'success',

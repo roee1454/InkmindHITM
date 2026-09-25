@@ -65,6 +65,17 @@ describe('lifecycle tick at a simulated time', () => {
     expect((await pb.collection('conversations').getOne(conversation.id)).state).toBe('COLLECTING_INFO')
   })
 
+  it('also releases a flow that was waiting on the health declaration', async () => {
+    const customer = await createCustomer(pb)
+    await createAppointment(pb, { customer: customer.id, startsInHours: 200, status: 'pending' })
+    const { conversation } = await createConversation(pb, customer.id)
+    await pb.collection('conversations').update(conversation.id, { state: 'AWAIT_HEALTH_NOTICE', ...stateAttribution('system', 'test_setup') })
+
+    await runLifecycleTick(pb, new Date(Date.now() + 49 * HOUR_MS))
+
+    expect((await pb.collection('conversations').getOne(conversation.id)).state).toBe('COLLECTING_INFO')
+  })
+
   it('leaves a pending appointment alone before 48 hours have passed', async () => {
     const customer = await createCustomer(pb)
     const pending = await createAppointment(pb, { customer: customer.id, startsInHours: 200, status: 'pending' })

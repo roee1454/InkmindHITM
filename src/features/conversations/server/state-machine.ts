@@ -24,8 +24,9 @@ export const TRANSITIONS: Record<ConversationState, ConversationState[]> = {
   WANTS_TO_BOOK: ['COLLECTING_INFO', 'AWAIT_PRICE_OFFER', 'WAITLIST', 'NEW', 'COMPLETED'],
   // Info collected → pending hold awaits pricing, or waitlist if full.
   COLLECTING_INFO: ['AWAIT_PRICE_OFFER', 'WAITLIST', 'NEW', 'COMPLETED'],
-  // WAITLIST: standby queue. Can go to WANTS_TO_BOOK, COLLECTING_INFO, AWAIT_PAYMENT (when slot offered), or COMPLETED.
-  WAITLIST: ['WANTS_TO_BOOK', 'COLLECTING_INFO', 'AWAIT_PAYMENT', 'COMPLETED'],
+  // WAITLIST: standby queue. Can go to WANTS_TO_BOOK, COLLECTING_INFO, AWAIT_PAYMENT (when slot offered),
+  // AWAIT_PRICE_OFFER (the customer books a slot straight from the waitlist), or COMPLETED.
+  WAITLIST: ['WANTS_TO_BOOK', 'COLLECTING_INFO', 'AWAIT_PRICE_OFFER', 'AWAIT_PAYMENT', 'COMPLETED'],
   // Staff priced it → health notice, payment, manual confirm override (Bug 45), or cancelled back to COLLECTING_INFO.
   AWAIT_PRICE_OFFER: ['AWAIT_HEALTH_NOTICE', 'AWAIT_PAYMENT', 'AWAITING_APPOINTMENT', 'COLLECTING_INFO'],
   // Health declaration step before payment.
@@ -65,6 +66,26 @@ export class InvalidTransitionError extends Error {
 }
 
 export type StateActor = 'bot' | 'staff' | 'system' | 'customer'
+
+/**
+ * Where staff may move a conversation from anywhere (logged in audit_log as an override): re-open
+ * pricing, the health notice, payment or scheduling — e.g. quoting an appointment booked by hand in
+ * the calendar — or reset the bot to NEW (bot-reset.server.ts).
+ */
+const STAFF_OVERRIDE_TARGETS: ConversationState[] = ['AWAIT_PRICE_OFFER', 'AWAIT_HEALTH_NOTICE', 'AWAIT_PAYMENT', 'AWAITING_APPOINTMENT', 'COLLECTING_INFO', 'NEW']
+
+function isStaffOverride(actor: StateActor, to: ConversationState): boolean {
+  return actor === 'staff' && STAFF_OVERRIDE_TARGETS.includes(to)
+}
+
+/**
+ * Whether transition() would accept this move. Callers that act on the outside world first (create
+ * a hold, cancel an appointment, send a message) check this before acting, so a move the state
+ * machine would refuse also stops the action instead of leaving it half done.
+ */
+export function canTransition(from: ConversationState, to: ConversationState, actor: StateActor): boolean {
+  return from === to || TRANSITIONS[from].includes(to) || isStaffOverride(actor, to)
+}
 
 /**
  * Attribution for a write that sets `state` outside transition() — creating a conversation that
@@ -108,8 +129,7 @@ export async function transition(
       .catch(() => null)
 
   if (from !== to && !TRANSITIONS[from].includes(to)) {
-    // Staff may override to re-open pricing/payment/scheduling, or reset the bot to NEW (bot-reset.server.ts), with audit
-    if (opts.actor === 'staff' && (to === 'AWAIT_PAYMENT' || to === 'AWAIT_PRICE_OFFER' || to === 'AWAITING_APPOINTMENT' || to === 'COLLECTING_INFO' || to === 'NEW')) {
+    if (isStaffOverride(opts.actor, to)) {
       console.warn(`[state-machine] Staff override: allowing ${from} → ${to} (${opts.reason}) conversation=${conversationId}`)
       await audit(`STAFF_OVERRIDE: ${opts.reason}`)
     } else {

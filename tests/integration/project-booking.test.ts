@@ -8,7 +8,7 @@ vi.mock('@/features/settings/server/helpers.server', () => ({
   requireAdmin: vi.fn().mockResolvedValue({ staff: { id: 'staff-actor', role: 'admin' } }),
 }))
 
-const { createAppointmentHandler } = await import('@/features/calendar/server/appointments.server')
+const { createAppointmentHandler, handleUpdateAppointment } = await import('@/features/calendar/server/appointments.server')
 const { createPendingHoldForBot } = await import('@/features/calendar/server/bot-appointments.server')
 const { ensureInquiryProject, INQUIRY_TITLE } = await import('@/features/projects/server/inquiry-project.server')
 
@@ -143,5 +143,37 @@ describe('booking inside a project', () => {
     await pb.collection('projects').update(old, { lost_at: new Date().toISOString(), lost_reason: 'no_response' })
 
     expect(await ensureInquiryProject(pb, conversation.id, customer.id, 'continue')).not.toBe(old)
+  })
+
+  it('books straight from the waitlist into pricing', async () => {
+    const customer = await createCustomer(pb)
+    const { conversation } = await createConversation(pb, customer.id)
+    await pb.collection('conversations').update(conversation.id, { state: 'WAITLIST', ...stateAttribution('system', 'test_setup') })
+
+    await transition(pb, conversation.id, 'AWAIT_PRICE_OFFER', { actor: 'bot', reason: 'collect_tattoo_info' })
+
+    expect((await pb.collection('conversations').getOne(conversation.id)).state).toBe('AWAIT_PRICE_OFFER')
+  })
+
+  it('marking an old appointment as no-show does not close a conversation that is booking something else', async () => {
+    const customer = await createCustomer(pb)
+    const old = await createAppointment(pb, { customer: customer.id, startsInHours: -5, status: 'confirmed' })
+    const { conversation } = await createConversation(pb, customer.id)
+    await pb.collection('conversations').update(conversation.id, { state: 'COLLECTING_INFO', ...stateAttribution('system', 'test_setup') })
+
+    await handleUpdateAppointment({ id: old.id, status: 'no_show' })
+
+    expect((await pb.collection('conversations').getOne(conversation.id)).state).toBe('COLLECTING_INFO')
+  })
+
+  it('marking the awaited appointment as no-show still closes the conversation', async () => {
+    const customer = await createCustomer(pb)
+    const awaited = await createAppointment(pb, { customer: customer.id, startsInHours: -5, status: 'confirmed' })
+    const { conversation } = await createConversation(pb, customer.id)
+    await pb.collection('conversations').update(conversation.id, { state: 'AWAITING_APPOINTMENT', ...stateAttribution('system', 'test_setup') })
+
+    await handleUpdateAppointment({ id: awaited.id, status: 'no_show' })
+
+    expect(await pb.collection('conversations').getOne(conversation.id)).toMatchObject({ state: 'COMPLETED', status: 'closed' })
   })
 })

@@ -653,7 +653,8 @@ export async function processPastConfirmedAppointments(su: PocketBase, now: Date
 }
 
 export const STALE_PENDING_HOURS = 48
-const RELEASABLE_STATES = ['AWAIT_PRICE_OFFER', 'AWAIT_PAYMENT', 'AWAIT_FINAL_CONFIRMATION'] as const
+// Every step of a booking flow that waits on its hold, the health notice included.
+const RELEASABLE_STATES = ['AWAIT_PRICE_OFFER', 'AWAIT_HEALTH_NOTICE', 'AWAIT_PAYMENT', 'AWAIT_FINAL_CONFIRMATION'] as const
 
 /**
  * 8. Cancel Stale Pending Appointments

@@ -29,7 +29,9 @@ import {
 } from '@/integrations/whatsapp-cloud-api/client'
 import { getWhatsAppSettings } from '@/integrations/whatsapp-cloud-api/settings.server'
 import { getStudioPolicyForBot } from '@/features/settings/server/policy'
-import { transition } from '@/features/conversations/server/state-machine'
+import { canTransition, toConversationState, transition } from '@/features/conversations/server/state-machine'
+import { quoteTargetState } from '../utils/price-quote'
+import { applyConversationAdvance, findConversationWaitingOn, isConsultation, planConversationAdvance } from '@/features/conversations/server/after-appointment.server'
 import { cancelPendingBotTurn } from '@/integrations/ai/agent.server'
 import { isHealthDeclarationValid } from '@/features/health-declaration/server/health-service'
 
@@ -439,49 +441,37 @@ export async function handleUpdateAppointment(
     }).catch(() => null)
   }
 
-  if (data.status === 'no_show') {
-    const customerId = (data.customerId || before?.customer) as string | undefined
-    if (customerId) {
-      try {
-        const conv = await su
-          .collection('conversations')
-          .getFirstListItem(`customer = "${customerId}"`)
-        await transition(su, conv.id, 'COMPLETED', {
-          actor: 'staff',
-          reason: 'appointment_no_show',
-          extraFields: {
-            status: 'closed',
-            is_staff_called: false,
-            staff_call_reason: 'no_show',
-          },
-        })
-      } catch {
-        // conversation might not exist
-      }
-    }
-  } else if (data.status === 'completed' && (before?.type === 'sketch' || data.type === 'sketch')) {
-    const customerId = (data.customerId || before?.customer) as string | undefined
-    if (customerId) {
-      try {
-        const conv = await su
-          .collection('conversations')
-          .getFirstListItem(`customer = "${customerId}"`)
-        await transition(su, conv.id, 'WANTS_TO_BOOK', {
-          actor: 'staff',
-          reason: 'sketch_completed_loop_to_tattoo',
-          extraFields: {
-            status: 'bot_active',
-            is_staff_called: false,
-            staff_call_reason: '',
-          },
-        })
-      } catch {
-        // conversation might not exist
-      }
-    }
+  // A manual status change moves the conversation only if it is waiting for this appointment
+  // (findConversationWaitingOn): a customer booking another piece keeps that conversation.
+  if (data.status === 'no_show' || data.status === 'completed') {
+    const updated = await su.collection('appointments').getOne(data.id).catch(() => null)
+    if (updated) await advanceConversationAfterManualStatus(su, updated, data.status)
   }
 
   return { id: data.id }
+}
+
+async function advanceConversationAfterManualStatus(su: PocketBase, appointment: RecordModel, status: 'no_show' | 'completed'): Promise<void> {
+  const now = new Date()
+  try {
+    if (status === 'no_show') {
+      const conversation = await findConversationWaitingOn(su, appointment, now)
+      if (!conversation) return
+      await transition(su, conversation.id, 'COMPLETED', {
+        actor: 'staff',
+        reason: 'appointment_no_show',
+        extraFields: { status: 'closed', is_staff_called: false, staff_call_reason: 'no_show' },
+      })
+      return
+    }
+    // A finished session waits for its close-out (the lifecycle moves the conversation); a finished
+    // consultation hands the conversation back to the bot to book the tattoo.
+    if (!isConsultation(appointment)) return
+    const advance = await planConversationAdvance(su, appointment, { upcomingAfter: now, reason: 'sketch_completed_loop_to_tattoo' })
+    if (advance) await applyConversationAdvance(su, advance, 'staff')
+  } catch (err) {
+    console.error(`[appointments] moving the conversation after ${status} of ${appointment.id} failed:`, err)
+  }
 }
 
 export async function retrySyncAppointmentToGoogleHandler(appointmentId: string) {
@@ -602,6 +592,12 @@ export async function sendPriceQuoteToCustomerHandler(data: SendPriceQuoteServer
     throw new Error('טרם הוגדר קישור לטופס הצהרת בריאות בהגדרות הסטודיו (הגדרות מדיניות ותפעול).')
   }
 
+  // Decided before anything is sent: if the conversation can't take this step, nothing goes out.
+  const target = quoteTargetState({ isSketch, hasDeposit: data.depositAmount != null && data.depositAmount > 0, isHealthValid })
+  if (conversation && !canTransition(toConversationState(conversation.state), target.state, 'staff')) {
+    throw new Error('השיחה עם הלקוח נמצאת בשלב שלא מאפשר לשלוח הצעת מחיר. ההודעה לא נשלחה. בדקו את השיחה (אפשר לאפס את שיחת הבוט) ונסו שוב.')
+  }
+
   let messageBody: string
   const durationLabel = formatDurationHebrew(effectiveDurationMinutes)
   const locationLine = '📍 איפה: שוהם מרקט קומה מינוס אחת, יש חנייה בשפע במתחם INKMIND!'
@@ -709,27 +705,13 @@ export async function sendPriceQuoteToCustomerHandler(data: SendPriceQuoteServer
       seen: true,
     })
 
-    const hasDeposit = data.depositAmount != null && data.depositAmount > 0
-    let targetState: 'AWAIT_PAYMENT' | 'AWAIT_HEALTH_NOTICE' | 'AWAITING_APPOINTMENT'
-    let reason: string
-
-    if (isSketch && !hasDeposit) {
-      if (isHealthValid) {
-        targetState = 'AWAITING_APPOINTMENT'
-        reason = 'sendPriceQuoteToCustomer_sketch_free_confirmed'
-        await su.collection('appointments').update(data.appointmentId, {
-          ...statusChange('confirmed', 'staff', 'free_sketch_quote_confirmed'),
-          slot_confirmed: true,
-        })
-      } else {
-        targetState = 'AWAIT_HEALTH_NOTICE'
-        reason = 'sendPriceQuoteToCustomer_sketch_free_requires_health_declaration'
-      }
-    } else {
-      targetState = isHealthValid ? 'AWAIT_PAYMENT' : 'AWAIT_HEALTH_NOTICE'
-      reason = isHealthValid
-        ? 'sendPriceQuoteToCustomer_returning_customer_signed'
-        : 'sendPriceQuoteToCustomer_requires_health_declaration'
+    const targetState = target.state
+    const reason = target.reason
+    if (targetState === 'AWAITING_APPOINTMENT') {
+      await su.collection('appointments').update(data.appointmentId, {
+        ...statusChange('confirmed', 'staff', 'free_sketch_quote_confirmed'),
+        slot_confirmed: true,
+      })
     }
 
     const nextStatus = targetState === 'AWAIT_PAYMENT' ? 'staff_handling' : 'bot_active'
@@ -742,6 +724,8 @@ export async function sendPriceQuoteToCustomerHandler(data: SendPriceQuoteServer
         status: nextStatus,
         is_staff_called: false,
         staff_call_reason: '',
+        // The bot's next steps (payment, the next hold) belong to the quoted appointment's project.
+        ...(appointment.project ? { active_project: appointment.project } : {}),
       },
     })
   }

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { statusChange } from '@/features/calendar/utils/appointment-transitions'
 import type { ToolFactoryContext } from '../types'
+import { canTransition } from '@/features/conversations/server/state-machine'
 import { createPendingHoldForBot, getActiveAppointmentForBot } from '@/features/calendar/server/bot-appointments.server'
 import { sanitizePromptText } from '@/lib/sanitization'
 import { syncAppointmentToGoogle } from '@/integrations/google-calendar/server/google-sync.server'
@@ -56,6 +57,13 @@ export function buildBookingCreationTools(ctx: ToolFactoryContext) {
           hasInspirationPhoto = hasPhoto
         }
 
+        // Checked before the hold exists: a move the state machine refuses must not leave an orphan hold.
+        if (!canTransition(ctx.conversationState, 'AWAIT_PRICE_OFFER', 'bot')) {
+          return {
+            status: 'error',
+            message: `לא ניתן לשריין משבצת בשלב הנוכחי של השיחה (${ctx.conversationState}). אל תאשר ללקוח שהתור נשמר; אם הלקוח רוצה לקבוע תור חדש, קרא ל-start_booking.`,
+          }
+        }
         const result = await createPendingHoldForBot(su, {
           customerId,
           staffId,

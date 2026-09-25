@@ -366,7 +366,8 @@ describe('Cluster 5: Calendar Tools, Working Hours, Shifts & Cancellation Policy
             }
           }
           return {
-            getFullList: vi.fn().mockResolvedValue([mockConfirmedAppt]),
+            // Once cancelled, the appointment is no longer among the customer's upcoming ones.
+            getFullList: vi.fn(() => Promise.resolve(mockUpdate.mock.calls.length > 0 ? [] : [mockConfirmedAppt])),
             update: mockUpdate,
           }
         }),
@@ -417,7 +418,8 @@ describe('Cluster 5: Calendar Tools, Working Hours, Shifts & Cancellation Policy
             }
           }
           return {
-            getFullList: vi.fn().mockResolvedValue([mockConfirmedAppt]),
+            // Once cancelled, the appointment is no longer among the customer's upcoming ones.
+            getFullList: vi.fn(() => Promise.resolve(mockUpdate.mock.calls.length > 0 ? [] : [mockConfirmedAppt])),
             update: mockUpdate,
           }
         }),
