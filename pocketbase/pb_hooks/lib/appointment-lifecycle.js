@@ -16,6 +16,30 @@ function pbNow() {
  * wasn't updated) are still logged, with an empty actor. Returns that attribution, so the project
  * stage it may move (./project-stage.js) is logged with the same actor and reason.
  */
+/**
+ * A moved appointment is an event, not a status: it stays pending/confirmed, and the log keeps the
+ * old and the new time with whoever moved it. Idle until state_transitions has `meta` (older
+ * migrations run with today's hooks when an old database is upgraded).
+ */
+function recordReschedule(app, record, original, attribution) {
+  if (!original) return
+  const before = original.getString('start_time')
+  const after = record.getString('start_time')
+  if (!before || !after || before === after) return
+  const transitions = app.findCollectionByNameOrId('state_transitions')
+  if (!transitions.fields.getByName('meta')) return
+
+  const log = new Record(transitions)
+  log.set('entity', 'appointments')
+  log.set('entity_id', record.id)
+  log.set('from', original.getString('status'))
+  log.set('to', record.getString('status'))
+  log.set('actor', attribution.actor)
+  log.set('reason', attribution.reason ? `rescheduled:${attribution.reason}` : 'rescheduled')
+  log.set('meta', { from_start: before, to_start: after })
+  app.save(log)
+}
+
 function recordStatusChange(app, record, original) {
   const from = original ? original.getString('status') : ''
   const to = record.getString('status')
@@ -24,6 +48,7 @@ function recordStatusChange(app, record, original) {
   record.set('status_actor', '')
   record.set('status_reason', '')
   const attribution = { actor: actor, reason: reason }
+  recordReschedule(app, record, original, attribution)
   if (from === to) return attribution
 
   const now = pbNow()

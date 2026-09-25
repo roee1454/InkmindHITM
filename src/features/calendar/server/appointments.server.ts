@@ -1,5 +1,5 @@
 import type PocketBase from 'pocketbase'
-import { canChangeAppointmentStatus, statusChange } from '../utils/appointment-transitions'
+import { canChangeAppointmentStatus, changeAttribution, statusChange } from '../utils/appointment-transitions'
 import { ClientResponseError } from 'pocketbase'
 import type { RecordModel } from 'pocketbase'
 import { customerCancellationPolicyText } from '@/lib/cancellation-policy'
@@ -381,6 +381,8 @@ export async function handleUpdateAppointment(
     }
 
     updateBody.start_time = new Date(year, month - 1, day, hour, minute).toISOString()
+    // Logged as a reschedule by the lifecycle hook; a status change in the same edit already attributes it.
+    if (!('status_actor' in updateBody)) Object.assign(updateBody, changeAttribution('staff', 'staff_edit'))
   }
 
   try {
@@ -567,6 +569,7 @@ export async function sendPriceQuoteToCustomerHandler(data: SendPriceQuoteServer
     price_max: isSketch ? null : data.priceMaxIls,
     deposit_amount: data.depositAmount,
     start_time: start.toISOString(),
+    ...changeAttribution('staff', 'price_quote_slot'),
     ...(data.durationMinutes != null ? { duration_minutes: data.durationMinutes } : {}),
   })
 

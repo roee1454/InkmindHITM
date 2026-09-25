@@ -12,6 +12,7 @@ import { ProjectStageBadge } from './ProjectStageBadge'
 import { ProjectDetailsForm } from './ProjectDetailsForm'
 import { MoveAppointmentSection } from './MoveAppointmentSection'
 import { MarkProjectLostDialog } from './MarkProjectLostDialog'
+import { RescheduleHistory } from './RescheduleHistory'
 
 function errorText(error: unknown): string | null {
   return error instanceof Error ? error.message : null
@@ -93,6 +94,8 @@ export function ProjectPanel({ projectId, onClose }: { projectId: string | null;
             ) : (
               <p className="rounded-2xl border border-dashed border-border p-3 text-center text-xs text-muted-foreground">עדיין אין תורים בפרויקט הזה.</p>
             )}
+
+            <RescheduleHistory reschedules={project.reschedules} />
 
             {project.canManage && project.timeline.length > 0 && (
               <MoveAppointmentSection

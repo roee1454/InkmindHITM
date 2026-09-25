@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import type PocketBase from 'pocketbase'
-import { statusChange } from '@/features/calendar/utils/appointment-transitions'
+import { changeAttribution, statusChange } from '@/features/calendar/utils/appointment-transitions'
 import { createCustomer, hoursFromNow, superuserClient } from './helpers/pocketbase'
 
 // pb_hooks/appointment-lifecycle.pb.js: every appointment status change is stamped and logged,
@@ -85,5 +85,29 @@ describe('appointment lifecycle log', () => {
     const log = await transitionsOf(appointment.id)
     expect(log).toHaveLength(2)
     expect(log[1]).toMatchObject({ from: 'pending', to: 'no_show', actor: '', reason: '' })
+  })
+})
+
+describe('rescheduling', () => {
+  it('logs a moved appointment with the old and new time and who moved it, without changing its status', async () => {
+    const customer = await createCustomer(pb)
+    const appointment = await book(customer.id)
+    const newStart = hoursFromNow(120)
+
+    const moved = await pb.collection('appointments').update(appointment.id, { start_time: newStart, ...changeAttribution('staff', 'staff_edit') })
+
+    expect(moved).toMatchObject({ status: 'pending', status_actor: '', status_reason: '' })
+    const [reschedule] = (await transitionsOf(appointment.id)).filter((t) => String(t.reason).startsWith('rescheduled'))
+    expect(reschedule).toMatchObject({ from: 'pending', to: 'pending', actor: 'staff', reason: 'rescheduled:staff_edit' })
+    expect(reschedule?.meta).toEqual({ from_start: appointment.start_time, to_start: moved.start_time })
+  })
+
+  it('logs nothing extra when an update leaves the time alone', async () => {
+    const customer = await createCustomer(pb)
+    const appointment = await book(customer.id)
+
+    await pb.collection('appointments').update(appointment.id, { notes: 'הערה', ...changeAttribution('staff', 'staff_edit') })
+
+    expect((await transitionsOf(appointment.id)).map((t) => t.reason)).toEqual(['bot_hold'])
   })
 })

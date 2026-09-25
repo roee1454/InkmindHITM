@@ -92,6 +92,20 @@ describe('project panel', () => {
   })
 })
 
+describe('project panel reschedules', () => {
+  it('lists the project’s reschedules, newest first', async () => {
+    const customer = await createCustomer(pb)
+    const session = await booking(customer.id, 'session', 'confirmed', 48)
+    await pb.collection('appointments').update(session.id, { start_time: hoursFromNow(72), status_actor: 'customer', status_reason: 'customer_request' })
+    await pb.collection('appointments').update(session.id, { start_time: hoursFromNow(96), status_actor: 'staff', status_reason: 'staff_edit' })
+
+    const { reschedules } = await handleGetProjectDetails(session.project as string, { su: pb, actor: admin })
+
+    expect(reschedules.map((r) => r.actor)).toEqual(['staff', 'customer'])
+    expect(reschedules[1]?.fromStart).toBe(session.start_time)
+  })
+})
+
 describe('pipeline', () => {
   it('lists each project with its stage and balance, against real records', async () => {
     const customer = await createCustomer(pb, { name: 'בדיקת פייפליין' })

@@ -49,6 +49,7 @@ export async function handleGetProjectDetails(projectId: string, deps: ProjectDe
     su.collection('projects').getFullList({ filter: su.filter('customer = {:c} && id != {:p}', { c: customerId, p: projectId }), sort: '-created' }),
   ])
 
+  const reschedules = await loadReschedules(su, appointments.map((a) => a.id))
   const ledger = appointments.map(toLedgerAppointment)
   const positions = computeProjectPositions(ledger.map((a) => ({ id: a.id, projectId, kind: a.kind, status: a.status, startTime: a.startTime })))
   const customer: unknown = project.expand?.customer
@@ -78,7 +79,25 @@ export async function handleGetProjectDetails(projectId: string, deps: ProjectDe
       }
     }),
     otherProjects: siblings.map((p) => ({ id: p.id, title: (p.title as string) || 'ללא כותרת', stage: projectStageOf(p.stage) })),
+    reschedules,
   }
+}
+
+async function loadReschedules(su: PocketBase, appointmentIds: string[]): Promise<ProjectDetails['reschedules']> {
+  if (appointmentIds.length === 0) return []
+  const ids = appointmentIds.map((_, i) => `entity_id = {:id${i}}`).join(' || ')
+  const params = Object.fromEntries(appointmentIds.map((id, i) => [`id${i}`, id]))
+  const rows = await su.collection('state_transitions').getFullList({
+    filter: su.filter(`entity = 'appointments' && reason ~ 'rescheduled' && (${ids})`, params),
+    sort: '-created',
+  })
+  return rows.flatMap((row) => {
+    const meta: unknown = row.meta
+    if (!meta || typeof meta !== 'object' || !('from_start' in meta) || !('to_start' in meta)) return []
+    const { from_start: fromStart, to_start: toStart } = meta
+    if (typeof fromStart !== 'string' || typeof toStart !== 'string') return []
+    return [{ appointmentId: row.entity_id as string, fromStart, toStart, actor: (row.actor as string) || '', at: row.created as string }]
+  })
 }
 
 async function requireManaged(su: PocketBase, actor: Actor, projectId: string): Promise<RecordModel> {

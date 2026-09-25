@@ -24,6 +24,14 @@ export function statusChange(
 }
 
 /**
+ * Attribution for a change that isn't a status change — moving an appointment to another time.
+ * The lifecycle hook logs it as a reschedule with the old and the new start time.
+ */
+export function changeAttribution(actor: StatusActor, reason: string): { status_actor: StatusActor; status_reason: string } {
+  return { status_actor: actor, status_reason: reason.slice(0, 200) }
+}
+
+/**
  * Status changes staff may make by hand in the calendar. Everything is allowed except moves that
  * rewrite history: a finished appointment can't be cancelled or turned back into a hold (that's a
  * refund or a new booking), and a cancelled one can't be marked as having happened.

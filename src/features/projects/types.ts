@@ -82,4 +82,6 @@ export interface ProjectDetails {
   }[]
   /** The customer's other projects, to move an appointment into. */
   otherProjects: { id: string; title: string; stage: ProjectStage }[]
+  /** Appointments moved to another time, newest first (state_transitions, reason "rescheduled"). */
+  reschedules: { appointmentId: string; fromStart: string; toStart: string; actor: string; at: string }[]
 }

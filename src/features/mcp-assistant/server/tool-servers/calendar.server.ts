@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { statusChange } from '@/features/calendar/utils/appointment-transitions'
+import { changeAttribution, statusChange } from '@/features/calendar/utils/appointment-transitions'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import {
   checkAvailabilityForBot,
@@ -289,6 +289,7 @@ export async function commitCalendarAction(toolName: string, args: Record<string
     const newStart = new Date(year!, month! - 1, day, hour, minute)
     await su.collection('appointments').update(appointmentId, {
       start_time: newStart.toISOString(),
+      ...changeAttribution('staff', 'mcp_assistant'),
       ...(bypassed ? { is_exception: true } : {}),
     })
     await syncAppointmentToGoogle(appointmentId).catch(() => null)
