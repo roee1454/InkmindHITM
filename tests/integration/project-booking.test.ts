@@ -10,6 +10,7 @@ vi.mock('@/features/settings/server/helpers.server', () => ({
 const { createAppointmentHandler } = await import('@/features/calendar/server/appointments.server')
 const { createPendingHoldForBot } = await import('@/features/calendar/server/bot-appointments.server')
 const { transition } = await import('@/features/conversations/server/state-machine')
+const { ensureInquiryProject, INQUIRY_TITLE } = await import('@/features/projects/server/inquiry-project.server')
 
 let pb: PocketBase
 
@@ -94,5 +95,53 @@ describe('booking inside a project', () => {
     await transition(pb, conversation.id, 'COMPLETED', { actor: 'system', reason: 'test' })
 
     expect((await pb.collection('conversations').getOne(conversation.id)).active_project).toBe('')
+  })
+
+  it('opens an inquiry project when a customer asks to book, and the first hold joins and names it', async () => {
+    const artist = await createStaff(pb)
+    const customer = await createCustomer(pb)
+    const { conversation } = await createConversation(pb, customer.id)
+
+    const projectId = await ensureInquiryProject(pb, conversation.id, customer.id, 'new')
+    expect(await pb.collection('projects').getOne(projectId)).toMatchObject({ stage: 'inquiry', title: INQUIRY_TITLE, customer: customer.id })
+    expect((await pb.collection('conversations').getOne(conversation.id)).active_project).toBe(projectId)
+
+    const hold = await createPendingHoldForBot(pb, {
+      customerId: customer.id,
+      staffId: artist.id,
+      date: daysAhead(42),
+      timeSlot: '10:00',
+      durationHours: 0.5,
+      type: 'sketch',
+      tattooDescription: 'פגישת סקיצה: נמר על היד',
+      allowException: true,
+    })
+
+    expect((await pb.collection('appointments').getOne(hold.appointmentId ?? '')).project).toBe(projectId)
+    expect(await pb.collection('projects').getOne(projectId)).toMatchObject({ stage: 'consultation_scheduled', title: 'פגישת סקיצה: נמר על היד' })
+  })
+
+  it('reuses an empty inquiry, continues a project in progress, and starts a new one for a new booking', async () => {
+    const customer = await createCustomer(pb)
+    const { conversation } = await createConversation(pb, customer.id)
+
+    const empty = await ensureInquiryProject(pb, conversation.id, customer.id, 'new')
+    expect(await ensureInquiryProject(pb, conversation.id, customer.id, 'new')).toBe(empty)
+
+    await pb.collection('appointments').create({ customer: customer.id, project: empty, kind: 'consultation', status: 'completed', start_time: new Date(Date.now() - 86_400_000).toISOString() })
+    expect(await ensureInquiryProject(pb, conversation.id, customer.id, 'continue')).toBe(empty)
+
+    const second = await ensureInquiryProject(pb, conversation.id, customer.id, 'new')
+    expect(second).not.toBe(empty)
+    expect((await pb.collection('conversations').getOne(conversation.id)).active_project).toBe(second)
+  })
+
+  it('does not continue a project that was lost or completed', async () => {
+    const customer = await createCustomer(pb)
+    const { conversation } = await createConversation(pb, customer.id)
+    const old = await ensureInquiryProject(pb, conversation.id, customer.id, 'new')
+    await pb.collection('projects').update(old, { lost_at: new Date().toISOString(), lost_reason: 'no_response' })
+
+    expect(await ensureInquiryProject(pb, conversation.id, customer.id, 'continue')).not.toBe(old)
   })
 })

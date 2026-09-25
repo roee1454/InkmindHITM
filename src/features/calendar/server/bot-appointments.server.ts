@@ -27,6 +27,7 @@ import {
   timeStringToMinutes
 } from '@/lib/time-intervals'
 import type {TimeInterval} from '@/lib/time-intervals';
+import { titleInquiryProject } from '@/features/projects/server/inquiry-project.server'
 
 const ACTIVE_STATUSES = '(status = "pending" || status = "confirmed")'
 
@@ -567,6 +568,9 @@ export async function createPendingHoldForBot(
     if (conv && conv.active_project !== created.project) {
       await su.collection('conversations').update(conv.id, { active_project: created.project }).catch(() => null)
     }
+    await titleInquiryProject(su, created.project as string, tattooDescription).catch((err: unknown) =>
+      console.error(`[createPendingHoldForBot] titling project ${String(created.project)} failed:`, err),
+    )
 
     // Link newly matched inspiration messages to this appointment
     if (conv && inspirationImages.length > 0) {

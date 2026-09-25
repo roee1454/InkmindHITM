@@ -1,10 +1,12 @@
 import { z } from 'zod'
 import type { ToolFactoryContext } from './types'
+import { ensureInquiryProject } from '@/features/projects/server/inquiry-project.server'
 
 export function buildBaseTools(ctx: ToolFactoryContext) {
   const {
     su,
     conversationId,
+    customerId,
     conversationState,
     waClient,
     customerPhone,
@@ -27,6 +29,8 @@ export function buildBaseTools(ctx: ToolFactoryContext) {
             message: `השיחה כבר נמצאת בתהליך עבודה פעיל במצב ${conversationState}.`,
           }
         }
+        // A new booking is a new project (a second tattoo next to an upcoming one included).
+        await ensureInquiryProject(su, conversationId, customerId, 'new')
         await transitionState('WANTS_TO_BOOK', {
           reason: 'start_booking',
           extraFields: { tattoo_info: null },
@@ -44,6 +48,8 @@ export function buildBaseTools(ctx: ToolFactoryContext) {
         track: z.enum(['sketch', 'tattoo']).describe('סוג התור שנבחר: sketch לסקיצה/ייעוץ, tattoo לקעקוע ישיר'),
       }),
       async ({ track }) => {
+        // After a consultation the project is already active and the tattoo continues it.
+        await ensureInquiryProject(su, conversationId, customerId, 'continue')
         await transitionState('COLLECTING_INFO', {
           reason: 'choose_booking_track',
           extraFields: {

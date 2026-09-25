@@ -23,6 +23,12 @@ vi.mock('@/lib/queue/conversation-turn-queue', () => ({
   enqueueLifecycleMessage: (...args: unknown[]) => enqueueLifecycleMessage(...args),
 }))
 
+// Opening the project is covered against a real PocketBase in tests/integration/project-booking.test.ts.
+const ensureInquiryProject = vi.fn().mockResolvedValue('project1')
+vi.mock('@/features/projects/server/inquiry-project.server', () => ({
+  ensureInquiryProject: (...args: unknown[]) => ensureInquiryProject(...args),
+}))
+
 describe('Cluster 6: State Machine & Lead Stage Sync', () => {
   describe('TRANSITIONS and stateToLeadStage', () => {
     it('supports WANTS_TO_BOOK, WAITLIST, and AWAIT_HEALTH_NOTICE legal transitions', () => {
@@ -132,6 +138,7 @@ describe('Cluster 6: State Machine & Lead Stage Sync', () => {
       expect(res.status).toBe('success')
       expect(transitionedTo).toBe('WANTS_TO_BOOK')
       expect(extraPassed).toEqual({ tattoo_info: null })
+      expect(ensureInquiryProject).toHaveBeenCalledWith(ctx.su, 'conv1', 'cust1', 'new')
     })
 
     it('start_booking rejects execution if conversation is already mid-funnel', async () => {
