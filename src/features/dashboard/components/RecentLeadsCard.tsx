@@ -19,6 +19,7 @@ const STAGE_TRANSLATIONS: Record<string, { label: string; pill: string }> = {
   AWAIT_PAYMENT: { label: 'ממתין למקדמה', pill: 'bg-warning/12 text-warning' },
   AWAIT_FINAL_CONFIRMATION: { label: 'אישור סופי', pill: 'bg-warning/12 text-warning' },
   AWAITING_APPOINTMENT: { label: 'נקבע תור', pill: 'bg-success/12 text-success' },
+  PROJECT_IN_PROGRESS: { label: 'באמצע פרויקט', pill: 'bg-accent-soft text-accent-ink' },
   AWAIT_NPS_SCORE: { label: 'משוב ודירוג', pill: 'bg-success/12 text-success' },
   COMPLETED: { label: 'סגור / הושלם', pill: 'bg-success/12 text-success' },
 }

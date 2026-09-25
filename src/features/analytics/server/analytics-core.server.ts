@@ -1,6 +1,7 @@
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { requireAuth } from '@/features/settings/server/helpers.server'
-import { SOURCE_LABELS, type CustomerSource } from '@/features/customers/types'
+import { SOURCE_LABELS } from '@/features/customers/types'
+import type { CustomerSource } from '@/features/customers/types'
 import { detectTattooStyle } from '../utils/styles'
 import type {
   AnalyticsSummary,
@@ -54,6 +55,7 @@ const POST_INFO_STATES = new Set([
   'AWAIT_PAYMENT',
   'AWAIT_FINAL_CONFIRMATION',
   'AWAITING_APPOINTMENT',
+  'PROJECT_IN_PROGRESS',
   'AWAIT_NPS_SCORE',
   'COMPLETED',
 ])

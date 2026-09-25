@@ -8,6 +8,7 @@ export type LeadStage =
   | 'AWAIT_PAYMENT'
   | 'AWAIT_FINAL_CONFIRMATION'
   | 'AWAITING_APPOINTMENT'
+  | 'PROJECT_IN_PROGRESS'
   | 'AWAIT_NPS_SCORE'
   | 'COMPLETED'
 
@@ -75,6 +76,12 @@ export const STAGE_CONFIG: Record<LeadStage, StageDefinition> = {
     badgeClass: 'bg-status-done-soft text-status-done border-status-done/25 hover:bg-status-done-soft',
     dotClass: 'bg-status-done',
   },
+  PROJECT_IN_PROGRESS: {
+    stage: 'PROJECT_IN_PROGRESS',
+    label: 'באמצע פרויקט',
+    badgeClass: 'bg-accent-soft text-accent-ink border-accent-ink/25 hover:bg-accent-soft',
+    dotClass: 'bg-accent-ink',
+  },
   AWAIT_NPS_SCORE: {
     stage: 'AWAIT_NPS_SCORE',
     label: 'משוב ודירוג',
@@ -88,15 +95,6 @@ export const STAGE_CONFIG: Record<LeadStage, StageDefinition> = {
     dotClass: 'bg-status-done',
   },
 }
-
-export const STAGE_OPTIONS: StageDefinition[] = Object.values(STAGE_CONFIG)
-
-/** Kept for backward compatibility with any column-keyed references */
-export const COLUMNS: { stage: LeadStage; label: string; color: string }[] = STAGE_OPTIONS.map((s) => ({
-  stage: s.stage,
-  label: s.label,
-  color: s.badgeClass,
-}))
 
 /** WAHA's source-detection keywords, plus 'whatsapp' — the only source the webhook sets
  *  today (see conversations/server/webhook.ts). */

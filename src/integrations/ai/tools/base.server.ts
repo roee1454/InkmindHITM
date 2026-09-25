@@ -22,22 +22,28 @@ export function buildBaseTools(ctx: ToolFactoryContext) {
         if (
           conversationState !== 'NEW' &&
           conversationState !== 'COMPLETED' &&
-          conversationState !== 'AWAITING_APPOINTMENT'
+          conversationState !== 'AWAITING_APPOINTMENT' &&
+          conversationState !== 'PROJECT_IN_PROGRESS'
         ) {
           return {
             status: 'error',
             message: `השיחה כבר נמצאת בתהליך עבודה פעיל במצב ${conversationState}.`,
           }
         }
-        // A new booking is a new project (a second tattoo next to an upcoming one included).
-        await ensureInquiryProject(su, conversationId, customerId, 'new')
+        // A new booking is a new project (a second tattoo next to an upcoming one included), except
+        // between sessions of a project in progress, where it books the next session of that project.
+        // Interim until track-b B4.2: start_booking's `scope` lets the customer pick either there.
+        const nextSession = conversationState === 'PROJECT_IN_PROGRESS'
+        await ensureInquiryProject(su, conversationId, customerId, nextSession ? 'continue' : 'new')
         await transitionState('WANTS_TO_BOOK', {
-          reason: 'start_booking',
+          reason: nextSession ? 'start_booking_next_session' : 'start_booking',
           extraFields: { tattoo_info: null },
         })
         return {
           status: 'success',
-          message: 'תהליך התיאום החל ומצב השיחה עודכן ל-WANTS_TO_BOOK. הצג ללקוח בטבעיות את שתי האפשרויות: פגישת ייעוץ וסקיצה אישית בסטודיו (כ-30 דק) או סשן קעקוע ישיר.',
+          message: nextSession
+            ? "תהליך התיאום של הסשן הבא בפרויקט החל. המסלול הוא סשן קעקוע: קרא ל-'choose_booking_track' עם tattoo בלי לשאול את הלקוח על פגישת ייעוץ."
+            : 'תהליך התיאום החל ומצב השיחה עודכן ל-WANTS_TO_BOOK. הצג ללקוח בטבעיות את שתי האפשרויות: פגישת ייעוץ וסקיצה אישית בסטודיו (כ-30 דק) או סשן קעקוע ישיר.',
         }
       }
     ),

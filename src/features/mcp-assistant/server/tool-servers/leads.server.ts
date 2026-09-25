@@ -16,6 +16,7 @@ const STAGE_LABELS: Record<string, string> = {
   AWAIT_PAYMENT: 'ממתין למקדמה',
   AWAIT_FINAL_CONFIRMATION: 'אישור סופי',
   AWAITING_APPOINTMENT: 'נקבע תור',
+  PROJECT_IN_PROGRESS: 'באמצע פרויקט',
   AWAIT_NPS_SCORE: 'משוב ודירוג',
   COMPLETED: 'סגור / הושלם',
 }
@@ -30,6 +31,7 @@ const stageEnum = z.enum([
   'AWAIT_PAYMENT',
   'AWAIT_FINAL_CONFIRMATION',
   'AWAITING_APPOINTMENT',
+  'PROJECT_IN_PROGRESS',
   'AWAIT_NPS_SCORE',
   'COMPLETED',
 ])

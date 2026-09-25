@@ -24,10 +24,34 @@ describe('resolveInboundRouting', () => {
     expect(routing.transition).toEqual({ to: 'WANTS_TO_BOOK', reason: 'inbound_after_consultation', clearProject: false, resetBooking: false })
   })
 
-  it('starts over after a session, keeping an open multi-session project but not a finished one', () => {
-    expect(resolveInboundRouting(input({ facts: facts({ activeProject: { closed: false, lastFinishedKind: 'session' } }) })).transition).toMatchObject({ to: 'NEW', clearProject: false, resetBooking: true })
+  it('waits for the next session after a session of a project that goes on', () => {
+    expect(resolveInboundRouting(input({ facts: facts({ activeProject: { closed: false, lastFinishedKind: 'session' } }) })).transition).toEqual({
+      to: 'PROJECT_IN_PROGRESS',
+      reason: 'inbound_between_sessions',
+      clearProject: false,
+      resetBooking: true,
+    })
+  })
+
+  it('starts over after a finished project, or with no project', () => {
     expect(resolveInboundRouting(input({ facts: facts({ activeProject: { closed: true, lastFinishedKind: 'session' } }) })).transition).toMatchObject({ to: 'NEW', clearProject: true })
     expect(resolveInboundRouting(input({ facts: facts({ activeProject: null }) })).transition).toMatchObject({ to: 'NEW', clearProject: true })
+  })
+
+  it('keeps an open project with nothing done yet (a no-show) attached for the rebooking', () => {
+    expect(resolveInboundRouting(input({ facts: facts({ activeProject: { closed: false, lastFinishedKind: null } }) })).transition).toMatchObject({ to: 'NEW', clearProject: false })
+  })
+
+  it('stays between sessions while the project is open, and starts over once it closed', () => {
+    const open = facts({ activeProject: { closed: false, lastFinishedKind: 'session' } })
+    expect(resolveInboundRouting(input({ state: 'PROJECT_IN_PROGRESS', facts: open })).transition).toBeNull()
+    const closed = facts({ activeProject: { closed: true, lastFinishedKind: 'session' } })
+    expect(resolveInboundRouting(input({ state: 'PROJECT_IN_PROGRESS', facts: closed })).transition).toEqual({
+      to: 'NEW',
+      reason: 'inbound_after_project_closed',
+      clearProject: true,
+      resetBooking: true,
+    })
   })
 
   it('starts over after a completed funnel', () => {

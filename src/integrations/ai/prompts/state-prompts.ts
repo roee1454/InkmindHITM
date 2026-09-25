@@ -71,6 +71,16 @@ export const STATE_TOOLS: Record<ConversationState, string[]> = {
     'get_available_slots',
     'resolve_date',
   ],
+  PROJECT_IN_PROGRESS: [
+    'start_booking',
+    'answer_faq',
+    'check_availability',
+    'get_available_slots',
+    'get_artist_schedule',
+    'resolve_date',
+    'call_staff',
+    'send_message',
+  ],
   AWAIT_NPS_SCORE: ['record_nps_score', 'call_staff', 'answer_faq', 'send_message'],
   COMPLETED: [
     'start_booking',
@@ -194,6 +204,17 @@ export const STATE_PROMPTS: Record<ConversationState, () => string> = {
 - הלקוח רוצה להזיז מועד? שאל מה המועד המועדף עליו, ואז השתמש ב-'request_reschedule'.
 - הלקוח רוצה לבטל? קרא ל-'request_cancel'.
 - הלקוח רוצה לתאם תור נוסף / קעקוע נוסף במקביל לתור הקיים? קרא ל-'start_booking' כדי להתחיל תהליך תיאום חדש.
+</workflow_state>`,
+
+  PROJECT_IN_PROGRESS: () => `
+<workflow_state current="PROJECT_IN_PROGRESS">
+שלב פרויקט בתהליך (PROJECT_IN_PROGRESS):
+הלקוח באמצע קעקוע רב-מפגשי: לפחות סשן אחד כבר נעשה, העבודה עוד לא הסתיימה, ואין לו כרגע תור עתידי.
+- הלקוח הוא לא ליד חדש. אל תציג לו את הסטודיו מחדש ואל תשאל "סקיצה או קעקוע?".
+- הודעת תודה או חוויה מהסשן? ענה בחום ובקצרה. אל תציע לקבוע תור אם לא ביקש.
+- שאלות על החלמה וטיפול בקעקוע: 'answer_faq'.
+- הלקוח רוצה לקבוע את הסשן הבא? קרא ל-'start_booking'. הסשן הבא נקבע באותו פרויקט.
+- הלקוח רוצה קעקוע חדש ונפרד, מבקש טאץ'-אפ, או שואל על מחיר ותשלום של העבודה? קרא ל-'call_staff' עם 'unhandled_query'.
 </workflow_state>`,
 
   AWAIT_NPS_SCORE: () => `

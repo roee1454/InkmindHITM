@@ -9,7 +9,8 @@ import type { AppointmentKind } from '@/features/calendar/types'
  *
  * Nothing moves while the customer still has an upcoming appointment. The same rules as
  * after-appointment.server.ts's planConversationAdvance: a finished consultation leads to booking
- * the tattoo in the same project; anything else starts over.
+ * the tattoo in the same project, a finished session of a project that goes on waits for the next
+ * session (PROJECT_IN_PROGRESS), and anything else starts over.
  */
 export interface InboundFacts {
   hasUpcomingAppointment: boolean
@@ -60,9 +61,14 @@ function nextState(input: InboundRoutingInput): InboundTransition | null {
       if (project && !project.closed && project.lastFinishedKind === 'consultation') {
         return { to: 'WANTS_TO_BOOK', reason: 'inbound_after_consultation', clearProject: false, resetBooking: false }
       }
-      // An open project (a multi-session piece between sessions) stays attached; a finished one doesn't.
-      // Interim until track-b B3.3: an open project moves to PROJECT_IN_PROGRESS instead of NEW.
+      if (project && !project.closed && project.lastFinishedKind !== null) {
+        return { to: 'PROJECT_IN_PROGRESS', reason: 'inbound_between_sessions', clearProject: false, resetBooking: true }
+      }
+      // Nothing of an open project was done yet (a no-show, say): it stays attached for the rebooking.
       return startOver('inbound_after_appointment', !project || project.closed)
+    case 'PROJECT_IN_PROGRESS':
+      // The project was completed or lost while the customer was away.
+      return !project || project.closed ? startOver('inbound_after_project_closed', true) : null
     case 'COMPLETED':
       return startOver('inbound_after_completed', true)
     case 'AWAIT_NPS_SCORE': {

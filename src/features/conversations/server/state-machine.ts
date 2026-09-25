@@ -36,12 +36,17 @@ export const TRANSITIONS: Record<ConversationState, ConversationState[]> = {
   // Customer confirmed → booked. Back: cancellation, expired hold, or staff re-opening payment/quote.
   AWAIT_FINAL_CONFIRMATION: ['AWAITING_APPOINTMENT', 'AWAIT_PAYMENT', 'AWAIT_PRICE_OFFER', 'COLLECTING_INFO'],
   // Appointment done → NPS ask; COMPLETED: closed; COLLECTING_INFO: cancelled; WANTS_TO_BOOK: sketch done -> tattoo booking;
+  // PROJECT_IN_PROGRESS: a session of a multi-session project is done and the project goes on;
   // NEW: the customer writes again after the appointment (utils/inbound-routing.ts).
-  AWAITING_APPOINTMENT: ['AWAIT_NPS_SCORE', 'COMPLETED', 'COLLECTING_INFO', 'WANTS_TO_BOOK', 'NEW'],
+  AWAITING_APPOINTMENT: ['AWAIT_NPS_SCORE', 'COMPLETED', 'COLLECTING_INFO', 'WANTS_TO_BOOK', 'PROJECT_IN_PROGRESS', 'NEW'],
+  // Between sessions of a multi-session project, with nothing booked: booking the next session
+  // (WANTS_TO_BOOK / COLLECTING_INFO), feedback or COMPLETED once the project ends, NEW when the
+  // project closed while the customer was away.
+  PROJECT_IN_PROGRESS: ['WANTS_TO_BOOK', 'COLLECTING_INFO', 'AWAIT_NPS_SCORE', 'COMPLETED', 'NEW'],
   // NEW: no answer within the feedback window, and the customer writes about something else.
   AWAIT_NPS_SCORE: ['COMPLETED', 'NEW'],
-  // A returning customer restarts the funnel.
-  COMPLETED: ['NEW', 'WANTS_TO_BOOK', 'COLLECTING_INFO'],
+  // A returning customer restarts the funnel; AWAIT_NPS_SCORE: the feedback question at the end of a project.
+  COMPLETED: ['NEW', 'WANTS_TO_BOOK', 'COLLECTING_INFO', 'AWAIT_NPS_SCORE'],
 }
 
 const VALID_STATES = new Set(Object.keys(TRANSITIONS) as ConversationState[])
@@ -52,7 +57,7 @@ export function toConversationState(raw: unknown): ConversationState {
 }
 
 export function stateToLeadStage(state: ConversationState): LeadStage {
-  return state as LeadStage
+  return state
 }
 
 export class InvalidTransitionError extends Error {

@@ -50,14 +50,16 @@ describe('a customer writing again after their booking', () => {
     expect(next).not.toBe(session.project)
   })
 
-  it('keeps an open multi-session project attached', async () => {
+  it('waits for the next session of an open multi-session project, with the project attached', async () => {
     const customer = await createCustomer(pb)
     const session = await appointmentIn(null, customer.id, 'session', 'completed', -5)
     const conv = await conversationIn('AWAITING_APPOINTMENT', customer.id, { active_project: session.project })
 
     await routeInboundMessage(pb, conv, { hasUpcomingAppointment: false, aiEnabled: true, nowIso: nowIso() })
 
-    expect(await pb.collection('conversations').getOne(conv.id)).toMatchObject({ state: 'NEW', active_project: session.project })
+    expect(await pb.collection('conversations').getOne(conv.id)).toMatchObject({ state: 'PROJECT_IN_PROGRESS', active_project: session.project })
+    // The next session joins the same project.
+    expect(await ensureInquiryProject(pb, conv.id, customer.id, 'continue')).toBe(session.project)
   })
 
   it('goes straight to booking the tattoo after a consultation, in the same project', async () => {

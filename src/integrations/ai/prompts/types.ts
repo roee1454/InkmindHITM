@@ -8,6 +8,7 @@ export type ConversationState =
   | 'AWAIT_PAYMENT'
   | 'AWAIT_FINAL_CONFIRMATION'
   | 'AWAITING_APPOINTMENT'
+  | 'PROJECT_IN_PROGRESS'
   | 'AWAIT_NPS_SCORE'
   | 'COMPLETED'
 
