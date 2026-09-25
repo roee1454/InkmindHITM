@@ -1,6 +1,7 @@
 FROM alpine:3.20
 
-ARG PB_VERSION=0.39.7
+# Keep in sync with PB_VERSION in .github/workflows/ci.yml: the hooks are tested against that version.
+ARG PB_VERSION=0.39.10
 
 RUN apk add --no-cache unzip ca-certificates tzdata && \
     wget https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/pocketbase_${PB_VERSION}_linux_amd64.zip -O /tmp/pb.zip && \

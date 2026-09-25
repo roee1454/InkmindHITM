@@ -38,3 +38,34 @@ jobs:
       - name: Unit tests
         if: always()
         run: pnpm test
+
+  integration:
+    runs-on: ubuntu-latest
+    env:
+      # Keep in sync with PB_VERSION in pocketbase/Dockerfile: this is the version production runs.
+      PB_VERSION: 0.39.10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download PocketBase
+        run: |
+          wget -q "https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/pocketbase_${PB_VERSION}_linux_amd64.zip" -O /tmp/pb.zip
+          unzip -q /tmp/pb.zip -d /tmp/pb
+          echo "PB_BIN=/tmp/pb/pocketbase" >> "$GITHUB_ENV"
+
+      # A throwaway PocketBase built from pb_migrations + pb_hooks: the only place the hook rules
+      # (cascades, integrity blocks, the payments ledger) are exercised against real SQLite.
+      - name: Integration tests
+        run: pnpm test:integration
