@@ -13,7 +13,8 @@ function pbNow() {
  * Stamps the dates a status change implies and appends it to state_transitions. `status_actor` and
  * `status_reason` are consumed here (cleared on the record), so each change carries only the
  * attribution its own writer supplied. Changes with no attribution (the admin UI, a caller that
- * wasn't updated) are still logged, with an empty actor.
+ * wasn't updated) are still logged, with an empty actor. Returns that attribution, so the project
+ * stage it may move (./project-stage.js) is logged with the same actor and reason.
  */
 function recordStatusChange(app, record, original) {
   const from = original ? original.getString('status') : ''
@@ -22,7 +23,8 @@ function recordStatusChange(app, record, original) {
   const reason = record.getString('status_reason')
   record.set('status_actor', '')
   record.set('status_reason', '')
-  if (from === to) return
+  const attribution = { actor: actor, reason: reason }
+  if (from === to) return attribution
 
   const now = pbNow()
   record.set('status_changed_at', now)
@@ -45,6 +47,7 @@ function recordStatusChange(app, record, original) {
   log.set('actor', actor)
   log.set('reason', reason)
   app.save(log)
+  return attribution
 }
 
 module.exports = { recordStatusChange }

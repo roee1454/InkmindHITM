@@ -65,6 +65,9 @@ describe('projects backfill migration', () => {
 
     const paidDeposit = await book(yossi.id, 100, 'tattoo', { status: 'confirmed', deposit_amount: 250, deposit_paid: true })
 
+    const michal = await makeCustomer('מיכל')
+    const pricedHold = await book(michal.id, 50, 'tattoo', { status: 'pending', price_min: 800, price_max: 1200 })
+
     const orphan = await makeCustomer('בלי סקיצה')
     const orphanTattoo = await book(orphan.id, -10, 'tattoo', { notes: 'בהמשך לפגישת סקיצה מתאריך 2026-01-01' })
     await legacy.stop()
@@ -93,6 +96,13 @@ describe('projects backfill migration', () => {
       expect((await db.collection('projects').getOne(orphanAfter.project)).customer).toBe(orphan.id)
 
       expect(await db.collection('appointments').getFullList({ filter: "project = ''" })).toHaveLength(0)
+
+      // 1786830100_project_stage.js: every project gets its stage, and a price sent before projects
+      // carried the quote still counts as a quote.
+      const stageOf = async (appointmentId: string) => (await db.collection('projects').getOne((await read(appointmentId)).project)).stage
+      expect(await stageOf(danaTattoo.id)).toBe('in_progress')
+      expect(await stageOf(paidDeposit.id)).toBe('booked')
+      expect(await db.collection('projects').getOne((await read(pricedHold.id)).project)).toMatchObject({ stage: 'quoted', quote_min: 800, quote_max: 1200 })
 
       // 1786830070_payments_and_close_out.js: deposits verified before the ledger existed.
       const deposits = await db.collection('payments').getFullList({ filter: db.filter('appointment = {:a}', { a: paidDeposit.id }) })
