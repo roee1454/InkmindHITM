@@ -9,12 +9,24 @@ function shortDate(ymd: string): string {
   return `${Number(day)}.${Number(month)}`
 }
 
+/** What the timeline needs of an appointment; calendar appointments and the project panel's both fit. */
+export type TimelineAppointment = Pick<ApiAppointment, 'id' | 'kind' | 'projectPosition' | 'status' | 'date' | 'timeSlot'>
+
 /**
  * Every appointment of the same tattoo project — consultation, sessions, touch-ups — oldest first,
  * so staff see that a session is the follow-up of a consultation instead of a separate booking.
  */
-export function ProjectTimeline({ appointments, currentId }: { appointments: ApiAppointment[]; currentId: string }) {
-  if (appointments.length < 2) return null
+export function ProjectTimeline({
+  appointments,
+  currentId,
+  showSingle = false,
+}: {
+  appointments: TimelineAppointment[]
+  currentId?: string
+  /** The appointment dialog hides a one-item timeline; the project panel always shows it. */
+  showSingle?: boolean
+}) {
+  if (appointments.length === 0 || (appointments.length < 2 && !showSingle)) return null
   const ordered = [...appointments].sort((a, b) => `${a.date} ${a.timeSlot}`.localeCompare(`${b.date} ${b.timeSlot}`))
 
   return (

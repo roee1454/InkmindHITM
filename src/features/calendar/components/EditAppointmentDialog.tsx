@@ -10,6 +10,7 @@ import { ImageGalleryDialog } from './ImageGalleryDialog'
 import { formatPhoneForDisplay } from '@/lib/phone'
 import { ProjectTimeline } from './ProjectTimeline'
 import { SessionCloseOutSection } from '@/features/payments/components/SessionCloseOutSection'
+import { ProjectPanel } from '@/features/projects/components/ProjectPanel'
 
 interface StaffItem {
   id: string
@@ -93,6 +94,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   const [localError, setLocalError] = useState<string | null>(null)
   const [selectedGallery, setSelectedGallery] = useState<{ images: string[]; index: number } | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [projectPanelOpen, setProjectPanelOpen] = useState(false)
 
   useEffect(() => {
     if (!appointment) {
@@ -173,6 +175,11 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
               {appointment && <SessionCloseOutSection appointment={appointment} readOnly={isReadOnly} />}
 
               {appointment && <ProjectTimeline appointments={projectAppointments} currentId={appointment.id} />}
+              {appointment?.projectId && (
+                <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => setProjectPanelOpen(true)}>
+                  פרטי הפרויקט
+                </Button>
+              )}
 
               {appointment?.kind === 'consultation' && onContinueToTattoo && !isReadOnly && (
                 <div className="flex items-center justify-between gap-2 p-3 rounded-2xl bg-accent-ink/10 border border-accent-ink/25">
@@ -315,6 +322,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
           onOpenChange={(open) => !open && setSelectedGallery(null)}
         />
       )}
+      <ProjectPanel projectId={projectPanelOpen ? (appointment?.projectId ?? null) : null} onClose={() => setProjectPanelOpen(false)} />
     </>
   )
 }

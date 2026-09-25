@@ -1,29 +1,28 @@
 import { create } from 'zustand'
+import type { PipelineFilter } from '../utils/pipeline-filter'
 
 interface LeadsUiState {
   searchQuery: string
-  selectedStage: string
-  selectedArtist: string
+  filter: PipelineFilter
+  artistId: string
   currentPage: number
 
-  // Actions
   setSearchQuery: (query: string) => void
-  setSelectedStage: (stage: string) => void
-  setSelectedArtist: (artistId: string) => void
+  setFilter: (filter: PipelineFilter) => void
+  setArtistId: (artistId: string) => void
   setCurrentPage: (page: number) => void
   resetFilters: () => void
 }
 
 export const useLeadsUiStore = create<LeadsUiState>((set) => ({
   searchQuery: '',
-  selectedStage: 'all',
-  selectedArtist: 'all',
+  filter: 'open',
+  artistId: 'all',
   currentPage: 1,
 
   setSearchQuery: (searchQuery) => set({ searchQuery, currentPage: 1 }),
-  setSelectedStage: (selectedStage) => set({ selectedStage, currentPage: 1 }),
-  setSelectedArtist: (selectedArtist) => set({ selectedArtist, currentPage: 1 }),
+  setFilter: (filter) => set({ filter, currentPage: 1 }),
+  setArtistId: (artistId) => set({ artistId, currentPage: 1 }),
   setCurrentPage: (currentPage) => set({ currentPage }),
-  resetFilters: () => set({ searchQuery: '', selectedStage: 'all', selectedArtist: 'all', currentPage: 1 }),
+  resetFilters: () => set({ searchQuery: '', filter: 'open', artistId: 'all', currentPage: 1 }),
 }))
-
