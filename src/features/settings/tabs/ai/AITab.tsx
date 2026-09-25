@@ -6,6 +6,7 @@ import { AiModelCard } from './components/AiModelCard'
 import { AiDevResetCard } from './components/AiDevResetCard'
 import { AiDevTimeSimulationCard } from './components/AiDevTimeSimulationCard'
 import { AiPolicyFormCard } from './components/AiPolicyFormCard'
+import { ProjectPolicyCard } from './components/ProjectPolicyCard'
 import { AiIronRulesCard } from './components/AiIronRulesCard'
 import { AiKnowledgeBaseCard } from './components/AiKnowledgeBaseCard'
 import { ClosuresSection } from './components/ClosuresSection'
@@ -92,6 +93,7 @@ export const AITab: React.FC<AITabProps> = ({
         {/* Tab 3: Policy & Payments */}
         <TabsContent value="policy" className="flex flex-col gap-5">
           <AiPolicyFormCard />
+          <ProjectPolicyCard />
         </TabsContent>
 
         {/* Tab 4: Closures & Holidays */}
