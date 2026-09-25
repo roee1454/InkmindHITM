@@ -22,7 +22,7 @@ export function MetricsSummary({ appointmentsTodayCount, newLeadsCount, totalLea
       {TILES.map((tile) => (
         <div
           key={tile.key}
-          className="flex flex-col justify-center rounded-2xl border border-border/80 bg-card p-3.5 shadow-2xs transition-shadow duration-150 sm:p-5 lg:rounded-3xl lg:p-6"
+          className="flex flex-col justify-center rounded-2xl border border-border bg-card p-3.5 shadow-xs transition-shadow duration-150 sm:p-5 lg:rounded-3xl lg:p-6"
         >
           <span className="text-2xl font-extrabold tracking-tight text-foreground tabular-nums sm:text-3xl lg:text-4xl">
             {values[tile.key]}

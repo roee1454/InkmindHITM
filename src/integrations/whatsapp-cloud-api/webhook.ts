@@ -14,12 +14,7 @@ import type {
   WhatsAppInboundEvent,
 } from './types'
 
-/** Cloud API `wa_id`s have no leading '+'; store everything as E.164 with '+' so inbound
- *  `from` and outbound `to` compare equal against `customers.phone`. */
-export function normalizePhoneNumber(waId: string): string {
-  const trimmed = waId.trim()
-  return trimmed.startsWith('+') ? trimmed : `+${trimmed}`
-}
+export { normalizePhoneNumber } from '@/lib/phone'
 
 /** Walks the (possibly batched) webhook envelope and yields one normalized event per
  *  `messages[]` / `statuses[]` entry across every entry/change. */
@@ -65,7 +60,7 @@ export function parseWebhookPayload(body: unknown): WhatsAppInboundEvent[] {
 
 function parseInboundMessage(m: RawMessage): ParsedInboundMessage {
   const replyToWamid = m.context?.id ?? null
-  const base = { media: null, location: null, replyToWamid } as const
+  const base = { media: null, location: null, replyToWamid, referral: m.referral } as const
 
   switch (m.type) {
     case 'text':
@@ -121,12 +116,12 @@ function parseInboundMessage(m: RawMessage): ParsedInboundMessage {
     case 'button':
       return { ...base, type: 'interactive', body: m.button?.text ?? '' }
 
-    // Reactions have no dedicated enum value; represent as a text row carrying the emoji
-    // and linking back to the reacted-to message. (fallback)
+    // Reactions have a dedicated enum value; carry the emoji (or empty string if removed)
+    // and link back to the reacted-to message.
     case 'reaction':
       return {
         ...base,
-        type: 'text',
+        type: 'reaction',
         body: m.reaction?.emoji ?? '',
         replyToWamid: m.reaction?.message_id ?? replyToWamid,
       }

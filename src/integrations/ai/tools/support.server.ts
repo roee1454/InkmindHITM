@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import type { ToolFactoryContext } from './types'
-import { getCompletedAppointmentAwaitingNpsForBot } from '@/features/calendar/server/bot-appointments'
+import { getCompletedAppointmentAwaitingNpsForBot } from '@/features/calendar/server/bot-appointments.server'
 import { getStudioPolicyForBot } from '@/features/settings/server/policy'
 import { CALL_STAFF_REASONS } from '../prompts'
 
@@ -84,18 +84,18 @@ export function buildSupportTools(ctx: ToolFactoryContext) {
 
         if (roundedScore >= 9) {
           await transitionState('COMPLETED', { reason: 'record_nps_score:promoter' })
-          const policy = await getStudioPolicyForBot(su)
+          const reviewLink = ctx.runtimeConfig?.reviewLink ?? (await getStudioPolicyForBot(su)).reviewLink
           return {
             status: 'success',
             segment: 'promoter',
-            message: policy.reviewLink
-              ? `ציון גבוה נרשם. הודו ללקוח בחום והזמינו אותו להשאיר ביקורת בגוגל בקישור המדויק הזה, בדיוק כפי שהוא: ${policy.reviewLink}`
-              : 'ציון גבוה נרשם. הודו ללקוח בחום. אין קישור ביקורת מוגדר — אל תמציאו אחד, רק הביעו הערכה כנה.',
+            message: reviewLink
+              ? `ציון גבוה נרשם. הודה ללקוח בחום והזמן אותו להשאיר ביקורת בגוגל בקישור המדויק הזה, בדיוק כפי שהוא: ${reviewLink}`
+              : 'ציון גבוה נרשם. הודה ללקוח בחום. אין קישור ביקורת מוגדר — אל תמציא אחד, רק הבע הערכה כנה.',
           }
         }
         if (roundedScore >= 7) {
           await transitionState('COMPLETED', { reason: 'record_nps_score:passive' })
-          return { status: 'success', segment: 'passive', message: 'ציון בינוני נרשם. תודה ללקוח על המשוב בחום. אל תדחוף קישור ביקורת ואל תסלים לצוות.' }
+          return { status: 'success', segment: 'passive', message: 'ציון בינוני נרשם. הודה ללקוח על המשוב בחום. אל תציע קישור ביקורת ואל תפנה לצוות.' }
         }
 
         await transitionState('COMPLETED', {

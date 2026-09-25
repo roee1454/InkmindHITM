@@ -1,5 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Settings, LogOut, Bell } from 'lucide-react'
+import { Settings, LogOut, Bell } from '@/components/ui/icon'
 import { Button } from '#/components/ui/button.tsx'
 import { logout } from '#/features/auth/server/auth.ts'
 import type { StaffRecord } from '#/integrations/pocketbase/types.ts'
@@ -9,8 +9,9 @@ import { getUnreadNotificationsCount } from '#/features/notifications/server/not
 import { getAiSettings } from '@/features/settings/server/ai'
 import { cn } from '#/lib/utils.ts'
 import { BrandMark } from '#/components/BrandMark.tsx'
+import { ThemeModeControl } from '#/components/ThemeModeControl.tsx'
 import { NAV_ITEMS } from '#/components/navigation.ts'
-import { clearSessionCache } from '@/routes/dashboard/route'
+import { clearSessionCache } from '@/features/auth/utils/session-cache'
 
 interface SidebarProps {
   staff: StaffRecord
@@ -47,6 +48,8 @@ export function Sidebar({ staff, className }: SidebarProps) {
   })
   const aiEnabled = Boolean(aiSettings?.aiEnabled)
 
+  const isAdmin = staff.role === 'owner' || staff.role === 'admin'
+
   return (
     // `lg:flex`, not `lg:block` — the aside depends on flex-column for its `flex-1` nav and
     // the footer pinned to the bottom.
@@ -57,12 +60,12 @@ export function Sidebar({ staff, className }: SidebarProps) {
         className,
       )}
     >
-      <div className="flex items-center justify-between gap-2 border-b border-border/60 p-5">
+      <div className="flex items-center justify-between gap-2 border-b border-border p-5">
         <div className="flex min-w-0 items-center justify-start gap-3">
           <BrandMark size="sm" />
           <div className="flex min-w-0 flex-col items-start font-assistant">
             <h1 className="text-sm font-extrabold text-foreground">INKMIND</h1>
-            <span className="text-[11px] font-bold uppercase text-muted-foreground">
+            <span className="text-2xs font-bold uppercase text-muted-foreground">
               ניהול סטודיו
             </span>
           </div>
@@ -83,21 +86,23 @@ export function Sidebar({ staff, className }: SidebarProps) {
         </Link>
       </div>
 
-      <Link
-        to="/dashboard/settings/ai"
-        className="mx-5 mt-4 flex items-center justify-between rounded-2xl border border-border/80 px-3.5 py-2.5 font-assistant text-[13px] font-bold text-muted-foreground transition-colors duration-150 active:bg-muted"
-        title="הגדרות סוכן AI"
-      >
-        <span className="flex items-center gap-2">
-          <span
-            className={cn('size-2 rounded-full', aiEnabled ? 'bg-success' : 'bg-muted-foreground/40')}
-          />
-          סוכן AI
-        </span>
-        <span className={aiEnabled ? 'font-extrabold text-success' : 'text-muted-foreground'}>
-          {aiEnabled ? 'פעיל' : 'כבוי'}
-        </span>
-      </Link>
+      {isAdmin && (
+        <Link
+          to="/dashboard/settings/ai"
+          className="mx-5 mt-4 flex items-center justify-between rounded-2xl border border-border px-3.5 py-2.5 font-assistant text-sm font-bold text-muted-foreground transition-colors duration-150 active:bg-muted"
+          title="הגדרות סוכן AI"
+        >
+          <span className="flex items-center gap-2">
+            <span
+              className={cn('size-2 rounded-full', aiEnabled ? 'bg-success' : 'bg-muted-foreground/40')}
+            />
+            סוכן AI
+          </span>
+          <span className={aiEnabled ? 'font-extrabold text-success' : 'text-muted-foreground'}>
+            {aiEnabled ? 'פעיל' : 'כבוי'}
+          </span>
+        </Link>
+      )}
 
       <nav aria-label="ניווט ראשי" className="flex-1 px-5 py-6">
         <ul className="space-y-1">
@@ -119,7 +124,7 @@ export function Sidebar({ staff, className }: SidebarProps) {
                       <span>{item.label}</span>
                     </div>
                     {item.to === '/dashboard/conversations' && unseenMessagesCount > 0 && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-success px-1 text-[10px] font-extrabold text-white">
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-success px-1 text-2xs font-extrabold text-white">
                         {unseenMessagesCount}
                       </span>
                     )}
@@ -134,23 +139,24 @@ export function Sidebar({ staff, className }: SidebarProps) {
 
           <li>
             <Link
-              to="/dashboard/settings"
+              to={isAdmin ? '/dashboard/settings' : '/dashboard/settings/team'}
               activeProps={{ className: 'bg-primary/10 text-primary font-extrabold' }}
               inactiveProps={{ className: 'text-muted-foreground font-bold active:bg-muted' }}
               className="flex h-[46px] items-center gap-2.5 rounded-2xl px-3.5 font-assistant text-sm transition-colors duration-150"
             >
               <Settings size={18} />
-              <span>הגדרות</span>
+              <span>{isAdmin ? 'הגדרות' : 'הפרופיל שלי'}</span>
             </Link>
           </li>
         </ul>
       </nav>
 
-      <div className="border-t border-border/60 p-5">
+      <div className="border-t border-border p-5">
         <p className="font-assistant text-sm font-bold text-foreground">{staff.name}</p>
-        <p className="font-assistant text-[13px] text-muted-foreground">
+        <p className="font-assistant text-sm text-muted-foreground">
           {ROLE_LABELS[staff.role] ?? staff.role}
         </p>
+        <ThemeModeControl className="mt-3" />
         <Button
           variant="ghost"
           size="sm"

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { createCustomer } from '@/features/customers/server/customers'
 import { SOURCE_LABELS } from '@/features/customers/types'
+import { toCanonicalE164Phone } from '@/lib/phone'
 
 interface CreatedCustomer {
   id: string
@@ -43,7 +44,7 @@ export const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ open, onOp
       createCustomer({
         data: {
           name: body.name || null,
-          phone: body.phone,
+          phone: toCanonicalE164Phone(body.phone),
           email: body.email || null,
           source: body.source === 'unknown' ? null : body.source,
           isVip: body.isVip,
@@ -51,7 +52,7 @@ export const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ open, onOp
       }),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] })
-      onCreated({ id: res.id, name: name || 'לקוח', phone })
+      onCreated({ id: res.id, name: name || 'לקוח', phone: toCanonicalE164Phone(phone) })
       resetForm()
       onOpenChange(false)
     },
@@ -80,7 +81,7 @@ export const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ open, onOp
       title="הוספת לקוח חדש"
       description="הזן את פרטי הלקוח החדש במאגר."
     >
-      {error && <p className="text-xs font-semibold text-rose-400">{error}</p>}
+      {error && <p className="text-xs font-semibold text-destructive">{error}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-4 mt-2">
         <div className="flex flex-col gap-1.5">
@@ -131,7 +132,7 @@ export const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ open, onOp
           </Select>
         </div>
 
-        <div className="flex items-center justify-between border-t border-border/60 pt-4">
+        <div className="flex items-center justify-between border-t border-border pt-4">
           <div className="flex flex-col gap-0.5">
             <span className="text-xs font-bold text-foreground">לקוח VIP</span>
             <span className="text-micro text-muted-foreground">סמן לקוח זה כ-VIP</span>

@@ -1,15 +1,9 @@
 import { createServerFn, createServerOnlyFn } from '@tanstack/react-start'
 import { z } from 'zod'
 
-export interface ApiNotification {
-  id: string
-  title: string
-  message: string
-  type: 'info' | 'warning' | 'error' | 'success'
-  read: boolean
-  link?: string
-  created: string
-}
+import type { ApiNotification, NotificationType } from '../types'
+
+export type { ApiNotification, NotificationType }
 
 async function requireSession() {
   const { getSession } = await import('@/lib/session.server')
@@ -100,6 +94,9 @@ export const clearAllNotifications = createServerFn({ method: 'POST' }).handler(
  *  can't be pulled into the client bundle even via a dynamic import. */
 export const addSystemNotification = createServerOnlyFn(
   async (data: { title: string; message: string; type: ApiNotification['type']; link?: string }) => {
+    if (process.env.NODE_ENV === 'test' || process.env.VITEST) {
+      return null
+    }
     const { getSuperuserClient } = await import('@/integrations/pocketbase/superuser.server')
     const su = await getSuperuserClient()
     return su.collection('notifications').create({

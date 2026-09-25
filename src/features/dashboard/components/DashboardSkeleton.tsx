@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 function StatTileSkeleton() {
   return (
-    <div className="flex flex-col justify-center gap-1.5 rounded-2xl border border-border/80 bg-card p-3.5 shadow-2xs sm:p-5 lg:rounded-3xl lg:p-6">
+    <div className="flex flex-col justify-center gap-1.5 rounded-2xl border border-border bg-card p-3.5 shadow-xs sm:p-5 lg:rounded-3xl lg:p-6">
       <Skeleton className="h-7 w-12 sm:h-9 sm:w-16 lg:h-10 lg:w-20" />
       <Skeleton className="h-3.5 w-16 sm:h-4 sm:w-24" />
     </div>
@@ -11,21 +11,23 @@ function StatTileSkeleton() {
 
 function DashboardCardSkeleton() {
   return (
-    <div className="card-native flex flex-col">
+    <div className="card-native flex h-65 flex-col overflow-hidden sm:h-84">
       <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3">
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-4 w-8" />
       </div>
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="row-native">
-          <Skeleton className="size-[42px] shrink-0 rounded-full" />
-          <div className="min-w-0 flex-1 space-y-1.5">
-            <Skeleton className="h-4 w-2/3" />
-            <Skeleton className="h-3 w-1/3" />
+      <div className="min-h-0 flex-1 divide-y divide-border/60 overflow-hidden">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="row-native">
+            <Skeleton className="size-[42px] shrink-0 rounded-full" />
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-3 w-1/3" />
+            </div>
+            <Skeleton className="h-6 w-16 shrink-0 rounded-full" />
           </div>
-          <Skeleton className="h-6 w-16 shrink-0 rounded-full" />
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   )
 }

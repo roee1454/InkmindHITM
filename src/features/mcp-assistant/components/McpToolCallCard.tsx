@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AlertCircle, ChevronDown, Database } from 'lucide-react'
+import { AlertCircle, ChevronDown, Database } from '@/components/ui/icon'
 import type { McpToolCallSummary } from '../types'
 
 // Exported for `tool-registration.test.ts` — checks every registered write tool has a label here.
@@ -56,7 +56,7 @@ export function McpToolCallCard({ call }: McpToolCallCardProps) {
         <span className={`shrink-0 ${isError ? 'text-destructive' : 'text-muted-foreground'}`}>
           {isError ? <AlertCircle size={12} /> : <Database size={12} />}
         </span>
-        <span className={`truncate text-[11.5px] font-semibold ${isError ? 'text-destructive' : 'text-muted-foreground'}`}>
+        <span className={`truncate text-xs font-semibold ${isError ? 'text-destructive' : 'text-muted-foreground'}`}>
           {label}
           {typeof call.rowCount === 'number' ? ` · ${call.rowCount}` : ''}
         </span>
@@ -68,13 +68,14 @@ export function McpToolCallCard({ call }: McpToolCallCardProps) {
 
       {expanded && (
         <div className="border-t border-border px-2.5 py-2">
-          <p dir="ltr" className="text-right font-mono text-[11px] text-muted-foreground">{call.toolName}</p>
-          <p className="mt-1 text-[12px] font-semibold text-foreground">
+          <p dir="ltr" className="text-right font-mono text-2xs text-muted-foreground">{call.toolName}</p>
+          <p dir="ltr" className="text-right text-2xs text-muted-foreground font-medium">{call.toolName}</p>
+          <p className="mt-1 text-xs font-semibold text-foreground">
             {call.summary}
             {typeof call.rowCount === 'number' ? ` · ${call.rowCount} רשומות` : ''}
           </p>
           {hasData && (
-            <pre dir="ltr" className="mt-2 max-h-48 overflow-auto rounded-xl bg-muted p-2.5 text-right font-mono text-[11px] leading-relaxed text-foreground">
+            <pre dir="ltr" className="mt-2 max-h-48 overflow-auto rounded-xl bg-muted p-2.5 text-right font-mono text-2xs leading-relaxed text-foreground">
               {JSON.stringify(call.data, null, 2)}
             </pre>
           )}

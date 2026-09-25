@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { requestStaffPasswordReset } from '@/features/auth/server/auth'
-import { Mail, CheckCircle2 } from 'lucide-react'
+import { Mail, CheckCircle2 } from '@/components/ui/icon'
 
 const schema = z.object({
   email: z.string().email('נא להזין אימייל תקין'),
@@ -36,7 +36,7 @@ export function ForgotPasswordForm() {
   if (sent) {
     return (
       <div className="form-stack gap-8 text-right font-assistant" dir="rtl">
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-[13px] font-semibold text-emerald-500">
+        <div className="flex items-center gap-2 rounded-xl border border-status-done/20 bg-status-done/10 p-3 text-sm font-semibold text-status-done">
           <CheckCircle2 size={15} className="shrink-0" />
           <span>אם קיים חשבון עם כתובת האימייל הזו, נשלח אליו קישור לאיפוס הסיסמה.</span>
         </div>
@@ -62,7 +62,7 @@ export function ForgotPasswordForm() {
               <FormItem>
                 <FormLabel className="form-label">כתובת אימייל</FormLabel>
                 <FormControl>
-                  <div className="flex h-14 w-full items-center gap-2.5 rounded-[18px] border border-input/80 bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
+                  <div className="flex h-14 w-full items-center gap-2.5 rounded-2xl border border-input bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
                     <Mail className="size-[18px] shrink-0 text-muted-foreground" />
                     <Input
                       type="email"

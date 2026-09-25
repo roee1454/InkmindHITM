@@ -1,5 +1,5 @@
 import React from 'react'
-import { Plus } from 'lucide-react'
+import { Plus } from '@/components/ui/icon'
 import { Button } from '@/components/ui/button'
 
 interface CustomersHeaderProps {

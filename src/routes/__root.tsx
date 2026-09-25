@@ -8,15 +8,15 @@ import {
 import appCss from '../styles.css?url'
 
 import { ToastProvider } from '../components/ui/ToastProvider'
+import { MotionProvider } from '../components/motion'
 import { ServiceWorkerRegistrar } from '../components/ServiceWorkerRegistrar'
 
 import type { QueryClient } from '@tanstack/react-query'
 
 // Runs before first paint (blocking inline script, not a React effect) so a returning visitor
-// never sees the hardcoded indigo/light default flash before the real theme applies. Written to
-// by `dashboard/route.tsx` on every load, from the already-fetched `settings` record — this
-// script itself makes no network request, it only reads the local cache.
-const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('ui-theme');var d=localStorage.getItem('ui-dark-mode');if(t)document.documentElement.setAttribute('data-theme',t);if(d==='1')document.documentElement.classList.add('dark');}catch(e){}})();`
+// never flashes light before dark applies. Mirrors `useTheme` in `hooks/use-theme.ts`: the
+// preference is per-device, and "system" (or nothing stored) follows prefers-color-scheme.
+const THEME_INIT_SCRIPT = `(function(){try{var m=localStorage.getItem('ui-mode');if(m!=='light'&&m!=='dark')m='system';var d=m==='dark'||(m==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();`
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -41,8 +41,9 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         name: 'description',
         content: 'מערכת ניהול סטודיו קעקועים — תורים, לידים, לקוחות ושיחות',
       },
-      { name: 'theme-color', content: '#ffffff' },
-      { name: 'color-scheme', content: 'light' },
+      { name: 'theme-color', content: '#f3f5f9', media: '(prefers-color-scheme: light)' },
+      { name: 'theme-color', content: '#0a0a0b', media: '(prefers-color-scheme: dark)' },
+      { name: 'color-scheme', content: 'light dark' },
       { name: 'application-name', content: 'Inkmind' },
       { name: 'mobile-web-app-capable', content: 'yes' },
       { name: 'apple-mobile-web-app-capable', content: 'yes' },
@@ -75,18 +76,20 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    // The inline THEME_INIT_SCRIPT below rewrites data-theme (and toggles .dark) from
-    // localStorage before hydration, on purpose, so returning visitors don't flash the
-    // hardcoded default — React must be told not to reconcile that intentional mismatch.
-    <html lang="he" dir="rtl" data-theme="indigo" suppressHydrationWarning>
+    // The inline THEME_INIT_SCRIPT below toggles `.dark` from localStorage before hydration,
+    // on purpose, so returning visitors don't flash the wrong mode — React must be told not
+    // to reconcile that intentional mismatch.
+    <html lang="he" dir="rtl" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
       <body>
-        <ToastProvider>
-          {children}
-        </ToastProvider>
+        <MotionProvider>
+          <ToastProvider>
+            {children}
+          </ToastProvider>
+        </MotionProvider>
         <ServiceWorkerRegistrar />
         <Suspense fallback={null}>
           <DevtoolsSetup />

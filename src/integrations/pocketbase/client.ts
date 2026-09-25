@@ -15,5 +15,14 @@ let browserClient: PocketBase | null = null
 
 export function getBrowserClient() {
   browserClient ??= new PocketBase(import.meta.env.VITE_POCKETBASE_URL ?? 'http://127.0.0.1:8090')
+  if (!browserClient) {
+    let url = import.meta.env.VITE_POCKETBASE_URL ?? 'http://127.0.0.1:8090'
+    // Normalize localhost:8090 to 127.0.0.1:8090 to avoid IPv6 [::1] connection issues in Linux/browsers
+    if (url.includes('localhost:8090')) {
+      url = url.replace('localhost:8090', '127.0.0.1:8090')
+    }
+    browserClient = new PocketBase(url)
+    browserClient.autoCancellation(false)
+  }
   return browserClient
 }

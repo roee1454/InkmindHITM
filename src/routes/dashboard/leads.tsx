@@ -1,5 +1,5 @@
 import { createFileRoute, getRouteApi } from '@tanstack/react-router'
-import { LeadsPage } from '@/features/leads/components/LeadsPage'
+import { LeadsPage } from '@/features/leads/LeadsPage'
 
 const dashboardRoute = getRouteApi('/dashboard')
 

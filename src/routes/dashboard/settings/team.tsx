@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
-import { TeamAccessTab } from '@/features/settings/components/TeamAccessTab'
+import { TeamTab } from '@/features/settings/tabs/team/TeamTab'
 
 const searchSchema = z.object({ staff: z.string().optional() })
 
@@ -15,9 +15,9 @@ function TeamPage() {
 
   return (
     <div className="flex flex-col gap-[18px] px-4 pt-5 pb-8 font-assistant lg:px-8 lg:pt-8" dir="rtl">
-      <TeamAccessTab
+      <TeamTab
         selectedStaffId={staffId}
-        onSelectStaff={(id) => navigate({ search: id ? { staff: id } : {} })}
+        onSelectStaff={(id: string | null) => navigate({ search: id ? { staff: id } : {} })}
       />
     </div>
   )

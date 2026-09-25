@@ -1,18 +1,28 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { AiAgentTab } from '@/features/settings/components/AiAgentTab'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { z } from 'zod'
+import { AITab, type AISubTab } from '@/features/settings/tabs/ai/AITab'
+
+const searchSchema = z.object({
+  sub: z.enum(['agent', 'rules', 'policy', 'closures']).optional(),
+})
 
 export const Route = createFileRoute('/dashboard/settings/ai')({
+  validateSearch: searchSchema,
   component: AiPage,
 })
 
 function AiPage() {
+  const navigate = useNavigate({ from: Route.fullPath })
+  const { sub } = Route.useSearch()
+
   return (
-    <div className="flex flex-col gap-[18px] px-4 pt-5 font-assistant lg:px-8 lg:pt-8" dir="rtl">
-      <div className="hidden lg:flex lg:flex-col lg:gap-0.5">
-        <h1 className="text-[23px] font-extrabold tracking-tight text-foreground">סוכן AI</h1>
-        <p className="text-[13.5px] font-medium text-muted-foreground">הגדרות הסוכן והתנהגותו בשיחות</p>
-      </div>
-      <AiAgentTab />
+    <div className="flex flex-col gap-[18px] px-4 pt-5 pb-8 font-assistant lg:px-8 lg:pt-8" dir="rtl">
+      <AITab
+        subTab={sub}
+        onSubTabChange={(newSub: AISubTab) =>
+          navigate({ search: { sub: newSub === 'agent' ? undefined : newSub } })
+        }
+      />
     </div>
   )
 }

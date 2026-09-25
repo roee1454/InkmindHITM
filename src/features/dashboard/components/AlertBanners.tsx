@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from '@/components/ui/icon'
 
 interface AlertBannersProps {
   receiptApprovalCount: number
@@ -22,16 +22,16 @@ export function AlertBanners({ receiptApprovalCount, awaitingPriceCount, onNavig
   return (
     <div
       onClick={onNavigateToLeads}
-      className="group flex cursor-pointer select-none items-center justify-between rounded-2xl border border-primary/25 bg-primary/10 px-5 py-3.5 shadow-2xs transition-all duration-150 ease-native hover:bg-primary/15 hover:border-primary/40 active:scale-[0.99] md:rounded-3xl"
+      className="group flex cursor-pointer select-none items-center justify-between rounded-2xl border border-primary/25 bg-primary/10 px-5 py-3.5 shadow-xs transition-all duration-150 ease-native hover:bg-primary/15 hover:border-primary/40 active:scale-[0.99] md:rounded-3xl"
     >
       <div className="flex items-center gap-3">
         <span className="relative flex size-2.5">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
           <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
         </span>
-        <span className="text-[14.5px] font-bold text-foreground">{message}</span>
+        <span className="text-sm font-bold text-foreground">{message}</span>
       </div>
-      <div className="flex items-center gap-1 text-[13px] font-extrabold text-primary transition-transform group-hover:translate-x-[-2px]">
+      <div className="flex items-center gap-1 text-sm font-extrabold text-primary transition-transform group-hover:translate-x-[-2px]">
         <span>לטיפול</span>
         <ArrowLeft size={16} />
       </div>

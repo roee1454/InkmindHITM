@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from '@/components/ui/icon'
 
 interface ImageGalleryDialogProps {
   images: string[]

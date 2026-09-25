@@ -41,11 +41,14 @@ export const Route = createFileRoute('/api/internal/lifecycle-tick')({
   },
 })
 
-// Auto-start periodic background runner on server runtime (guarded against test environments)
+// Auto-start periodic background runners on server runtime (guarded against test environments)
 if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'test') {
   import('@/features/lifecycle/server/lifecycle-runner')
     .then((m) => {
       m.startLifecycleRunner()
     })
+    .catch(() => null)
+  import('@/features/database/server/integration-outbox.server')
+    .then((m) => m.startIntegrationOutboxRunner())
     .catch(() => null)
 }

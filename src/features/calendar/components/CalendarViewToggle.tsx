@@ -1,5 +1,5 @@
 import React from 'react'
-import { Calendar, List } from 'lucide-react'
+import { Calendar, List } from '@/components/ui/icon'
 
 export type ViewMode = 'calendar' | 'table'
 
@@ -17,7 +17,7 @@ export const CalendarViewToggle: React.FC<CalendarViewToggleProps> = ({
       <button
         type="button"
         onClick={() => onViewModeChange('calendar')}
-        className={`flex h-10 cursor-pointer items-center gap-1.5 rounded-xl px-3 text-[14.5px] font-bold transition-all duration-150 ease-native ${
+        className={`flex h-10 cursor-pointer items-center gap-1.5 rounded-xl px-3 text-sm font-bold transition-all duration-150 ease-native ${
           viewMode === 'calendar' ? 'bg-card font-extrabold text-foreground shadow-sm' : 'text-muted-foreground'
         }`}
       >
@@ -26,7 +26,7 @@ export const CalendarViewToggle: React.FC<CalendarViewToggleProps> = ({
       <button
         type="button"
         onClick={() => onViewModeChange('table')}
-        className={`flex h-10 cursor-pointer items-center gap-1.5 rounded-xl px-3 text-[14.5px] font-bold transition-all duration-150 ease-native ${
+        className={`flex h-10 cursor-pointer items-center gap-1.5 rounded-xl px-3 text-sm font-bold transition-all duration-150 ease-native ${
           viewMode === 'table' ? 'bg-card font-extrabold text-foreground shadow-sm' : 'text-muted-foreground'
         }`}
       >

@@ -1,7 +1,8 @@
 import React from 'react'
-import { Plus } from 'lucide-react'
+import { Plus } from '@/components/ui/icon'
 import { Button } from '@/components/ui/button'
-import { CalendarViewToggle, type ViewMode } from './CalendarViewToggle'
+import { CalendarViewToggle  } from './CalendarViewToggle'
+import type {ViewMode} from './CalendarViewToggle';
 
 interface CalendarHeaderProps {
   todayCount: number

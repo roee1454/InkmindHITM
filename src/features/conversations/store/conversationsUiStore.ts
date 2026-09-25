@@ -10,6 +10,7 @@ export interface SelectedFile {
 
 interface ConversationsUiState {
   searchQuery: string
+  statusFilter: string
   messagesLimit: number
   draft: string
   replyingTo: UIMessage | null
@@ -17,6 +18,7 @@ interface ConversationsUiState {
 
   // Actions
   setSearchQuery: (query: string) => void
+  setStatusFilter: (status: string) => void
   setMessagesLimit: (limit: number) => void
   setDraft: (draft: string) => void
   setReplyingTo: (message: UIMessage | null) => void
@@ -26,12 +28,14 @@ interface ConversationsUiState {
 
 export const useConversationsUiStore = create<ConversationsUiState>((set) => ({
   searchQuery: '',
+  statusFilter: 'all',
   messagesLimit: 50,
   draft: '',
   replyingTo: null,
   selectedFile: null,
 
   setSearchQuery: (searchQuery) => set({ searchQuery }),
+  setStatusFilter: (statusFilter) => set({ statusFilter }),
   setMessagesLimit: (messagesLimit) => set({ messagesLimit }),
   setDraft: (draft) => set({ draft }),
   setReplyingTo: (replyingTo) => set({ replyingTo }),

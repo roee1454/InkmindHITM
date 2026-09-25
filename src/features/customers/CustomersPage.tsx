@@ -1,29 +1,29 @@
+import { CascadeDeleteDialog } from '@/features/database/components/CascadeDeleteDialog'
 import React from 'react'
-import { Search, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { AlertCircle } from '@/components/ui/icon'
 import { useLocation, useNavigate } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
+import { Pagination } from '@/components/ui/pagination'
 import type { Customer, CustomerFormData } from './types'
-import {
-  getCustomers,
-  createCustomer,
-  updateCustomer,
-  deleteCustomer,
-} from './server/customers'
+import { createCustomer, updateCustomer } from './server/customers'
+import { customersQueryOptions } from './utils/customers-query'
 import { CustomersHeader } from './components/CustomersHeader'
 import { CustomersSummary } from './components/CustomersSummary'
 import { CustomerCard } from './components/CustomerCard'
 import { CustomersSkeleton } from './components/CustomersSkeleton'
 import { CustomerDialog } from './components/CustomerDialog'
 import { useCustomersUiStore } from './store/customersUiStore'
+import { phoneMatchesQuery, toCanonicalE164Phone } from '@/lib/phone'
 
-const ITEMS_PER_PAGE = 9
+const ITEMS_PER_PAGE = 10
 
 export const CustomersPage: React.FC = () => {
   const queryClient = useQueryClient()
   const location = useLocation()
   const navigate = useNavigate()
   const [returningOnly, setReturningOnly] = React.useState(false)
+  const [customerToDelete, setCustomerToDelete] = React.useState<Customer | null>(null)
 
   const {
     searchQuery,
@@ -43,11 +43,15 @@ export const CustomersPage: React.FC = () => {
     openEdit,
   } = useCustomersUiStore()
 
-  const { data: customers = [], isLoading, error } = useQuery<Customer[]>({
-    queryKey: ['customers'],
-    queryFn: () => getCustomers(),
-    staleTime: 5 * 60 * 1000,
-  })
+  const { data: customers = [], isLoading, error } = useQuery(customersQueryOptions())
+
+  // The customer being edited was deleted elsewhere (another tab, a colleague, the realtime
+  // feed): close the form instead of letting a save or delete run against a dead id.
+  React.useEffect(() => {
+    if (editingCustomer && !isLoading && !customers.some((c) => c.id === editingCustomer.id)) {
+      setEditingCustomer(null)
+    }
+  }, [customers, editingCustomer, isLoading, setEditingCustomer])
 
   // The mobile top bar's "+" action navigates here with `?new=1` since it lives outside this
   // component's tree — pick it up once, then clear it so back-navigation doesn't reopen it.
@@ -56,7 +60,6 @@ export const CustomersPage: React.FC = () => {
       openCreate()
       navigate({ to: '/dashboard/customers', search: {}, replace: true })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search])
 
   const createCustomerMutation = useMutation({
@@ -64,7 +67,7 @@ export const CustomersPage: React.FC = () => {
       createCustomer({
         data: {
           name: body.name || null,
-          phone: body.phone,
+          phone: toCanonicalE164Phone(body.phone),
           email: body.email || null,
           source: body.source === 'unknown' ? null : body.source,
           isVip: body.isVip,
@@ -87,10 +90,15 @@ export const CustomersPage: React.FC = () => {
         data: {
           id,
           name: body.name || null,
-          phone: body.phone,
+          phone: toCanonicalE164Phone(body.phone),
           email: body.email || null,
           source: body.source === 'unknown' ? null : body.source,
           isVip: body.isVip,
+          healthDeclarationSigned: body.healthDeclarationSigned,
+          healthDeclarationDate: body.healthDeclarationDate,
+          healthDeclarationUrl: body.healthDeclarationUrl,
+          allergies: body.allergies,
+          medicalNotes: body.medicalNotes,
         },
       }),
     onSuccess: () => {
@@ -101,14 +109,6 @@ export const CustomersPage: React.FC = () => {
     },
     onError: (err: unknown) => {
       setFormError(err instanceof Error ? err.message : 'שגיאה בעדכון הלקוח')
-    },
-  })
-
-  const deleteCustomerMutation = useMutation({
-    mutationFn: (id: string) => deleteCustomer({ data: { id } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] })
-      queryClient.invalidateQueries({ queryKey: ['dashboardData'] })
     },
   })
 
@@ -137,7 +137,7 @@ export const CustomersPage: React.FC = () => {
     const term = searchQuery.toLowerCase().trim()
     if (!term) return true
     const nameMatch = c.name?.toLowerCase().includes(term)
-    const phoneMatch = c.phone?.includes(term)
+    const phoneMatch = phoneMatchesQuery(c.phone, term)
     const emailMatch = c.email?.toLowerCase().includes(term)
     return nameMatch || phoneMatch || emailMatch
   })
@@ -150,28 +150,31 @@ export const CustomersPage: React.FC = () => {
   const totalCustomers = customers.length
   const totalSpend = customers.reduce((sum, c) => sum + c.totalSpend, 0)
 
+  const handlePageChange = (page: number) => {
+    React.startTransition(() => {
+      setCurrentPage(page)
+    })
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-[18px] font-assistant lg:gap-6" dir="rtl">
       <CustomersHeader totalCustomers={totalCustomers} totalSpend={totalSpend} onNewCustomer={openCreate} />
 
       {error && (
-        <div className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-[13px] font-semibold text-destructive">
+        <div className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">
           <AlertCircle size={15} />
-          {(error as Error).message}
+          {(error).message}
         </div>
       )}
 
       {/* Search field */}
-      <div className="flex h-13 w-full items-center gap-2.5 rounded-2xl border border-input/80 bg-card px-4 shadow-xs transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
-        <Search size={18} className="shrink-0 text-muted-foreground" />
-        <Input
-          type="text"
-          placeholder="חיפוש שם, טלפון או אימייל"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-full w-full border-0 bg-transparent p-0 text-base shadow-none outline-none focus-visible:ring-0"
-        />
-      </div>
+      <SearchInput
+        size="lg"
+        variant="card"
+        placeholder="חיפוש שם, טלפון או אימייל"
+        value={searchQuery}
+        onChange={setSearchQuery}
+      />
 
       <CustomersSummary
         totalCustomers={filteredCustomers.length}
@@ -193,55 +196,14 @@ export const CustomersPage: React.FC = () => {
           </div>
 
           {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex flex-col gap-3 border-t border-border/60 pt-4 font-assistant text-[13px] sm:flex-row sm:items-center sm:justify-between">
-              <div className="text-muted-foreground">
-                מציג {((safePage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(safePage * ITEMS_PER_PAGE, filteredCustomers.length)} מתוך {filteredCustomers.length} לקוחות
-              </div>
-
-              <div className="flex items-center justify-between gap-2 sm:justify-start">
-                <button
-                  type="button"
-                  onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-                  disabled={safePage === 1}
-                  className="flex cursor-pointer items-center gap-1 rounded-xl border border-border/80 bg-card px-3 py-1.5 text-foreground transition-colors duration-100 active:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <ChevronRight size={14} /> הקודם
-                </button>
-
-                {/* The number strip grows without bound — one 28px button per page overflows a
-                    375px viewport at ~9 pages. Below sm it collapses to a text indicator. */}
-                <span className="font-bold text-muted-foreground sm:hidden">
-                  עמוד {safePage} מתוך {totalPages}
-                </span>
-                <div className="hidden items-center gap-1 sm:flex">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                    <button
-                      key={pageNum}
-                      type="button"
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`h-7 w-7 cursor-pointer rounded-lg text-[13px] font-bold transition-transform duration-150 ease-native active:scale-95 ${
-                        pageNum === safePage
-                          ? 'bg-primary text-primary-foreground'
-                          : 'border border-border/80 bg-card text-muted-foreground active:bg-muted'
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
-                  disabled={safePage === totalPages}
-                  className="flex cursor-pointer items-center gap-1 rounded-xl border border-border/80 bg-card px-3 py-1.5 text-foreground transition-colors duration-100 active:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  הבא <ChevronLeft size={14} />
-                </button>
-              </div>
-            </div>
-          )}
+          <Pagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            totalItems={filteredCustomers.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+            itemLabel="לקוחות"
+          />
         </div>
       ) : (
         <div className="flex h-44 items-center justify-center rounded-2xl border border-dashed border-border text-sm font-semibold text-muted-foreground">
@@ -272,11 +234,26 @@ export const CustomersPage: React.FC = () => {
         onDelete={
           editingCustomer
             ? () => {
-                deleteCustomerMutation.mutate(editingCustomer.id)
+                const target = editingCustomer
                 setEditingCustomer(null)
+                setCustomerToDelete(target)
               }
             : undefined
         }
+      />
+
+      <CascadeDeleteDialog
+        open={Boolean(customerToDelete)}
+        onOpenChange={(open) => {
+          if (!open) setCustomerToDelete(null)
+        }}
+        collection="customers"
+        id={customerToDelete?.id || null}
+        entityName={customerToDelete?.name || customerToDelete?.phone || 'לקוח'}
+        onDeleted={() => {
+          setCustomerToDelete(null)
+          queryClient.invalidateQueries({ queryKey: ['customers'] })
+        }}
       />
     </div>
   )

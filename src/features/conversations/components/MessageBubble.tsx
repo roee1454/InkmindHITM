@@ -1,6 +1,7 @@
-import { Check, CheckCheck, Clock, Download, MapPin, Reply, TriangleAlert } from 'lucide-react'
-import { messageMediaUrl } from '../lib/media'
-import { formatTime } from '../lib/format'
+import { Bot, Check, CheckCheck, Clock, Download, MapPin, Reply, Sparkles, TriangleAlert } from '@/components/ui/icon'
+import { cn } from '@/lib/utils'
+import { messageMediaUrl } from '../utils/media'
+import { formatTime } from '../utils/format'
 import type { UIMessage } from '../types'
 
 const STATUS_ICON: Record<string, typeof Check> = {
@@ -14,20 +15,23 @@ interface MessageBubbleProps {
   message: UIMessage
   onReply?: (message: UIMessage) => void
   onImageClick?: (url: string, category: 'inspiration' | 'verification' | null) => void
-  onCategoryToggle?: (messageId: string, currentCategory: 'inspiration' | 'verification' | null) => void
 }
 
-export function MessageBubble({ message, onReply, onImageClick, onCategoryToggle }: MessageBubbleProps) {
+export function MessageBubble({ message, onReply, onImageClick }: MessageBubbleProps) {
+  const isInternalStaffInstruction = Boolean(
+    message.senderType === 'staff' && message.whatsappMessageId?.startsWith('internal_staff_'),
+  )
+  const isBot = message.senderType === 'ai_bot'
+  const isStaff = message.senderType === 'staff' && !isInternalStaffInstruction
   const outbound = message.direction === 'outbound'
   const StatusIcon = message.status ? (STATUS_ICON[message.status] ?? Clock) : null
 
   return (
-    // Under this thread's dir="rtl" ancestor, `justify-start`/`justify-end` resolve relative to
-    // reading direction (start = right) — so outbound (own) messages need `justify-start` to
-    // land on the visual right, and inbound (customer) messages `justify-end` for the left.
-    <div className={`group relative flex ${outbound ? 'justify-start' : 'justify-end'} items-center gap-2`}>
+    // Under dir="rtl", `justify-start` lands on the visual right (outbound/studio messages),
+    // and `justify-end` lands on the visual left (inbound customer messages).
+    <div className={`group relative flex ${outbound ? 'justify-start' : 'justify-end'} items-center gap-2 font-assistant`}>
       {/* Reply trigger button */}
-      {onReply && (
+      {onReply && !isInternalStaffInstruction && (
         <button
           type="button"
           onClick={() => onReply(message)}
@@ -41,20 +45,48 @@ export function MessageBubble({ message, onReply, onImageClick, onCategoryToggle
       )}
 
       <div
-        className={`max-w-[85%] rounded-2xl px-3.5 py-2 font-assistant text-sm shadow-sm sm:max-w-[75%] ${
-          outbound
-            ? 'bg-primary text-primary-foreground'
-            : 'border border-border bg-card text-foreground'
-        }`}
+        className={cn(
+          'max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm shadow-xs sm:max-w-[75%]',
+          outbound ? 'rounded-ss-xs' : 'rounded-se-xs',
+          isInternalStaffInstruction
+            ? 'border border-accent-ink/30 bg-accent-ink/10 text-foreground'
+            : isStaff
+              ? 'bg-primary text-primary-foreground'
+              : 'border border-border bg-card text-foreground',
+        )}
       >
+        {/* Bot header badge */}
+        {isBot && (
+          <div className="mb-1 flex items-center gap-1.5 text-2xs font-extrabold text-primary">
+            <Bot className="size-3.5" />
+            <span>בוט</span>
+          </div>
+        )}
+
+        {/* Staff header badge */}
+        {isStaff && (
+          <div className="mb-1 text-2xs font-bold text-primary-foreground/85">
+            <span>צוות</span>
+          </div>
+        )}
+
+        {/* Internal Staff Instruction Badge */}
+        {isInternalStaffInstruction && (
+          <div className="mb-1 flex items-center gap-1 text-micro font-bold text-accent-ink">
+            <Sparkles className="size-3 shrink-0" />
+            <span>הנחיית צוות לבוט (פנימי)</span>
+          </div>
+        )}
+
         {/* Reply Context Banner */}
         {message.replyToWamid && (
           <div
-            className={`mb-1.5 rounded-lg border-r-2 p-1.5 text-xs ${
-              outbound
+            className={cn(
+              'mb-1.5 rounded-lg border-r-2 p-1.5 text-xs',
+              isStaff
                 ? 'border-primary-foreground/60 bg-primary-foreground/10 text-primary-foreground/90'
-                : 'border-primary bg-muted/60 text-muted-foreground'
-            }`}
+                : 'border-primary bg-muted/60 text-muted-foreground',
+            )}
           >
             <span className="block font-semibold text-micro">בתשובה להודעה</span>
           </div>
@@ -63,27 +95,38 @@ export function MessageBubble({ message, onReply, onImageClick, onCategoryToggle
         <MessageBody
           message={message}
           onImageClick={onImageClick}
-          onCategoryToggle={onCategoryToggle}
         />
 
         <div
-          className={`mt-1 flex items-center justify-end gap-1 text-micro ${
-            outbound ? 'text-primary-foreground/70' : 'text-muted-foreground'
-          }`}
+          className={cn(
+            'mt-1 flex items-center justify-end gap-1 text-micro tabular-nums',
+            isInternalStaffInstruction
+              ? 'text-accent-ink/70'
+              : isStaff
+                ? 'text-primary-foreground/75'
+                : 'text-muted-foreground',
+          )}
         >
-          <span>{formatTime(message.timestamp)}</span>
-          {outbound && StatusIcon ? (
-            <StatusIcon
-              className={`size-3 ${message.status === 'read' ? 'text-sky-300' : ''} ${
-                message.status === 'failed' ? 'text-destructive' : ''
-              }`}
-            />
-          ) : null}
+          {isInternalStaffInstruction ? (
+            <span className="font-semibold text-accent-ink">פנימי</span>
+          ) : (
+            <>
+              {outbound && StatusIcon && (
+                <StatusIcon
+                  className={cn(
+                    'size-3 shrink-0',
+                    message.status === 'read'
+                      ? isStaff ? 'text-primary-foreground' : 'text-primary'
+                      : message.status === 'failed'
+                        ? 'text-destructive'
+                        : '',
+                  )}
+                />
+              )}
+              <span>{formatTime(message.timestamp)}</span>
+            </>
+          )}
         </div>
-
-        {message.status === 'failed' && message.errorDetail ? (
-          <p className="mt-1 text-micro text-destructive">{message.errorDetail}</p>
-        ) : null}
       </div>
     </div>
   )
@@ -92,11 +135,9 @@ export function MessageBubble({ message, onReply, onImageClick, onCategoryToggle
 function MessageBody({
   message,
   onImageClick,
-  onCategoryToggle,
 }: {
   message: UIMessage
   onImageClick?: (url: string, category: 'inspiration' | 'verification' | null) => void
-  onCategoryToggle?: (messageId: string, currentCategory: 'inspiration' | 'verification' | null) => void
 }) {
   const hasMedia = Boolean(message.mediaFilename)
   const mediaUrl = hasMedia ? messageMediaUrl(message.id, message.mediaFilename!) : null
@@ -114,25 +155,16 @@ function MessageBody({
             alt={message.body || 'תמונה'}
             className="max-h-64 rounded-lg object-cover"
           />
-          {onCategoryToggle && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                onCategoryToggle(message.id, message.mediaCategory)
-              }}
-              className="absolute bottom-2 right-2 px-2 py-1 rounded-full text-micro font-bold shadow-xs backdrop-blur-md bg-background/80 hover:bg-background border border-border/40 transition select-none text-foreground cursor-pointer flex items-center gap-1 opacity-0 group-hover/image:opacity-100 focus:opacity-100 transition-opacity duration-200"
-            >
-              {isVerification ? '📁 אסמכתא' : '✨ השראה'}
-            </button>
-          )}
+          <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded-full text-micro font-extrabold shadow-sm backdrop-blur-md border border-border bg-muted/80 text-muted-foreground select-none pointer-events-none flex items-center gap-1 opacity-90">
+            {isVerification ? '🧾 אסמכתה' : '🎨 השראה'}
+          </span>
         </div>
         {message.body ? <p className="whitespace-pre-wrap break-words">{message.body}</p> : null}
       </div>
     )
   }
 
-  if ((message.type === 'video') && mediaUrl) {
+  if (message.type === 'video' && mediaUrl) {
     return (
       <div className="space-y-1">
         <video src={mediaUrl} controls className="max-h-64 rounded-lg" />

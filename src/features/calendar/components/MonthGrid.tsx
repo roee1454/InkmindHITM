@@ -1,9 +1,13 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { Plus } from '@/components/ui/icon'
 import type { ApiAppointment, ApiExternalBusyPeriod } from '../types'
-import { artistColor } from '../artist-colors'
-import { HEBREW_DAYS_SHORT, buildMonthMatrix, isSameMonth, isToday, toYmd, minutesToTime, timeToMinutes } from '../date-utils'
+import { HEBREW_DAYS_SHORT, buildMonthMatrix, isSameMonth, isToday, toYmd } from '../utils/date-utils'
+import { DayOverviewDialog } from './DayOverviewDialog'
+import { AppointmentMonthChip } from './AppointmentMonthChip'
+import { cn } from '@/lib/utils'
 
 const DEFAULT_SLOT = '12:00'
+const MAX_VISIBLE = 3
 
 const BUSY_STRIPES: React.CSSProperties = {
   backgroundImage:
@@ -27,6 +31,7 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
   onSelectAppointment,
   onSelectSlot,
 }) => {
+  const [dayOverviewDate, setDayOverviewDate] = useState<Date | null>(null)
   const weeks = buildMonthMatrix(anchorDate)
 
   const appointmentsForDay = (day: Date) =>
@@ -57,77 +62,109 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
           const outside = !isSameMonth(day, anchorDate)
           const today = isToday(day)
           const dayAppointments = appointmentsForDay(day)
+          const visibleAppointments = dayAppointments.slice(0, MAX_VISIBLE)
+          const hiddenCount = dayAppointments.length - MAX_VISIBLE
+          const dayBusy = busyForDay(day)
 
           return (
             <div
               key={toYmd(day)}
-              onClick={() => onSelectSlot(toYmd(day), DEFAULT_SLOT)}
-              className={`min-h-[104px] border-b border-l border-border p-1.5 transition-all duration-200 hover:bg-primary/10 hover:scale-[0.99] cursor-pointer ${
-                outside ? 'bg-muted/30' : ''
-              } ${today ? 'bg-card/30' : ''}`}
+              className={cn(
+                'min-h-[112px] border-b border-l border-border p-1.5 flex flex-col justify-between group transition-colors select-none @container',
+                outside ? 'bg-muted/30' : 'bg-card/20',
+                today && 'bg-primary/[0.04]',
+              )}
             >
-              <div className="mb-1 flex justify-start">
-                <span
-                  className={`flex h-5 min-w-5 items-center justify-center px-1 text-mini font-bold ${
+              {/* Day cell header */}
+              <div className="mb-1 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setDayOverviewDate(day)}
+                  className={cn(
+                    'flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-mini font-bold transition-all cursor-pointer hover:ring-2 hover:ring-primary/40',
                     today
-                      ? 'rounded-full bg-primary text-primary-foreground'
+                      ? 'bg-primary text-primary-foreground font-extrabold shadow-xs'
                       : outside
-                        ? 'text-muted-foreground/60'
-                        : 'text-muted-foreground'
-                  }`}
+                        ? 'text-muted-foreground/50 hover:text-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/60',
+                  )}
+                  title={`צפה בכל הפגישות של ${day.getDate()}`}
+                  aria-label={`צפה בכל הפגישות של ${day.getDate()}`}
                 >
                   {day.getDate()}
-                </span>
+                </button>
+
+                {/* Explicit add appointment button (intentional, no accidental clicking) */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onSelectSlot(toYmd(day), DEFAULT_SLOT)
+                  }}
+                  className="size-5 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-primary hover:bg-primary/15 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+                  title={`קבע תור ל-${toYmd(day)}`}
+                  aria-label={`קבע תור ל-${toYmd(day)}`}
+                >
+                  <Plus size={12} />
+                </button>
               </div>
 
-              <div className="space-y-1">
-                {busyForDay(day).map((busy) => (
+              {/* Appointments list (capped at MAX_VISIBLE) */}
+              <div
+                onClick={() => setDayOverviewDate(day)}
+                className="flex-1 space-y-1 cursor-pointer min-w-0"
+              >
+                {dayBusy.map((busy) => (
                   <div
                     key={busy.googleEventId}
                     style={BUSY_STRIPES}
-                    className="pointer-events-none flex w-full items-center gap-1 truncate rounded-md border border-border bg-muted/50 px-1.5 py-0.5 text-right text-micro text-muted-foreground"
+                    title={`חסימה: ${timeOf(busy.startsAt)}`}
+                    className="pointer-events-none flex h-[22px] w-full min-w-0 items-center gap-1 overflow-hidden rounded-md border border-border bg-muted/40 px-1.5 text-right text-[10.5px] text-muted-foreground"
                   >
-                    {timeOf(busy.startsAt)} חסימה חיצונית
+                    <span className="shrink-0 font-semibold tabular-nums">{timeOf(busy.startsAt)}</span>
+                    <span className="hidden @[70px]:inline truncate">חסימה</span>
                   </div>
                 ))}
-                {dayAppointments.map((appointment) => {
-                  const durationHours = (appointment.durationMinutes || 120) / 60
-                  const startMinutes = timeToMinutes(appointment.timeSlot)
-                  const endMinutes = startMinutes + durationHours * 60
-                  const timeRange = `${appointment.timeSlot} - ${minutesToTime(endMinutes)}`
 
-                  return (
-                    <button
-                      key={appointment.id}
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onSelectAppointment(appointment)
-                      }}
-                      className={`flex w-full items-center gap-1 truncate border-2 bg-card px-1.5 py-0.5 text-right text-micro text-foreground transition-all duration-200 hover:scale-[1.03] hover:shadow-md cursor-pointer rounded-md ${
-                        appointment.isException
-                          ? 'border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.2)]'
-                          : artistColor(appointment.staffId).block
-                      } ${appointment.status === 'cancelled' ? 'opacity-40 line-through' : ''}`}
-                    >
-                      {appointment.staffId && artistAvatars[appointment.staffId] && (
-                        <img
-                          src={artistAvatars[appointment.staffId]}
-                          alt=""
-                          className="h-3 w-3 shrink-0 rounded-full object-cover"
-                        />
-                      )}
-                      <span className="truncate">
-                        {timeRange} {appointment.leadName || 'לקוח'}
-                      </span>
-                    </button>
-                  )
-                })}
+                {visibleAppointments.map((appointment) => (
+                  <AppointmentMonthChip
+                    key={appointment.id}
+                    appointment={appointment}
+                    artistAvatars={artistAvatars}
+                    onSelect={() => onSelectAppointment(appointment)}
+                  />
+                ))}
+
+                {/* More items indicator button */}
+                {hiddenCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setDayOverviewDate(day)
+                    }}
+                    className="w-full mt-1 flex h-5 min-w-0 items-center justify-center gap-1 rounded-md bg-muted/60 hover:bg-primary/15 text-muted-foreground hover:text-primary px-1 text-[10px] font-extrabold transition-all cursor-pointer border border-border shadow-xs overflow-hidden"
+                  >
+                    <span className="hidden @[85px]:inline truncate">+ עוד {hiddenCount} פגישות</span>
+                    <span className="@[85px]:hidden">+{hiddenCount}</span>
+                  </button>
+                )}
               </div>
             </div>
           )
         })}
       </div>
+
+      {/* Day Overview Dialog for dense or expanded viewing */}
+      <DayOverviewDialog
+        date={dayOverviewDate}
+        open={dayOverviewDate !== null}
+        onOpenChange={(open) => !open && setDayOverviewDate(null)}
+        appointments={appointments}
+        artistAvatars={artistAvatars}
+        onSelectAppointment={onSelectAppointment}
+        onNewAppointment={onSelectSlot}
+      />
     </div>
   )
 }

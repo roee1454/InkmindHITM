@@ -1,5 +1,5 @@
 import React from 'react'
-import { ChevronDown, Lock, Loader2 } from 'lucide-react'
+import { ChevronDown, Lock, Loader2 } from '@/components/ui/icon'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,12 +22,12 @@ export const LeadStatusSelect: React.FC<LeadStatusSelectProps> = ({
   isUpdating = false,
   onStageChange,
 }) => {
-  const currentConfig = STAGE_CONFIG[stage] ?? STAGE_CONFIG.new
+  const currentConfig = STAGE_CONFIG[stage] ?? STAGE_CONFIG.NEW
 
   if (!editable) {
     return (
       <div
-        className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3 font-assistant text-[12.5px] font-bold opacity-70 select-none md:h-7 ${currentConfig.badgeClass}`}
+        className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3 font-assistant text-xs font-bold opacity-70 select-none md:h-7 ${currentConfig.badgeClass}`}
         title="אין לך הרשאה לעדכן ליד זה"
       >
         <span className={`size-2 rounded-full ${currentConfig.dotClass}`} />
@@ -38,13 +38,15 @@ export const LeadStatusSelect: React.FC<LeadStatusSelectProps> = ({
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu
+      dir='rtl'
+    >
       <DropdownMenuTrigger asChild>
         <button
           type="button"
           disabled={isUpdating}
           onClick={(e) => e.stopPropagation()}
-          className={`group inline-flex h-8.5 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 font-assistant text-[13px] font-bold shadow-2xs transition-all duration-150 ease-native outline-none hover:shadow-xs focus-visible:ring-2 focus-visible:ring-primary/20 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 md:h-7.5 md:px-3 md:text-[12.5px] ${currentConfig.badgeClass}`}
+          className={`group inline-flex h-8.5 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 font-assistant text-sm font-bold shadow-xs transition-all duration-150 ease-native outline-none hover:shadow-xs focus-visible:ring-2 focus-visible:ring-primary/20 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 md:h-7.5 md:px-3 md:text-xs ${currentConfig.badgeClass}`}
         >
           {isUpdating ? (
             <Loader2 className="size-3 animate-spin text-muted-foreground" />
@@ -67,7 +69,7 @@ export const LeadStatusSelect: React.FC<LeadStatusSelectProps> = ({
                   onStageChange(opt.stage)
                 }
               }}
-              className={`flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-[13.5px] font-semibold transition-colors md:py-1.5 md:text-[13px] ${
+              className={`flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold transition-colors md:py-1.5 md:text-sm ${
                 isSelected ? 'bg-primary/10 font-bold text-primary' : 'text-foreground hover:bg-muted'
               }`}
             >

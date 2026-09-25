@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight } from '@/components/ui/icon'
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Button } from '@/components/ui/button'
 import { StepCustomerDateTime } from './create-appointment-wizard/StepCustomerDateTime'
@@ -8,7 +8,7 @@ import { StepPricingDeposit } from './create-appointment-wizard/StepPricingDepos
 import { StepStatusNotes } from './create-appointment-wizard/StepStatusNotes'
 import { WIZARD_STEPS, progressPercent } from './create-appointment-wizard/wizard-steps'
 import type { ApiGoogleConnection, AppointmentFormValues } from '../types'
-import { useWorkingHoursCheck } from '../use-working-hours-check'
+import { useWorkingHoursCheck } from '../hooks/useWorkingHoursCheck'
 
 interface StaffItem {
   id: string
@@ -26,6 +26,7 @@ interface CreateAppointmentDialogProps {
   initialChatId?: string
   initialDate?: string
   initialTimeSlot?: string
+  initialValues?: Partial<AppointmentFormValues> | null
 }
 
 function emptyValues(): AppointmentFormValues {
@@ -34,6 +35,7 @@ function emptyValues(): AppointmentFormValues {
     chatId: null,
     leadName: '',
     leadPhone: '',
+    type: 'tattoo',
     date: '',
     timeSlot: '',
     staffId: null,
@@ -60,6 +62,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   initialChatId,
   initialDate,
   initialTimeSlot,
+  initialValues,
 }) => {
   const [values, setValues] = useState<AppointmentFormValues>(emptyValues)
   const [currentStep, setCurrentStep] = useState(0)
@@ -69,13 +72,14 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     if (!open) return
     setValues({
       ...emptyValues(),
-      chatId: initialChatId ?? null,
-      date: initialDate ?? '',
-      timeSlot: initialTimeSlot ?? '',
+      ...(initialValues ?? {}),
+      chatId: initialChatId ?? initialValues?.chatId ?? null,
+      date: initialDate ?? initialValues?.date ?? '',
+      timeSlot: initialTimeSlot ?? initialValues?.timeSlot ?? '',
     })
     setCurrentStep(0)
     setLocalError(null)
-  }, [open, initialChatId, initialDate, initialTimeSlot])
+  }, [open, initialChatId, initialDate, initialTimeSlot, initialValues])
 
   const handleChange = (patch: Partial<AppointmentFormValues>) =>
     setValues((prev) => ({ ...prev, ...patch }))
@@ -156,7 +160,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
         <div className="size-6" />
       </div>
 
-      {displayError && <p className="text-[13px] font-bold text-destructive">{displayError}</p>}
+      {displayError && <p className="text-sm font-bold text-destructive">{displayError}</p>}
 
       <form onSubmit={handleSubmit} className="mt-2 space-y-4">
         {currentStep === 0 && <StepCustomerDateTime values={values} onChange={handleChange} />}
@@ -174,12 +178,12 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
         {currentStep === 2 && <StepPricingDeposit values={values} onChange={handleChange} />}
         {currentStep === 3 && <StepStatusNotes values={values} onChange={handleChange} />}
 
-        <div className="grid grid-cols-2 gap-3 pt-2">
+        <div className="grid grid-cols-2 gap-3 pt-2" dir="rtl">
+          <Button type="submit" disabled={isSaving} className="font-bold">
+            {isLastStep ? (isSaving ? 'שומר…' : 'שמור') : 'המשך'}
+          </Button>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             ביטול
-          </Button>
-          <Button type="submit" disabled={isSaving}>
-            {isLastStep ? (isSaving ? 'שומר…' : 'שמור') : 'המשך'}
           </Button>
         </div>
       </form>

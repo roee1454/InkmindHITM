@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
-import { ArrowUp, ChevronDown, ChevronUp, MessageSquarePlus, Sparkles, X } from 'lucide-react'
+import { ArrowUp, ChevronDown, ChevronUp, MessageSquarePlus, Sparkles, X } from '@/components/ui/icon'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { useIsMobile } from '@/hooks/use-media-query'
+import { useIsMobile } from '#/hooks/useMediaQuery'
 import { useMcpConversation } from '../hooks/useMcpConversation'
 import { useMcpUiStore } from '../store/mcpUiStore'
 import { McpMessageBubble } from './McpMessageBubble'
@@ -119,7 +119,7 @@ function McpPanelBody() {
           onClick={toggleHistory}
           className="flex h-9 min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-xl bg-muted px-2.5"
         >
-          <span className="truncate text-[15px] font-extrabold text-foreground">
+          <span className="truncate text-base font-extrabold text-foreground">
             {panelMode === 'history' ? 'היסטוריית שיחות' : conversationTitle}
           </span>
           {panelMode === 'history' ? (
@@ -158,11 +158,11 @@ function McpPanelBody() {
         <>
           <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3.5">
             {!activeConversationId && (
-              <p className="m-auto max-w-[26ch] text-center text-[13.5px] font-semibold text-muted-foreground">
+              <p className="m-auto max-w-[26ch] text-center text-sm font-semibold text-muted-foreground">
                 שאלו אותי כל דבר על הסטודיו — תורים, לידים, תשלומים.
               </p>
             )}
-            {isLoading && activeConversationId && <p className="text-center text-[13px] text-muted-foreground">טוען…</p>}
+            {isLoading && activeConversationId && <p className="text-center text-sm text-muted-foreground">טוען…</p>}
             {data?.messages.map((message) => {
               const isAssistant = message.role === 'assistant'
               const relatedCards = isAssistant && (message.toolCalls.length > 0 || data.actions.some((a) => a.messageId === message.id))
@@ -211,7 +211,7 @@ function McpPanelBody() {
                 <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Sparkles size={13} className="animate-pulse motion-reduce:animate-none" />
                 </span>
-                <span className="mt-1.5 text-[13.5px] font-semibold text-muted-foreground">
+                <span className="mt-1.5 text-sm font-semibold text-muted-foreground">
                   חושב
                   <span className="inline-flex w-4 animate-pulse motion-reduce:animate-none">…</span>
                 </span>
@@ -231,7 +231,7 @@ function McpPanelBody() {
                 }
               }}
               placeholder={anyEditing ? 'סיים/י את העריכה כדי להמשיך…' : 'שאל/י כל דבר על הסטודיו…'}
-              className="h-11 flex-1 rounded-2xl bg-muted px-3.5 text-[14.5px] font-medium text-foreground outline-none placeholder:text-muted-foreground disabled:opacity-60"
+              className="h-11 flex-1 rounded-2xl bg-muted px-3.5 text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground disabled:opacity-60"
             />
             <button
               type="button"

@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
-import { TriangleAlert } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { TriangleAlert } from '@/components/ui/icon'
+import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import type { ApiGoogleConnection, AppointmentFormValues } from '../../types'
-import { formatDuration } from '@/features/conversations/lib/format'
+import { formatDuration } from '@/features/conversations/utils/format'
 import { NoCalendarWarningDialog } from './NoCalendarWarningDialog'
 
 const NO_ARTIST = 'none'
@@ -106,8 +106,8 @@ export const StepStaffDuration: React.FC<StepStaffDurationProps> = ({
       </div>
 
       {isStudioClosed && (
-        <div className="flex flex-col gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
+        <div className="flex flex-col gap-2 rounded-xl border border-accent-ink/30 bg-accent-ink/10 p-3">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-accent-ink">
             <TriangleAlert size={13} className="shrink-0" />
             הסטודיו סגור בתאריך זה
           </div>
@@ -126,8 +126,8 @@ export const StepStaffDuration: React.FC<StepStaffDurationProps> = ({
       )}
 
       {!fitsWorkingHours && (
-        <div className="flex flex-col gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
+        <div className="flex flex-col gap-2 rounded-xl border border-accent-ink/30 bg-accent-ink/10 p-3">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-accent-ink">
             <TriangleAlert size={13} className="shrink-0" />
             מחוץ לשעות העבודה
           </div>
@@ -146,12 +146,19 @@ export const StepStaffDuration: React.FC<StepStaffDurationProps> = ({
       )}
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-semibold text-foreground">תיאור קעקוע</label>
-        <Input
-          type="text"
-          placeholder="פורטרט ריאליסטי"
+        <label className="text-xs font-semibold text-foreground">
+          {values.type === 'sketch' ? 'נושא פגישת הסקיצה / ייעוץ' : 'תיאור הקעקוע'}
+        </label>
+        <Textarea
+          rows={3}
+          placeholder={
+            values.type === 'sketch'
+              ? 'תיאור הרעיון לסקיצה, כיוון עיצובי, קאבראפ או מיקום מבוקש…'
+              : 'תיאור הקעקוע, מיקום על הגוף, גודל משוער וסגנון…'
+          }
           value={values.tattooDescription}
           onChange={(e) => onChange({ tattooDescription: e.target.value })}
+          className="resize-none text-xs min-h-[72px]"
         />
       </div>
 

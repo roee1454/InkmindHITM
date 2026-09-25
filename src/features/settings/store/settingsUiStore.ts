@@ -4,7 +4,6 @@ interface SettingsUiState {
   // AI config state
   aiModel: string
   aiTemperature: number
-  aiMaxTokens: string
   aiInstructions: string
   aiConfigSaved: boolean
   aiInstructionsSaved: boolean
@@ -21,7 +20,6 @@ interface SettingsUiState {
   // AI config actions
   setAiModel: (model: string) => void
   setAiTemperature: (temp: number) => void
-  setAiMaxTokens: (tokens: string) => void
   setAiInstructions: (instructions: string) => void
   setAiConfigSaved: (saved: boolean) => void
   setAiInstructionsSaved: (saved: boolean) => void
@@ -40,7 +38,6 @@ export const useSettingsUiStore = create<SettingsUiState>((set) => ({
   // Defaults
   aiModel: 'claude-sonnet-5',
   aiTemperature: 0.4,
-  aiMaxTokens: '',
   aiInstructions: '',
   aiConfigSaved: false,
   aiInstructionsSaved: false,
@@ -56,7 +53,6 @@ export const useSettingsUiStore = create<SettingsUiState>((set) => ({
   // Setters
   setAiModel: (aiModel) => set({ aiModel }),
   setAiTemperature: (aiTemperature) => set({ aiTemperature }),
-  setAiMaxTokens: (aiMaxTokens) => set({ aiMaxTokens }),
   setAiInstructions: (aiInstructions) => set({ aiInstructions }),
   setAiConfigSaved: (aiConfigSaved) => set({ aiConfigSaved }),
   setAiInstructionsSaved: (aiInstructionsSaved) => set({ aiInstructionsSaved }),

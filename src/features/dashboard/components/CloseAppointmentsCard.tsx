@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft } from '@/components/ui/icon'
+import { useIsMobile } from '#/hooks/useMediaQuery'
 
 type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show'
 
@@ -10,6 +11,10 @@ const APPOINTMENT_STATUS_TRANSLATIONS: Record<AppointmentStatus, { label: string
   cancelled: { label: 'בוטל', pill: 'bg-destructive/10 text-destructive' },
   no_show: { label: 'לא הגיע', pill: 'bg-muted text-muted-foreground' },
 }
+
+/** Row caps that the card's fixed height is sized around — keep the two in step. */
+const VISIBLE_MOBILE = 3
+const VISIBLE_DESKTOP = 4
 
 interface CloseAppointmentsCardProps {
   appointments: Array<{
@@ -25,10 +30,14 @@ interface CloseAppointmentsCardProps {
 
 export function CloseAppointmentsCard({ appointments, onViewAll }: CloseAppointmentsCardProps) {
   const navigate = useNavigate()
-  const visibleAppointments = appointments.slice(0, 4)
+  const isMobile = useIsMobile()
+  const visibleAppointments = appointments.slice(0, isMobile ? VISIBLE_MOBILE : VISIBLE_DESKTOP)
 
   return (
-    <div className="flex flex-col rounded-2xl border border-border/80 bg-card shadow-2xs sm:rounded-3xl">
+    // Fixed height, matching RecentLeadsCard exactly: the two sit side by side in a
+    // grid, so a card that sizes to its rows leaves the pair ragged whenever one has fewer
+    // appointments than the other — or no appointments at all.
+    <div className="card-native flex h-65 flex-col overflow-hidden sm:h-84">
       <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3 sm:px-6 sm:pt-5">
         <div className="flex items-center gap-2">
           <h3 className="text-base font-extrabold text-foreground">תורים קרובים</h3>
@@ -49,7 +58,7 @@ export function CloseAppointmentsCard({ appointments, onViewAll }: CloseAppointm
       </div>
 
       {visibleAppointments.length > 0 ? (
-        <div className="divide-y divide-border/60">
+        <div className="min-h-0 flex-1 divide-y divide-border/60 overflow-hidden">
           {visibleAppointments.map((apt) => {
             const translation = APPOINTMENT_STATUS_TRANSLATIONS[apt.status] ?? {
               label: apt.status,
@@ -63,12 +72,12 @@ export function CloseAppointmentsCard({ appointments, onViewAll }: CloseAppointm
                 onClick={() => navigate({ to: '/dashboard/calendar' })}
                 className="flex cursor-pointer select-none items-center gap-3.5 px-5 py-3.5 transition-colors hover:bg-muted/40 active:bg-muted sm:px-6"
               >
-                <div className="flex size-10 shrink-0 flex-col items-center justify-center rounded-xl border border-border/60 bg-muted/60 leading-none tabular-nums">
-                  <span className="text-[13px] font-extrabold text-foreground">{dayNum}</span>
-                  <span className="mt-0.5 text-[10px] font-bold text-muted-foreground">{apt.timeSlot}</span>
+                <div className="flex size-10 shrink-0 flex-col items-center justify-center rounded-xl border border-border bg-muted/60 leading-none tabular-nums">
+                  <span className="text-sm font-extrabold text-foreground">{dayNum}</span>
+                  <span className="mt-0.5 text-2xs font-bold text-muted-foreground">{apt.timeSlot}</span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[14.5px] font-extrabold text-foreground">
+                  <div className="truncate text-sm font-extrabold text-foreground">
                     {apt.leadName || 'לקוח ללא שם'}
                   </div>
                   <div className="truncate text-xs font-medium text-muted-foreground">
@@ -81,7 +90,7 @@ export function CloseAppointmentsCard({ appointments, onViewAll }: CloseAppointm
           })}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center px-5 py-10 text-center text-sm font-semibold text-muted-foreground">
+        <div className="flex min-h-0 flex-1 items-center justify-center px-5 text-center text-sm font-semibold text-muted-foreground">
           אין תורים קרובים ביומן
         </div>
       )}

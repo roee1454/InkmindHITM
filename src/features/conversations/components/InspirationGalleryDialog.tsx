@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Image as ImageIcon, ReceiptText } from 'lucide-react'
+import { Image as ImageIcon, ReceiptText } from '@/components/ui/icon'
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ImageGalleryDialog } from '@/features/calendar/components/ImageGalleryDialog'
@@ -58,7 +58,7 @@ export function InspirationGalleryDialog({
                       key={url}
                       type="button"
                       onClick={() => setZoom({ images: inspirationImages, index: idx })}
-                      className="aspect-square cursor-pointer overflow-hidden rounded-2xl border border-border/80 bg-muted"
+                      className="aspect-square cursor-pointer overflow-hidden rounded-2xl border border-border bg-muted"
                     >
                       <img src={url} alt="" className="h-full w-full object-cover" />
                     </button>
@@ -79,10 +79,10 @@ export function InspirationGalleryDialog({
                       onClick={() => setZoom({ images: receipts.map((r) => r.url), index: idx })}
                       className="row-native w-full cursor-pointer"
                     >
-                      <div className="size-11 shrink-0 overflow-hidden rounded-xl border border-border/80 bg-muted">
+                      <div className="size-11 shrink-0 overflow-hidden rounded-xl border border-border bg-muted">
                         <img src={receipt.url} alt="" className="h-full w-full object-cover" />
                       </div>
-                      <span className="flex-1 text-start text-[13.5px] font-medium text-muted-foreground">
+                      <span className="flex-1 text-start text-sm font-medium text-muted-foreground">
                         {new Date(receipt.timestamp).toLocaleString('he-IL', {
                           day: '2-digit',
                           month: '2-digit',
@@ -102,7 +102,7 @@ export function InspirationGalleryDialog({
         images={zoom?.images ?? []}
         initialIndex={zoom?.index ?? 0}
         open={zoom !== null}
-        onOpenChange={(open) => !open && setZoom(null)}
+        onOpenChange={(isOpen) => !isOpen && setZoom(null)}
       />
     </>
   )

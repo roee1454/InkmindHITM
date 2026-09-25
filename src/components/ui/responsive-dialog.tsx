@@ -1,6 +1,6 @@
 import * as React from "react"
 import { cn } from "#/lib/utils.ts"
-import { useIsMobile } from "#/hooks/use-media-query.ts"
+import { useIsMobile } from "#/hooks/useMediaQuery"
 import {
   Dialog,
   DialogContent,
@@ -68,9 +68,9 @@ export function ResponsiveDialog({
               {description && <SheetDescription className="sr-only">{description}</SheetDescription>}
             </>
           ) : (
-            <SheetHeader className="border-b-0 px-0 pb-0">
-              <SheetTitle>{title}</SheetTitle>
-              {description && <SheetDescription>{description}</SheetDescription>}
+            <SheetHeader className="border-b-0 px-0 pb-0 text-right items-start">
+              <SheetTitle className="text-right w-full">{title}</SheetTitle>
+              {description && <SheetDescription className="text-right w-full">{description}</SheetDescription>}
             </SheetHeader>
           )}
           {children}
@@ -90,9 +90,9 @@ export function ResponsiveDialog({
             {description && <DialogDescription className="sr-only">{description}</DialogDescription>}
           </>
         ) : (
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            {description && <DialogDescription>{description}</DialogDescription>}
+          <DialogHeader className="text-right sm:text-right items-start">
+            <DialogTitle className="text-right w-full">{title}</DialogTitle>
+            {description && <DialogDescription className="text-right w-full">{description}</DialogDescription>}
           </DialogHeader>
         )}
         {children}

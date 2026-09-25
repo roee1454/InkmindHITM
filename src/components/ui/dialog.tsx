@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { XIcon } from "lucide-react"
+import { XIcon } from '@/components/ui/icon'
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "#/lib/utils.ts"
@@ -68,7 +68,7 @@ function DialogContent({
           data-slot="dialog-content"
           tabIndex={-1}
           className={cn(
-            "pointer-events-auto relative flex w-full max-w-lg flex-col gap-4 rounded-3xl border border-border/80 bg-card p-5 font-assistant shadow-lg outline-none fill-mode-both data-[state=open]:animate-in data-[state=open]:duration-300 data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            "pointer-events-auto relative flex w-full max-w-lg flex-col gap-4 rounded-3xl border border-border bg-card p-5 font-assistant shadow-lg outline-none fill-mode-both data-[state=open]:animate-in data-[state=open]:duration-300 data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
             className
           )}
           onOpenAutoFocus={(e) => {
@@ -99,7 +99,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-1.5 text-center font-assistant sm:text-right", className)}
+      className={cn("flex flex-col gap-1.5 text-right font-assistant items-start pe-8", className)}
       {...props}
     />
   )
@@ -152,7 +152,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("font-assistant text-[13px] font-medium text-muted-foreground", className)}
+      className={cn("font-assistant text-sm font-medium text-muted-foreground", className)}
       {...props}
     />
   )

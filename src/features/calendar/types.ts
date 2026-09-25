@@ -1,8 +1,29 @@
+import type { ProjectBalance } from '@/features/payments/types'
+
 export type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show'
 export type AppointmentType = 'tattoo' | 'sketch'
+/** What the appointment is inside its project. Replaces `type` (kept in sync by pb_hooks/projects.pb.js). */
+export type AppointmentKind = 'consultation' | 'session' | 'touch_up'
+
+export interface ProjectPosition {
+  /** 1-based among the project's sessions that are happening; null for consultations, touch-ups and cancellations. */
+  sessionNumber: number | null
+  sessionCount: number
+  hasConsultation: boolean
+  appointmentCount: number
+}
 
 export interface ApiAppointment {
   id: string
+  /** The tattoo project this appointment belongs to (consultation, sessions and touch-ups share one). */
+  projectId: string | null
+  kind: AppointmentKind
+  projectPosition: ProjectPosition | null
+  /** What the session cost, entered when it was closed; null until then. */
+  finalPrice: number | null
+  chargeWaived: boolean
+  /** Money state of the whole project (all its sessions and payments). */
+  projectBalance: ProjectBalance | null
   customerId: string
   chatId: string | null
   staffId: string | null
@@ -29,9 +50,16 @@ export interface ApiAppointment {
   healthDeclarationSigned?: boolean
   healthDeclarationDate?: string | null
   healthDeclarationFileUrl?: string | null
+  medicalNotes?: string | null
+  healthDeclarationAnswers?: Record<string, string | number | boolean | null | string[]> | null
+  allergies?: string | null
+  googleSyncStatus?: 'synced' | 'push_failed' | null
+  googleEventId?: string | null
 }
 
 export interface AppointmentFormValues {
+  /** Set when booking a follow-up inside an existing project (e.g. a session after a consultation). */
+  projectId?: string | null
   customerId: string | null
   chatId: string | null
   leadName: string
@@ -54,6 +82,9 @@ export interface AppointmentFormValues {
   healthDeclarationSigned?: boolean
   healthDeclarationDate?: string | null
   healthDeclarationFileUrl?: string | null
+  medicalNotes?: string | null
+  healthDeclarationAnswers?: Record<string, string | number | boolean | null | string[]> | null
+  allergies?: string | null
 }
 
 export interface ApiLead {
@@ -79,12 +110,13 @@ export interface ApiGoogleConnection {
   lastSyncedAt: string | null
 }
 
+/** Status roles, not hues: `wait` needs you, `done` is settled, `dead` is over. */
 export const STATUS_STYLES: Record<AppointmentStatus, string> = {
-  pending: 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20',
-  confirmed: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20',
-  completed: 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20',
-  cancelled: 'bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20',
-  no_show: 'bg-stone-800 text-stone-400 border-stone-800 hover:bg-stone-800/80',
+  pending: 'bg-accent-soft text-accent-ink border-accent-ink/25 hover:bg-accent-soft',
+  confirmed: 'bg-status-done-soft text-status-done border-status-done/25 hover:bg-status-done-soft',
+  completed: 'bg-status-done-soft text-status-done border-status-done/25 hover:bg-status-done-soft',
+  cancelled: 'bg-status-dead-soft text-status-dead border-status-dead/25 hover:bg-status-dead-soft',
+  no_show: 'bg-status-dead-soft text-status-dead border-status-dead/25 hover:bg-status-dead-soft',
 }
 
 export const STATUS_LABELS: Record<AppointmentStatus, string> = {

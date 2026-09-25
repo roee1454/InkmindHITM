@@ -1,12 +1,13 @@
 import { z } from 'zod'
+import { statusChange } from '@/features/calendar/utils/appointment-transitions'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import {
   checkAvailabilityForBot,
   getArtistScheduleForBot,
-} from '@/features/calendar/server/bot-appointments'
+} from '@/features/calendar/server/bot-appointments.server'
 import { getWorkingHoursForStaff } from '@/features/settings/server/profiles'
 import { toYmd, minutesToTime, timeToMinutes } from '@/lib/date-utils'
-import { syncAppointmentToGoogle } from '@/integrations/google-calendar/server/google-sync'
+import { syncAppointmentToGoogle } from '@/integrations/google-calendar/server/google-sync.server'
 import { mcpReadTool, mcpWriteTool } from './shared'
 import type { McpToolContext } from './shared'
 import type { McpActionDiff } from '../types'
@@ -264,7 +265,6 @@ export function buildCalendarTools(ctx: McpToolContext) {
   }
 }
 
-/** The only place these two write tools actually mutate the database — called from
 /** The only place these write tools actually mutate the database — called from
  *  `approval.ts` when the owner taps "אשר ובצע", never from the model's own tool call. */
 export async function commitCalendarAction(toolName: string, args: Record<string, unknown>): Promise<string> {
@@ -286,7 +286,7 @@ export async function commitCalendarAction(toolName: string, args: Record<string
     }
     const [year, month, day] = newDate.split('-').map(Number)
     const [hour, minute] = newTimeSlot.split(':').map(Number)
-    const newStart = new Date(year!, month! - 1, day!, hour!, minute!)
+    const newStart = new Date(year!, month! - 1, day, hour, minute)
     await su.collection('appointments').update(appointmentId, {
       start_time: newStart.toISOString(),
       ...(bypassed ? { is_exception: true } : {}),
@@ -296,7 +296,7 @@ export async function commitCalendarAction(toolName: string, args: Record<string
   }
   if (toolName === 'cancel_appointment') {
     const { appointmentId } = args as { appointmentId: string }
-    await su.collection('appointments').update(appointmentId, { status: 'cancelled' })
+    await su.collection('appointments').update(appointmentId, statusChange('cancelled', 'staff', 'mcp_assistant'))
     await syncAppointmentToGoogle(appointmentId).catch(() => null)
     return 'התור בוטל בהצלחה.'
   }
@@ -318,7 +318,7 @@ export async function commitCalendarAction(toolName: string, args: Record<string
     }
     const [year, month, day] = date.split('-').map(Number)
     const [hour, minute] = timeSlot.split(':').map(Number)
-    const startTime = new Date(year!, month! - 1, day!, hour!, minute!)
+    const startTime = new Date(year!, month! - 1, day, hour, minute)
     const created = await su.collection('appointments').create({
       customer: customerId,
       staff: staffId,
@@ -343,20 +343,13 @@ export async function commitCalendarAction(toolName: string, args: Record<string
     }
     const [year, month, day] = date.split('-').map(Number)
     const [hour, minute] = timeSlot.split(':').map(Number)
-    const startTimeIso = new Date(year!, month! - 1, day!, hour!, minute!).toISOString()
+    const startTimeIso = new Date(year!, month! - 1, day, hour, minute).toISOString()
     const studio = await su.collection('studios').getFirstListItem('').catch(() => null)
-
-    let studioCustomer = await su.collection('customers').getFirstListItem('phone = "0553063884"').catch(() => null)
-    if (!studioCustomer) {
-      studioCustomer = await su.collection('customers').create({
-        name: 'סטודיו Inkmind (חסימת זמן)',
-        phone: '0553063884',
-      }).catch(() => null)
-    }
 
     const created = await su.collection('appointments').create({
       studio: studio?.id || '',
-      customer: studioCustomer?.id || null,
+      customer: null,
+      customer_name_override: 'סטודיו Inkmind (חסימת זמן)',
       staff: staffId,
       start_time: startTimeIso,
       duration_minutes: Math.round(durationHours * 60),

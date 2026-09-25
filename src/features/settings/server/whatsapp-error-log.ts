@@ -2,7 +2,7 @@ import { createServerFn, createServerOnlyFn } from '@tanstack/react-start'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { requireAdmin } from './helpers.server'
 
-export type WhatsAppErrorSource = 'webhook_signature' | 'webhook_processing' | 'test_connection'
+export type WhatsAppErrorSource = 'webhook_signature' | 'webhook_processing' | 'test_connection' | 'conversation_turn_queue'
 
 /** Best-effort: a logging failure must never break the webhook/test-connection flow it's
  *  logging. `createServerOnlyFn` keeps this out of the client bundle even though this module

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, Pencil, RotateCcw, X } from 'lucide-react'
+import { Check, Pencil, RotateCcw, X } from '@/components/ui/icon'
 import { useMcpUiStore } from '../store/mcpUiStore'
 import type { McpAction } from '../types'
 
@@ -50,7 +50,7 @@ export function McpActionCard({ action, onApprove, onCancel, onUndo, onStartEdit
   if (action.status === 'cancelled') {
     return (
       <div className="w-full rounded-2xl border border-border bg-muted/40 px-3.5 py-3 opacity-70">
-        <p className="text-[13px] font-bold text-muted-foreground">{label} — בוטל</p>
+        <p className="text-sm font-bold text-muted-foreground">{label} — בוטל</p>
       </div>
     )
   }
@@ -58,19 +58,19 @@ export function McpActionCard({ action, onApprove, onCancel, onUndo, onStartEdit
   if (action.status === 'done') {
     const undoAvailable = action.undoExpiresAt && new Date(action.undoExpiresAt).getTime() > Date.now()
     return (
-      <div className="w-full overflow-hidden rounded-2xl border border-emerald-500/30">
-        <div className="flex items-center gap-2.5 bg-emerald-500/10 px-3 py-2.5">
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-[9px] bg-card text-emerald-600 dark:text-emerald-400">
+      <div className="w-full overflow-hidden rounded-2xl border border-status-done/30">
+        <div className="flex items-center gap-2.5 bg-status-done/10 px-3 py-2.5">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-card text-status-done">
             <Check size={15} />
           </span>
-          <p className="flex-1 text-[13.5px] font-extrabold text-foreground">{action.diff.summary}</p>
+          <p className="flex-1 text-sm font-extrabold text-foreground">{action.diff.summary}</p>
         </div>
         {undoAvailable && (
           <button
             type="button"
             onClick={onUndo}
             disabled={busy}
-            className="flex w-full cursor-pointer items-center justify-center gap-1.5 border-t border-border py-2.5 text-[13px] font-bold text-muted-foreground disabled:opacity-50"
+            className="flex w-full cursor-pointer items-center justify-center gap-1.5 border-t border-border py-2.5 text-sm font-bold text-muted-foreground disabled:opacity-50"
           >
             <RotateCcw size={14} />
             ביטול הפעולה
@@ -88,7 +88,7 @@ export function McpActionCard({ action, onApprove, onCancel, onUndo, onStartEdit
           <span className="size-1.5 animate-pulse rounded-full bg-muted-foreground [animation-delay:150ms]" />
           <span className="size-1.5 animate-pulse rounded-full bg-muted-foreground [animation-delay:300ms]" />
         </span>
-        <span className="text-[13px] font-bold text-muted-foreground">מבצע…</span>
+        <span className="text-sm font-bold text-muted-foreground">מבצע…</span>
       </div>
     )
   }
@@ -97,26 +97,26 @@ export function McpActionCard({ action, onApprove, onCancel, onUndo, onStartEdit
     return (
       <div className="w-full overflow-hidden rounded-2xl border-[1.5px] border-primary bg-card shadow-sm">
         <div className="flex items-center gap-2.5 bg-primary/10 px-3 py-2.5">
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-[9px] bg-card text-primary">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-card text-primary">
             <Pencil size={14} />
           </span>
-          <p className="flex-1 text-[13.5px] font-extrabold text-foreground">{label} — עריכה</p>
-          <span className="shrink-0 rounded-full bg-card px-2.5 py-1 text-[11px] font-extrabold text-primary">טרם בוצע</span>
+          <p className="flex-1 text-sm font-extrabold text-foreground">{label} — עריכה</p>
+          <span className="shrink-0 rounded-full bg-card px-2.5 py-1 text-2xs font-extrabold text-primary">טרם בוצע</span>
         </div>
 
         <div className="flex flex-col gap-2.5 p-3">
           {editableEntries.map(([key]) => (
             <label key={key} className="flex flex-col gap-1">
-              <span className="text-[11.5px] font-bold text-muted-foreground">{key}</span>
+              <span className="text-xs font-bold text-muted-foreground">{key}</span>
               <input
                 type="text"
                 value={String(draft[key] ?? '')}
                 onChange={(e) => setDraftEdit(action.id, { ...draft, [key]: e.target.value })}
-                className="h-10 rounded-xl border border-border bg-background px-3 text-[13.5px] font-semibold text-foreground outline-none focus:border-primary"
+                className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none focus:border-primary"
               />
             </label>
           ))}
-          {error && <p className="text-[12px] font-semibold text-destructive">{error}</p>}
+          {error && <p className="text-xs font-semibold text-destructive">{error}</p>}
 
           <div className="flex items-center gap-2 pt-1">
             <button
@@ -126,7 +126,7 @@ export function McpActionCard({ action, onApprove, onCancel, onUndo, onStartEdit
                 setError(null)
                 onSaveEdit(draft)
               }}
-              className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-primary text-[13.5px] font-extrabold text-primary-foreground shadow-sm disabled:opacity-50"
+              className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-primary text-sm font-extrabold text-primary-foreground shadow-sm disabled:opacity-50"
             >
               <Check size={15} />
               אשר ובצע
@@ -135,7 +135,7 @@ export function McpActionCard({ action, onApprove, onCancel, onUndo, onStartEdit
               type="button"
               disabled={busy}
               onClick={onDiscardEdit}
-              className="h-11 shrink-0 cursor-pointer rounded-xl border border-border px-4 text-[13.5px] font-bold text-foreground disabled:opacity-50"
+              className="h-11 shrink-0 cursor-pointer rounded-xl border border-border px-4 text-sm font-bold text-foreground disabled:opacity-50"
             >
               ביטול
             </button>
@@ -151,9 +151,9 @@ export function McpActionCard({ action, onApprove, onCancel, onUndo, onStartEdit
       <div className="flex flex-col gap-2.5 p-3">
         <div className="flex items-center gap-2.5">
           <div className="min-w-0 flex-1">
-            <p className="text-[13.5px] font-extrabold text-foreground">{label}</p>
+            <p className="text-sm font-extrabold text-foreground">{label}</p>
           </div>
-          <span className="shrink-0 rounded-full bg-amber-500/15 px-2.5 py-1 text-[11px] font-extrabold text-amber-600 dark:text-amber-400">
+          <span className="shrink-0 rounded-full bg-accent-ink/15 px-2.5 py-1 text-2xs font-extrabold text-accent-ink">
             דורש אישור
           </span>
           <button type="button" onClick={onCancel} className="shrink-0 cursor-pointer text-muted-foreground">
@@ -164,9 +164,9 @@ export function McpActionCard({ action, onApprove, onCancel, onUndo, onStartEdit
         <div className="flex flex-col gap-1.5">
           {action.diff.rows.map((row, i) => (
             <div key={i} className="flex items-center gap-2 rounded-xl bg-card px-2.5 py-2">
-              <span className="flex-1 truncate text-[13px] font-bold text-foreground">{row.label}</span>
-              <span className="truncate text-[12px] font-semibold text-muted-foreground line-through">{row.before}</span>
-              <span className="truncate text-[12px] font-extrabold text-primary">{row.after}</span>
+              <span className="flex-1 truncate text-sm font-bold text-foreground">{row.label}</span>
+              <span className="truncate text-xs font-semibold text-muted-foreground line-through">{row.before}</span>
+              <span className="truncate text-xs font-extrabold text-primary">{row.after}</span>
             </div>
           ))}
         </div>
@@ -176,7 +176,7 @@ export function McpActionCard({ action, onApprove, onCancel, onUndo, onStartEdit
             type="button"
             disabled={busy}
             onClick={onApprove}
-            className="flex h-[42px] flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[13px] bg-primary text-[14px] font-extrabold text-primary-foreground disabled:opacity-50"
+            className="flex h-[42px] flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-primary text-sm font-extrabold text-primary-foreground disabled:opacity-50"
           >
             <Check size={16} />
             אשר ובצע
@@ -185,7 +185,7 @@ export function McpActionCard({ action, onApprove, onCancel, onUndo, onStartEdit
             type="button"
             disabled={busy}
             onClick={onStartEdit}
-            className="h-[42px] shrink-0 cursor-pointer rounded-[13px] border border-border bg-card px-3.5 text-[14px] font-bold text-foreground disabled:opacity-50"
+            className="h-[42px] shrink-0 cursor-pointer rounded-xl border border-border bg-card px-3.5 text-sm font-bold text-foreground disabled:opacity-50"
           >
             עריכה
           </button>

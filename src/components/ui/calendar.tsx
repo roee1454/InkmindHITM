@@ -1,5 +1,5 @@
 import * as React from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight } from '@/components/ui/icon'
 import { cn } from "#/lib/utils.ts"
 import {
   HEBREW_DAYS_SHORT,
@@ -76,7 +76,7 @@ export const Calendar: React.FC<CalendarProps> = ({ selected, onSelect, disabled
         >
           <ChevronRight size={18} />
         </button>
-        <span className="text-[15px] font-extrabold text-foreground">{formatMonthTitle(anchor)}</span>
+        <span className="text-base font-extrabold text-foreground">{formatMonthTitle(anchor)}</span>
         <button
           type="button"
           onClick={() => setAnchor((a) => addMonths(a, 1))}
@@ -89,7 +89,7 @@ export const Calendar: React.FC<CalendarProps> = ({ selected, onSelect, disabled
 
       <div className="grid grid-cols-7 gap-y-1" onKeyDown={handleKeyDown}>
         {HEBREW_DAYS_SHORT.map((label) => (
-          <div key={label} className="flex h-9 items-center justify-center text-[11.5px] font-bold text-muted-foreground">
+          <div key={label} className="flex h-9 items-center justify-center text-xs font-bold text-muted-foreground">
             {label}
           </div>
         ))}
@@ -112,7 +112,7 @@ export const Calendar: React.FC<CalendarProps> = ({ selected, onSelect, disabled
               onFocus={() => setFocused(day)}
               onClick={() => onSelect(ymd)}
               className={cn(
-                "flex size-11 cursor-pointer items-center justify-center justify-self-center rounded-xl text-[15px] font-medium transition-colors duration-100 active:bg-primary/10",
+                "flex size-11 cursor-pointer items-center justify-center justify-self-center rounded-xl text-base font-medium transition-colors duration-100 active:bg-primary/10",
                 inMonth ? "text-foreground" : "opacity-40",
                 isToday(day) && !isSelected && "border border-primary font-bold",
                 isSelected && "bg-primary font-extrabold text-primary-foreground active:bg-primary",

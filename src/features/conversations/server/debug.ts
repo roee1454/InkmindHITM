@@ -8,6 +8,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { requireAdmin } from '@/features/settings/server/helpers.server'
+import { cancelPendingBotTurn } from '@/integrations/ai/engine/turn-cancellation.server'
 
 export interface ResetConversationsResult {
   ok: true
@@ -23,14 +24,15 @@ export const resetConversations = createServerFn({ method: 'POST' }).handler(
     await requireAdmin()
     const su = await getSuperuserClient()
 
-    // Messages first — `messages.conversation` isn't a cascade-delete relation, so deleting
-    // conversations first would leave orphaned message rows pointing at a deleted conversation.
-    const messages = await su.collection('messages').getFullList({ fields: 'id' })
-    await Promise.all(messages.map((m) => su.collection('messages').delete(m.id)))
-
+    // `messages.conversation` cascades, so deleting a conversation takes its messages with it in
+    // the same transaction. Stop any bot turn first so it can't reply into a deleted chat.
+    const { totalItems: deletedMessages } = await su.collection('messages').getList(1, 1, { fields: 'id' })
     const conversations = await su.collection('conversations').getFullList({ fields: 'id' })
-    await Promise.all(conversations.map((c) => su.collection('conversations').delete(c.id)))
+    for (const conversation of conversations) {
+      cancelPendingBotTurn(conversation.id)
+      await su.collection('conversations').delete(conversation.id)
+    }
 
-    return { ok: true, deletedMessages: messages.length, deletedConversations: conversations.length }
+    return { ok: true, deletedMessages, deletedConversations: conversations.length }
   },
 )

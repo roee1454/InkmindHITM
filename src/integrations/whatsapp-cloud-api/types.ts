@@ -22,6 +22,7 @@ export type MessageType =
   | 'contacts'
   | 'interactive'
   | 'template'
+  | 'reaction'
 
 export type MessageStatus = 'sent' | 'delivered' | 'read' | 'failed'
 
@@ -76,6 +77,20 @@ export interface RawMessage {
   }
   button?: { text?: string; payload?: string }
   reaction?: { message_id?: string; emoji?: string }
+  referral?: RawReferral
+}
+
+export interface RawReferral {
+  source_url?: string
+  source_id?: string
+  source_type?: 'ad' | 'post' | string
+  headline?: string
+  body?: string
+  media_type?: string
+  image_url?: string
+  video_url?: string
+  thumbnail_url?: string
+  ctwa_clid?: string
 }
 
 interface RawMedia {
@@ -116,6 +131,7 @@ export interface ParsedInboundMessage {
   location: { latitude: number; longitude: number; name: string | null; address: string | null } | null
   /** wamid of the message this one replies to (context.id), if any. */
   replyToWamid: string | null
+  referral?: RawReferral
 }
 
 export type WhatsAppInboundEvent =
@@ -142,4 +158,49 @@ export type WhatsAppInboundEvent =
 export interface WhatsAppCredentials {
   phoneNumberId: string
   accessToken: string
+  businessAccountId?: string
+}
+
+// --- Meta WhatsApp Business Management API types ---
+
+export interface MetaTemplateComponent {
+  type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS' | string
+  format?: 'TEXT' | 'IMAGE' | 'DOCUMENT' | 'VIDEO' | string
+  text?: string
+  example?: {
+    body_text?: string[][]
+    header_text?: string[]
+  }
+  buttons?: Array<{
+    type: string
+    text: string
+    url?: string
+    phone_number?: string
+  }>
+}
+
+export interface MetaMessageTemplate {
+  id: string
+  name: string
+  status: string
+  category: string
+  language: string
+  components: MetaTemplateComponent[]
+}
+
+export interface UIMetaTemplate {
+  id: string
+  name: string
+  displayName: string
+  description: string
+  language: string
+  category: string
+  status: string
+  bodyText: string
+  params: Array<{
+    index: number
+    label: string
+    placeholder: string
+    example?: string
+  }>
 }

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react'
-import { X, Info, AlertTriangle, AlertCircle, CheckCircle } from 'lucide-react'
+import { X, Info, AlertTriangle, AlertCircle, CheckCircle } from '@/components/ui/icon'
 
 export type ToastType = 'info' | 'warning' | 'error' | 'success'
 
@@ -52,7 +52,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         dir="rtl"
       >
         {toasts.map((t) => {
-          let bgClass = 'bg-card border-border/80'
+          let bgClass = 'bg-card border-border'
           let icon = <Info className="text-primary shrink-0" size={22} />
           if (t.type === 'success') {
             bgClass = 'bg-success/10 border-success/20'

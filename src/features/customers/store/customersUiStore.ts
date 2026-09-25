@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { Customer, CustomerFormData } from '../types'
+import { formatPhoneForDisplay } from '@/lib/phone'
 
 export const EMPTY_FORM: CustomerFormData = {
   name: '',
@@ -54,10 +55,16 @@ export const useCustomersUiStore = create<CustomersUiState>((set) => ({
     set({
       form: {
         name: c.name || '',
-        phone: c.phone || '',
+        phone: formatPhoneForDisplay(c.phone),
         email: c.email || '',
         source: c.source || 'unknown',
         isVip: c.isVip,
+        healthDeclarationSigned: c.healthDeclarationSigned,
+        healthDeclarationDate: c.healthDeclarationDate,
+        healthDeclarationUrl: c.healthDeclarationUrl,
+        allergies: c.allergies,
+        medicalNotes: c.medicalNotes,
+        healthDeclarationAnswers: c.healthDeclarationAnswers,
       },
       formError: null,
       editingCustomer: c,

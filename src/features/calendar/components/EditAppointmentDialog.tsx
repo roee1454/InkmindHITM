@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import { Send } from 'lucide-react'
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Button } from '@/components/ui/button'
+import { Trash, Sparkle, CalendarPlus, Lock } from '@/components/ui/icon'
 import { AppointmentFormFields } from './AppointmentFormFields'
 import type { ApiAppointment, ApiGoogleConnection, AppointmentFormValues } from '../types'
-import { useWorkingHoursCheck } from '../use-working-hours-check'
+import type { CurrentStaffInfo } from '@/features/settings/server/staff'
+import { useWorkingHoursCheck } from '../hooks/useWorkingHoursCheck'
 import { ImageGalleryDialog } from './ImageGalleryDialog'
+import { formatPhoneForDisplay } from '@/lib/phone'
+import { ProjectTimeline } from './ProjectTimeline'
+import { SessionCloseOutSection } from '@/features/payments/components/SessionCloseOutSection'
 
 interface StaffItem {
   id: string
@@ -22,6 +26,42 @@ interface EditAppointmentDialogProps {
   error: string | null
   onSendQuote: (priceMinIls: number, priceMaxIls: number, depositAmount: number, durationMinutes: number) => void
   isSendingQuote: boolean
+  onDelete?: (id: string) => void
+  isDeleting?: boolean
+  onContinueToTattoo?: (sketchAppointment: ApiAppointment) => void
+  currentStaff?: CurrentStaffInfo | null
+  /** All appointments of this appointment's project, including itself. */
+  projectAppointments?: ApiAppointment[]
+}
+
+function appointmentToFormValues(appointment: ApiAppointment): AppointmentFormValues {
+  return {
+    customerId: appointment.customerId,
+    chatId: appointment.chatId,
+    leadName: appointment.leadName ?? '',
+    leadPhone: appointment.leadPhone ?? '',
+    type: appointment.type || 'tattoo',
+    date: appointment.date,
+    timeSlot: appointment.timeSlot,
+    staffId: appointment.staffId,
+    durationMinutes: appointment.durationMinutes ?? 120,
+    tattooDescription: appointment.style ?? '',
+    priceMinIls: appointment.priceMin,
+    priceMaxIls: appointment.priceMax,
+    depositAmount: appointment.depositAmount,
+    status: appointment.status,
+    depositPaid: appointment.hasDeposit,
+    notes: appointment.notes ?? '',
+    allowException: appointment.isException,
+    referenceImages: appointment.referenceImages,
+    paymentReceiptUrl: appointment.paymentReceiptUrl,
+    healthDeclarationSigned: appointment.healthDeclarationSigned,
+    healthDeclarationDate: appointment.healthDeclarationDate,
+    healthDeclarationFileUrl: appointment.healthDeclarationFileUrl,
+    medicalNotes: appointment.medicalNotes,
+    healthDeclarationAnswers: appointment.healthDeclarationAnswers,
+    allergies: appointment.allergies,
+  }
 }
 
 export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
@@ -34,40 +74,33 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   error,
   onSendQuote,
   isSendingQuote,
+  onDelete,
+  isDeleting = false,
+  onContinueToTattoo,
+  projectAppointments = [],
+  currentStaff,
 }) => {
-  const [values, setValues] = useState<AppointmentFormValues | null>(null)
+  const isReadOnly = Boolean(
+    currentStaff &&
+      !currentStaff.isAdmin &&
+      appointment?.staffId &&
+      appointment.staffId !== currentStaff.id,
+  )
+
+  const [values, setValues] = useState<AppointmentFormValues | null>(() =>
+    appointment ? appointmentToFormValues(appointment) : null,
+  )
   const [localError, setLocalError] = useState<string | null>(null)
   const [selectedGallery, setSelectedGallery] = useState<{ images: string[]; index: number } | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   useEffect(() => {
     if (!appointment) {
       setValues(null)
+      setIsDeleteDialogOpen(false)
       return
     }
-    setValues({
-      customerId: appointment.customerId,
-      chatId: appointment.chatId,
-      leadName: appointment.leadName ?? '',
-      leadPhone: appointment.leadPhone ?? '',
-      type: appointment.type || 'tattoo',
-      date: appointment.date,
-      timeSlot: appointment.timeSlot,
-      staffId: appointment.staffId,
-      durationMinutes: appointment.durationMinutes ?? 120,
-      tattooDescription: appointment.style ?? '',
-      priceMinIls: appointment.priceMin,
-      priceMaxIls: appointment.priceMax,
-      depositAmount: appointment.depositAmount,
-      status: appointment.status,
-      depositPaid: appointment.hasDeposit,
-      notes: appointment.notes ?? '',
-      allowException: appointment.isException,
-      referenceImages: appointment.referenceImages,
-      paymentReceiptUrl: appointment.paymentReceiptUrl,
-      healthDeclarationSigned: appointment.healthDeclarationSigned,
-      healthDeclarationDate: appointment.healthDeclarationDate,
-      healthDeclarationFileUrl: appointment.healthDeclarationFileUrl,
-    })
+    setValues(appointmentToFormValues(appointment))
     setLocalError(null)
   }, [appointment])
 
@@ -83,6 +116,10 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (isReadOnly) {
+      onOpenChange(false)
+      return
+    }
     if (!values) return
     if (!values.customerId || !values.date || !values.timeSlot) {
       setLocalError('נא לבחור לקוח, תאריך ושעה')
@@ -106,141 +143,168 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
       <ResponsiveDialog
         open={appointment !== null}
         onOpenChange={onOpenChange}
-        title="עריכת תור"
-        description="עדכן את פרטי הלקוח, מועד התור, המקעקע והסטטוס."
-        contentClassName="sm:max-w-lg max-h-[90vh] overflow-y-auto"
+        title={isReadOnly ? 'פרטי תור' : 'עריכת תור'}
+        description={
+          isReadOnly
+            ? 'צפייה בפרטי התור, המועד, המקעקע והמסמכים המצורפים.'
+            : 'עדכן את פרטי הלקוח, מועד התור, המקעקע והסטטוס.'
+        }
+        // Rigid fixed height: content changes across tabs, errors, or notes must not cause layout shifts
+        contentClassName="sm:max-w-lg h-[85dvh] max-h-[85dvh] sm:h-[42rem] sm:max-h-[min(42rem,calc(100dvh-2rem))] overflow-hidden flex flex-col"
       >
-        {displayError && <p className="text-[13px] font-bold text-destructive">{displayError}</p>}
+        {displayError && (
+          <p className="shrink-0 text-sm font-bold text-destructive">{displayError}</p>
+        )}
 
         {values && (
-          <form onSubmit={handleSubmit} className="mt-2 space-y-4">
-            <AppointmentFormFields
-              values={values}
-              onChange={handleChange}
-              staff={staff}
-              googleConnections={googleConnections}
-              isEdit={true}
-            />
-
-            {appointment?.source === 'ai_bot' && appointment.status === 'pending' && (
-              <div className="space-y-2 rounded-2xl border border-primary/20 bg-primary/5 p-3.5">
-                <p className="text-[13px] font-bold text-foreground">
-                  בקשת הזמנה מהבוט — ממתינה להצעת מחיר
-                </p>
-                <p className="text-[12.5px] text-muted-foreground">
-                  מלא/י טווח מחיר ומקדמה למעלה ואז שלח/י ללקוח את הצעת המחיר בוואטסאפ.
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={isSendingQuote || values.priceMinIls == null || values.priceMaxIls == null || values.depositAmount == null}
-                  onClick={() =>
-                    values.priceMinIls != null &&
-                    values.priceMaxIls != null &&
-                    values.depositAmount != null &&
-                    onSendQuote(values.priceMinIls, values.priceMaxIls, values.depositAmount, values.durationMinutes)
-                  }
-                  className="w-full"
-                >
-                  <Send size={14} className="ml-1.5" />
-                  {isSendingQuote ? 'שולח הצעת מחיר…' : 'שלח הצעת מחיר ללקוח'}
-                </Button>
-              </div>
-            )}
-
-            {/* Linked Documents & Media Section */}
-            <div className="space-y-3 mt-4 border-t border-border/60 pt-3" dir="rtl">
-              <span className="text-[13px] font-bold text-foreground">מסמכים ומדיה מקושרים</span>
-
-              {/* Reference / Inspiration Images */}
-              {appointment?.referenceImages && appointment.referenceImages.length > 0 ? (
-                <div className="space-y-1.5 rounded-xl border border-border/70 bg-card p-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-muted-foreground">תמונות השראה ורפרנס ({appointment.referenceImages.length})</span>
-                  </div>
-                  <div className="flex gap-2 overflow-x-auto py-1">
-                    {appointment.referenceImages.map((img, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => setSelectedGallery({ images: appointment.referenceImages!, index: idx })}
-                        className="relative w-16 h-16 rounded-xl overflow-hidden border border-border/80 shrink-0 bg-muted cursor-pointer hover:opacity-90 transition-opacity"
-                      >
-                        <img src={img} alt={`Reference ${idx + 1}`} className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
+          <form
+            onSubmit={handleSubmit}
+            className="flex min-h-0 flex-1 flex-col font-assistant"
+            dir="rtl"
+          >
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pb-4">
+              {isReadOnly && (
+                <div className="flex items-center gap-2 p-3 rounded-2xl bg-muted/40 border border-border text-xs text-muted-foreground">
+                  <Lock size={15} className="shrink-0 text-muted-foreground" />
+                  <span>תור המשויך למקעקע אחר — לצפייה בלבד (אין הרשאת עריכה או מחיקה)</span>
                 </div>
-              ) : null}
+              )}
 
-              {/* Payment Receipt */}
-              {appointment?.paymentReceiptUrl && (
-                <div className="flex items-center justify-between rounded-xl border border-border/70 bg-card p-2.5">
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      onClick={() => setSelectedGallery({ images: [appointment.paymentReceiptUrl!], index: 0 })}
-                      className="relative w-12 h-12 rounded-lg overflow-hidden border border-border/80 shrink-0 bg-muted cursor-pointer hover:opacity-90 transition-opacity"
-                    >
-                      <img src={appointment.paymentReceiptUrl} alt="קבלה" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-foreground">אסמכתת תשלום מקדמה</span>
-                      <span className="text-micro text-emerald-600 dark:text-emerald-400 font-medium">מאומת</span>
+              {appointment && <SessionCloseOutSection appointment={appointment} readOnly={isReadOnly} />}
+
+              {appointment && <ProjectTimeline appointments={projectAppointments} currentId={appointment.id} />}
+
+              {appointment?.kind === 'consultation' && onContinueToTattoo && !isReadOnly && (
+                <div className="flex items-center justify-between gap-2 p-3 rounded-2xl bg-accent-ink/10 border border-accent-ink/25">
+                  <div className="flex items-center gap-2">
+                    <Sparkle size={16} className="text-accent-ink shrink-0" />
+                    <div className="flex flex-col text-right">
+                      <span className="text-xs font-extrabold text-foreground">קביעת תור לקעקוע בעקבות הפגישה</span>
+                      <span className="text-2xs text-muted-foreground">מעבר לאשף לקביעת סשן קעקוע על בסיס הסקיצה</span>
                     </div>
                   </div>
                   <Button
                     type="button"
-                    variant="ghost"
                     size="sm"
-                    className="text-xs h-8"
-                    onClick={() => setSelectedGallery({ images: [appointment.paymentReceiptUrl!], index: 0 })}
+                    onClick={() => onContinueToTattoo(appointment)}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold text-xs shrink-0 gap-1.5 h-8 px-3 cursor-pointer shadow-xs"
                   >
-                    צפה בקבלה
+                    <CalendarPlus size={13} />
+                    <span>המשך לתור</span>
                   </Button>
                 </div>
               )}
 
-              {/* Health Notice */}
-              <div className="flex items-center justify-between rounded-xl border border-border/70 bg-card p-2.5">
-                <div className="flex flex-col gap-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-foreground">הצהרת בריאות</span>
-                    {appointment?.healthDeclarationSigned ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-micro font-bold text-emerald-600 dark:text-emerald-400">
-                        חתומה ומאושרת
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-micro font-bold text-amber-600 dark:text-amber-400">
-                        טרם נחתמה
-                      </span>
-                    )}
-                  </div>
-                  {appointment?.healthDeclarationDate && (
-                    <span className="text-micro text-muted-foreground">תאריך חתימה: {appointment.healthDeclarationDate}</span>
-                  )}
-                </div>
-                {appointment?.healthDeclarationFileUrl && (
-                  <a
-                    href={appointment.healthDeclarationFileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-xs font-bold text-primary hover:underline"
-                  >
-                    צפה במסמך
-                  </a>
-                )}
-              </div>
+              <AppointmentFormFields
+                values={values}
+                onChange={handleChange}
+                staff={staff}
+                googleConnections={googleConnections}
+                appointment={appointment}
+                onSendQuote={onSendQuote}
+                isSendingQuote={isSendingQuote}
+                onOpenGallery={(images, index) => setSelectedGallery({ images, index })}
+                isEdit={true}
+                readOnly={isReadOnly}
+              />
             </div>
 
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <Button type="submit" disabled={isSaving}>
-                {isSaving ? 'שומר…' : 'שמור'}
-              </Button>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                ביטול
-              </Button>
-            </div>
+            {isReadOnly ? (
+              <div className="flex shrink-0 items-center justify-end border-t border-border pt-3">
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  סגור
+                </Button>
+              </div>
+            ) : (
+              <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border pt-3">
+                {onDelete ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 font-bold gap-1.5 px-3"
+                  >
+                    <Trash size={16} />
+                    <span>מחק תור</span>
+                  </Button>
+                ) : (
+                  <div />
+                )}
+                <div className="flex items-center gap-2">
+                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                    ביטול
+                  </Button>
+                  <Button type="submit" disabled={isSaving || isDeleting} className="font-bold">
+                    {isSaving ? 'שומר…' : 'שמור שינויים'}
+                  </Button>
+                </div>
+              </div>
+            )}
           </form>
         )}
+      </ResponsiveDialog>
+
+      {/* Dedicated Delete Confirmation Dialog */}
+      <ResponsiveDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="מחיקת תור"
+        description="האם אתה בטוח שברצונך למחוק תור זה לצמיתות? לא ניתן יהיה לשחזר את התור לאחר המחיקה."
+        contentClassName="sm:max-w-md font-assistant"
+      >
+        <div className="flex flex-col gap-4 pt-2 font-assistant" dir="rtl">
+          {appointment && (
+            <div className="p-3.5 bg-muted/40 rounded-2xl border border-border text-xs space-y-2 text-right">
+              <div className="font-extrabold text-foreground text-sm">
+                {appointment.style || (appointment.type === 'sketch' ? 'פגישת סקיצה / ייעוץ' : 'סשן קעקוע')}
+              </div>
+              <div className="text-muted-foreground flex items-center gap-1.5">
+                <span>לקוח:</span>
+                <strong className="text-foreground">{appointment.leadName || 'ללא שם'}</strong>
+                {appointment.leadPhone && <span>({formatPhoneForDisplay(appointment.leadPhone)})</span>}
+              </div>
+              <div className="text-muted-foreground flex items-center gap-1.5">
+                <span>מועד:</span>
+                <span className="font-mono text-foreground font-bold">{appointment.date} בשעה {appointment.timeSlot}</span>
+                <span className="text-foreground font-bold tabular-nums">{appointment.date} בשעה {appointment.timeSlot}</span>
+                {appointment.durationMinutes ? <span>({appointment.durationMinutes} דקות)</span> : null}
+              </div>
+              {appointment.staffName && (
+                <div className="text-muted-foreground flex items-center gap-1.5">
+                  <span>מקעקע:</span>
+                  <span className="text-foreground font-medium">{appointment.staffName}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isDeleting}
+              onClick={() => {
+                if (appointment && onDelete) {
+                  onDelete(appointment.id)
+                  setIsDeleteDialogOpen(false)
+                  onOpenChange(false)
+                }
+              }}
+              className="flex items-center justify-center gap-1.5 font-bold rounded-xl"
+            >
+              <Trash size={15} />
+              <span>{isDeleting ? 'מוחק…' : 'מחק תור לצמיתות'}</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              className="font-bold rounded-xl"
+            >
+              ביטול
+            </Button>
+          </div>
+        </div>
       </ResponsiveDialog>
 
       {selectedGallery && (

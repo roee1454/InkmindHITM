@@ -1,10 +1,6 @@
 import { timingSafeEqual } from 'node:crypto'
 import { createFileRoute } from '@tanstack/react-router'
 import type { RecordModel } from 'pocketbase'
-import {
-  syncAppointmentToGoogle,
-  deleteSyncedAppointmentFromGoogle,
-} from '@/integrations/google-calendar/server/google-sync'
 
 /** Constant-time shared-secret check — same rationale as the WhatsApp webhook's HMAC check
  *  (src/routes/api/whatsapp-webhook.ts): this is called by pocketbase/pb_hooks/appointments.pb.js
@@ -30,6 +26,9 @@ type SyncPayload =
  * plan for the full rationale.
  */
 export async function handleAppointmentSync(request: Request): Promise<Response> {
+  const { syncAppointmentToGoogle, deleteSyncedAppointmentFromGoogle } = await import(
+    '@/integrations/google-calendar/server/google-sync.server'
+  )
   if (!isValidHookSecret(request.headers.get('x-pb-hook-secret'))) {
     return new Response('Forbidden', { status: 403 })
   }

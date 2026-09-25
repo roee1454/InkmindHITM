@@ -7,6 +7,8 @@ export interface StudioPolicySettings {
   paymentInstructions: string | null
   reviewLink: string | null
   cancellationCutoffHours: number
+  healthDeclarationFormUrl?: string | null
+  healthDeclarationValidityMonths?: number
 }
 
 export interface BotStudioPolicy extends StudioPolicySettings {
@@ -22,16 +24,24 @@ export interface BotStudioPolicy extends StudioPolicySettings {
 export async function getStudioPolicyForBot(
   su: Awaited<ReturnType<typeof getSuperuserClient>>,
 ): Promise<BotStudioPolicy> {
-  const list = await su.collection('settings').getList(1, 1)
-  const record = list.items[0]
+  const col = su.collection('settings')
+  const list = typeof col?.getList === 'function' ? await col.getList(1, 1).catch(() => ({ items: [] })) : { items: [] }
+  const record = list?.items?.[0]
   return {
     paymentInstructions: (record?.payment_instructions as string) || null,
     reviewLink: (record?.google_review_link as string) || null,
-    // `|| 48`, not `??`: a freshly-created settings record has this as PocketBase's zero-value
-    // (0), not null/undefined — `??` would let that fall through instead of the real default.
-    cancellationCutoffHours: (record?.cancellation_cutoff_hours as number) || 48,
+    // Preserves 0 hours when studio policy permits free cancellation anytime (Bug 20)
+    cancellationCutoffHours:
+      typeof record?.cancellation_cutoff_hours === 'number'
+        ? (record.cancellation_cutoff_hours)
+        : 48,
     depositRequired: Boolean(record?.deposit_required),
     depositAmount: (record?.deposit_amount as number) ?? null,
+    healthDeclarationFormUrl: (record?.health_declaration_form_url as string) || null,
+    healthDeclarationValidityMonths:
+      typeof record?.health_declaration_validity_months === 'number'
+        ? (record.health_declaration_validity_months)
+        : 6,
   }
 }
 
@@ -42,15 +52,25 @@ export const getStudioPolicySettings = createServerFn({ method: 'GET' }).handler
     return {
       paymentInstructions: (record?.payment_instructions as string) || null,
       reviewLink: (record?.google_review_link as string) || null,
-      cancellationCutoffHours: (record?.cancellation_cutoff_hours as number) || 48,
+      cancellationCutoffHours:
+        typeof record?.cancellation_cutoff_hours === 'number'
+          ? (record.cancellation_cutoff_hours)
+          : 48,
+      healthDeclarationFormUrl: (record?.health_declaration_form_url as string) || null,
+      healthDeclarationValidityMonths:
+        typeof record?.health_declaration_validity_months === 'number'
+          ? (record.health_declaration_validity_months)
+          : 6,
     }
   },
 )
 
-const saveStudioPolicySchema = z.object({
+export const saveStudioPolicySchema = z.object({
   paymentInstructions: z.string().optional(),
   reviewLink: z.string().optional(),
   cancellationCutoffHours: z.number().min(0),
+  healthDeclarationFormUrl: z.string().optional().nullable(),
+  healthDeclarationValidityMonths: z.number().default(6),
 })
 
 export const saveStudioPolicySettings = createServerFn({ method: 'POST' })
@@ -64,6 +84,8 @@ export const saveStudioPolicySettings = createServerFn({ method: 'POST' })
       payment_instructions: data.paymentInstructions || '',
       google_review_link: data.reviewLink || '',
       cancellation_cutoff_hours: data.cancellationCutoffHours,
+      health_declaration_form_url: data.healthDeclarationFormUrl || '',
+      health_declaration_validity_months: data.healthDeclarationValidityMonths ?? 6,
     })
     return { ok: true }
   })

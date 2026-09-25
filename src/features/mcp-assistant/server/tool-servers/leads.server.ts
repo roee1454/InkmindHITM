@@ -1,21 +1,38 @@
 import { z } from 'zod'
 import { listLeads, moveLead } from '@/features/leads/server/leads'
-import { canEditLead } from '@/features/leads/lib/permissions'
+import { canEditLead } from '@/features/leads/utils/permissions'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { fuzzySearchByName, mcpReadTool, mcpWriteTool } from './shared'
 import type { McpToolContext } from './shared'
 import type { McpActionDiff } from '../types'
 
 const STAGE_LABELS: Record<string, string> = {
-  new: 'חדש',
-  intake: 'איסוף פרטים',
-  awaiting_price: 'ממתין להצעת מחיר',
-  awaiting_payment: 'ממתין לתשלום מקדמה',
-  booked: 'נקבע תור',
-  expired: 'פג תוקף',
+  NEW: 'ליד חדש',
+  WANTS_TO_BOOK: 'בירור מסלול',
+  COLLECTING_INFO: 'איסוף פרטים',
+  WAITLIST: 'רשימת המתנה',
+  AWAIT_PRICE_OFFER: 'ממתין לתמחור',
+  AWAIT_HEALTH_NOTICE: 'הצהרת בריאות',
+  AWAIT_PAYMENT: 'ממתין למקדמה',
+  AWAIT_FINAL_CONFIRMATION: 'אישור סופי',
+  AWAITING_APPOINTMENT: 'נקבע תור',
+  AWAIT_NPS_SCORE: 'משוב ודירוג',
+  COMPLETED: 'סגור / הושלם',
 }
 
-const stageEnum = z.enum(['new', 'intake', 'awaiting_price', 'awaiting_payment', 'booked', 'expired'])
+const stageEnum = z.enum([
+  'NEW',
+  'WANTS_TO_BOOK',
+  'COLLECTING_INFO',
+  'WAITLIST',
+  'AWAIT_PRICE_OFFER',
+  'AWAIT_HEALTH_NOTICE',
+  'AWAIT_PAYMENT',
+  'AWAIT_FINAL_CONFIRMATION',
+  'AWAITING_APPOINTMENT',
+  'AWAIT_NPS_SCORE',
+  'COMPLETED',
+])
 
 export function buildLeadsTools(ctx: McpToolContext) {
   return {

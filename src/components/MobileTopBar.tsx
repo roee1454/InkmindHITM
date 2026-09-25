@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Bell, ChevronRight, Menu } from 'lucide-react'
+import { Bell, ChevronRight, Menu } from '@/components/ui/icon'
 import { cn } from '#/lib/utils.ts'
 import { getUnreadNotificationsCount } from '#/features/notifications/server/notifications.ts'
 
@@ -43,7 +43,7 @@ export function MobileTopBar({ title, onOpenMenu, onBack, className, action }: M
         </button>
       )}
 
-      <span className="truncate font-assistant text-[17px] font-extrabold text-foreground">{title}</span>
+      <span className="truncate font-assistant text-lg font-extrabold text-foreground">{title}</span>
 
       {action ?? (
         <Link

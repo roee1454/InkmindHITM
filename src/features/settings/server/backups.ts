@@ -26,10 +26,10 @@ export const getBackupSettings = createServerFn({ method: 'GET' }).handler(
   },
 )
 
-const saveBackupSettingsSchema = z.object({
+export const saveBackupSettingsSchema = z.object({
   backupEnabled: z.boolean(),
   backupIntervalHours: z.number().min(1),
-  backupRetentionCount: z.number().min(1),
+  backupRetentionCount: z.number().min(1).optional(),
 })
 
 export const saveBackupSettings = createServerFn({ method: 'POST' })
@@ -39,11 +39,32 @@ export const saveBackupSettings = createServerFn({ method: 'POST' })
     const { su, record } = await getSettingsRecord()
     if (!record) throw new Error('רשומת ההגדרות חסרה.')
 
+    const retention = data.backupEnabled ? 1 : (data.backupRetentionCount ?? 7)
+
     await su.collection('settings').update(record.id, {
       backup_enabled: data.backupEnabled,
       backup_interval_hours: data.backupIntervalHours,
-      backup_retention_count: data.backupRetentionCount,
+      backup_retention_count: retention,
     })
+
+    // If automatic backup is enabled, delete previous backups to preserve server disk storage
+    if (data.backupEnabled) {
+      try {
+        const files = await su.backups.getFullList()
+        if (files.length > 1) {
+          const sorted = [...files].sort((a, b) => (a.modified < b.modified ? 1 : -1))
+          for (let i = 1; i < sorted.length; i++) {
+            const item = sorted[i]
+            if (item?.key) {
+              await su.backups.delete(item.key).catch(() => null)
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[backups] Failed to prune previous backups on auto-backup enable:', err)
+      }
+    }
+
     return { ok: true }
   })
 
@@ -80,6 +101,10 @@ export const runBackupNow = createServerFn({ method: 'POST' }).handler(async () 
   await requireAdmin()
   const { su, record } = await getSettingsRecord()
   if (!record) throw new Error('רשומת ההגדרות חסרה.')
+
+  if (record.backup_enabled) {
+    throw new Error('לא ניתן לבצע גיבוי ידני כאשר גיבוי אוטומטי מופעל.')
+  }
 
   const name = `backup-manual-${backupTimestamp()}.zip`
   try {

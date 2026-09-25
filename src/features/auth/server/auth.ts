@@ -6,12 +6,14 @@ import { clearSessionCookie, getSession, getSessionClient, persistSessionCookie 
 export const getCurrentSession = createServerFn({ method: 'GET' }).handler(async () => {
   const session = await getSession()
   if (!session) return null
-  const client = getSessionClient()
   return {
     staff: session.staff,
-    token: client.authStore.token,
+    token: session.token,
   }
 })
+
+export type CurrentSession = Awaited<ReturnType<typeof getCurrentSession>>
+
 
 /** True until the very first staff (owner) account is created. */
 export const needsBootstrap = createServerFn({ method: 'GET' }).handler(async () => {
@@ -21,9 +23,10 @@ export const needsBootstrap = createServerFn({ method: 'GET' }).handler(async ()
 })
 
 const bootstrapSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-  password: z.string().min(8),
+  name: z.string().trim().min(1, 'שם מלא הוא שדה חובה'),
+  email: z.string().trim().email('נא להזין אימייל תקין'),
+  phone: z.string().trim().min(9, 'נא להזין מספר טלפון תקין'),
+  password: z.string().min(8, 'הסיסמה חייבת להכיל לפחות 8 תווים'),
 })
 
 /** Creates the first `staff` record (role: owner) and logs the caller in immediately. */
@@ -38,6 +41,7 @@ export const bootstrapAdmin = createServerFn({ method: 'POST' })
     await su.collection('staff').create({
       name: data.name,
       email: data.email,
+      phone: data.phone,
       password: data.password,
       passwordConfirm: data.password,
       role: 'owner',

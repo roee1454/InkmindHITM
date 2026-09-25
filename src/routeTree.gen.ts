@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteRouteImport } from './routes/auth/route'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
+import { Route as InviteRouteImport } from './routes/invite'
 import { Route as OnboardingRouteRouteImport } from './routes/onboarding/route'
 import { Route as ApiPingRouteImport } from './routes/api/ping'
 import { Route as ApiWhatsappWebhookRouteImport } from './routes/api/whatsapp-webhook'
@@ -20,6 +21,7 @@ import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
 import { Route as AuthSetupRouteImport } from './routes/auth/setup'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard/analytics'
 import { Route as DashboardCalendarRouteImport } from './routes/dashboard/calendar'
 import { Route as DashboardConversationsRouteImport } from './routes/dashboard/conversations'
 import { Route as DashboardCustomersRouteImport } from './routes/dashboard/customers'
@@ -27,22 +29,23 @@ import { Route as DashboardLeadsRouteImport } from './routes/dashboard/leads'
 import { Route as DashboardNotificationsRouteImport } from './routes/dashboard/notifications'
 import { Route as DashboardSettingsRouteRouteImport } from './routes/dashboard/settings/route'
 import { Route as DashboardSetupRouteImport } from './routes/dashboard/setup'
+import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
 import { Route as OnboardingDoneRouteImport } from './routes/onboarding/done'
 import { Route as OnboardingHoursRouteImport } from './routes/onboarding/hours'
 import { Route as OnboardingProfileLinksRouteImport } from './routes/onboarding/profile-links'
 import { Route as OnboardingStudioRouteImport } from './routes/onboarding/studio'
+import { Route as ApiHealthDeclarationWebhookRouteImport } from './routes/api/health-declaration.webhook'
 import { Route as ApiInternalAppointmentFreedRouteImport } from './routes/api/internal.appointment-freed'
 import { Route as ApiInternalAppointmentSyncRouteImport } from './routes/api/internal.appointment-sync'
 import { Route as ApiInternalLifecycleTickRouteImport } from './routes/api/internal.lifecycle-tick'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardSettingsAiRouteImport } from './routes/dashboard/settings/ai'
-import { Route as DashboardSettingsBackupsRouteImport } from './routes/dashboard/settings/backups'
-import { Route as DashboardSettingsFaqRouteImport } from './routes/dashboard/settings/faq'
 import { Route as DashboardSettingsGeneralRouteImport } from './routes/dashboard/settings/general'
 import { Route as DashboardSettingsPolicyRouteImport } from './routes/dashboard/settings/policy'
+import { Route as DashboardSettingsSystemRouteImport } from './routes/dashboard/settings/system'
 import { Route as DashboardSettingsTeamRouteImport } from './routes/dashboard/settings/team'
-import { Route as DashboardSettingsWhatsappRouteImport } from './routes/dashboard/settings/whatsapp'
 import { Route as ApiGoogleCalendarOauthCallbackRouteImport } from './routes/api/google-calendar.oauth.callback'
+import { Route as ApiSettingsBackupsUploadRouteImport } from './routes/api/settings.backups.upload'
 import { Route as ApiSettingsBackupsKeyDownloadRouteImport } from './routes/api/settings.backups.$key.download'
 import { Route as ApiStaffStaffIdGoogleCalendarConnectRouteImport } from './routes/api/staff.$staffId.google-calendar.connect'
 
@@ -59,6 +62,11 @@ const AuthRouteRoute = AuthRouteRouteImport.update({
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteRoute = InviteRouteImport.update({
+  id: '/invite',
+  path: '/invite',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRouteRoute = OnboardingRouteRouteImport.update({
@@ -101,6 +109,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardAnalyticsRoute = DashboardAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardCalendarRoute = DashboardCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -136,6 +149,11 @@ const DashboardSetupRoute = DashboardSetupRouteImport.update({
   path: '/setup',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OnboardingRouteRoute,
+} as any)
 const OnboardingDoneRoute = OnboardingDoneRouteImport.update({
   id: '/done',
   path: '/done',
@@ -156,6 +174,12 @@ const OnboardingStudioRoute = OnboardingStudioRouteImport.update({
   path: '/studio',
   getParentRoute: () => OnboardingRouteRoute,
 } as any)
+const ApiHealthDeclarationWebhookRoute =
+  ApiHealthDeclarationWebhookRouteImport.update({
+    id: '/api/health-declaration/webhook',
+    path: '/api/health-declaration/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiInternalAppointmentFreedRoute =
   ApiInternalAppointmentFreedRouteImport.update({
     id: '/api/internal/appointment-freed',
@@ -184,17 +208,6 @@ const DashboardSettingsAiRoute = DashboardSettingsAiRouteImport.update({
   path: '/ai',
   getParentRoute: () => DashboardSettingsRouteRoute,
 } as any)
-const DashboardSettingsBackupsRoute =
-  DashboardSettingsBackupsRouteImport.update({
-    id: '/backups',
-    path: '/backups',
-    getParentRoute: () => DashboardSettingsRouteRoute,
-  } as any)
-const DashboardSettingsFaqRoute = DashboardSettingsFaqRouteImport.update({
-  id: '/faq',
-  path: '/faq',
-  getParentRoute: () => DashboardSettingsRouteRoute,
-} as any)
 const DashboardSettingsGeneralRoute =
   DashboardSettingsGeneralRouteImport.update({
     id: '/general',
@@ -206,21 +219,26 @@ const DashboardSettingsPolicyRoute = DashboardSettingsPolicyRouteImport.update({
   path: '/policy',
   getParentRoute: () => DashboardSettingsRouteRoute,
 } as any)
+const DashboardSettingsSystemRoute = DashboardSettingsSystemRouteImport.update({
+  id: '/system',
+  path: '/system',
+  getParentRoute: () => DashboardSettingsRouteRoute,
+} as any)
 const DashboardSettingsTeamRoute = DashboardSettingsTeamRouteImport.update({
   id: '/team',
   path: '/team',
   getParentRoute: () => DashboardSettingsRouteRoute,
 } as any)
-const DashboardSettingsWhatsappRoute =
-  DashboardSettingsWhatsappRouteImport.update({
-    id: '/whatsapp',
-    path: '/whatsapp',
-    getParentRoute: () => DashboardSettingsRouteRoute,
-  } as any)
 const ApiGoogleCalendarOauthCallbackRoute =
   ApiGoogleCalendarOauthCallbackRouteImport.update({
     id: '/api/google-calendar/oauth/callback',
     path: '/api/google-calendar/oauth/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiSettingsBackupsUploadRoute =
+  ApiSettingsBackupsUploadRouteImport.update({
+    id: '/api/settings/backups/upload',
+    path: '/api/settings/backups/upload',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiSettingsBackupsKeyDownloadRoute =
@@ -241,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteRouteWithChildren
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/onboarding': typeof OnboardingRouteRouteWithChildren
+  '/invite': typeof InviteRoute
   '/dashboard/settings': typeof DashboardSettingsRouteRouteWithChildren
   '/api/ping': typeof ApiPingRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
@@ -248,6 +267,7 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/setup': typeof AuthSetupRoute
+  '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/conversations': typeof DashboardConversationsRoute
   '/dashboard/customers': typeof DashboardCustomersRoute
@@ -259,31 +279,33 @@ export interface FileRoutesByFullPath {
   '/onboarding/profile-links': typeof OnboardingProfileLinksRoute
   '/onboarding/studio': typeof OnboardingStudioRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/onboarding/': typeof OnboardingIndexRoute
+  '/api/health-declaration/webhook': typeof ApiHealthDeclarationWebhookRoute
   '/api/internal/appointment-freed': typeof ApiInternalAppointmentFreedRoute
   '/api/internal/appointment-sync': typeof ApiInternalAppointmentSyncRoute
   '/api/internal/lifecycle-tick': typeof ApiInternalLifecycleTickRoute
   '/dashboard/settings/ai': typeof DashboardSettingsAiRoute
-  '/dashboard/settings/backups': typeof DashboardSettingsBackupsRoute
-  '/dashboard/settings/faq': typeof DashboardSettingsFaqRoute
   '/dashboard/settings/general': typeof DashboardSettingsGeneralRoute
   '/dashboard/settings/policy': typeof DashboardSettingsPolicyRoute
+  '/dashboard/settings/system': typeof DashboardSettingsSystemRoute
   '/dashboard/settings/team': typeof DashboardSettingsTeamRoute
-  '/dashboard/settings/whatsapp': typeof DashboardSettingsWhatsappRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/api/google-calendar/oauth/callback': typeof ApiGoogleCalendarOauthCallbackRoute
+  '/api/settings/backups/upload': typeof ApiSettingsBackupsUploadRoute
   '/api/settings/backups/$key/download': typeof ApiSettingsBackupsKeyDownloadRoute
   '/api/staff/$staffId/google-calendar/connect': typeof ApiStaffStaffIdGoogleCalendarConnectRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteRouteWithChildren
-  '/onboarding': typeof OnboardingRouteRouteWithChildren
+  '/invite': typeof InviteRoute
   '/api/ping': typeof ApiPingRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/setup': typeof AuthSetupRoute
+  '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/conversations': typeof DashboardConversationsRoute
   '/dashboard/customers': typeof DashboardCustomersRoute
@@ -295,18 +317,19 @@ export interface FileRoutesByTo {
   '/onboarding/profile-links': typeof OnboardingProfileLinksRoute
   '/onboarding/studio': typeof OnboardingStudioRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/onboarding': typeof OnboardingIndexRoute
+  '/api/health-declaration/webhook': typeof ApiHealthDeclarationWebhookRoute
   '/api/internal/appointment-freed': typeof ApiInternalAppointmentFreedRoute
   '/api/internal/appointment-sync': typeof ApiInternalAppointmentSyncRoute
   '/api/internal/lifecycle-tick': typeof ApiInternalLifecycleTickRoute
   '/dashboard/settings/ai': typeof DashboardSettingsAiRoute
-  '/dashboard/settings/backups': typeof DashboardSettingsBackupsRoute
-  '/dashboard/settings/faq': typeof DashboardSettingsFaqRoute
   '/dashboard/settings/general': typeof DashboardSettingsGeneralRoute
   '/dashboard/settings/policy': typeof DashboardSettingsPolicyRoute
+  '/dashboard/settings/system': typeof DashboardSettingsSystemRoute
   '/dashboard/settings/team': typeof DashboardSettingsTeamRoute
-  '/dashboard/settings/whatsapp': typeof DashboardSettingsWhatsappRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/api/google-calendar/oauth/callback': typeof ApiGoogleCalendarOauthCallbackRoute
+  '/api/settings/backups/upload': typeof ApiSettingsBackupsUploadRoute
   '/api/settings/backups/$key/download': typeof ApiSettingsBackupsKeyDownloadRoute
   '/api/staff/$staffId/google-calendar/connect': typeof ApiStaffStaffIdGoogleCalendarConnectRoute
 }
@@ -316,6 +339,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteRouteWithChildren
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/onboarding': typeof OnboardingRouteRouteWithChildren
+  '/invite': typeof InviteRoute
   '/dashboard/settings': typeof DashboardSettingsRouteRouteWithChildren
   '/api/ping': typeof ApiPingRoute
   '/api/whatsapp-webhook': typeof ApiWhatsappWebhookRoute
@@ -323,6 +347,7 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/setup': typeof AuthSetupRoute
+  '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/calendar': typeof DashboardCalendarRoute
   '/dashboard/conversations': typeof DashboardConversationsRoute
   '/dashboard/customers': typeof DashboardCustomersRoute
@@ -334,18 +359,19 @@ export interface FileRoutesById {
   '/onboarding/profile-links': typeof OnboardingProfileLinksRoute
   '/onboarding/studio': typeof OnboardingStudioRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/onboarding/': typeof OnboardingIndexRoute
+  '/api/health-declaration/webhook': typeof ApiHealthDeclarationWebhookRoute
   '/api/internal/appointment-freed': typeof ApiInternalAppointmentFreedRoute
   '/api/internal/appointment-sync': typeof ApiInternalAppointmentSyncRoute
   '/api/internal/lifecycle-tick': typeof ApiInternalLifecycleTickRoute
   '/dashboard/settings/ai': typeof DashboardSettingsAiRoute
-  '/dashboard/settings/backups': typeof DashboardSettingsBackupsRoute
-  '/dashboard/settings/faq': typeof DashboardSettingsFaqRoute
   '/dashboard/settings/general': typeof DashboardSettingsGeneralRoute
   '/dashboard/settings/policy': typeof DashboardSettingsPolicyRoute
+  '/dashboard/settings/system': typeof DashboardSettingsSystemRoute
   '/dashboard/settings/team': typeof DashboardSettingsTeamRoute
-  '/dashboard/settings/whatsapp': typeof DashboardSettingsWhatsappRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/api/google-calendar/oauth/callback': typeof ApiGoogleCalendarOauthCallbackRoute
+  '/api/settings/backups/upload': typeof ApiSettingsBackupsUploadRoute
   '/api/settings/backups/$key/download': typeof ApiSettingsBackupsKeyDownloadRoute
   '/api/staff/$staffId/google-calendar/connect': typeof ApiStaffStaffIdGoogleCalendarConnectRoute
 }
@@ -356,6 +382,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/onboarding'
+    | '/invite'
     | '/dashboard/settings'
     | '/api/ping'
     | '/api/whatsapp-webhook'
@@ -363,6 +390,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/setup'
+    | '/dashboard/analytics'
     | '/dashboard/calendar'
     | '/dashboard/conversations'
     | '/dashboard/customers'
@@ -374,31 +402,33 @@ export interface FileRouteTypes {
     | '/onboarding/profile-links'
     | '/onboarding/studio'
     | '/dashboard/'
+    | '/onboarding/'
+    | '/api/health-declaration/webhook'
     | '/api/internal/appointment-freed'
     | '/api/internal/appointment-sync'
     | '/api/internal/lifecycle-tick'
     | '/dashboard/settings/ai'
-    | '/dashboard/settings/backups'
-    | '/dashboard/settings/faq'
     | '/dashboard/settings/general'
     | '/dashboard/settings/policy'
+    | '/dashboard/settings/system'
     | '/dashboard/settings/team'
-    | '/dashboard/settings/whatsapp'
     | '/dashboard/settings/'
     | '/api/google-calendar/oauth/callback'
+    | '/api/settings/backups/upload'
     | '/api/settings/backups/$key/download'
     | '/api/staff/$staffId/google-calendar/connect'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
-    | '/onboarding'
+    | '/invite'
     | '/api/ping'
     | '/api/whatsapp-webhook'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/setup'
+    | '/dashboard/analytics'
     | '/dashboard/calendar'
     | '/dashboard/conversations'
     | '/dashboard/customers'
@@ -410,18 +440,19 @@ export interface FileRouteTypes {
     | '/onboarding/profile-links'
     | '/onboarding/studio'
     | '/dashboard'
+    | '/onboarding'
+    | '/api/health-declaration/webhook'
     | '/api/internal/appointment-freed'
     | '/api/internal/appointment-sync'
     | '/api/internal/lifecycle-tick'
     | '/dashboard/settings/ai'
-    | '/dashboard/settings/backups'
-    | '/dashboard/settings/faq'
     | '/dashboard/settings/general'
     | '/dashboard/settings/policy'
+    | '/dashboard/settings/system'
     | '/dashboard/settings/team'
-    | '/dashboard/settings/whatsapp'
     | '/dashboard/settings'
     | '/api/google-calendar/oauth/callback'
+    | '/api/settings/backups/upload'
     | '/api/settings/backups/$key/download'
     | '/api/staff/$staffId/google-calendar/connect'
   id:
@@ -430,6 +461,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/onboarding'
+    | '/invite'
     | '/dashboard/settings'
     | '/api/ping'
     | '/api/whatsapp-webhook'
@@ -437,6 +469,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/setup'
+    | '/dashboard/analytics'
     | '/dashboard/calendar'
     | '/dashboard/conversations'
     | '/dashboard/customers'
@@ -448,18 +481,19 @@ export interface FileRouteTypes {
     | '/onboarding/profile-links'
     | '/onboarding/studio'
     | '/dashboard/'
+    | '/onboarding/'
+    | '/api/health-declaration/webhook'
     | '/api/internal/appointment-freed'
     | '/api/internal/appointment-sync'
     | '/api/internal/lifecycle-tick'
     | '/dashboard/settings/ai'
-    | '/dashboard/settings/backups'
-    | '/dashboard/settings/faq'
     | '/dashboard/settings/general'
     | '/dashboard/settings/policy'
+    | '/dashboard/settings/system'
     | '/dashboard/settings/team'
-    | '/dashboard/settings/whatsapp'
     | '/dashboard/settings/'
     | '/api/google-calendar/oauth/callback'
+    | '/api/settings/backups/upload'
     | '/api/settings/backups/$key/download'
     | '/api/staff/$staffId/google-calendar/connect'
   fileRoutesById: FileRoutesById
@@ -469,12 +503,15 @@ export interface RootRouteChildren {
   AuthRouteRoute: typeof AuthRouteRouteWithChildren
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   OnboardingRouteRoute: typeof OnboardingRouteRouteWithChildren
+  InviteRoute: typeof InviteRoute
   ApiPingRoute: typeof ApiPingRoute
   ApiWhatsappWebhookRoute: typeof ApiWhatsappWebhookRoute
+  ApiHealthDeclarationWebhookRoute: typeof ApiHealthDeclarationWebhookRoute
   ApiInternalAppointmentFreedRoute: typeof ApiInternalAppointmentFreedRoute
   ApiInternalAppointmentSyncRoute: typeof ApiInternalAppointmentSyncRoute
   ApiInternalLifecycleTickRoute: typeof ApiInternalLifecycleTickRoute
   ApiGoogleCalendarOauthCallbackRoute: typeof ApiGoogleCalendarOauthCallbackRoute
+  ApiSettingsBackupsUploadRoute: typeof ApiSettingsBackupsUploadRoute
   ApiSettingsBackupsKeyDownloadRoute: typeof ApiSettingsBackupsKeyDownloadRoute
   ApiStaffStaffIdGoogleCalendarConnectRoute: typeof ApiStaffStaffIdGoogleCalendarConnectRoute
 }
@@ -500,6 +537,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite': {
+      id: '/invite'
+      path: '/invite'
+      fullPath: '/invite'
+      preLoaderRoute: typeof InviteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -558,6 +602,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/analytics': {
+      id: '/dashboard/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/analytics'
+      preLoaderRoute: typeof DashboardAnalyticsRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/calendar': {
       id: '/dashboard/calendar'
       path: '/calendar'
@@ -607,6 +658,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSetupRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/onboarding/': {
+      id: '/onboarding/'
+      path: '/'
+      fullPath: '/onboarding/'
+      preLoaderRoute: typeof OnboardingIndexRouteImport
+      parentRoute: typeof OnboardingRouteRoute
+    }
     '/onboarding/done': {
       id: '/onboarding/done'
       path: '/done'
@@ -634,6 +692,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/onboarding/studio'
       preLoaderRoute: typeof OnboardingStudioRouteImport
       parentRoute: typeof OnboardingRouteRoute
+    }
+    '/api/health-declaration/webhook': {
+      id: '/api/health-declaration/webhook'
+      path: '/api/health-declaration/webhook'
+      fullPath: '/api/health-declaration/webhook'
+      preLoaderRoute: typeof ApiHealthDeclarationWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/internal/appointment-freed': {
       id: '/api/internal/appointment-freed'
@@ -670,20 +735,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsAiRouteImport
       parentRoute: typeof DashboardSettingsRouteRoute
     }
-    '/dashboard/settings/backups': {
-      id: '/dashboard/settings/backups'
-      path: '/backups'
-      fullPath: '/dashboard/settings/backups'
-      preLoaderRoute: typeof DashboardSettingsBackupsRouteImport
-      parentRoute: typeof DashboardSettingsRouteRoute
-    }
-    '/dashboard/settings/faq': {
-      id: '/dashboard/settings/faq'
-      path: '/faq'
-      fullPath: '/dashboard/settings/faq'
-      preLoaderRoute: typeof DashboardSettingsFaqRouteImport
-      parentRoute: typeof DashboardSettingsRouteRoute
-    }
     '/dashboard/settings/general': {
       id: '/dashboard/settings/general'
       path: '/general'
@@ -698,6 +749,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsPolicyRouteImport
       parentRoute: typeof DashboardSettingsRouteRoute
     }
+    '/dashboard/settings/system': {
+      id: '/dashboard/settings/system'
+      path: '/system'
+      fullPath: '/dashboard/settings/system'
+      preLoaderRoute: typeof DashboardSettingsSystemRouteImport
+      parentRoute: typeof DashboardSettingsRouteRoute
+    }
     '/dashboard/settings/team': {
       id: '/dashboard/settings/team'
       path: '/team'
@@ -705,18 +763,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsTeamRouteImport
       parentRoute: typeof DashboardSettingsRouteRoute
     }
-    '/dashboard/settings/whatsapp': {
-      id: '/dashboard/settings/whatsapp'
-      path: '/whatsapp'
-      fullPath: '/dashboard/settings/whatsapp'
-      preLoaderRoute: typeof DashboardSettingsWhatsappRouteImport
-      parentRoute: typeof DashboardSettingsRouteRoute
-    }
     '/api/google-calendar/oauth/callback': {
       id: '/api/google-calendar/oauth/callback'
       path: '/api/google-calendar/oauth/callback'
       fullPath: '/api/google-calendar/oauth/callback'
       preLoaderRoute: typeof ApiGoogleCalendarOauthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/settings/backups/upload': {
+      id: '/api/settings/backups/upload'
+      path: '/api/settings/backups/upload'
+      fullPath: '/api/settings/backups/upload'
+      preLoaderRoute: typeof ApiSettingsBackupsUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/settings/backups/$key/download': {
@@ -756,24 +814,20 @@ const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
 
 interface DashboardSettingsRouteRouteChildren {
   DashboardSettingsAiRoute: typeof DashboardSettingsAiRoute
-  DashboardSettingsBackupsRoute: typeof DashboardSettingsBackupsRoute
-  DashboardSettingsFaqRoute: typeof DashboardSettingsFaqRoute
   DashboardSettingsGeneralRoute: typeof DashboardSettingsGeneralRoute
   DashboardSettingsPolicyRoute: typeof DashboardSettingsPolicyRoute
+  DashboardSettingsSystemRoute: typeof DashboardSettingsSystemRoute
   DashboardSettingsTeamRoute: typeof DashboardSettingsTeamRoute
-  DashboardSettingsWhatsappRoute: typeof DashboardSettingsWhatsappRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
 }
 
 const DashboardSettingsRouteRouteChildren: DashboardSettingsRouteRouteChildren =
   {
     DashboardSettingsAiRoute: DashboardSettingsAiRoute,
-    DashboardSettingsBackupsRoute: DashboardSettingsBackupsRoute,
-    DashboardSettingsFaqRoute: DashboardSettingsFaqRoute,
     DashboardSettingsGeneralRoute: DashboardSettingsGeneralRoute,
     DashboardSettingsPolicyRoute: DashboardSettingsPolicyRoute,
+    DashboardSettingsSystemRoute: DashboardSettingsSystemRoute,
     DashboardSettingsTeamRoute: DashboardSettingsTeamRoute,
-    DashboardSettingsWhatsappRoute: DashboardSettingsWhatsappRoute,
     DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
   }
 
@@ -784,6 +838,7 @@ const DashboardSettingsRouteRouteWithChildren =
 
 interface DashboardRouteRouteChildren {
   DashboardSettingsRouteRoute: typeof DashboardSettingsRouteRouteWithChildren
+  DashboardAnalyticsRoute: typeof DashboardAnalyticsRoute
   DashboardCalendarRoute: typeof DashboardCalendarRoute
   DashboardConversationsRoute: typeof DashboardConversationsRoute
   DashboardCustomersRoute: typeof DashboardCustomersRoute
@@ -795,6 +850,7 @@ interface DashboardRouteRouteChildren {
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSettingsRouteRoute: DashboardSettingsRouteRouteWithChildren,
+  DashboardAnalyticsRoute: DashboardAnalyticsRoute,
   DashboardCalendarRoute: DashboardCalendarRoute,
   DashboardConversationsRoute: DashboardConversationsRoute,
   DashboardCustomersRoute: DashboardCustomersRoute,
@@ -813,6 +869,7 @@ interface OnboardingRouteRouteChildren {
   OnboardingHoursRoute: typeof OnboardingHoursRoute
   OnboardingProfileLinksRoute: typeof OnboardingProfileLinksRoute
   OnboardingStudioRoute: typeof OnboardingStudioRoute
+  OnboardingIndexRoute: typeof OnboardingIndexRoute
 }
 
 const OnboardingRouteRouteChildren: OnboardingRouteRouteChildren = {
@@ -820,6 +877,7 @@ const OnboardingRouteRouteChildren: OnboardingRouteRouteChildren = {
   OnboardingHoursRoute: OnboardingHoursRoute,
   OnboardingProfileLinksRoute: OnboardingProfileLinksRoute,
   OnboardingStudioRoute: OnboardingStudioRoute,
+  OnboardingIndexRoute: OnboardingIndexRoute,
 }
 
 const OnboardingRouteRouteWithChildren = OnboardingRouteRoute._addFileChildren(
@@ -831,12 +889,15 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRouteRoute: AuthRouteRouteWithChildren,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   OnboardingRouteRoute: OnboardingRouteRouteWithChildren,
+  InviteRoute: InviteRoute,
   ApiPingRoute: ApiPingRoute,
   ApiWhatsappWebhookRoute: ApiWhatsappWebhookRoute,
+  ApiHealthDeclarationWebhookRoute: ApiHealthDeclarationWebhookRoute,
   ApiInternalAppointmentFreedRoute: ApiInternalAppointmentFreedRoute,
   ApiInternalAppointmentSyncRoute: ApiInternalAppointmentSyncRoute,
   ApiInternalLifecycleTickRoute: ApiInternalLifecycleTickRoute,
   ApiGoogleCalendarOauthCallbackRoute: ApiGoogleCalendarOauthCallbackRoute,
+  ApiSettingsBackupsUploadRoute: ApiSettingsBackupsUploadRoute,
   ApiSettingsBackupsKeyDownloadRoute: ApiSettingsBackupsKeyDownloadRoute,
   ApiStaffStaffIdGoogleCalendarConnectRoute:
     ApiStaffStaffIdGoogleCalendarConnectRoute,

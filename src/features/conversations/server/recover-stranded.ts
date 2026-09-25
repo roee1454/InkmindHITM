@@ -18,7 +18,7 @@ import type PocketBase from 'pocketbase'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { runBotTurn } from '@/integrations/ai/agent.server'
 
-const MIN_AGE_MS = 30_000
+const MIN_AGE_MS = 15_000
 const MAX_AGE_MS = 24 * 60 * 60 * 1000
 
 async function newestMessage(su: PocketBase, conversationId: string) {
@@ -41,7 +41,7 @@ export async function recoverStrandedBotTurns(): Promise<void> {
 
   for (const conv of conversations) {
     const last = await newestMessage(su, conv.id)
-    if (!last || last.direction !== 'inbound') continue
+    if (!last || last.direction !== 'inbound' || last.type === 'reaction') continue
 
     const ageMs = Date.now() - new Date(last.timestamp as string).getTime()
     if (ageMs < MIN_AGE_MS || ageMs > MAX_AGE_MS) continue

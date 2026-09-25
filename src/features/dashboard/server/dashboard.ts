@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { requireAuth } from '@/features/settings/server/helpers.server'
-import { toYmd, minutesToTime } from '@/features/calendar/date-utils'
+import { toYmd, minutesToTime } from '#/features/calendar/utils/date-utils'
 
 export interface DashboardMetrics {
   appointmentsTodayCount: number
@@ -27,15 +27,37 @@ export interface DashboardMetrics {
 
 export const getDashboardData = createServerFn({ method: 'GET' }).handler(
   async (): Promise<DashboardMetrics> => {
-    await requireAuth()
+    const session = await requireAuth()
     const su = await getSuperuserClient()
+    const isAdmin = session.staff.role === 'owner' || session.staff.role === 'admin'
 
     const todayStr = toYmd(new Date())
 
-    const [customerRecords, appointmentRecords] = await Promise.all([
+    const [rawCustomers, rawAppointments, conversations] = await Promise.all([
       su.collection('customers').getFullList({ sort: '-updated' }),
       su.collection('appointments').getFullList({ expand: 'customer', sort: 'start_time' }),
+      !isAdmin
+        ? su.collection('conversations').getFullList({ fields: 'id,customer,assigned_staff' })
+        : Promise.resolve([]),
     ])
+
+    const appointmentRecords = isAdmin
+      ? rawAppointments
+      : rawAppointments.filter((a) => a.staff === session.staff.id)
+
+    let customerRecords = rawCustomers
+    if (!isAdmin) {
+      const assignedCustomerIds = new Set<string>()
+      for (const conv of conversations) {
+        if (conv.assigned_staff === session.staff.id && conv.customer) {
+          assignedCustomerIds.add(conv.customer as string)
+        }
+      }
+      for (const appt of appointmentRecords) {
+        if (appt.customer) assignedCustomerIds.add(appt.customer as string)
+      }
+      customerRecords = rawCustomers.filter((c) => assignedCustomerIds.has(c.id))
+    }
 
     // Active leads = customers whose lead_stage is not 'expired' (or 'lost')
     const activeLeads = customerRecords.filter((c) => (c.lead_stage as string) !== 'expired')

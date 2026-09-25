@@ -1,18 +1,42 @@
+import { formatDatabaseError } from '@/lib/pocketbase-error'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { requireAuth } from '@/features/settings/server/helpers.server'
+import { toCanonicalE164Phone } from '@/lib/phone'
 import type { Customer } from '../types'
 
 export const getCustomers = createServerFn({ method: 'GET' }).handler(
   async (): Promise<Customer[]> => {
-    await requireAuth()
+    const session = await requireAuth()
     const su = await getSuperuserClient()
+    const isAdmin = session.staff.role === 'owner' || session.staff.role === 'admin'
 
-    const [customerRecords, appointmentRecords] = await Promise.all([
+    const [allCustomers, allAppointments, conversations] = await Promise.all([
       su.collection('customers').getFullList({ sort: '-created' }),
       su.collection('appointments').getFullList().catch(() => []),
+      !isAdmin
+        ? su.collection('conversations').getFullList({ fields: 'id,customer,assigned_staff' })
+        : Promise.resolve([]),
     ])
+
+    const appointmentRecords = isAdmin
+      ? allAppointments
+      : allAppointments.filter((a) => a.staff === session.staff.id)
+
+    let customerRecords = allCustomers
+    if (!isAdmin) {
+      const allowedCustomerIds = new Set<string>()
+      for (const conv of conversations) {
+        if (conv.assigned_staff === session.staff.id && conv.customer) {
+          allowedCustomerIds.add(conv.customer as string)
+        }
+      }
+      for (const appt of appointmentRecords) {
+        if (appt.customer) allowedCustomerIds.add(appt.customer as string)
+      }
+      customerRecords = allCustomers.filter((c) => allowedCustomerIds.has(c.id))
+    }
 
     const statsMap: Record<string, { visits: number; totalSpend: number }> = {}
     for (const appt of appointmentRecords) {
@@ -39,6 +63,13 @@ export const getCustomers = createServerFn({ method: 'GET' }).handler(
         updatedAt: item.updated as string,
         visits: stats.visits,
         totalSpend: stats.totalSpend,
+        healthDeclarationSigned: Boolean(item.health_declaration_signed),
+        healthDeclarationDate: (item.health_declaration_date as string) || null,
+        healthDeclarationUrl: (item.health_declaration_url as string) || null,
+        allergies: (item.allergies as string) || null,
+        medicalNotes: (item.medical_notes as string) || null,
+        healthDeclarationAnswers:
+          (item.health_declaration_answers as Record<string, string | number | boolean | null | string[]>) || null,
       }
     })
   },
@@ -50,6 +81,12 @@ const createCustomerSchema = z.object({
   email: z.string().nullable().optional(),
   source: z.string().nullable().optional(),
   isVip: z.boolean().default(false),
+  healthDeclarationSigned: z.boolean().optional(),
+  healthDeclarationDate: z.string().nullable().optional(),
+  healthDeclarationUrl: z.string().nullable().optional(),
+  allergies: z.string().nullable().optional(),
+  medicalNotes: z.string().nullable().optional(),
+  healthDeclarationAnswers: z.record(z.string(), z.any()).nullable().optional(),
 })
 
 export const createCustomer = createServerFn({ method: 'POST' })
@@ -57,16 +94,26 @@ export const createCustomer = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     await requireAuth()
     const su = await getSuperuserClient()
-    const studio = await su.collection('studios').getFirstListItem('').catch(() => null)
-    const created = await su.collection('customers').create({
-      studio: studio?.id || '',
-      name: data.name || '',
-      phone: data.phone,
-      email: data.email || '',
-      source: data.source || '',
-      is_vip: data.isVip,
-    })
-    return { id: created.id }
+    try {
+      const studio = await su.collection('studios').getFirstListItem('').catch(() => null)
+      const created = await su.collection('customers').create({
+        studio: studio?.id || '',
+        name: data.name || '',
+        phone: toCanonicalE164Phone(data.phone),
+        email: data.email || '',
+        source: data.source || '',
+        is_vip: data.isVip,
+        health_declaration_signed: Boolean(data.healthDeclarationSigned),
+        health_declaration_date: data.healthDeclarationDate || '',
+        health_declaration_url: data.healthDeclarationUrl || '',
+        allergies: data.allergies || '',
+        medical_notes: data.medicalNotes || '',
+        health_declaration_answers: data.healthDeclarationAnswers || {},
+      })
+      return { id: created.id }
+    } catch (err) {
+      throw new Error(formatDatabaseError(err, 'יצירת הלקוח נכשלה.'))
+    }
   })
 
 const updateCustomerSchema = z.object({
@@ -76,6 +123,12 @@ const updateCustomerSchema = z.object({
   email: z.string().nullable().optional(),
   source: z.string().nullable().optional(),
   isVip: z.boolean().default(false),
+  healthDeclarationSigned: z.boolean().optional(),
+  healthDeclarationDate: z.string().nullable().optional(),
+  healthDeclarationUrl: z.string().nullable().optional(),
+  allergies: z.string().nullable().optional(),
+  medicalNotes: z.string().nullable().optional(),
+  healthDeclarationAnswers: z.record(z.string(), z.any()).nullable().optional(),
 })
 
 export const updateCustomer = createServerFn({ method: 'POST' })
@@ -83,25 +136,24 @@ export const updateCustomer = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     await requireAuth()
     const su = await getSuperuserClient()
-    await su.collection('customers').update(data.id, {
-      name: data.name || '',
-      phone: data.phone,
-      email: data.email || '',
-      source: data.source || '',
-      is_vip: data.isVip,
-    })
-    return { id: data.id }
-  })
+    try {
+      const updateBody: Record<string, unknown> = {
+        name: data.name || '',
+        phone: toCanonicalE164Phone(data.phone),
+        email: data.email || '',
+        source: data.source || '',
+        is_vip: data.isVip,
+      }
+      if (data.healthDeclarationSigned !== undefined) updateBody.health_declaration_signed = data.healthDeclarationSigned
+      if (data.healthDeclarationDate !== undefined) updateBody.health_declaration_date = data.healthDeclarationDate
+      if (data.healthDeclarationUrl !== undefined) updateBody.health_declaration_url = data.healthDeclarationUrl
+      if (data.allergies !== undefined) updateBody.allergies = data.allergies
+      if (data.medicalNotes !== undefined) updateBody.medical_notes = data.medicalNotes
+      if (data.healthDeclarationAnswers !== undefined) updateBody.health_declaration_answers = data.healthDeclarationAnswers
 
-const deleteCustomerSchema = z.object({
-  id: z.string(),
-})
-
-export const deleteCustomer = createServerFn({ method: 'POST' })
-  .validator(deleteCustomerSchema)
-  .handler(async ({ data }) => {
-    await requireAuth()
-    const su = await getSuperuserClient()
-    await su.collection('customers').delete(data.id)
-    return { ok: true }
+      await su.collection('customers').update(data.id, updateBody)
+      return { id: data.id }
+    } catch (err) {
+      throw new Error(formatDatabaseError(err, 'עדכון הלקוח נכשל.'))
+    }
   })

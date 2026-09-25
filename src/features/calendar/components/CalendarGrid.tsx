@@ -1,10 +1,11 @@
 import React from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from '@/components/ui/icon'
 import type { ApiAppointment, ApiExternalBusyPeriod } from '../types'
 import type { WorkingHoursWindow } from '@/lib/working-hours'
 import { WeekGrid } from './WeekGrid'
 import { MonthGrid } from './MonthGrid'
 import { DailyAppointmentCards } from './DailyAppointmentCards'
+import { CalendarLegend } from './CalendarLegend'
 import {
   addDays,
   addMonths,
@@ -16,9 +17,9 @@ import {
   isToday,
   toYmd,
   HEBREW_DAYS_SHORT,
-} from '../date-utils'
+} from '../utils/date-utils'
 import { cn } from '#/lib/utils.ts'
-import { useIsMobile } from '@/hooks/use-media-query'
+import { useIsMobile } from '#/hooks/useMediaQuery'
 
 /** `day` is the phone-sized variant of `week` — same grid, one column. */
 export type CalendarMode = 'day' | 'week' | 'month'
@@ -34,7 +35,6 @@ interface CalendarGridProps {
   workingHours: WorkingHoursWindow[] | null
   onSelectAppointment: (appointment: ApiAppointment) => void
   onSelectSlot: (date: string, timeSlot: string) => void
-  onDeleteAppointment: (id: string) => void
 }
 
 export const CalendarGrid: React.FC<CalendarGridProps> = ({
@@ -48,7 +48,6 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   workingHours,
   onSelectAppointment,
   onSelectSlot,
-  onDeleteAppointment,
 }) => {
   const isMobile = useIsMobile()
 
@@ -77,7 +76,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     <button
       type="button"
       onClick={() => onModeChange(value)}
-      className={`h-8 cursor-pointer rounded-xl px-3 text-[13px] font-bold transition-all duration-150 ease-native ${
+      className={`h-8 cursor-pointer rounded-xl px-3 text-sm font-bold transition-all duration-150 ease-native ${
         mode === value ? 'bg-card font-extrabold text-foreground shadow-sm' : 'text-muted-foreground'
       } ${className}`}
       aria-pressed={mode === value}
@@ -87,8 +86,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   )
 
   return (
-    <div className="border border-border/80 bg-card rounded-3xl overflow-hidden shadow-sm font-assistant">
-      <div dir="rtl" className="flex items-center justify-between gap-2 border-b border-border/60 px-3 py-3 lg:px-4">
+    <div className="border border-border bg-card rounded-3xl overflow-hidden shadow-sm font-assistant">
+      <div dir="rtl" className="flex items-center justify-between gap-2 border-b border-border px-3 py-3 lg:px-4">
         <button
           type="button"
           onClick={() => step(-1)}
@@ -99,11 +98,11 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         </button>
 
         <div className="flex min-w-0 flex-col items-center gap-1.5 sm:flex-row sm:gap-4">
-          <h4 className="truncate text-[16px] font-extrabold text-foreground">{title}</h4>
-          {/* The toggle stays two-wide at every size: `יום` below lg, `שבוע` at lg and up. */}
+          <h4 className="truncate text-base font-extrabold text-foreground">{title}</h4>
+          {/* Calendar view modes: Day, Week, Month */}
           <div className="hidden lg:flex select-none rounded-2xl bg-muted p-1">
-            {modeButton('day', 'יום', 'lg:hidden')}
-            {modeButton('week', 'שבוע', 'hidden lg:block')}
+            {modeButton('day', 'יום')}
+            {modeButton('week', 'שבוע')}
             {modeButton('month', 'חודש')}
           </div>
         </div>
@@ -119,7 +118,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
       </div>
 
       {/* Mobile-only Day Carousel/Strip */}
-      <div className="flex lg:hidden items-center justify-between border-b border-border/60 px-2 py-2 gap-1">
+      <div className="flex lg:hidden items-center justify-between border-b border-border px-2 py-2 gap-1">
         {weekDays(anchorDate).map((day) => {
           const active = isSameDay(day, anchorDate)
           const today = isToday(day)
@@ -131,7 +130,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               type="button"
               onClick={() => onAnchorDateChange(day)}
               className={cn(
-                'flex flex-1 select-none flex-col items-center justify-center gap-0.5 rounded-[14px] py-2 transition-all duration-150 ease-native cursor-pointer',
+                'flex flex-1 select-none flex-col items-center justify-center gap-0.5 rounded-xl py-2 transition-all duration-150 ease-native cursor-pointer',
                 active
                   ? 'bg-primary text-primary-foreground shadow'
                   : today
@@ -141,8 +140,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                       : 'text-muted-foreground',
               )}
             >
-              <span className="text-[11.5px] font-bold">{dayNameShort}</span>
-              <span className="text-[16px] font-extrabold tabular-nums">{day.getDate()}</span>
+              <span className="text-xs font-bold">{dayNameShort}</span>
+              <span className="text-base font-extrabold tabular-nums">{day.getDate()}</span>
             </button>
           )
         })}
@@ -154,9 +153,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             appointments={appointments
               .filter((a) => a.date === toYmd(anchorDate))
               .sort((a, b) => a.timeSlot.localeCompare(b.timeSlot))}
+            artistAvatars={artistAvatars}
             onSelectAppointment={onSelectAppointment}
             onNewAppointment={() => onSelectSlot(toYmd(anchorDate), '10:00')}
-            onDeleteAppointment={onDeleteAppointment}
           />
         </div>
       ) : mode === 'week' || mode === 'day' ? (
@@ -180,6 +179,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           onSelectSlot={onSelectSlot}
         />
       )}
+
+      <CalendarLegend />
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useIsMobile } from '@/hooks/use-media-query'
+import { useIsMobile } from '#/hooks/useMediaQuery'
 import { useMcpUiStore } from '../store/mcpUiStore'
 import { McpBubble } from './McpBubble'
 import { McpPanel } from './McpPanel'

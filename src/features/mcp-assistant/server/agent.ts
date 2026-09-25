@@ -8,9 +8,10 @@
 import { generateText, stepCountIs } from 'ai'
 import type { ModelMessage } from 'ai'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
-import { getModelInstance } from '@/integrations/ai/providers.server'
-import { buildGenerationParams } from '@/integrations/ai/capabilities'
+import { getModelInstance } from '@/integrations/ai/model/provider.server'
+import { buildGenerationParams } from '@/integrations/ai/model/generation-params'
 import type { StaffRecord } from '@/integrations/pocketbase/types'
+import { coalesceHistory } from '@/integrations/ai/agent.server'
 import { buildMcpSystemPrompt } from './prompts'
 import { createPendingAction } from './approval'
 import { buildCalendarTools } from './tool-servers/calendar.server'
@@ -22,7 +23,8 @@ import { buildAnalyticsTools } from './tool-servers/analytics.server'
 import { buildWaitlistTools } from './tool-servers/waitlist.server'
 import { buildStaffTools } from './tool-servers/staff.server'
 import type { McpToolContext } from './tool-servers/shared'
-import type { McpAction, McpMessage, McpToolCallSummary } from './types'
+import type { McpAction, McpMessage, McpToolCallSummary, JsonValue } from './types'
+import { SYSTEM_AI_MODEL, SYSTEM_AI_MAX_TOKENS } from '@/integrations/ai/model/defaults'
 
 const HISTORY_LIMIT = 20
 const MAX_TOOL_STEPS = 6
@@ -31,9 +33,9 @@ async function loadModelConfig(su: Awaited<ReturnType<typeof getSuperuserClient>
   const list = await su.collection('settings').getList(1, 1)
   const record = list.items[0]
   return {
-    model: (record?.ai_model as string) || 'claude-sonnet-5',
+    model: SYSTEM_AI_MODEL,
     temperature: (record?.ai_temperature as number | undefined) ?? 0.4,
-    maxTokens: (record?.ai_max_tokens as number | undefined) ?? null,
+    maxTokens: SYSTEM_AI_MAX_TOKENS,
   }
 }
 
@@ -78,11 +80,12 @@ export async function runMcpTurn({ staff, conversationId, text }: RunMcpTurnInpu
     body: text,
   })
 
-  const messages: ModelMessage[] = history.map((r) => ({
+  const rawMessages: ModelMessage[] = history.map((r) => ({
     role: r.role === 'owner' ? 'user' : 'assistant',
     content: (r.body as string) || '',
   }))
-  messages.push({ role: 'user', content: text })
+  rawMessages.push({ role: 'user', content: text })
+  const messages = coalesceHistory(rawMessages)
 
   const proposals: McpToolContext['proposals'] = []
   const toolCtx: McpToolContext = { su, staff, proposals }
@@ -108,10 +111,10 @@ export async function runMcpTurn({ staff, conversationId, text }: RunMcpTurnInpu
 
   const toolCallSummaries: McpToolCallSummary[] = (result.toolCalls || []).map((call) => {
     const matchingResult = (result.toolResults || []).find((r) => r.toolCallId === call.toolCallId)
-    const output = matchingResult?.output as { status?: string; message?: string; data?: unknown } | undefined
+    const output = matchingResult?.output as { status?: string; message?: string; data?: JsonValue } | undefined
     return {
       toolName: call.toolName,
-      args: call.input as Record<string, unknown>,
+      args: (call.input || {}) as Record<string, JsonValue>,
       status: (output?.status as McpToolCallSummary['status']) || 'success',
       summary: output?.message || call.toolName,
       rowCount: Array.isArray(output?.data) ? output.data.length : undefined,

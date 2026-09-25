@@ -13,7 +13,7 @@
  * never the other way around.
  */
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
-import { checkAvailabilityForBot } from '@/features/calendar/server/bot-appointments'
+import { checkAvailabilityForBot } from '@/features/calendar/server/bot-appointments.server'
 import { toYmd, minutesToTime } from '@/lib/date-utils'
 import { createPendingAction } from './approval'
 import type { McpActionDiff } from './types'

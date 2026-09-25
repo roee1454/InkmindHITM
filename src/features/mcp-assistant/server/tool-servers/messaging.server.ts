@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { getWhatsAppSettings } from '@/integrations/whatsapp-cloud-api/settings.server'
-import { createWhatsAppClient } from '@/integrations/whatsapp-cloud-api/client'
+import { createWhatsAppClient, WhatsAppApiError, ERROR_REENGAGEMENT_REQUIRED } from '@/integrations/whatsapp-cloud-api/client'
 import { mcpWriteTool } from './shared'
 import type { McpToolContext } from './shared'
 import type { McpActionDiff } from '../types'
@@ -91,7 +91,47 @@ export async function commitMessagingAction(toolName: string, args: Record<strin
   }
   if (!customer.phone) throw new Error('ללקוח/ה הזה/ו אין מספר טלפון שמור.')
   const client = createWhatsAppClient({ phoneNumberId: waSettings.phoneNumberId, accessToken: waSettings.accessToken })
-  await client.sendText({ to: customer.phone as string, body: text })
+  let wamid = ''
+  try {
+    const res = await client.sendText({ to: customer.phone as string, body: text })
+    wamid = res.wamid
+  } catch (error) {
+    if (error instanceof WhatsAppApiError && error.code === ERROR_REENGAGEMENT_REQUIRED) {
+      throw new Error('לא ניתן לשלוח הודעה — הלקוח/ה מחוץ לחלון 24 השעות של וואטסאפ. יש ליצור קשר באמצעות תבנית מאושרת או בדרך אחרת.')
+    }
+    throw error
+  }
+
+  // Bug 49: Record outbound MCP message in messages collection and sync conversation
+  let conv = await su.collection('conversations').getFirstListItem(`customer = "${customer.id}"`).catch(() => null)
+  if (!conv) {
+    conv = await su.collection('conversations').create({
+      customer: customer.id,
+      channel: 'whatsapp',
+      state: 'COLLECTING_INFO',
+      status: 'staff_active',
+      last_message_at: new Date().toISOString(),
+    }).catch(() => null)
+  }
+
+  if (conv) {
+    await su.collection('messages').create({
+      conversation: conv.id,
+      whatsapp_message_id: wamid,
+      direction: 'outbound',
+      sender_type: 'staff',
+      type: 'text',
+      body: text,
+      status: 'sent',
+      timestamp: new Date().toISOString(),
+      seen: true,
+    }).catch(() => null)
+
+    await su.collection('conversations').update(conv.id, {
+      last_message_at: new Date().toISOString(),
+    }).catch(() => null)
+  }
+
   return 'ההודעה נשלחה בהצלחה.'
 }
 

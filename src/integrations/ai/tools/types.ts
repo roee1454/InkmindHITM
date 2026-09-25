@@ -1,6 +1,8 @@
 import type PocketBase from 'pocketbase'
+import type { RecordModel } from 'pocketbase'
 import type { ConversationState } from '../prompts'
 import type { WhatsAppClient } from '@/integrations/whatsapp-cloud-api/client'
+import type { StudioAgentRuntimeConfig } from '../studio-config.server'
 import type { Tool } from 'ai'
 import type { z } from 'zod'
 
@@ -8,6 +10,7 @@ export interface ToolFactoryContext {
   su: PocketBase
   conversationId: string
   customerId: string
+  runtimeConfig?: StudioAgentRuntimeConfig
   /** Live conversation state — updated mid-turn by `transitionState`, so `prepareStep`
    *  in agent.server.ts re-gates the tool set after a state-changing tool (FLOW-8).
    *  Note: factories that destructure this capture the turn-START value. */
@@ -21,7 +24,7 @@ export interface ToolFactoryContext {
   didSendMessage?: boolean
 
   // Common Helpers
-  updateConversation: (fields: any) => Promise<any>
+  updateConversation: (fields: Record<string, unknown>) => Promise<RecordModel>
   /** The only sanctioned way for a tool to change conversation `state` (FLOW-5):
    *  validates against the transition table, then syncs the live ctx fields above.
    *  Direct `updateConversation({ state })` is forbidden — use this. */
@@ -34,12 +37,12 @@ export interface ToolFactoryContext {
     message: string,
     type?: 'info' | 'warning' | 'error',
     link?: string
-  ) => Promise<any>
+  ) => Promise<RecordModel | null>
   // `Tool` (default generics), not `ReturnType<typeof tool>` — the latter collapses the
   // generic to `Tool<never, never>`, which no concretely-typed tool is assignable to.
   botTool: <T extends z.ZodTypeAny>(
     description: string,
     inputSchema: T,
-    execute: (input: z.infer<T>) => Promise<any>
+    execute: (input: z.infer<T>) => Promise<unknown>
   ) => Tool
 }

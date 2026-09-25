@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { GeneralSettingsTab } from '@/features/settings/components/GeneralSettingsTab'
+import { GeneralTab } from '@/features/settings/tabs/general/GeneralTab'
 
 export const Route = createFileRoute('/dashboard/settings/general')({
   component: GeneralPage,
@@ -8,7 +8,7 @@ export const Route = createFileRoute('/dashboard/settings/general')({
 function GeneralPage() {
   return (
     <div className="flex flex-col gap-[18px] px-4 pt-5 pb-8 font-assistant lg:px-8 lg:pt-8" dir="rtl">
-      <GeneralSettingsTab />
+      <GeneralTab />
     </div>
   )
 }

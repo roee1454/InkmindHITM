@@ -3,7 +3,7 @@
  * `settings` singleton's credentials (a factory, not a module singleton) so
  * "test connection" can validate candidate credentials before they're saved.
  */
-import type { WhatsAppCredentials } from './types'
+import type { MetaMessageTemplate, WhatsAppCredentials } from './types'
 
 const GRAPH_BASE = 'https://graph.facebook.com/v21.0'
 
@@ -60,6 +60,32 @@ export interface SendMediaParams {
   replyToWamid?: string
 }
 
+export type TemplateParameter =
+  | { type: 'text'; text: string }
+  | { type: 'currency'; currency: { fallback_value: string; code: string; amount_1000: number } }
+  | { type: 'date_time'; date_time: { fallback_value: string } }
+  | { type: 'image'; image: { id?: string; link?: string } }
+  | { type: 'document'; document: { id?: string; link?: string; filename?: string } }
+  | { type: 'video'; video: { id?: string; link?: string } }
+
+export interface TemplateComponent {
+  type: 'header' | 'body' | 'button'
+  sub_type?: 'quick_reply' | 'url'
+  index?: string | number
+  parameters: TemplateParameter[]
+}
+
+export interface SendTemplateParams {
+  to: string
+  templateName: string
+  languageCode?: string
+  components?: TemplateComponent[]
+}
+
+export interface WhatsAppClientOptions {
+  retryDelays?: number[]
+}
+
 export interface SendResult {
   wamid: string
 }
@@ -69,18 +95,45 @@ export interface PhoneNumberInfo {
   verifiedName: string
 }
 
-export function createWhatsAppClient(creds: WhatsAppCredentials) {
+export function isRetryableError(err: unknown): boolean {
+  if (err instanceof WhatsAppApiError) {
+    return err.httpStatus >= 500 || err.httpStatus === 429
+  }
+  if (err instanceof Error) {
+    return true
+  }
+  return false
+}
+
+const DEFAULT_RETRY_DELAYS = process.env.NODE_ENV === 'test' ? [5, 10, 15] : [500, 1500, 3000]
+
+export function createWhatsAppClient(creds: WhatsAppCredentials, options?: WhatsAppClientOptions) {
   const authHeader = { Authorization: `Bearer ${creds.accessToken}` }
+  const retryDelays = options?.retryDelays ?? DEFAULT_RETRY_DELAYS
 
   async function postMessage(payload: Record<string, unknown>): Promise<SendResult> {
-    const res = await fetch(`${GRAPH_BASE}/${creds.phoneNumberId}/messages`, {
-      method: 'POST',
-      headers: { ...authHeader, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messaging_product: 'whatsapp', ...payload }),
-    })
-    if (!res.ok) await throwGraphError(res)
-    const data = (await res.json()) as { messages?: { id?: string }[] }
-    return { wamid: data.messages?.[0]?.id ?? '' }
+    let lastError: unknown
+    for (let attempt = 0; attempt <= retryDelays.length; attempt++) {
+      try {
+        const res = await fetch(`${GRAPH_BASE}/${creds.phoneNumberId}/messages`, {
+          method: 'POST',
+          headers: { ...authHeader, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messaging_product: 'whatsapp', ...payload }),
+        })
+        if (!res.ok) await throwGraphError(res)
+        const data = (await res.json()) as { messages?: { id?: string }[] }
+        return { wamid: data.messages?.[0]?.id ?? '' }
+      } catch (err: unknown) {
+        lastError = err
+        const canRetry = attempt < retryDelays.length && isRetryableError(err)
+        if (!canRetry) {
+          throw err
+        }
+        const delay = retryDelays[attempt]
+        await new Promise((resolve) => setTimeout(resolve, delay))
+      }
+    }
+    throw lastError
   }
 
   return {
@@ -91,6 +144,19 @@ export function createWhatsAppClient(creds: WhatsAppCredentials) {
         type: 'text',
         text: { body: params.body, preview_url: false },
         ...(params.replyToWamid ? { context: { message_id: params.replyToWamid } } : {}),
+      })
+    },
+
+    async sendTemplate(params: SendTemplateParams): Promise<SendResult> {
+      return postMessage({
+        recipient_type: 'individual',
+        to: params.to,
+        type: 'template',
+        template: {
+          name: params.templateName,
+          language: { code: params.languageCode || 'he' },
+          ...(params.components && params.components.length > 0 ? { components: params.components } : {}),
+        },
       })
     },
 
@@ -183,6 +249,83 @@ export function createWhatsAppClient(creds: WhatsAppCredentials) {
         displayPhoneNumber: data.display_phone_number ?? '',
         verifiedName: data.verified_name ?? '',
       }
+    },
+
+    /** Fetches message templates approved by Meta for this WABA account. */
+    async getApprovedTemplates(businessAccountId?: string): Promise<MetaMessageTemplate[]> {
+      const wabaId = businessAccountId || creds.businessAccountId
+      if (!wabaId) {
+        throw new Error('חסר מזהה חשבון עסקי (WHATSAPP_BUSINESS_ACCOUNT_ID) למשיכת תבניות.')
+      }
+      const res = await fetch(`${GRAPH_BASE}/${wabaId}/message_templates?status=APPROVED&limit=100`, {
+        headers: authHeader,
+      })
+      if (!res.ok) await throwGraphError(res)
+      const data = (await res.json()) as { data?: MetaMessageTemplate[] }
+      return (data.data ?? []).filter((t) => t.status === 'APPROVED')
+    },
+
+    /** Sends a native WhatsApp interactive list menu (up to 10 rows). */
+    async sendInteractiveList(params: {
+      to: string
+      bodyText: string
+      buttonText: string
+      sections: Array<{
+        title?: string
+        rows: Array<{ id: string; title: string; description?: string }>
+      }>
+      headerText?: string
+      footerText?: string
+      replyToWamid?: string
+    }): Promise<SendResult> {
+      return postMessage({
+        recipient_type: 'individual',
+        to: params.to,
+        type: 'interactive',
+        interactive: {
+          type: 'list',
+          ...(params.headerText ? { header: { type: 'text', text: params.headerText } } : {}),
+          body: { text: params.bodyText },
+          ...(params.footerText ? { footer: { text: params.footerText } } : {}),
+          action: {
+            button: params.buttonText,
+            sections: params.sections,
+          },
+        },
+        ...(params.replyToWamid ? { context: { message_id: params.replyToWamid } } : {}),
+      })
+    },
+
+    /** Sends native WhatsApp quick-reply buttons (up to 3 buttons). */
+    async sendInteractiveButtons(params: {
+      to: string
+      bodyText: string
+      buttons: Array<{ id: string; title: string }>
+      headerText?: string
+      footerText?: string
+      replyToWamid?: string
+    }): Promise<SendResult> {
+      return postMessage({
+        recipient_type: 'individual',
+        to: params.to,
+        type: 'interactive',
+        interactive: {
+          type: 'button',
+          ...(params.headerText ? { header: { type: 'text', text: params.headerText } } : {}),
+          body: { text: params.bodyText },
+          ...(params.footerText ? { footer: { text: params.footerText } } : {}),
+          action: {
+            buttons: params.buttons.map((b) => ({
+              type: 'reply',
+              reply: {
+                id: b.id,
+                title: b.title,
+              },
+            })),
+          },
+        },
+        ...(params.replyToWamid ? { context: { message_id: params.replyToWamid } } : {}),
+      })
     },
   }
 }

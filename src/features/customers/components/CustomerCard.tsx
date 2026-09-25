@@ -1,31 +1,64 @@
 import React from 'react'
-import { ChevronLeft, Star } from 'lucide-react'
+import { ChevronLeft, FileCheck, Star, AlertTriangle } from '@/components/ui/icon'
 import type { Customer } from '../types'
+import { extractMedicalAlerts } from '@/features/health-declaration/utils/health-alerts'
+import { isHealthDeclarationValid } from '@/features/health-declaration/utils/validity'
 
 interface CustomerCardProps {
   customer: Customer
   onEdit: (customer: Customer) => void
 }
 
-export const CustomerCard: React.FC<CustomerCardProps> = ({ customer: c, onEdit }) => {
+export const CustomerCard = React.memo<CustomerCardProps>(({ customer: c, onEdit }) => {
   const displayName = c.name || 'לקוח ללא שם'
-  const initial = displayName.charAt(0)
+  const isExpired = Boolean(
+    c.healthDeclarationSigned &&
+    c.healthDeclarationDate &&
+    !isHealthDeclarationValid(c.healthDeclarationDate)
+  )
+  const alerts = c.healthDeclarationSigned
+    ? extractMedicalAlerts({
+        answers: c.healthDeclarationAnswers,
+        medicalNotes: c.medicalNotes,
+        allergies: c.allergies,
+      })
+    : []
 
   return (
-    <div onClick={() => onEdit(c)} className="row-native cursor-pointer" dir="rtl">
-      <div className="avatar-native">{initial}</div>
+    <div onClick={() => onEdit(c)} className="row-native cursor-pointer justify-between" dir="rtl">
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-1.5">
-          <h4 className="truncate text-[15.5px] font-bold text-foreground">{displayName}</h4>
-          {c.isVip && <Star size={13} className="shrink-0 fill-amber-400 text-amber-400" />}
+          <h4 className="truncate text-base font-bold text-foreground">{displayName}</h4>
+          {c.isVip && <Star size={13} className="shrink-0 fill-warning text-warning" />}
+          {c.healthDeclarationSigned && (
+            <span
+              title={
+                alerts.length > 0
+                  ? `הצהרת בריאות חתומה — ${alerts.length} התראות רפואיות!`
+                  : isExpired
+                    ? 'הצהרת בריאות פגת תוקף — נדרש חידוש'
+                    : 'הצהרת בריאות חתומה ומאושרת'
+              }
+              className="inline-flex items-center"
+            >
+              {alerts.length > 0 ? (
+                <AlertTriangle size={13} className="shrink-0 text-destructive" />
+              ) : isExpired ? (
+                <AlertTriangle size={13} className="shrink-0 text-warning" />
+              ) : (
+                <FileCheck size={13} className="shrink-0 text-status-done" />
+              )}
+            </span>
+          )}
         </div>
-        <span className="block truncate text-[13px] text-muted-foreground">
+        <span className="block truncate text-sm text-muted-foreground">
           ₪{c.totalSpend.toLocaleString()} • {c.visits} ביקורים
         </span>
       </div>
       <ChevronLeft size={18} className="shrink-0 text-muted-foreground" />
     </div>
   )
-}
+})
+CustomerCard.displayName = 'CustomerCard'
 
 export default CustomerCard

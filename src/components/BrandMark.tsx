@@ -40,12 +40,12 @@ export function BrandMark({ size = 'md', className }: BrandMarkProps) {
         <img
           src={logo}
           alt=""
-          className={cn('rounded-full object-cover shadow-md', s.box)}
+          className={cn('rounded-full object-cover shadow-lg', s.box)}
         />
       ) : (
         <div
           className={cn(
-            'flex items-center justify-center rounded-full bg-primary font-assistant font-extrabold text-primary-foreground shadow-md',
+            'flex items-center justify-center rounded-full bg-primary font-assistant font-extrabold text-primary-foreground shadow-lg',
             s.box,
             s.text,
           )}

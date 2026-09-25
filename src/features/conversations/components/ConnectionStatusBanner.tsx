@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { TriangleAlert } from 'lucide-react'
+import { TriangleAlert } from '@/components/ui/icon'
 
 /** Shown in place of the inbox when WhatsApp credentials aren't configured yet, so an
  *  empty conversation list doesn't read as a bug. */

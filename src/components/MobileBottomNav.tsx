@@ -42,7 +42,7 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
               activeOptions={{ exact: item.exact }}
               activeProps={{ className: 'text-primary font-extrabold' }}
               inactiveProps={{ className: 'text-muted-foreground font-bold' }}
-              className="relative flex h-full flex-col items-center justify-center gap-1 font-assistant text-[11.5px] no-underline transition-colors duration-150 hover:no-underline active:no-underline active:bg-muted"
+              className="relative flex h-full flex-col items-center justify-center gap-1 font-assistant text-xs no-underline transition-colors duration-150 hover:no-underline active:no-underline active:bg-muted"
             >
               {({ isActive }) => (
                 <>
@@ -52,7 +52,7 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
                   <span className="relative">
                     <item.icon size={22} />
                     {item.to === '/dashboard/conversations' && unseenMessagesCount > 0 && (
-                      <span className="absolute -top-1.5 -end-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-success px-1 text-[10px] font-extrabold leading-none text-white">
+                      <span className="absolute -top-1.5 -end-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-success px-1 text-2xs font-extrabold leading-none text-white">
                         {unseenMessagesCount}
                       </span>
                     )}

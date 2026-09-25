@@ -10,6 +10,7 @@ interface CalendarUiState {
   selectedStatus: string
   selectedArtist: string
   hasInitializedDefaultArtist: boolean
+  searchQuery: string
 
   isCreating: boolean
   createSlot: { date: string; timeSlot: string } | null
@@ -23,6 +24,7 @@ interface CalendarUiState {
   setSelectedStatus: (selectedStatus: string) => void
   setSelectedArtist: (selectedArtist: string) => void
   setHasInitializedDefaultArtist: (hasInitialized: boolean) => void
+  setSearchQuery: (searchQuery: string) => void
   setIsCreating: (isCreating: boolean) => void
   setCreateSlot: (slot: { date: string; timeSlot: string } | null) => void
   setEditingAppointment: (appointment: ApiAppointment | null) => void
@@ -38,6 +40,7 @@ export const useCalendarUiStore = create<CalendarUiState>((set) => ({
   selectedStatus: 'all',
   selectedArtist: 'all',
   hasInitializedDefaultArtist: false,
+  searchQuery: '',
 
   isCreating: false,
   createSlot: null,
@@ -50,6 +53,7 @@ export const useCalendarUiStore = create<CalendarUiState>((set) => ({
   setSelectedStatus: (selectedStatus) => set({ selectedStatus }),
   setSelectedArtist: (selectedArtist) => set({ selectedArtist }),
   setHasInitializedDefaultArtist: (hasInitializedDefaultArtist) => set({ hasInitializedDefaultArtist }),
+  setSearchQuery: (searchQuery) => set({ searchQuery }),
   setIsCreating: (isCreating) => set({ isCreating }),
   setCreateSlot: (createSlot) => set({ createSlot }),
   setEditingAppointment: (editingAppointment) => set({ editingAppointment }),

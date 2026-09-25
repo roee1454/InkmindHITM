@@ -4,8 +4,8 @@ import { Skeleton } from '@/components/ui/skeleton'
  *  bar + grid body) so the skeleton→content swap doesn't jump. */
 export function CalendarSkeleton() {
   return (
-    <div className="overflow-hidden rounded-3xl border border-border/80 bg-card shadow-sm font-assistant">
-      <div className="flex items-center justify-between gap-2 border-b border-border/60 px-3 py-3 lg:px-4">
+    <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm font-assistant">
+      <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-3 lg:px-4">
         <Skeleton className="size-11 rounded-2xl" />
         <Skeleton className="h-5 w-32" />
         <Skeleton className="size-11 rounded-2xl" />

@@ -5,7 +5,6 @@ export function buildBaseTools(ctx: ToolFactoryContext) {
   const {
     su,
     conversationId,
-    customerId,
     conversationState,
     waClient,
     customerPhone,
@@ -14,29 +13,47 @@ export function buildBaseTools(ctx: ToolFactoryContext) {
   } = ctx
 
   return {
-    start_conversation: botTool(
-      'מאתחל שיחה חדשה עם לקוח ומעביר לשלב איסוף פרטי הקעקוע. קראו לכלי זה מיד כשהלקוח פונה בפעם הראשונה.',
+    start_booking: botTool(
+      'מתחיל תהליך תיאום תור חדש ומעביר לשלב בירור מסלול התיאום (WANTS_TO_BOOK). קרא לכלי זה אך ורק כאשר הלקוח מביע במפורש רצון לתאם תור או לקבוע פגישה.',
       z.object({}),
       async () => {
-        if (conversationState !== 'NEW' && conversationState !== 'COMPLETED') {
+        if (
+          conversationState !== 'NEW' &&
+          conversationState !== 'COMPLETED' &&
+          conversationState !== 'AWAITING_APPOINTMENT'
+        ) {
           return {
             status: 'error',
-            message: `השיחה כבר נמצאת בתהליך עבודה פעיל במצב ${conversationState}. אל תאתחל אותה מחדש.`,
+            message: `השיחה כבר נמצאת בתהליך עבודה פעיל במצב ${conversationState}.`,
           }
         }
-        await transitionState('COLLECTING_INFO', { reason: 'start_conversation' })
-        return { status: 'success', message: 'השיחה אותחלה. המשך לשאול על רעיון הקעקוע.' }
+        await transitionState('WANTS_TO_BOOK', {
+          reason: 'start_booking',
+          extraFields: { tattoo_info: null },
+        })
+        return {
+          status: 'success',
+          message: 'תהליך התיאום החל ומצב השיחה עודכן ל-WANTS_TO_BOOK. הצג ללקוח בטבעיות את שתי האפשרויות: פגישת ייעוץ וסקיצה אישית בסטודיו (כ-30 דק) או סשן קעקוע ישיר.',
+        }
       }
     ),
 
-    save_client_name: botTool(
-      'שומר את שם הלקוח שנמסר בשיחה בכרטיס הלקוח.',
+    choose_booking_track: botTool(
+      'מגדיר את מסלול התיאום שנבחר (sketch לפגישת סקיצה וייעוץ כ-30 דק\', או tattoo לסשן קעקוע ישיר) ומעביר את השיחה לשלב איסוף הפרטים (COLLECTING_INFO). קרא לכלי ברגע שהלקוח בוחר כיוון, או כשמוסר פרטים על מועד או רעיון.',
       z.object({
-        fullName: z.string().min(1).max(50).describe('השם המלא של הלקוח בלבד (שם פרטי ומשפחה, ללא תארים או תוספות, מקסימום 50 תווים)'),
+        track: z.enum(['sketch', 'tattoo']).describe('סוג התור שנבחר: sketch לסקיצה/ייעוץ, tattoo לקעקוע ישיר'),
       }),
-      async ({ fullName }) => {
-        await su.collection('customers').update(customerId, { name: fullName })
-        return { status: 'success', message: 'שם הלקוח נשמר בהצלחה.' }
+      async ({ track }) => {
+        await transitionState('COLLECTING_INFO', {
+          reason: 'choose_booking_track',
+          extraFields: {
+            tattoo_info: { appointmentType: track },
+          },
+        })
+        return {
+          status: 'success',
+          message: `מסלול התיאום נקבע כ-${track === 'sketch' ? 'פגישת סקיצה וייעוץ (כ-30 דק)' : 'סשן קעקוע ישיר'} ומצב השיחה עודכן ל-COLLECTING_INFO. המשך כעת בבירור אמן, מועדים ובדיקת זמינות לפי כללי COLLECTING_INFO.`,
+        }
       }
     ),
 

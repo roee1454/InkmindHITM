@@ -70,6 +70,28 @@ export const deleteStudioClosure = createServerFn({ method: 'POST' })
     return { ok: true }
   })
 
+const updateClosureGroupSchema = z.object({
+  ids: z.array(z.string()).min(1, 'לפחות מזהה אחד נדרש'),
+  reason: z.string().optional(),
+  date: z.string().optional(),
+})
+
+export const updateStudioClosureGroup = createServerFn({ method: 'POST' })
+  .validator(updateClosureGroupSchema)
+  .handler(async ({ data }) => {
+    await requireAdmin()
+    const su = await getSuperuserClient()
+    await Promise.all(
+      data.ids.map((id) =>
+        su.collection('studio_closures').update(id, {
+          ...(data.reason !== undefined ? { reason: data.reason } : {}),
+          ...(data.date && data.ids.length === 1 ? { date: data.date } : {}),
+        }),
+      ),
+    )
+    return { ok: true }
+  })
+
 /** Years the Add-closure modal's "close forever" picker covers — Hebrew holidays don't fall on
  *  the same Gregorian date every year, so "forever" means listing out each year's actual date
  *  rather than a single recurring month/day match (see `isStudioClosedOn`'s doc comment). Ten

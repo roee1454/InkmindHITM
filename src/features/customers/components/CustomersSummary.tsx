@@ -13,11 +13,11 @@ export const CustomersSummary: React.FC<CustomersSummaryProps> = ({
 }) => {
   return (
     <div className="flex items-center gap-3 px-1 font-assistant" dir="rtl">
-      <span className="text-[13px] font-extrabold text-muted-foreground">{totalCustomers} לקוחות</span>
+      <span className="text-sm font-extrabold text-muted-foreground">{totalCustomers} לקוחות</span>
       <button
         type="button"
         onClick={onToggleReturning}
-        className={`cursor-pointer text-[13px] font-bold ${returningOnly ? 'text-primary underline' : 'text-primary'}`}
+        className={`cursor-pointer text-sm font-bold ${returningOnly ? 'text-primary underline' : 'text-primary'}`}
       >
         חוזרים בלבד
       </button>

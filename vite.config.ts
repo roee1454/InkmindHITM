@@ -15,6 +15,7 @@ export default defineConfig(({ command, mode }) => {
       // Vite blocks requests from unknown Host headers; allow ngrok's tunnel domains so
       // Meta's webhook (and local tunnel testing) reach the dev server. Dev-only.
       allowedHosts: ['.ngrok-free.dev', '.ngrok-free.app', '.ngrok.app', '.ngrok.io'],
+      host: true,
     },
     plugins: [
       isDev && devtools(),

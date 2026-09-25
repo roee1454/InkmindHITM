@@ -1,6 +1,6 @@
 import { forwardRef } from 'react'
 import { useIsMutating } from '@tanstack/react-query'
-import { Sparkles } from 'lucide-react'
+import { Sparkles } from '@/components/ui/icon'
 import { useMcpConversationsList, useMcpPendingActionsCount } from '../hooks/useMcpConversation'
 
 /** The floating trigger — meant to be passed as `McpPanel`'s `anchor` prop, which wraps it in a
@@ -37,7 +37,7 @@ export const McpBubble = forwardRef<HTMLButtonElement, React.ButtonHTMLAttribute
         type="button"
         aria-label="עוזר MCP"
         aria-busy={isBusy}
-        className="fixed end-[18px] bottom-[calc(var(--app-bottom-nav-h)+32px)] z-50 flex size-[58px] cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_14px_30px_-10px_rgba(0,0,0,0.4)] transition-transform active:scale-95 lg:end-6 lg:bottom-6"
+        className="fixed end-[18px] bottom-[calc(var(--app-bottom-nav-h)+32px)] z-50 flex size-[58px] cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95 lg:end-6 lg:bottom-6"
         {...props}
       >
         {isBusy && (
@@ -50,12 +50,12 @@ export const McpBubble = forwardRef<HTMLButtonElement, React.ButtonHTMLAttribute
         {(hasPending || hasUnreadAnswer) && (
           <span
             className={`absolute -top-0.5 -start-0.5 block size-[15px] rounded-full border-[2.5px] border-background ${
-              hasPending ? 'bg-amber-500' : 'bg-emerald-500'
+              hasPending ? 'bg-accent-ink' : 'bg-status-done'
             }`}
           />
         )}
         {hasPending && (
-          <span className="absolute -top-1.5 -end-1.5 flex min-w-[18px] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-extrabold text-white">
+          <span className="absolute -top-1.5 -end-1.5 flex min-w-[18px] items-center justify-center rounded-full bg-accent-ink px-1 text-2xs font-extrabold text-white">
             {pendingCount}
           </span>
         )}

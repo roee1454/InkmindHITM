@@ -9,36 +9,46 @@
  * (bot_active / escalated / staff_handling / closed) is the who-is-driving axis and is
  * NOT governed here — escalations legitimately happen from any state.
  *
- * KEEP IN SYNC: pocketbase/pb_hooks/cron.pb.js performs the same
- * AWAIT_* → COLLECTING_INFO release inside PocketBase's own cron (it can't call this
- * module). If the table changes around those states, update the hook too.
+ * The 48h stale-pending release (lifecycle-service.ts processStalePendingAppointments) moves
+ * AWAIT_* → COLLECTING_INFO through transition() like every other caller.
  */
 import type PocketBase from 'pocketbase'
 import type { ConversationState } from '@/integrations/ai/prompts'
+import type { LeadStage } from '@/features/leads/types'
 import { addSystemNotification } from '@/features/notifications/server/notifications'
 
 export const TRANSITIONS: Record<ConversationState, ConversationState[]> = {
-  // Greeting → info collection; COMPLETED covers a conversation opened by mistake.
-  NEW: ['COLLECTING_INFO', 'COMPLETED'],
-  // Info collected → pending hold awaits pricing. COMPLETED: customer walks away.
-  COLLECTING_INFO: ['AWAIT_PRICE_OFFER', 'COMPLETED'],
-  // Staff priced it → customer pays. Back to COLLECTING_INFO: hold cancelled/expired.
-  AWAIT_PRICE_OFFER: ['AWAIT_PAYMENT', 'COLLECTING_INFO'],
-  // Deposit confirmed → final summary sent. Back: cancellation or expired hold.
-  AWAIT_PAYMENT: ['AWAIT_FINAL_CONFIRMATION', 'COLLECTING_INFO'],
-  // Customer confirmed → booked. Back: cancellation or expired hold.
-  AWAIT_FINAL_CONFIRMATION: ['AWAITING_APPOINTMENT', 'COLLECTING_INFO'],
-  // Appointment done → NPS ask; COMPLETED: closed without NPS; COLLECTING_INFO: cancelled → rebook.
-  AWAITING_APPOINTMENT: ['AWAIT_NPS_SCORE', 'COMPLETED', 'COLLECTING_INFO'],
+  // Greeting / non-pushy advisor. Can go to WANTS_TO_BOOK (explicit intent), COLLECTING_INFO, or COMPLETED.
+  NEW: ['WANTS_TO_BOOK', 'COLLECTING_INFO', 'COMPLETED'],
+  // Inquiring appointment route (sketch consult vs tattoo). Can go to COLLECTING_INFO, AWAIT_PRICE_OFFER, WAITLIST, NEW, or COMPLETED.
+  WANTS_TO_BOOK: ['COLLECTING_INFO', 'AWAIT_PRICE_OFFER', 'WAITLIST', 'NEW', 'COMPLETED'],
+  // Info collected → pending hold awaits pricing, or waitlist if full.
+  COLLECTING_INFO: ['AWAIT_PRICE_OFFER', 'WAITLIST', 'NEW', 'COMPLETED'],
+  // WAITLIST: standby queue. Can go to WANTS_TO_BOOK, COLLECTING_INFO, AWAIT_PAYMENT (when slot offered), or COMPLETED.
+  WAITLIST: ['WANTS_TO_BOOK', 'COLLECTING_INFO', 'AWAIT_PAYMENT', 'COMPLETED'],
+  // Staff priced it → health notice, payment, manual confirm override (Bug 45), or cancelled back to COLLECTING_INFO.
+  AWAIT_PRICE_OFFER: ['AWAIT_HEALTH_NOTICE', 'AWAIT_PAYMENT', 'AWAITING_APPOINTMENT', 'COLLECTING_INFO'],
+  // Health declaration step before payment.
+  AWAIT_HEALTH_NOTICE: ['AWAIT_PAYMENT', 'AWAITING_APPOINTMENT', 'COLLECTING_INFO', 'COMPLETED'],
+  // Deposit confirmed → final summary sent, manual confirm override (Bug 45), or cancellation.
+  AWAIT_PAYMENT: ['AWAIT_FINAL_CONFIRMATION', 'AWAITING_APPOINTMENT', 'COLLECTING_INFO'],
+  // Customer confirmed → booked. Back: cancellation, expired hold, or staff re-opening payment/quote.
+  AWAIT_FINAL_CONFIRMATION: ['AWAITING_APPOINTMENT', 'AWAIT_PAYMENT', 'AWAIT_PRICE_OFFER', 'COLLECTING_INFO'],
+  // Appointment done → NPS ask; COMPLETED: closed; COLLECTING_INFO: cancelled; WANTS_TO_BOOK: sketch done -> tattoo booking.
+  AWAITING_APPOINTMENT: ['AWAIT_NPS_SCORE', 'COMPLETED', 'COLLECTING_INFO', 'WANTS_TO_BOOK'],
   AWAIT_NPS_SCORE: ['COMPLETED'],
   // A returning customer restarts the funnel.
-  COMPLETED: ['COLLECTING_INFO'],
+  COMPLETED: ['NEW', 'WANTS_TO_BOOK', 'COLLECTING_INFO'],
 }
 
 const VALID_STATES = new Set(Object.keys(TRANSITIONS) as ConversationState[])
 
 function toState(raw: unknown): ConversationState {
   return VALID_STATES.has(raw as ConversationState) ? (raw as ConversationState) : 'NEW'
+}
+
+export function stateToLeadStage(state: ConversationState): LeadStage {
+  return state as LeadStage
 }
 
 export class InvalidTransitionError extends Error {
@@ -83,21 +93,43 @@ export async function transition(
       .catch(() => null)
 
   if (from !== to && !TRANSITIONS[from].includes(to)) {
-    console.error(`[state-machine] REJECTED ${from} → ${to} (${opts.actor}: ${opts.reason}) conversation=${conversationId}`)
-    await audit(`REJECTED: ${opts.reason}`)
-    await addSystemNotification({
-      title: 'נחסם מעבר מצב שיחה לא חוקי',
-      message: `ניסיון מעבר ${from} → ${to} (גורם: ${opts.actor}, סיבה: ${opts.reason}). המצב לא שונה — ייתכן שנדרשת בדיקה ידנית של השיחה.`,
-      type: 'error',
-      link: `/dashboard/conversations?chatId=${conversationId}`,
-    }).catch(() => null)
-    throw new InvalidTransitionError(from, to)
+    // If actor is staff and it's a manual override to re-open pricing/payment/scheduling, allow it with audit
+    if (opts.actor === 'staff' && (to === 'AWAIT_PAYMENT' || to === 'AWAIT_PRICE_OFFER' || to === 'AWAITING_APPOINTMENT' || to === 'COLLECTING_INFO')) {
+      console.warn(`[state-machine] Staff override: allowing ${from} → ${to} (${opts.reason}) conversation=${conversationId}`)
+      await audit(`STAFF_OVERRIDE: ${opts.reason}`)
+    } else {
+      console.error(`[state-machine] REJECTED ${from} → ${to} (${opts.actor}: ${opts.reason}) conversation=${conversationId}`)
+      await audit(`REJECTED: ${opts.reason}`)
+      await addSystemNotification({
+        title: 'נחסם מעבר מצב שיחה לא חוקי',
+        message: `ניסיון מעבר ${from} → ${to} (גורם: ${opts.actor}, סיבה: ${opts.reason}). המצב לא שונה — ייתכן שנדרשת בדיקה ידנית של השיחה.`,
+        type: 'error',
+        link: `/dashboard/conversations?chatId=${conversationId}`,
+      }).catch(() => null)
+      throw new InvalidTransitionError(from, to)
+    }
   }
 
   await su.collection('conversations').update(conversationId, {
     state: to,
+    // A finished funnel ends the project the bot was booking for; the next inquiry starts a new one.
+    ...(to === 'COMPLETED' ? { active_project: '' } : {}),
     ...(opts.extraFields ?? {}),
   })
+
+  // Sync customer lead_stage (Bug 43)
+  const customerId = conversation.customer as string | undefined
+  if (customerId) {
+    try {
+      const customer = await su.collection('customers').getOne(customerId)
+      const targetStage = stateToLeadStage(to)
+      if (customer.lead_stage !== targetStage) {
+        await su.collection('customers').update(customerId, { lead_stage: targetStage })
+      }
+    } catch (err) {
+      console.warn(`[state-machine] Failed to sync customer lead_stage for ${customerId}:`, err)
+    }
+  }
 
   if (from !== to) {
     await audit(opts.reason)

@@ -1,14 +1,31 @@
-import { ChevronLeft } from 'lucide-react'
-import { useIsMobile } from '@/hooks/use-media-query'
+import { ChevronLeft } from '@/components/ui/icon'
+import { useIsMobile } from '#/hooks/useMediaQuery'
 
 const STAGE_TRANSLATIONS: Record<string, { label: string; pill: string }> = {
+  // Lowercase legacy keys
   new: { label: 'פנייה חדשה', pill: 'bg-muted text-muted-foreground' },
   intake: { label: 'איסוף פרטים', pill: 'bg-muted text-muted-foreground' },
   awaiting_price: { label: 'ממתין להצעת מחיר', pill: 'bg-primary/10 text-primary' },
   awaiting_payment: { label: 'ממתין למקדמה', pill: 'bg-warning/12 text-warning' },
   booked: { label: 'נקבע תור', pill: 'bg-success/12 text-success' },
   expired: { label: 'פג תוקף', pill: 'bg-destructive/10 text-destructive' },
+  // LeadStage uppercase keys
+  NEW: { label: 'ליד חדש', pill: 'bg-muted text-muted-foreground' },
+  WANTS_TO_BOOK: { label: 'בירור מסלול', pill: 'bg-muted text-muted-foreground' },
+  COLLECTING_INFO: { label: 'איסוף פרטים', pill: 'bg-muted text-muted-foreground' },
+  WAITLIST: { label: 'רשימת המתנה', pill: 'bg-muted text-muted-foreground' },
+  AWAIT_PRICE_OFFER: { label: 'ממתין לתמחור', pill: 'bg-primary/10 text-primary' },
+  AWAIT_HEALTH_NOTICE: { label: 'הצהרת בריאות', pill: 'bg-primary/10 text-primary' },
+  AWAIT_PAYMENT: { label: 'ממתין למקדמה', pill: 'bg-warning/12 text-warning' },
+  AWAIT_FINAL_CONFIRMATION: { label: 'אישור סופי', pill: 'bg-warning/12 text-warning' },
+  AWAITING_APPOINTMENT: { label: 'נקבע תור', pill: 'bg-success/12 text-success' },
+  AWAIT_NPS_SCORE: { label: 'משוב ודירוג', pill: 'bg-success/12 text-success' },
+  COMPLETED: { label: 'סגור / הושלם', pill: 'bg-success/12 text-success' },
 }
+
+/** Row caps that the card's fixed height is sized around — keep the two in step. */
+const VISIBLE_MOBILE = 3
+const VISIBLE_DESKTOP = 4
 
 interface RecentLeadsCardProps {
   leads: Array<{
@@ -23,10 +40,13 @@ interface RecentLeadsCardProps {
 
 export function RecentLeadsCard({ leads, onViewAll, onLeadClick }: RecentLeadsCardProps) {
   const isMobile = useIsMobile()
-  const visibleLeads = leads.slice(0, isMobile ? 3 : 4)
+  const visibleLeads = leads.slice(0, isMobile ? VISIBLE_MOBILE : VISIBLE_DESKTOP)
 
   return (
-    <div className="flex flex-col rounded-2xl border border-border/80 bg-card shadow-2xs sm:rounded-3xl">
+    // Fixed height, matching CloseAppointmentsCard exactly: the two sit side by side in a
+    // grid, so a card that sizes to its rows leaves the pair ragged whenever one has fewer
+    // leads than the other — or no leads at all.
+    <div className="card-native flex h-65 flex-col overflow-hidden sm:h-84">
       <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3 sm:px-6 sm:pt-5">
         <div className="flex items-center gap-2">
           <h3 className="text-base font-extrabold text-foreground">פניות אחרונות</h3>
@@ -47,26 +67,22 @@ export function RecentLeadsCard({ leads, onViewAll, onLeadClick }: RecentLeadsCa
       </div>
 
       {visibleLeads.length > 0 ? (
-        <div className="divide-y divide-border/60">
+        <div className="min-h-0 flex-1 divide-y divide-border/60 overflow-hidden">
           {visibleLeads.map((lead) => {
             const translation = STAGE_TRANSLATIONS[lead.stage] ?? {
               label: lead.stage,
               pill: 'bg-muted text-muted-foreground',
             }
             const displayName = lead.name || 'לקוח ללא שם'
-            const initial = displayName.charAt(0)
 
             return (
               <div
                 key={lead.chatId}
                 onClick={() => onLeadClick(lead.chatId)}
-                className="flex cursor-pointer select-none items-center gap-3.5 px-5 py-3.5 transition-colors hover:bg-muted/40 active:bg-muted sm:px-6"
+                className="flex cursor-pointer select-none items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-muted/40 active:bg-muted sm:px-6"
               >
-                <div className="avatar-native size-10 shrink-0 text-sm">
-                  {initial}
-                </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[14.5px] font-extrabold text-foreground">
+                  <div className="truncate text-sm font-extrabold text-foreground">
                     {displayName}
                   </div>
                   <div className="truncate text-xs font-medium text-muted-foreground">
@@ -79,7 +95,7 @@ export function RecentLeadsCard({ leads, onViewAll, onLeadClick }: RecentLeadsCa
           })}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center px-5 py-10 text-center text-sm font-semibold text-muted-foreground">
+        <div className="flex min-h-0 flex-1 items-center justify-center px-5 text-center text-sm font-semibold text-muted-foreground">
           אין פניות אחרונות במערכת
         </div>
       )}

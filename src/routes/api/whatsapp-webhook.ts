@@ -91,3 +91,13 @@ export const Route = createFileRoute('/api/whatsapp-webhook')({
     },
   },
 })
+
+// Auto-start the BullMQ conversation-turn worker on server runtime (guarded against test
+// environments) — same pattern as the lifecycle runner bootstrap in internal.lifecycle-tick.ts.
+if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'test') {
+  import('@/lib/queue/conversation-turn-worker')
+    .then((m) => {
+      m.startConversationTurnWorker()
+    })
+    .catch(() => null)
+}

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { XIcon } from "lucide-react"
+import { XIcon } from '@/components/ui/icon'
 import { Dialog as SheetPrimitive } from "radix-ui"
 
 import { cn } from "#/lib/utils.ts"
@@ -85,13 +85,13 @@ function SheetContent({
           // ring drawn around the whole panel.
           "fixed z-50 flex flex-col gap-4 bg-card font-assistant shadow-lg outline-none fill-mode-both data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=open]:animate-in data-[state=open]:duration-300",
           side === "right" &&
-            "inset-y-0 right-0 h-svh w-[85vw] max-w-sm rounded-e-3xl border-e border-border/80 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+            "inset-y-0 right-0 h-svh w-[85vw] max-w-sm rounded-e-3xl border-e border-border data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
           side === "left" &&
-            "inset-y-0 left-0 h-svh w-[85vw] max-w-sm rounded-s-3xl border-s border-border/80 data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
+            "inset-y-0 left-0 h-svh w-[85vw] max-w-sm rounded-s-3xl border-s border-border data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
           side === "bottom" &&
-            "inset-x-0 bottom-0 max-h-[92svh] rounded-t-3xl border-t border-border/80 px-5 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+            "inset-x-0 bottom-0 max-h-[92svh] rounded-t-3xl border-t border-border px-5 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
           side === "top" &&
-            "inset-x-0 top-0 h-auto rounded-b-3xl border-b border-border/80 data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+            "inset-x-0 top-0 h-auto rounded-b-3xl border-b border-border data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
           className
         )}
         {...props}
@@ -118,7 +118,7 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-header"
-      className={cn("flex flex-col gap-1 border-b border-border/60 p-5 font-assistant", className)}
+      className={cn("flex flex-col gap-1 border-b border-border p-5 font-assistant text-right items-start pe-8", className)}
       {...props}
     />
   )
@@ -128,7 +128,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-footer"
-      className={cn("mt-auto flex flex-col gap-2 border-t border-border/60 p-5", className)}
+      className={cn("mt-auto flex flex-col gap-2 border-t border-border p-5", className)}
       {...props}
     />
   )

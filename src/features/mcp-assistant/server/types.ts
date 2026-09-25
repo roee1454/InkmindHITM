@@ -9,19 +9,24 @@ export interface McpConversation {
   created: string
 }
 
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | JsonValue[]
+  | { [key: string]: JsonValue }
+
 export interface McpToolCallSummary {
   toolName: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tool args are arbitrary JSON;
-  // `Record<string, unknown>` trips TanStack Start's serializable-return-type checker on the
-  // `createServerFn` handlers that return these (see mcp-conversations.ts).
-  args: Record<string, any>
+  args: Record<string, JsonValue>
   status: 'success' | 'error' | 'pending_approval'
   summary: string
   rowCount?: number
   /** First 20 rows only (see agent.ts) — enough for "show data" in `McpToolCallCard` without
    *  risking the `mcp_messages.tool_calls` json field's size cap on a large list result. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see args above
-  data?: any
+  data?: JsonValue
 }
 
 export interface McpMessage {
@@ -51,7 +56,7 @@ export interface McpAction {
   conversationId: string
   messageId: string
   toolName: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see McpToolCallSummary.args
+   
   args: Record<string, any>
   status: McpActionStatus
   diff: McpActionDiff
