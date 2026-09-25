@@ -1,25 +1,11 @@
 import { z } from 'zod'
 import { listLeads, moveLead } from '@/features/leads/server/leads'
 import { canEditLead } from '@/features/leads/utils/permissions'
+import { conversationStateLabel } from '@/features/conversations/utils/labels'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { fuzzySearchByName, mcpReadTool, mcpWriteTool } from './shared'
 import type { McpToolContext } from './shared'
 import type { McpActionDiff } from '../types'
-
-const STAGE_LABELS: Record<string, string> = {
-  NEW: 'ליד חדש',
-  WANTS_TO_BOOK: 'בירור מסלול',
-  COLLECTING_INFO: 'איסוף פרטים',
-  WAITLIST: 'רשימת המתנה',
-  AWAIT_PRICE_OFFER: 'ממתין לתמחור',
-  AWAIT_HEALTH_NOTICE: 'הצהרת בריאות',
-  AWAIT_PAYMENT: 'ממתין למקדמה',
-  AWAIT_FINAL_CONFIRMATION: 'אישור סופי',
-  AWAITING_APPOINTMENT: 'נקבע תור',
-  PROJECT_IN_PROGRESS: 'באמצע פרויקט',
-  AWAIT_NPS_SCORE: 'משוב ודירוג',
-  COMPLETED: 'סגור / הושלם',
-}
 
 const stageEnum = z.enum([
   'NEW',
@@ -63,7 +49,7 @@ export function buildLeadsTools(ctx: McpToolContext) {
             name: l.name,
             phone: l.phone,
             stage: l.stage,
-            stageLabel: STAGE_LABELS[l.stage] || l.stage,
+            stageLabel: conversationStateLabel(l.stage),
             updatedAt: l.updatedAt,
           })),
         }
@@ -77,7 +63,7 @@ export function buildLeadsTools(ctx: McpToolContext) {
         const all = await listLeads()
         const lead = all.find((l) => l.id === customerId)
         if (!lead) return { status: 'error', message: 'ליד לא נמצא.' }
-        return { status: 'success', message: 'פרטי הליד.', data: { ...lead, stageLabel: STAGE_LABELS[lead.stage] || lead.stage } }
+        return { status: 'success', message: 'פרטי הליד.', data: { ...lead, stageLabel: conversationStateLabel(lead.stage) } }
       },
     ),
 
@@ -107,8 +93,8 @@ export function buildLeadsTools(ctx: McpToolContext) {
           rows: [
             {
               label: (customer.name as string) || (customer.phone as string) || 'ליד',
-              before: STAGE_LABELS[currentStage] || currentStage,
-              after: STAGE_LABELS[stage] || stage,
+              before: conversationStateLabel(currentStage),
+              after: conversationStateLabel(stage),
             },
           ],
         } satisfies McpActionDiff

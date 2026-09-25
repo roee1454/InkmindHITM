@@ -311,6 +311,7 @@ describe('lifecycle-service', () => {
         expiredLeads: 0,
         pastCompleted: 0,
         stalePendingCancelled: 0,
+        reconciled: 0,
         total: 0,
       })
     })

@@ -2,6 +2,7 @@
  * Canonical Hebrew labels for conversation statuses and staff call reasons.
  * Single source of truth across list items, thread headers, action docks, and dialogs.
  */
+import type { ConversationState } from '@/integrations/ai/prompts'
 
 export const STATUS_LABEL: Record<string, string> = {
   all: 'הכל',
@@ -9,6 +10,26 @@ export const STATUS_LABEL: Record<string, string> = {
   escalated: 'ממתין למענה',
   staff_handling: 'בטיפול צוות',
   closed: 'סגור',
+}
+
+/** The bot's dialogue state (conversations.state), as staff read it. */
+export const CONVERSATION_STATE_LABELS: Record<ConversationState, string> = {
+  NEW: 'ליד חדש',
+  WANTS_TO_BOOK: 'בירור מסלול',
+  COLLECTING_INFO: 'איסוף פרטים',
+  WAITLIST: 'רשימת המתנה',
+  AWAIT_PRICE_OFFER: 'ממתין לתמחור',
+  AWAIT_HEALTH_NOTICE: 'הצהרת בריאות',
+  AWAIT_PAYMENT: 'ממתין למקדמה',
+  AWAIT_FINAL_CONFIRMATION: 'אישור סופי',
+  AWAITING_APPOINTMENT: 'נקבע תור',
+  PROJECT_IN_PROGRESS: 'באמצע פרויקט',
+  AWAIT_NPS_SCORE: 'משוב ודירוג',
+  COMPLETED: 'סגור / הושלם',
+}
+
+export function conversationStateLabel(state: string): string {
+  return CONVERSATION_STATE_LABELS[state as ConversationState] ?? state
 }
 
 export const STAFF_REASON_LABELS: Record<string, string> = {

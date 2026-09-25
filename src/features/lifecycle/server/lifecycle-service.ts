@@ -6,6 +6,7 @@ import { createWhatsAppClient, WhatsAppApiError } from '@/integrations/whatsapp-
 import type { TemplateComponent } from '@/integrations/whatsapp-cloud-api/client'
 import { stateAttribution, transition } from '@/features/conversations/server/state-machine'
 import { applyConversationAdvance, isConsultation, planConversationAdvance } from '@/features/conversations/server/after-appointment.server'
+import { applyReconcileAction, planReconciliation } from '@/features/conversations/server/reconciler.server'
 import { logWhatsAppError } from '@/features/settings/server/whatsapp-error-log'
 import { addSystemNotification } from '@/features/notifications/server/notifications'
 import { enqueueLifecycleMessage } from '@/lib/queue/conversation-turn-queue'
@@ -43,6 +44,7 @@ export type LifecyclePlannedAction =
   | { kind: 'cancel_stale_pending'; appointmentId: string }
   | { kind: 'expire_lead'; customerId: string }
   | { kind: 'transition_conversation'; conversationId: string; to: string; reason: string }
+  | { kind: 'reconcile_conversation'; conversationId: string; from: string; to: string | null; reason: string }
 
 export interface LifecycleRunOptions {
   /** Record the plan without sending messages or writing records. */
@@ -693,6 +695,30 @@ export async function processStalePendingAppointments(
   return stale.length
 }
 
+/**
+ * 9. Reconcile conversation states with the facts (conversations/utils/state-drift.ts).
+ * Runs after the other processors, so it sees what they did and never races them for the same
+ * conversation; in a dry run, where they didn't act, it skips conversations they already plan to move.
+ */
+export async function processConversationDrift(su: PocketBase, now: Date = new Date(), options: LifecycleRunOptions = {}): Promise<number> {
+  const planned = new Set(
+    (options.plan ?? []).flatMap((action) => (action.kind === 'transition_conversation' ? [action.conversationId] : [])),
+  )
+  const actions = (await planReconciliation(su, now).catch((err: unknown) => {
+    console.error('[lifecycle] reconciliation failed:', err)
+    return []
+  })).filter((action) => !planned.has(action.conversationId))
+
+  for (const action of actions) {
+    await effect(
+      options,
+      { kind: 'reconcile_conversation', conversationId: action.conversationId, from: action.from, to: action.to, reason: action.reason },
+      () => applyReconcileAction(su, action),
+    ).catch((err: unknown) => console.error(`[lifecycle] reconciling ${action.conversationId} failed:`, err))
+  }
+  return actions.length
+}
+
 export interface LifecycleTickResult {
   reminders3d: number
   reminders1d: number
@@ -702,6 +728,7 @@ export interface LifecycleTickResult {
   expiredLeads: number
   pastCompleted: number
   stalePendingCancelled: number
+  reconciled: number
   total: number
   /** Present when the caller asked for the plan (always for dry runs). */
   plan?: LifecyclePlannedAction[]
@@ -732,9 +759,10 @@ export async function runLifecycleTick(
       processPastConfirmedAppointments(su, now, run),
       processStalePendingAppointments(su, now, run),
     ])
+  const reconciled = await processConversationDrift(su, now, run)
 
   const total =
-    reminders3d + reminders1d + aftercare + healingChecks + stalledNudges + expiredLeads + pastCompleted + stalePendingCancelled
+    reminders3d + reminders1d + aftercare + healingChecks + stalledNudges + expiredLeads + pastCompleted + stalePendingCancelled + reconciled
   return {
     reminders3d,
     reminders1d,
@@ -744,6 +772,7 @@ export async function runLifecycleTick(
     expiredLeads,
     pastCompleted,
     stalePendingCancelled,
+    reconciled,
     total,
     plan: run.plan,
   }

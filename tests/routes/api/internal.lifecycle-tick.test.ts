@@ -19,6 +19,7 @@ vi.mock('@/features/lifecycle/server/lifecycle-service', () => ({
     expiredLeads: 0,
     pastCompleted: 0,
     stalePendingCancelled: 0,
+    reconciled: 0,
     total: 3,
   }),
 }))
@@ -36,6 +37,7 @@ describe('handleLifecycleTick', () => {
       expiredLeads: 0,
       pastCompleted: 0,
       stalePendingCancelled: 0,
+      reconciled: 0,
       total: 3,
     })
   })

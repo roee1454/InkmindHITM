@@ -36,7 +36,7 @@
 - ביטול, "לא הגיע" ו"ייעוץ הסתיים" מזיזים את השיחה רק אם היא עוסקת בתור הזה.
 - החזקה שפגה משחררת גם שיחה שממתינה להצהרת בריאות.
 
-**להשלים ב-B3.5 (Reconciler):** להוסיף `AWAIT_HEALTH_NOTICE` ו-`AWAIT_FINAL_CONFIRMATION` בלי החזקה. להוסיף גם שיחה שנשארה ב-`AWAIT_PRICE_OFFER` או ב-`AWAIT_PAYMENT` אחרי שהצוות מחק או ביטל את התור ישירות ביומן.
+**נסגר ב-B3.5 (Reconciler):** כל ארבעת שלבי ההחזקה (`AWAIT_PRICE_OFFER`, `AWAIT_HEALTH_NOTICE`, `AWAIT_PAYMENT`, `AWAIT_FINAL_CONFIRMATION`) בלי החזקה, כולל החזקה שהצוות מחק או ביטל ישירות ביומן.
 
 ## עקרונות
 

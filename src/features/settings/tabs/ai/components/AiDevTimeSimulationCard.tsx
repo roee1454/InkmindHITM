@@ -31,6 +31,10 @@ function describeAction(action: LifecyclePlannedAction): string {
       return `סגירת הליד הלא פעיל ${action.customerId}`
     case 'transition_conversation':
       return `מעבר השיחה ${action.conversationId} ל-${action.to}`
+    case 'reconcile_conversation':
+      return action.to
+        ? `תיקון מצב השיחה ${action.conversationId}: ${action.from} ← ${action.to}`
+        : `ניתוק פרויקט שהסתיים מהשיחה ${action.conversationId}`
   }
 }
 
