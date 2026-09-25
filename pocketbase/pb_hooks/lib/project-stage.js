@@ -75,8 +75,26 @@ function logTransition(app, projectId, from, to, attribution) {
  * For a project being saved (hook on `projects`): consumes the writer's stage_actor/stage_reason,
  * derives the stage and, when it changed, stamps and logs it. The caller saves the record.
  */
+const PROJECT_HAS_ACTIVE_APPOINTMENTS = 'integrity:project_has_active_appointments'
+
+/** Losing a customer who still has a booking is a contradiction: cancel the booking first. */
+function assertCanBeLost(app, project, original) {
+  const becomesLost = project.getString('lost_at') && !(original && original.getString('lost_at'))
+  if (!becomesLost) return
+  const active = app.findRecordsByFilter(
+    'appointments',
+    "project = {:project} && start_time > {:now} && (status = 'pending' || status = 'confirmed')",
+    '',
+    1,
+    0,
+    { project: project.id, now: pbNow() },
+  )
+  if (active.length > 0) throw new BadRequestError(PROJECT_HAS_ACTIVE_APPOINTMENTS)
+}
+
 function applyStage(app, project, original) {
   if (!stageTracked(app)) return
+  assertCanBeLost(app, project, original)
   const attribution = { actor: project.getString('stage_actor'), reason: project.getString('stage_reason') }
   project.set('stage_actor', '')
   project.set('stage_reason', '')
@@ -117,4 +135,4 @@ function refreshProjects(app, projectIds, attribution) {
   }
 }
 
-module.exports = { STAGES, deriveProjectStage, applyStage, refreshProjects }
+module.exports = { STAGES, PROJECT_HAS_ACTIVE_APPOINTMENTS, deriveProjectStage, applyStage, refreshProjects }

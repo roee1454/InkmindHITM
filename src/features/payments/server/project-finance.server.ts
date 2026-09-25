@@ -1,6 +1,7 @@
 import type PocketBase from 'pocketbase'
 import type { RecordModel } from 'pocketbase'
 import type { AppointmentKind, AppointmentStatus } from '@/features/calendar/types'
+import { loadProjectPolicy } from '@/features/settings/server/project-policy'
 import { computeProjectBalance } from '../utils/balance'
 import type { LedgerAppointment, LedgerPayment, PaymentKind, PaymentMethod, PaymentStatus, ProjectFinance } from '../types'
 
@@ -34,10 +35,11 @@ export function toLedgerPayment(record: RecordModel): LedgerPayment {
 }
 
 export async function loadProjectFinance(su: PocketBase, projectId: string): Promise<ProjectFinance> {
-  const [project, appointments, payments] = await Promise.all([
+  const [project, appointments, payments, policy] = await Promise.all([
     su.collection('projects').getOne(projectId),
     su.collection('appointments').getFullList({ filter: su.filter('project = {:p}', { p: projectId }), sort: 'start_time' }),
     su.collection('payments').getFullList({ filter: su.filter('project = {:p}', { p: projectId }), sort: 'created' }),
+    loadProjectPolicy(su),
   ])
   const ledgerAppointments = appointments.map(toLedgerAppointment)
   const ledgerPayments = payments.map(toLedgerPayment)
@@ -47,5 +49,14 @@ export async function loadProjectFinance(su: PocketBase, projectId: string): Pro
     appointments: ledgerAppointments,
     payments: ledgerPayments,
     balance: computeProjectBalance(ledgerAppointments, ledgerPayments),
+    quoteMin: positiveOrNull(project.quote_min),
+    quoteMax: positiveOrNull(project.quote_max),
+    estimatedSessions: positiveOrNull(project.estimated_sessions),
+    depositApplication: policy.depositApplication,
   }
+}
+
+/** PocketBase stores an empty number as 0. */
+function positiveOrNull(value: unknown): number | null {
+  return typeof value === 'number' && value > 0 ? value : null
 }

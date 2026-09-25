@@ -8,12 +8,14 @@ export type IntegrityViolation =
   | 'last_owner'
   | 'project_customer_mismatch'
   | 'completion_requires_final_price'
+  | 'project_has_active_appointments'
 
 const VIOLATION_BY_MESSAGE = new Map<string, IntegrityViolation>([
   ['integrity:customer_has_active_appointments', 'customer_has_active_appointments'],
   ['integrity:last_owner', 'last_owner'],
   ['integrity:project_customer_mismatch', 'project_customer_mismatch'],
   ['integrity:completion_requires_final_price', 'completion_requires_final_price'],
+  ['integrity:project_has_active_appointments', 'project_has_active_appointments'],
 ])
 
 /**

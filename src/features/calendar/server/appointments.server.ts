@@ -17,6 +17,7 @@ import { computeProjectBalance } from '@/features/payments/utils/balance'
 import { toLedgerAppointment, toLedgerPayment } from '@/features/payments/server/project-finance.server'
 import type { ProjectBalance } from '@/features/payments/types'
 import { parseIntegrityViolation } from '@/features/database/utils/integrity-codes'
+import { recordProjectQuote } from '@/features/projects/server/project-milestones.server'
 
 import { disconnectGoogleCalendar, newOAuthClient } from '@/integrations/google-calendar/server/google-auth.server'
 import { cleanupStaffGoogleCalendarEvents, syncAppointmentToGoogle } from '@/integrations/google-calendar/server/google-sync.server'
@@ -682,7 +683,15 @@ export async function sendPriceQuoteToCustomerHandler(data: SendPriceQuoteServer
     throw new Error(err instanceof WhatsAppApiError ? `שליחת הצעת המחיר נכשלה: ${err.message}` : 'שליחת הצעת המחיר נכשלה.')
   }
 
-  const nowIso = new Date().toISOString()
+  const now = new Date()
+  const nowIso = now.toISOString()
+  // The quote belongs to the project (it moves the funnel to "quoted"); recorded only once the
+  // message went out. A consultation's details aren't a price quote.
+  if (!isSketch && appointment.project) {
+    await recordProjectQuote(su, appointment.project as string, { min: data.priceMinIls, max: data.priceMaxIls }, now).catch((err: unknown) =>
+      console.error(`[price-quote] recording the quote on project ${String(appointment.project)} failed:`, err),
+    )
+  }
   if (conversation) {
     cancelPendingBotTurn(conversation.id)
     await su.collection('messages').create({

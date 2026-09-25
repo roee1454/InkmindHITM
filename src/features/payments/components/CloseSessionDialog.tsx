@@ -6,50 +6,17 @@ import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Loader2 } from '@/components/ui/icon'
 import { formatDatabaseError } from '@/lib/pocketbase-error'
-import { cn } from '@/lib/utils'
 import type { ApiAppointment } from '@/features/calendar/types'
 import { appointmentKindLabel } from '@/features/calendar/utils/project-position'
 import { useCloseSession } from '../hooks/use-close-session'
-import { balanceAfterClosing } from '../utils/balance'
-import { PAYMENT_KIND_LABELS, formatIls } from '../utils/labels'
-import type { NewPayment, ProjectFinance } from '../types'
+import { defaultIsLastSession } from '../utils/closing'
+import type { NewPayment } from '../types'
+import { ClosingPreview } from './ClosingPreview'
 import { PaymentRowsEditor } from './PaymentRowsEditor'
 import type { PaymentRowDraft } from './PaymentRowsEditor'
 
 function toNewPayments(rows: PaymentRowDraft[]): NewPayment[] {
   return rows.map((row) => ({ method: row.method, amount: Number(row.amount) })).filter((p) => p.amount > 0)
-}
-
-function PreviewLine({ label, value, emphasis }: { label: string; value: string; emphasis?: 'due' | 'credit' }) {
-  return (
-    <div className="flex items-center justify-between text-xs">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={cn('font-bold tabular-nums text-foreground', emphasis === 'due' && 'text-warning', emphasis === 'credit' && 'text-status-done')}>{value}</span>
-    </div>
-  )
-}
-
-function ClosingPreview({ finance, appointmentId, finalPrice, chargeWaived, newPayments }: {
-  finance: ProjectFinance
-  appointmentId: string
-  finalPrice: number | null
-  chargeWaived: boolean
-  newPayments: NewPayment[]
-}) {
-  const earlier = finance.payments.filter((p) => p.status === 'verified')
-  const after = balanceAfterClosing(finance.appointments, finance.payments, { appointmentId, finalPrice, chargeWaived, newPayments })
-  return (
-    <section className="flex flex-col gap-1.5 rounded-xl border border-border bg-muted/30 p-3" aria-label="מצב הפרויקט אחרי הסגירה">
-      {earlier.map((payment) => (
-        <PreviewLine key={payment.id} label={`${PAYMENT_KIND_LABELS[payment.kind]} ששולם/ה קודם`} value={formatIls(payment.amount)} />
-      ))}
-      <PreviewLine label="סה״כ חיובים בפרויקט" value={formatIls(after.billed)} />
-      <PreviewLine label="סה״כ שולם" value={formatIls(after.paid - after.refunded)} />
-      {after.due > 0 && <PreviewLine label="יתרה לתשלום" value={formatIls(after.due)} emphasis="due" />}
-      {after.credit > 0 && <PreviewLine label="זיכוי לסשנים הבאים" value={formatIls(after.credit)} emphasis="credit" />}
-      {after.due === 0 && after.credit === 0 && <PreviewLine label="מצב" value="מאוזן" emphasis="credit" />}
-    </section>
-  )
 }
 
 /**
@@ -60,13 +27,18 @@ export function CloseSessionDialog({ appointment, open, onOpenChange }: { appoin
   const [finalPrice, setFinalPrice] = useState('')
   const [chargeWaived, setChargeWaived] = useState(false)
   const [rows, setRows] = useState<PaymentRowDraft[]>([{ method: 'cash', amount: '' }])
+  // null until staff touch it: follows the default computed from the project.
+  const [lastSessionChoice, setLastSessionChoice] = useState<boolean | null>(null)
   const { finance, close } = useCloseSession(appointment.projectId, open, () => onOpenChange(false))
+  const isLastSession =
+    lastSessionChoice ?? (finance.data ? defaultIsLastSession(finance.data.appointments, appointment.id, finance.data.estimatedSessions) : false)
 
   useEffect(() => {
     if (!open) return
     setFinalPrice('')
     setChargeWaived(appointment.kind === 'touch_up')
     setRows([{ method: 'cash', amount: '' }])
+    setLastSessionChoice(null)
     close.reset()
     // Reset only when the dialog opens for an appointment, not on every render of `close`.
   }, [open, appointment.id])
@@ -77,7 +49,7 @@ export function CloseSessionDialog({ appointment, open, onOpenChange }: { appoin
 
   const submit = () => {
     if (!canSubmit) return
-    close.mutate({ appointmentId: appointment.id, finalPrice: chargeWaived ? null : price, chargeWaived, payments: newPayments })
+    close.mutate({ appointmentId: appointment.id, finalPrice: chargeWaived ? null : price, chargeWaived, payments: newPayments, completesProject: isLastSession })
   }
 
   return (
@@ -124,8 +96,21 @@ export function CloseSessionDialog({ appointment, open, onOpenChange }: { appoin
             {formatDatabaseError(finance.error, 'לא הצלחנו לטעון את מצב התשלומים של הפרויקט.')}
           </p>
         )}
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Switch checked={isLastSession} onCheckedChange={setLastSessionChoice} disabled={close.isPending || !finance.data} />
+          זה הסשן האחרון בפרויקט (הפרויקט יסומן כהושלם)
+        </label>
+
         {finance.data && (
-          <ClosingPreview finance={finance.data} appointmentId={appointment.id} finalPrice={price} chargeWaived={chargeWaived} newPayments={newPayments} />
+          <ClosingPreview
+            finance={finance.data}
+            appointmentId={appointment.id}
+            finalPrice={price}
+            chargeWaived={chargeWaived}
+            newPayments={newPayments}
+            isLastSession={isLastSession}
+            onFillSuggested={(amount) => setRows([{ method: rows[0]?.method ?? 'cash', amount: String(amount) }])}
+          />
         )}
 
         {close.isError && (

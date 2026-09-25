@@ -1,4 +1,5 @@
 import type { AppointmentKind, AppointmentStatus } from '@/features/calendar/types'
+import type { DepositApplication } from '@/lib/project-policy'
 
 export type PaymentKind = 'deposit' | 'payment' | 'refund'
 export type PaymentMethod = 'bit' | 'paybox' | 'cash' | 'credit_card' | 'bank_transfer' | 'other'
@@ -43,6 +44,12 @@ export interface ProjectFinance {
   appointments: LedgerAppointment[]
   payments: LedgerPayment[]
   balance: ProjectBalance
+  quoteMin: number | null
+  quoteMax: number | null
+  /** How many sessions the piece was estimated at, when someone said. */
+  estimatedSessions: number | null
+  /** The studio's policy for where a deposit is suggested against (src/lib/project-policy.ts). */
+  depositApplication: DepositApplication
 }
 
 export interface NewPayment {
@@ -57,4 +64,6 @@ export interface CloseSessionInput {
   chargeWaived: boolean
   payments: NewPayment[]
   note?: string
+  /** This was the project's last session: the project is completed in the same batch. */
+  completesProject: boolean
 }

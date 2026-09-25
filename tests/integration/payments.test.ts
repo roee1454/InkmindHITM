@@ -92,7 +92,7 @@ describe('closing a session', () => {
     const appointment = await session(customer.id, { staff: artist.id, deposit_amount: 300, deposit_paid: true })
 
     const finance = await handleCloseSession(
-      { appointmentId: appointment.id, finalPrice: 1800, chargeWaived: false, payments: [{ method: 'cash', amount: 1500 }] },
+      { appointmentId: appointment.id, finalPrice: 1800, chargeWaived: false, payments: [{ method: 'cash', amount: 1500 }], completesProject: true },
       { su: pb, actor: { id: artist.id, role: 'staff' } },
     )
 
@@ -103,6 +103,8 @@ describe('closing a session', () => {
     ])
     expect(finance.balance).toEqual({ billed: 1800, paid: 1800, refunded: 0, due: 0, credit: 0 })
     expect((await pb.collection('conversations').getOne(conversation.id)).state).toBe('COMPLETED')
+    // The last session completes the project in the same batch.
+    expect(await pb.collection('projects').getOne(appointment.project)).toMatchObject({ stage: 'completed', completed_at: expect.any(String) })
   })
 
   it('keeps a multi-session project open: deposit credit carries over to the next session', async () => {
@@ -117,26 +119,28 @@ describe('closing a session', () => {
     })
 
     const finance = await handleCloseSession(
-      { appointmentId: first.id, finalPrice: 2000, chargeWaived: false, payments: [{ method: 'bit', amount: 2000 }] },
+      { appointmentId: first.id, finalPrice: 2000, chargeWaived: false, payments: [{ method: 'bit', amount: 2000 }], completesProject: false },
       { su: pb, actor: admin },
     )
     expect(finance.balance).toMatchObject({ billed: 2000, paid: 2500, due: 0, credit: 500 })
+    expect(finance).toMatchObject({ depositApplication: 'first_session', estimatedSessions: null })
+    expect((await pb.collection('projects').getOne(first.project)).stage).toBe('in_progress')
   })
 
   it('refuses consultations, sessions already closed, a missing price, and another artist', async () => {
     const artist = await createStaff(pb)
     const customer = await createCustomer(pb)
     const consultation = await session(customer.id, { kind: 'consultation' })
-    await expect(handleCloseSession({ appointmentId: consultation.id, finalPrice: 100, chargeWaived: false, payments: [] }, { su: pb, actor: admin })).rejects.toThrow('פגישת ייעוץ')
+    await expect(handleCloseSession({ appointmentId: consultation.id, finalPrice: 100, chargeWaived: false, payments: [], completesProject: false }, { su: pb, actor: admin })).rejects.toThrow('פגישת ייעוץ')
 
     const open = await session(customer.id, { staff: artist.id })
-    await expect(handleCloseSession({ appointmentId: open.id, finalPrice: null, chargeWaived: false, payments: [] }, { su: pb, actor: admin })).rejects.toThrow('מחיר סופי')
+    await expect(handleCloseSession({ appointmentId: open.id, finalPrice: null, chargeWaived: false, payments: [], completesProject: false }, { su: pb, actor: admin })).rejects.toThrow('מחיר סופי')
     await expect(
-      handleCloseSession({ appointmentId: open.id, finalPrice: 500, chargeWaived: false, payments: [] }, { su: pb, actor: { id: 'someone-else', role: 'staff' } }),
+      handleCloseSession({ appointmentId: open.id, finalPrice: 500, chargeWaived: false, payments: [], completesProject: false }, { su: pb, actor: { id: 'someone-else', role: 'staff' } }),
     ).rejects.toThrow('אין הרשאה')
 
-    await handleCloseSession({ appointmentId: open.id, finalPrice: 500, chargeWaived: false, payments: [] }, { su: pb, actor: admin })
-    await expect(handleCloseSession({ appointmentId: open.id, finalPrice: 500, chargeWaived: false, payments: [] }, { su: pb, actor: admin })).rejects.toThrow('כבר נסגר')
+    await handleCloseSession({ appointmentId: open.id, finalPrice: 500, chargeWaived: false, payments: [], completesProject: false }, { su: pb, actor: admin })
+    await expect(handleCloseSession({ appointmentId: open.id, finalPrice: 500, chargeWaived: false, payments: [], completesProject: false }, { su: pb, actor: admin })).rejects.toThrow('כבר נסגר')
   })
 
   it('records the payments once when the same session is closed twice at the same time', async () => {
@@ -144,7 +148,7 @@ describe('closing a session', () => {
     const appointment = await session(customer.id)
     const close = () =>
       handleCloseSession(
-        { appointmentId: appointment.id, finalPrice: 600, chargeWaived: false, payments: [{ method: 'cash', amount: 600 }] },
+        { appointmentId: appointment.id, finalPrice: 600, chargeWaived: false, payments: [{ method: 'cash', amount: 600 }], completesProject: false },
         { su: pb, actor: admin },
       )
 
@@ -160,13 +164,14 @@ describe('closing a session', () => {
 
     await expect(
       handleCloseSession(
-        { appointmentId: appointment.id, finalPrice: 700, chargeWaived: false, payments: [{ method: 'cash', amount: 700 }] },
+        { appointmentId: appointment.id, finalPrice: 700, chargeWaived: false, payments: [{ method: 'cash', amount: 700 }], completesProject: true },
         { su: pb, actor: admin },
       ),
     ).rejects.toThrow('שום דבר לא נשמר')
 
     expect(await paymentsOf(appointment.id)).toHaveLength(0)
     expect((await pb.collection('appointments').getOne(appointment.id)).status).toBe('confirmed')
+    expect((await pb.collection('projects').getOne(appointment.project)).completed_at).toBe('')
     // The failpoint marker must not trip other files' tests that sweep every appointment.
     await pb.collection('appointments').delete(appointment.id)
   })

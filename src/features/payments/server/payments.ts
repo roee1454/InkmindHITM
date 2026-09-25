@@ -22,6 +22,7 @@ export const closeSession = createServerFn({ method: 'POST' })
       chargeWaived: z.boolean(),
       payments: z.array(z.object({ method: paymentMethod, amount: z.number().positive() })).max(10),
       note: z.string().max(500).optional(),
+      completesProject: z.boolean(),
     }),
   )
   .handler(async ({ data }): Promise<ProjectFinance> => {

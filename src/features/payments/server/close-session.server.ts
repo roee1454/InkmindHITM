@@ -73,6 +73,10 @@ async function closeSessionExclusive(input: CloseSessionInput, actor: Actor, su:
     charge_waived: input.chargeWaived,
     ...statusChange('completed', 'staff', 'session_closed'),
   })
+  // Last in the batch, so the project's stage hook already sees this session completed.
+  if (input.completesProject) {
+    batch.collection('projects').update(projectId, { completed_at: receivedAt, stage_actor: 'staff', stage_reason: 'last_session_closed' })
+  }
 
   try {
     await batch.send()
