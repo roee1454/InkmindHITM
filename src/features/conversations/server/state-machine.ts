@@ -34,16 +34,19 @@ export const TRANSITIONS: Record<ConversationState, ConversationState[]> = {
   AWAIT_PAYMENT: ['AWAIT_FINAL_CONFIRMATION', 'AWAITING_APPOINTMENT', 'COLLECTING_INFO'],
   // Customer confirmed → booked. Back: cancellation, expired hold, or staff re-opening payment/quote.
   AWAIT_FINAL_CONFIRMATION: ['AWAITING_APPOINTMENT', 'AWAIT_PAYMENT', 'AWAIT_PRICE_OFFER', 'COLLECTING_INFO'],
-  // Appointment done → NPS ask; COMPLETED: closed; COLLECTING_INFO: cancelled; WANTS_TO_BOOK: sketch done -> tattoo booking.
-  AWAITING_APPOINTMENT: ['AWAIT_NPS_SCORE', 'COMPLETED', 'COLLECTING_INFO', 'WANTS_TO_BOOK'],
-  AWAIT_NPS_SCORE: ['COMPLETED'],
+  // Appointment done → NPS ask; COMPLETED: closed; COLLECTING_INFO: cancelled; WANTS_TO_BOOK: sketch done -> tattoo booking;
+  // NEW: the customer writes again after the appointment (utils/inbound-routing.ts).
+  AWAITING_APPOINTMENT: ['AWAIT_NPS_SCORE', 'COMPLETED', 'COLLECTING_INFO', 'WANTS_TO_BOOK', 'NEW'],
+  // NEW: no answer within the feedback window, and the customer writes about something else.
+  AWAIT_NPS_SCORE: ['COMPLETED', 'NEW'],
   // A returning customer restarts the funnel.
   COMPLETED: ['NEW', 'WANTS_TO_BOOK', 'COLLECTING_INFO'],
 }
 
 const VALID_STATES = new Set(Object.keys(TRANSITIONS) as ConversationState[])
 
-function toState(raw: unknown): ConversationState {
+/** A stored state, or NEW for anything unknown (matches the agent's fallback). */
+export function toConversationState(raw: unknown): ConversationState {
   return VALID_STATES.has(raw as ConversationState) ? (raw as ConversationState) : 'NEW'
 }
 
@@ -61,8 +64,18 @@ export class InvalidTransitionError extends Error {
   }
 }
 
+export type StateActor = 'bot' | 'staff' | 'system' | 'customer'
+
+/**
+ * Attribution for a write that sets `state` outside transition() — creating a conversation that
+ * doesn't start at NEW. pb_hooks/conversation-state.pb.js rejects a state change without it.
+ */
+export function stateAttribution(actor: StateActor, reason: string): { state_actor: StateActor; state_reason: string } {
+  return { state_actor: actor, state_reason: reason.slice(0, 200) }
+}
+
 export interface TransitionOptions {
-  actor: 'bot' | 'staff' | 'system'
+  actor: StateActor
   /** Short machine-ish cause, e.g. the tool or server-fn name that triggered it. */
   reason: string
   /** Extra conversation fields written atomically with the state (e.g. tattoo_info,
@@ -83,9 +96,11 @@ export async function transition(
   opts: TransitionOptions,
 ): Promise<{ from: ConversationState }> {
   const conversation = await su.collection('conversations').getOne(conversationId)
-  const from = toState(conversation.state)
+  const from = toConversationState(conversation.state)
 
-  // Best-effort audit write (HITL-11) — the trail must never break the transition itself.
+  // audit_log keeps what didn't go through normally: rejected moves and staff overrides (best
+  // effort — it must never break the transition). Every applied move is logged in
+  // state_transitions by pb_hooks/conversation-state.pb.js, inside the update's transaction.
   const audit = (reason: string) =>
     su
       .collection('audit_log')
@@ -93,8 +108,8 @@ export async function transition(
       .catch(() => null)
 
   if (from !== to && !TRANSITIONS[from].includes(to)) {
-    // If actor is staff and it's a manual override to re-open pricing/payment/scheduling, allow it with audit
-    if (opts.actor === 'staff' && (to === 'AWAIT_PAYMENT' || to === 'AWAIT_PRICE_OFFER' || to === 'AWAITING_APPOINTMENT' || to === 'COLLECTING_INFO')) {
+    // Staff may override to re-open pricing/payment/scheduling, or reset the bot to NEW (bot-reset.server.ts), with audit
+    if (opts.actor === 'staff' && (to === 'AWAIT_PAYMENT' || to === 'AWAIT_PRICE_OFFER' || to === 'AWAITING_APPOINTMENT' || to === 'COLLECTING_INFO' || to === 'NEW')) {
       console.warn(`[state-machine] Staff override: allowing ${from} → ${to} (${opts.reason}) conversation=${conversationId}`)
       await audit(`STAFF_OVERRIDE: ${opts.reason}`)
     } else {
@@ -112,6 +127,7 @@ export async function transition(
 
   await su.collection('conversations').update(conversationId, {
     state: to,
+    ...stateAttribution(opts.actor, opts.reason),
     // A finished funnel ends the project the bot was booking for; the next inquiry starts a new one.
     ...(to === 'COMPLETED' ? { active_project: '' } : {}),
     ...(opts.extraFields ?? {}),
@@ -132,7 +148,6 @@ export async function transition(
   }
 
   if (from !== to) {
-    await audit(opts.reason)
     console.log(`[state-machine] ${from} → ${to} (${opts.actor}: ${opts.reason}) conversation=${conversationId}`)
   }
   return { from }

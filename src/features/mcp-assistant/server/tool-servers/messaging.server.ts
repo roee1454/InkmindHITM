@@ -5,6 +5,7 @@ import { createWhatsAppClient, WhatsAppApiError, ERROR_REENGAGEMENT_REQUIRED } f
 import { mcpWriteTool } from './shared'
 import type { McpToolContext } from './shared'
 import type { McpActionDiff } from '../types'
+import { stateAttribution } from '@/features/conversations/server/state-machine'
 
 // Channel-agnostic on purpose (doc §2/§8): this calls the exact same low-level `sendText`
 // function the Customer Agent uses, as an explicit staff-approved tool call — never by writing
@@ -109,6 +110,7 @@ export async function commitMessagingAction(toolName: string, args: Record<strin
       customer: customer.id,
       channel: 'whatsapp',
       state: 'COLLECTING_INFO',
+      ...stateAttribution('staff', 'mcp_started_conversation'),
       status: 'staff_active',
       last_message_at: new Date().toISOString(),
     }).catch(() => null)

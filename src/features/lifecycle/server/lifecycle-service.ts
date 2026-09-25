@@ -4,7 +4,7 @@ import type { RecordModel } from 'pocketbase'
 import { getWhatsAppSettings } from '@/integrations/whatsapp-cloud-api/settings.server'
 import { createWhatsAppClient, WhatsAppApiError } from '@/integrations/whatsapp-cloud-api/client'
 import type { TemplateComponent } from '@/integrations/whatsapp-cloud-api/client'
-import { transition } from '@/features/conversations/server/state-machine'
+import { stateAttribution, transition } from '@/features/conversations/server/state-machine'
 import { applyConversationAdvance, isConsultation, planConversationAdvance } from '@/features/conversations/server/after-appointment.server'
 import { logWhatsAppError } from '@/features/settings/server/whatsapp-error-log'
 import { addSystemNotification } from '@/features/notifications/server/notifications'
@@ -230,6 +230,7 @@ export async function dispatchLifecycleMessage({
     conversation = await su.collection('conversations').create({
       customer: customer.id,
       state: 'AWAITING_APPOINTMENT',
+      ...stateAttribution('system', 'lifecycle_message_to_booked_customer'),
       last_message_at: nowIso,
     }).catch(() => null)
   }

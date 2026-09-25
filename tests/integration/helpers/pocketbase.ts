@@ -46,6 +46,8 @@ export async function createConversation(
 ): Promise<{ conversation: RecordModel; messages: RecordModel[] }> {
   const conversation = await pb.collection('conversations').create({
     customer: customerId,
+    // First contact, the way the WhatsApp webhook creates it.
+    state: 'NEW',
     status: 'bot_active',
     assigned_staff: options.assignedStaff ?? '',
   })

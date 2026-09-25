@@ -1,6 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type PocketBase from 'pocketbase'
 import { createAppointment, createConversation, createCustomer, superuserClient } from './helpers/pocketbase'
+import { stateAttribution } from '@/features/conversations/server/state-machine'
 
 const enqueueLifecycleMessage = vi.fn().mockResolvedValue(undefined)
 vi.mock('@/lib/queue/conversation-turn-queue', () => ({
@@ -45,7 +46,7 @@ describe('lifecycle tick at a simulated time', () => {
     const customer = await createCustomer(pb)
     const pending = await createAppointment(pb, { customer: customer.id, startsInHours: 200, status: 'pending' })
     const { conversation } = await createConversation(pb, customer.id)
-    await pb.collection('conversations').update(conversation.id, { state: 'AWAIT_PAYMENT' })
+    await pb.collection('conversations').update(conversation.id, { state: 'AWAIT_PAYMENT', ...stateAttribution('system', 'test_setup') })
 
     const inTwoDays = new Date(Date.now() + 49 * HOUR_MS)
 

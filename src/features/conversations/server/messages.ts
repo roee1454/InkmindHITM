@@ -25,7 +25,7 @@ import { toCanonicalE164Phone, formatPhoneForDisplay } from '@/lib/phone'
 import { createStaleReferenceError } from '@/lib/stale-reference'
 import type { CustomerSource } from '@/features/customers/types'
 import { shouldExcludeTemplate } from '../utils/templates'
-import { transition } from './state-machine'
+import { stateAttribution, transition } from './state-machine'
 import { cancelPendingBotTurn } from '@/integrations/ai/agent.server'
 import {
   handleGetActiveAppointmentSummary,
@@ -1000,6 +1000,7 @@ export const startConversationWithTemplate = createServerFn({ method: 'POST' })
         customer: customer.id,
         status: data.initialStatus,
         state: 'COLLECTING_INFO',
+        ...stateAttribution('staff', 'template_started_conversation'),
         last_message_at: nowIso,
       })
     } else {

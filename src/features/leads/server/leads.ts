@@ -31,7 +31,6 @@ function toUILead(customer: RecordModel, conversation: RecordModel | undefined):
 }
 
 export const listLeads = createServerFn({ method: 'GET' }).handler(async (): Promise<UILead[]> => {
-  await requireSession()
   const session = await requireSession()
   const su = await getSuperuserClient()
   const isAdmin = session.staff.role === 'owner' || session.staff.role === 'admin'
@@ -43,7 +42,6 @@ export const listLeads = createServerFn({ method: 'GET' }).handler(async (): Pro
     su.collection('conversations').getFullList({ fields: 'id,customer,assigned_staff,state' }),
   ])
   const conversationByCustomerId = new Map(conversations.map((c) => [c.customer as string, c]))
-  return customers.map((customer) => toUILead(customer, conversationByCustomerId.get(customer.id)))
   const allLeads = customers.map((customer) => toUILead(customer, conversationByCustomerId.get(customer.id)))
 
   if (isAdmin) return allLeads
@@ -75,13 +73,11 @@ export const moveLead = createServerFn({ method: 'POST' })
     const session = await requireSession()
     const su = await getSuperuserClient()
 
-    let conversationId: string | null = null
     let assignedStaffId: string | null = null
     try {
       const conversation = await su
         .collection('conversations')
-        .getFirstListItem(`customer = "${data.customerId}"`, { fields: 'id,assigned_staff,state' })
-      conversationId = conversation.id
+        .getFirstListItem(`customer = "${data.customerId}"`, { fields: 'id,assigned_staff' })
       assignedStaffId = (conversation.assigned_staff as string) || null
     } catch {
       // no conversation yet for this customer — treated as unassigned, editable by anyone
@@ -91,8 +87,7 @@ export const moveLead = createServerFn({ method: 'POST' })
       throw new Error('הליד הזה משויך לאיש צוות אחר — אין לך הרשאת עריכה.')
     }
 
+    // Only the lead label. The bot's dialogue state is not a lead stage: it changes through the
+    // state machine alone (the projects pipeline replaces this, see docs/projects-payments).
     await su.collection('customers').update(data.customerId, { lead_stage: data.stage })
-    if (conversationId) {
-      await su.collection('conversations').update(conversationId, { state: data.stage }).catch(() => null)
-    }
   })

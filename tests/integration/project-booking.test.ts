@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import type PocketBase from 'pocketbase'
 import { createAppointment, createConversation, createCustomer, createStaff, superuserClient } from './helpers/pocketbase'
+import { stateAttribution, transition } from '@/features/conversations/server/state-machine'
 
 vi.mock('@/features/settings/server/helpers.server', () => ({
   requireAuth: vi.fn().mockResolvedValue({ staff: { id: 'staff-actor', role: 'admin' } }),
@@ -9,7 +10,6 @@ vi.mock('@/features/settings/server/helpers.server', () => ({
 
 const { createAppointmentHandler } = await import('@/features/calendar/server/appointments.server')
 const { createPendingHoldForBot } = await import('@/features/calendar/server/bot-appointments.server')
-const { transition } = await import('@/features/conversations/server/state-machine')
 const { ensureInquiryProject, INQUIRY_TITLE } = await import('@/features/projects/server/inquiry-project.server')
 
 let pb: PocketBase
@@ -90,7 +90,7 @@ describe('booking inside a project', () => {
     const customer = await createCustomer(pb)
     const { conversation } = await createConversation(pb, customer.id)
     const done = await createAppointment(pb, { customer: customer.id, startsInHours: -30, status: 'completed' })
-    await pb.collection('conversations').update(conversation.id, { active_project: done.project, state: 'AWAITING_APPOINTMENT' })
+    await pb.collection('conversations').update(conversation.id, { active_project: done.project, state: 'AWAITING_APPOINTMENT', ...stateAttribution('system', 'test_setup') })
 
     await transition(pb, conversation.id, 'COMPLETED', { actor: 'system', reason: 'test' })
 

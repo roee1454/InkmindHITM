@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   Paperclip,
   Trash2,
+  RotateCcw,
 } from '@/components/ui/icon'
 import { useQuery } from '@tanstack/react-query'
 import { getCurrentStaffInfo } from '@/features/settings/server/staff'
@@ -25,6 +26,7 @@ import { STATUS_LABEL, hasStaffActionButtons } from '../utils/labels'
 import { formatPhoneForDisplay } from '@/lib/phone'
 import { cn } from '@/lib/utils'
 import { extractMedicalAlerts } from '@/features/health-declaration/utils/health-alerts'
+import { useResetBotConversation } from '../hooks/use-reset-bot-conversation'
 import { User } from '@phosphor-icons/react'
 
 interface ConversationHeaderProps {
@@ -64,6 +66,7 @@ export function ConversationHeader({
     queryKey: ['currentStaff'],
     queryFn: () => getCurrentStaffInfo(),
   })
+  const resetBot = useResetBotConversation(conversation.id)
   const displayPhone = formatPhoneForDisplay(conversation.customerPhone)
   const title = conversation.customerName || displayPhone || 'שיחה'
 
@@ -240,6 +243,10 @@ export function ConversationHeader({
               {currentStaff?.isAdmin && (
                 <>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => void resetBot()} className="cursor-pointer">
+                    <RotateCcw className="size-4 me-2 shrink-0" />
+                    <span className="text-xs whitespace-nowrap">איפוס שיחת הבוט</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={onDeleteConversation} className="cursor-pointer text-destructive focus:text-destructive">
                     <Trash2 className="size-4 me-2 shrink-0" />
                     <span className="text-xs whitespace-nowrap">מחיקת השיחה</span>

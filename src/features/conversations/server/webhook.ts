@@ -21,6 +21,7 @@ import { detectCustomerSource } from '@/features/analytics/utils/attribution'
 import type PocketBase from 'pocketbase'
 import type { RecordModel } from 'pocketbase'
 import { getActiveAppointmentForBot } from '@/features/calendar/server/bot-appointments.server'
+import { routeInboundMessage } from './inbound-routing.server'
 import { addSystemNotification } from '@/features/notifications/server/notifications'
 import { hasStaffActionButtons } from '../utils/labels'
 
@@ -75,45 +76,10 @@ async function ingestInboundMessage(
     const cust = await findOrCreateCustomer(su, phone, event.senderName, event.message)
     const conv = await findOrCreateConversation(su, cust.id, nowIso, windowExpiresIso, aiEnabled)
 
-    // Handle returning customer reactivation & session reset:
-    // If customer has no active upcoming appointment:
-    // 1. If conversation status is 'closed' or stale 'staff_handling' (>24h inactive), reactivate bot.
-    // 2. If conversation was in a finished/past state (COMPLETED, AWAIT_NPS_SCORE, or AWAITING_APPOINTMENT),
-    //    reset the session to NEW with tattoo_info: null and a fresh booking_session_started_at.
+    // A customer writing again after their booking: decided from facts and applied through the
+    // state machine (inbound-routing.server.ts), never by a direct state write.
     const activeAppointment = await getActiveAppointmentForBot(su, cust.id).catch(() => null)
-    if (!activeAppointment) {
-      const convUpdates: Record<string, unknown> = {}
-      const lastMsgTime = conv.last_message_at ? new Date(conv.last_message_at as string).getTime() : 0
-      const isStaffHandlingStale = conv.status === 'staff_handling' && (Date.now() - lastMsgTime > 24 * 60 * 60 * 1000)
-      const shouldReactivateBot = aiEnabled && (conv.status === 'closed' || isStaffHandlingStale)
-
-      if (shouldReactivateBot) {
-        convUpdates.status = 'bot_active'
-        conv.status = 'bot_active'
-      }
-
-      const isFinishedState =
-        conv.state === 'COMPLETED' ||
-        conv.state === 'AWAIT_NPS_SCORE' ||
-        conv.state === 'AWAITING_APPOINTMENT'
-
-      if (isFinishedState) {
-        convUpdates.state = 'NEW'
-        convUpdates.tattoo_info = null
-        convUpdates.booking_session_started_at = nowIso
-        convUpdates.is_staff_called = false
-        convUpdates.staff_call_reason = ''
-        conv.state = 'NEW'
-        conv.tattoo_info = null
-        conv.booking_session_started_at = nowIso
-        conv.is_staff_called = false
-        conv.staff_call_reason = ''
-      }
-
-      if (Object.keys(convUpdates).length > 0) {
-        await su.collection('conversations').update(conv.id, convUpdates).catch(() => null)
-      }
-    }
+    await routeInboundMessage(su, conv, { hasUpcomingAppointment: Boolean(activeAppointment), aiEnabled, nowIso })
 
     return { customer: cust, conversation: conv }
   })

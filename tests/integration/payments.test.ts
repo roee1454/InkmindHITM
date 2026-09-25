@@ -3,6 +3,7 @@ import type PocketBase from 'pocketbase'
 import { parseIntegrityViolation } from '@/features/database/utils/integrity-codes'
 import { statusChange } from '@/features/calendar/utils/appointment-transitions'
 import { createConversation, createCustomer, createStaff, hoursFromNow, superuserClient } from './helpers/pocketbase'
+import { stateAttribution } from '@/features/conversations/server/state-machine'
 
 vi.mock('@/features/settings/server/helpers.server', () => ({
   requireAuth: vi.fn(() => Promise.reject(new Error('tests pass the actor explicitly'))),
@@ -88,7 +89,7 @@ describe('closing a session', () => {
     const artist = await createStaff(pb)
     const customer = await createCustomer(pb)
     const { conversation } = await createConversation(pb, customer.id)
-    await pb.collection('conversations').update(conversation.id, { state: 'AWAITING_APPOINTMENT' })
+    await pb.collection('conversations').update(conversation.id, { state: 'AWAITING_APPOINTMENT', ...stateAttribution('system', 'test_setup') })
     const appointment = await session(customer.id, { staff: artist.id, deposit_amount: 300, deposit_paid: true })
 
     const finance = await handleCloseSession(
