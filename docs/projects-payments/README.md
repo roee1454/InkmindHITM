@@ -78,7 +78,7 @@
 | ה-aftercare נשלח גם אחרי פגישת ייעוץ, והקישורים כתובים ישירות בקוד | `lifecycle-service.ts:397` | Track B, B5.1 |
 | **מחיקת לקוח מוחקת בשקט את היסטוריית התשלומים שלו** (`payments.project` היה `cascadeDelete: true`) | [1786830070_payments_and_close_out.js](../../pocketbase/pb_migrations/1786830070_payments_and_close_out.js) | Track B, **B1.2** — זו לא שאלה משפטית, ולכן נשארה ב-Track B ותתוקן מיד, לא מחכה לחשבוניות |
 | `pocketbase/Dockerfile` מתקין PocketBase 0.39.7, בזמן שהטסטים רצים על 0.39.10 | `Dockerfile:3` | Track B, B0.2 |
-| `design-system.md` מתאר צבעים שה-eslint אוסר | §2 | Track B, B9.7 |
+| `design-system.md` מתאר צבעים שה-eslint אוסר | §2 | Track B, B9.8 |
 
 ## מטריצת כיסוי: כל מה שדיברנו עליו
 

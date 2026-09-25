@@ -681,18 +681,6 @@ export async function getPastCustomerAppointmentsInfo(
   }
 }
 
-export async function getCompletedAppointmentAwaitingNpsForBot(
-  su: PocketBase,
-  customerId: string,
-): Promise<RecordModel | null> {
-  // Bug 17: Limit NPS evaluation window to appointments completed in the last 14 days
-  const fourteenDaysAgoIso = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
-  return su.collection('appointments').getFirstListItem(
-    `customer = "${customerId}" && status = "completed" && nps_score = null && start_time >= "${fourteenDaysAgoIso}"`,
-    { sort: '-start_time' },
-  ).catch(() => null)
-}
-
 export async function cancelAppointmentForBot(
   su: PocketBase,
   appointment: RecordModel,

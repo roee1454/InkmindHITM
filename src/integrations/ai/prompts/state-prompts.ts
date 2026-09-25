@@ -220,7 +220,7 @@ export const STATE_PROMPTS: Record<ConversationState, () => string> = {
   AWAIT_NPS_SCORE: () => `
 <workflow_state current="AWAIT_NPS_SCORE">
 שלב משוב וניקוד (AWAIT_NPS_SCORE):
-התור הושלם וביקשנו דירוג בסולם 1 עד 10.
+הפרויקט של הלקוח הסתיים וביקשנו דירוג של החוויה בסולם 1 עד 10.
 - הודעה עם מספר ברור בין 1 ל-10? קרא ל-'record_nps_score' עם המספר.
 - תשובה אינה מספר? אל תמציא ציון. בקש בעדינות מספר קונקרטי.
 </workflow_state>`,

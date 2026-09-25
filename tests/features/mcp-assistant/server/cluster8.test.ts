@@ -2,7 +2,6 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { coalesceHistory } from '@/integrations/ai/agent.server'
 import { commitMessagingAction } from '@/features/mcp-assistant/server/tool-servers/messaging.server'
 import { commitCalendarAction } from '@/features/mcp-assistant/server/tool-servers/calendar.server'
-import { getCompletedAppointmentAwaitingNpsForBot } from '@/features/calendar/server/bot-appointments.server'
 import { handleUpdateAppointment } from '@/features/calendar/server/appointments.server'
 import { buildDynamicSystemPrompt } from '@/integrations/ai/prompts'
 import type { ModelMessage } from 'ai'
@@ -171,24 +170,6 @@ describe('Cluster 8: MCP Assistant, Waitlist, and Tools', () => {
           slot_confirmed: true,
         }),
       )
-    })
-  })
-
-  describe('Bug 17: NPS window recency cutoff', () => {
-    it('queries appointments completed within 14 days ago', async () => {
-      const mockAppointmentsCol = {
-        getFirstListItem: vi.fn().mockResolvedValue(null),
-      }
-      mockSu.collection.mockReturnValue(mockAppointmentsCol)
-
-      await getCompletedAppointmentAwaitingNpsForBot(mockSu as any, 'cust_99')
-
-      expect(mockAppointmentsCol.getFirstListItem).toHaveBeenCalledTimes(1)
-      const filterArg = mockAppointmentsCol.getFirstListItem.mock.calls[0]![0]
-      expect(filterArg).toContain('customer = "cust_99"')
-      expect(filterArg).toContain('status = "completed"')
-      expect(filterArg).toContain('nps_score = null')
-      expect(filterArg).toContain('start_time >= "')
     })
   })
 

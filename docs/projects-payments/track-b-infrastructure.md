@@ -658,6 +658,13 @@
 
 - **טסטים:** unit לכלי, ו-integration למעבר.
 
+- **מה בוצע בפועל (25/9/2026):**
+  - `record_nps_score` כותב ל-`nps_score` של הפרויקט שהשיחה מצביעה עליו (`active_project`). ציון שכבר נרשם לפרויקט לא נדרס.
+  - שיחה בלי פרויקט: הציון עובר לצוות כהתראה, כדי שלא ילך לאיבוד.
+  - המעבר ל-`AWAIT_NPS_SCORE` נבנה ב-B5.5. הוא חייב להצמיד את הפרויקט שהסתיים ל-`active_project`, כי `COMPLETED` מנקה אותו.
+  - **באג שנמצא:** ב-PocketBase, שדה מספר שלא מולא נקרא כ-0 ולא כ-null. לכן הסינון הישן, `nps_score = null`, לא התאים אף פעם.
+  - **מה ירד:** `getCompletedAppointmentAwaitingNpsForBot` (הניחוש של 14 הימים) והטסט שלו, והשדה `tattoo_info.last_nps_score`, שנכתב ואף אחד לא קרא אותו. השדה `appointments.nps_score` עבר ל-B9.7.
+
 - **מה יורד:** הניחוש "תור שהושלם ב-14 הימים האחרונים" ב-[bot-appointments.server.ts](../../src/features/calendar/server/bot-appointments.server.ts) (Bug 17), וה-mocks והטסטים שבנויים עליו.
 
 ### B3.7 ניתוק `lead_stage`
@@ -913,7 +920,7 @@
 
 - **סוכן הוואטסאפ:** כמו בסעיף "מה זה".
 
-- **שרת ולוגיקה:** כמו בסעיף "מה זה".
+- **שרת ולוגיקה:** כמו בסעיף "מה זה". המעבר ל-`AWAIT_NPS_SCORE` מצמיד את הפרויקט שהסתיים ל-`active_project` (B3.6 כותב את הציון לשם).
 
 - **פעולות חיצוניות:** template `nps_request` (A5).
 
@@ -1177,4 +1184,5 @@
 | B9.4 | `price_amount` | כל ההפניות מוסרות (השדה לא קיים בסכמה) |
 | B9.5 | `lead_stage` ו-`stateToLeadStage` | הסרה. `audit_log` מאוחד לתוך `state_transitions`, כולל העברת השורות הקיימות |
 | B9.6 | `pocketbase/schema/build_schema.py` | מחיקה. אף סקריפט לא משתמש בו, והמיגרציות הן מקור האמת |
-| B9.7 | תיעוד | `architecture.md` §9 מתעדכן. ב-`design-system.md` §2 עדיין כתוב emerald/amber/rose, בזמן שה-eslint אוכף tokens (`status-done` / `status-wait` / `status-dead`), אז הוא מתעדכן לפיהם |
+| B9.7 | `appointments.nps_score` | אף אחד לא קורא או כותב אותו מאז B3.6 (הציון נשמר על הפרויקט). יורד במיגרציה אחרי שבודקים שאין בו ערכים, ואם יש, מעבירים אותם ל-`projects.nps_score` |
+| B9.8 | תיעוד | `architecture.md` §9 מתעדכן. ב-`design-system.md` §2 עדיין כתוב emerald/amber/rose, בזמן שה-eslint אוכף tokens (`status-done` / `status-wait` / `status-dead`), אז הוא מתעדכן לפיהם |

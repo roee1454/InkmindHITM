@@ -1,6 +1,5 @@
 import { z } from 'zod'
 import type { ToolFactoryContext } from './types'
-import { getCompletedAppointmentAwaitingNpsForBot } from '@/features/calendar/server/bot-appointments.server'
 import { getStudioPolicyForBot } from '@/features/settings/server/policy'
 import { CALL_STAFF_REASONS } from '../prompts'
 
@@ -8,7 +7,6 @@ export function buildSupportTools(ctx: ToolFactoryContext) {
   const {
     su,
     conversationId,
-    customerId,
     updateConversation,
     transitionState,
     notifyStaff,
@@ -59,27 +57,22 @@ export function buildSupportTools(ctx: ToolFactoryContext) {
     ),
 
     record_nps_score: botTool(
-      'רושם את ציון ה-NPS (1-10) שהלקוח נתן לאחר סיום הטיפול, ומגיב בהתאם.',
+      'רושם את ציון ה-NPS (1-10) שהלקוח נתן בסוף הפרויקט, ומגיב בהתאם.',
       z.object({
         score: z.number().min(1).max(10),
       }),
       async ({ score }) => {
         const roundedScore = Math.round(score)
-        const appointment = await getCompletedAppointmentAwaitingNpsForBot(su, customerId)
-        if (appointment) {
-          await su.collection('appointments').update(appointment.id, { nps_score: roundedScore })
-        }
-
-        // Always save NPS score on the conversation record as a durability fallback
-        const conversation = await su.collection('conversations').getOne(conversationId).catch(() => null)
-        if (conversation) {
-          const tattooInfo = (conversation.tattoo_info as Record<string, any>) || {}
-          await updateConversation({
-            tattoo_info: {
-              ...tattooInfo,
-              last_nps_score: roundedScore,
-            }
-          }).catch(() => null)
+        // The question is about the project the conversation points at (set when feedback was asked),
+        // once per project.
+        const conversation = await su.collection('conversations').getOne(conversationId)
+        const projectId = (conversation.active_project as string) || ''
+        const project = projectId ? await su.collection('projects').getOne(projectId).catch(() => null) : null
+        // An unset number reads as 0 in PocketBase; a real score is 1–10.
+        if (project && !project.nps_score) {
+          await su.collection('projects').update(project.id, { nps_score: roundedScore })
+        } else if (!project) {
+          await notifyStaff('התקבל ציון משוב בלי פרויקט', `הלקוח נתן ${roundedScore}/10, אבל השיחה לא מקושרת לפרויקט, והציון לא נשמר.`, 'info')
         }
 
         if (roundedScore >= 9) {
