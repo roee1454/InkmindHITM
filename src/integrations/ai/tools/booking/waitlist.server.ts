@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import type { ToolFactoryContext } from '../types'
-import { getActiveAppointmentForBot } from '@/features/calendar/server/bot-appointments.server'
+import { getActiveAppointmentForBot, getActiveAppointmentsForBot } from '@/features/calendar/server/bot-appointments.server'
 import { DETERMINISTIC_TEMPLATES, sendDeterministicMessage } from '../../engine/deterministic-templates'
 
 export function buildWaitlistTools(ctx: ToolFactoryContext) {
@@ -14,9 +14,12 @@ export function buildWaitlistTools(ctx: ToolFactoryContext) {
         notBefore: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('לא לפני תאריך זה בפורמט YYYY-MM-DD — אם לא צוין, מהיום'),
       }),
       async ({ appointmentId, notBefore }) => {
-        const appointment = await getActiveAppointmentForBot(su, customerId, appointmentId)
-        if (!appointment) {
-          return { status: 'error', message: 'לא נמצא תור פעיל ללקוח הזה כרגע — אי אפשר להוסיף לרשימת המתנה.' }
+        // Only a confirmed appointment can be brought forward; a hold isn't booked yet.
+        const appointment = appointmentId
+          ? await getActiveAppointmentForBot(su, customerId, appointmentId)
+          : ((await getActiveAppointmentsForBot(su, customerId)).find((a) => a.status === 'confirmed') ?? null)
+        if (!appointment || appointment.status !== 'confirmed') {
+          return { status: 'error', message: 'לא נמצא תור מאושר ללקוח הזה כרגע — אי אפשר להוסיף לרשימת המתנה להקדמה.' }
         }
         const existing = await su
           .collection('waitlist_entries')

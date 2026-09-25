@@ -35,6 +35,12 @@ export function buildCancellationTools(ctx: ToolFactoryContext) {
       }),
       async ({ appointmentId, details }) => {
         const activeAppointments = await getActiveAppointmentsForBot(su, customerId)
+        if (activeAppointments.length === 0) {
+          return {
+            status: 'error',
+            message: 'לא נמצא ללקוח תור עתידי שאפשר להזיז. אם הלקוח רוצה לקבוע תור חדש, זה תהליך תיאום רגיל.',
+          }
+        }
         if (activeAppointments.length > 1 && !appointmentId) {
           const summaryList = activeAppointments
             .map((a, idx) => {

@@ -589,6 +589,15 @@
 
 - **טסטים:** unit ל-`applyFactGuards` על כל שורה בטבלה, ו-unit לכלים שדוחים בזמן ביצוע.
 
+- **מה בוצע בפועל (25/9/2026):**
+  - `src/integrations/ai/tools/fact-guards.ts` מכיל את `toConversationFacts` ו-`applyFactGuards`. העובדות נגזרות מהתורים שה-bot turn כבר טוען, כך שלא נוספה אף שאילתה. בינתיים יש בהן רק את מה שהשומרים צריכים: התורים העתידיים, הסטטוס שלהם, והאם המקדמה הוסדרה. B4.1 ירחיב אותן בפרטי הפרויקט.
+  - השורות של `start_booking` עם `scope` עוברות ל-B4.2, כי הפרמטר עצמו נוסף שם. הנעילה של `choose_booking_track` עוברת ל-B4.3, כי שם מוגדר מתי מותר ייעוץ נוסף.
+  - שלושה כלים קיבלו בדיקה בזמן ריצה:
+    - `request_reschedule` כבר לא מסלים לצוות כשאין תור.
+    - `flag_earlier_preference` פועל רק על תור מאושר.
+    - `confirm_booking_final` בודק `canTransition` לפני שהוא נועל את התור.
+  - **מה ירד:** העותק המקומי של `toConversationState` ב-`run-bot-turn.server.ts`, והבדיקה הכפולה של המקדמה ב-`confirm_booking_final`, שעברה ל-`isHoldReadyToConfirm`.
+
 - **מה יורד:** הוראות ב-`STATE_PROMPTS` שמבקשות מהמודל לא להציע ביטול, דחייה או הקדמה כשאין תור, כי השומר מסיר את הכלי. בדיקות אד-הוק בתוך הכלים שטוענות בעצמן את אותן עובדות עוברות ל-`ConversationFacts`. `STATE_TOOLS` מצטמצם למה שתלוי בשלב הדיאלוג בלבד.
 
 ### B3.5 Reconciler: לולאת התאמה

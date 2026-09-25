@@ -61,6 +61,21 @@ describe('Cluster 3 AI Tools Security', () => {
   })
 
   describe('Bug 41: confirm_booking_final deposit enforcement', () => {
+    beforeEach(() => {
+      mockContext.conversationState = 'AWAIT_FINAL_CONFIRMATION'
+    })
+
+    it('does not lock the appointment when the conversation is not at the final confirmation', async () => {
+      mockContext.conversationState = 'COLLECTING_INFO'
+      mockSu.collection().getFirstListItem.mockResolvedValue({ id: 'appt1', status: 'pending', deposit_amount: 200, deposit_paid: true })
+
+      const result = await (buildBookingTools(mockContext).confirm_booking_final as any).execute({})
+
+      expect(result.status).toBe('error')
+      expect(mockSu.collection().update).not.toHaveBeenCalled()
+      expect(mockTransitionState).not.toHaveBeenCalled()
+    })
+
     it('blocks confirmation when deposit is required but unpaid', async () => {
       mockSu.collection().getFirstListItem.mockResolvedValue({
         id: 'appt1',
@@ -112,5 +127,26 @@ describe('Cluster 3 AI Tools Security', () => {
       expect(mockSu.collection().update).toHaveBeenCalledWith('appt1', { status: 'confirmed', status_actor: 'bot', status_reason: 'confirm_booking_final' })
     })
   })
-})
 
+  describe('appointment tools re-check the facts when they run', () => {
+    it('does not escalate a reschedule request when the customer has no upcoming appointment', async () => {
+      mockSu.collection().getFullList = vi.fn().mockResolvedValue([])
+
+      const result = await (buildBookingTools(mockContext).request_reschedule as any).execute({ details: 'יום שלישי' })
+
+      expect(result.status).toBe('error')
+      expect(mockContext.updateConversation).not.toHaveBeenCalled()
+      expect(mockNotifyStaff).not.toHaveBeenCalled()
+    })
+
+    it('does not put a hold on the bring-forward list, only a confirmed appointment', async () => {
+      mockSu.collection().getFullList = vi.fn().mockResolvedValue([{ id: 'hold1', status: 'pending' }])
+      mockSu.collection().create = vi.fn()
+
+      const result = await (buildBookingTools(mockContext).flag_earlier_preference as any).execute({})
+
+      expect(result.status).toBe('error')
+      expect(mockSu.collection().create).not.toHaveBeenCalled()
+    })
+  })
+})

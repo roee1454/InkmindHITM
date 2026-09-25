@@ -6,6 +6,7 @@ import { createPendingHoldForBot, getActiveAppointmentForBot } from '@/features/
 import { sanitizePromptText } from '@/lib/sanitization'
 import { syncAppointmentToGoogle } from '@/integrations/google-calendar/server/google-sync.server'
 import { DETERMINISTIC_TEMPLATES, sendDeterministicMessage } from '../../engine/deterministic-templates'
+import { isHoldReadyToConfirm } from '../fact-guards'
 
 export function buildBookingCreationTools(ctx: ToolFactoryContext) {
   const { su, conversationId, customerId, transitionState, notifyStaff, botTool } = ctx
@@ -163,12 +164,16 @@ export function buildBookingCreationTools(ctx: ToolFactoryContext) {
             message: 'לא נמצא תור במצב ממתין (pending) לאישור. קראו ל-call_staff עם unhandled_query.',
           }
         }
-        const depositAmount = Number(appointment.deposit_amount) || 0
-        if (depositAmount > 0 && !appointment.deposit_paid) {
+        if (!isHoldReadyToConfirm(appointment)) {
           return {
             status: 'error',
             message: 'לא ניתן לאשר את התור סופית עדיין — יש להמתין לאישור קבלת המקדמה על ידי צוות הסטודיו.',
           }
+        }
+        // Checked before locking the appointment, so a refused move doesn't leave it confirmed behind
+        // a conversation that still thinks it's being booked.
+        if (!canTransition(ctx.conversationState, 'AWAITING_APPOINTMENT', 'bot')) {
+          return { status: 'error', message: "השיחה לא בשלב אישור ההזמנה. קרא/י ל-'call_staff' עם unhandled_query." }
         }
         await Promise.all([
           su.collection('appointments').update(appointment.id, statusChange('confirmed', 'bot', 'confirm_booking_final')),

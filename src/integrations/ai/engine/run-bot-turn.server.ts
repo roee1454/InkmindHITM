@@ -3,13 +3,14 @@ import type PocketBase from 'pocketbase'
 import { buildGenerationParams } from '../model/generation-params'
 import { buildBotTools } from '../tools.server'
 import type { BotToolsContext } from '../tools.server'
-import { buildStaticSystemPrompt, buildDynamicSystemPrompt, getAllowedToolNames, STATE_TOOLS } from '../prompts'
-import type { ConversationState } from '../prompts'
+import { buildStaticSystemPrompt, buildDynamicSystemPrompt, getAllowedToolNames } from '../prompts'
+import { applyFactGuards, toConversationFacts } from '../tools/fact-guards'
 import { SYSTEM_AI_MODEL, SYSTEM_AI_MAX_TOKENS } from '../model/defaults'
 import { createWhatsAppClient } from '@/integrations/whatsapp-cloud-api/client'
 import type { WhatsAppClient } from '@/integrations/whatsapp-cloud-api/client'
 import { getWhatsAppSettings } from '@/integrations/whatsapp-cloud-api/settings.server'
 import { getActiveAppointmentsForBot, getPastCustomerAppointmentsInfo } from '@/features/calendar/server/bot-appointments.server'
+import { toConversationState } from '@/features/conversations/server/state-machine'
 import { isHealthDeclarationValid } from '@/features/health-declaration/server/health-service'
 import { conversationLock } from '@/lib/async-lock'
 import { toYmd, minutesToTime } from '@/lib/date-utils'
@@ -24,17 +25,12 @@ import { escalate, classifyBotTurnError } from './escalation.server'
 const HISTORY_MESSAGE_LIMIT = 35
 const MAX_TOOL_STEPS = 5
 
-const VALID_STATES = new Set<ConversationState>(Object.keys(STATE_TOOLS) as ConversationState[])
 /** Conversation statuses the bot still turns for. `escalated` keeps running in a heavily
  *  restricted tool set (see `getAllowedToolNames`) rather than going fully silent, so a client
  *  isn't left ignored during a handoff the bot can still partially help with (e.g. answering a
  *  plain FAQ while staff picks up a receipt-verification call). `staff_handling` and `closed`
  *  never run the bot — those mean a human has manually taken the conversation over. */
 const BOT_TURN_STATUSES = new Set(['bot_active'])
-
-function toConversationState(raw: unknown): ConversationState {
-  return VALID_STATES.has(raw as ConversationState) ? (raw as ConversationState) : 'NEW'
-}
 
 export interface RunBotTurnInput {
   su: PocketBase
@@ -103,7 +99,7 @@ export async function runBotTurnInner({ su, conversationId, customerId, force }:
 
     // Dedup guard against double-processing on rapid consecutive webhook hits (FLOW-9).
     const inboundMessages = effectiveMessages.filter((m) => m.direction === 'inbound')
-    const latestInboundId = inboundMessages[inboundMessages.length - 1]?.id as string | undefined
+    const latestInboundId = inboundMessages[inboundMessages.length - 1]?.id
 
     if (!force && latestInboundId) {
       if ((conversation.last_processed_message_id as string) === latestInboundId) {
@@ -193,6 +189,7 @@ export async function runBotTurnInner({ su, conversationId, customerId, force }:
       customerPhone: (customer.phone as string) || undefined,
     }
     const allTools = buildBotTools(toolsCtx)
+    const facts = toConversationFacts(activeAppointments)
 
     const result = await generateText({
       model: modelInstance,
@@ -219,7 +216,7 @@ export async function runBotTurnInner({ su, conversationId, customerId, force }:
           toolsCtx.staffCallReason ?? staffCallReason,
           Boolean(activeStaffInstruction),
         )
-        return { activeTools: allowedNow.filter((n) => n in allTools) as Array<keyof typeof allTools> }
+        return { activeTools: applyFactGuards(allowedNow, facts).filter((n) => n in allTools) as Array<keyof typeof allTools> }
       },
       abortSignal: controller.signal,
       ...buildGenerationParams(SYSTEM_AI_MODEL, {
