@@ -61,6 +61,7 @@ function nextState(input: InboundRoutingInput): InboundTransition | null {
         return { to: 'WANTS_TO_BOOK', reason: 'inbound_after_consultation', clearProject: false, resetBooking: false }
       }
       // An open project (a multi-session piece between sessions) stays attached; a finished one doesn't.
+      // Interim until track-b B3.3: an open project moves to PROJECT_IN_PROGRESS instead of NEW.
       return startOver('inbound_after_appointment', !project || project.closed)
     case 'COMPLETED':
       return startOver('inbound_after_completed', true)

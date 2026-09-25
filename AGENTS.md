@@ -217,6 +217,17 @@ For every bug fix, feature, or architectural change, planning and execution MUST
 4. **User External Actions**:
    - Required manual setups in external consoles (Google Cloud Console, Meta WhatsApp Cloud API, Groq, `.env` environment variables).
 
+## Superseded Logic Rule
+New logic usually makes some old logic obsolete. Removing that old logic is part of the task, not a cleanup the developer does by hand after the plan ends.
+1. **In the plan**: every item has a **Removes** entry that names what it supersedes: functions, components, hooks, server functions, fields, flags, constants, labels, prompt text, bot/MCP tools, tests, mocks and docs. Write "nothing" only after searching for it.
+2. **In the same change**: when new logic replaces old logic, delete the old logic in the same commit.
+   - Find every caller (`grep -rw <name> src tests pocketbase scripts`). If nothing calls it any more, delete it together with its tests, mocks, types, labels and doc references.
+   - Don't comment code out, keep a branch "just in case", or keep unused parameters and compatibility re-exports. This is a single-tenant app with no external consumers, and git history is the backup.
+   - Delete tests that only covered removed behavior. Don't skip them.
+   - Interim code that a later plan item replaces gets a comment naming that item, so the item's author finds it.
+3. **When it can't go yet** (live readers still depend on it, or stored data needs a migration first): record it in the plan's cleanup phase. Say who still reads it and what condition unblocks the removal.
+4. **Before calling a stage done**: check the touched modules for exports that lost their last caller. `tsc` catches unused locals and parameters, not unused exports. List what was removed in the stage report.
+
 ## UI/UX Screenshot & Visual Verification Rule
 Whenever work involves changes to In-CRM UI/UX (new components, dialogs, cards, sheets, views, settings, or modified visual states):
 1. **Dev Server Lifecycle Protocol**:
