@@ -1,21 +1,36 @@
-import { CalendarDays, ChartBar, Home, MessageSquare, SquareKanban, Users } from '@/components/ui/icon'
+import { CalendarDays, ChartBar, ClipboardList, Home, MessageSquare, SquareKanban, Users } from '@/components/ui/icon'
 
 export interface NavItem {
   readonly to: string
   readonly label: string
   readonly icon: typeof Home
   readonly exact: boolean
+  /** Overrides the default `pathname.startsWith(to)` (or `=== to` when `exact`) active check —
+   *  used by the mobile bottom bar's combined pipeline tab, which reads as active on either of
+   *  two routes. `MobileBottomNav` is the only reader; `Link`'s own matching handles everyone else. */
+  readonly activeMatch?: (pathname: string) => boolean
 }
 
 const HOME: NavItem = { to: '/dashboard', label: 'בית', icon: Home, exact: true }
 const CALENDAR: NavItem = { to: '/dashboard/calendar', label: 'תורים', icon: CalendarDays, exact: false }
-// TODO(B6.7): this becomes the combined "צינורת" tab (label + icon unchanged) once
-// /dashboard/projects exists — routes to whichever of leads/projects was last open, with an
-// in-page switcher at the top. See docs/projects-payments/track-b-infrastructure.md B6.7.
-const LEADS: NavItem = { to: '/dashboard/leads', label: 'לידים', icon: SquareKanban, exact: false }
+const LEADS: NavItem = { to: '/dashboard/leads', label: 'לידים', icon: ClipboardList, exact: false }
+const PROJECTS: NavItem = { to: '/dashboard/projects', label: 'פרויקטים', icon: SquareKanban, exact: false }
 const CUSTOMERS: NavItem = { to: '/dashboard/customers', label: 'לקוחות', icon: Users, exact: false }
 const CONVERSATIONS: NavItem = { to: '/dashboard/conversations', label: 'שיחות', icon: MessageSquare, exact: false }
 const ANALYTICS: NavItem = { to: '/dashboard/analytics', label: 'אנליטיקות', icon: ChartBar, exact: false }
+
+/**
+ * The mobile bottom bar's one slot for both pipeline pages (track-b B6.7): leads and projects
+ * are separate sidebar links on desktop, but a phone's 5-tab cap can't afford two. Defaults to
+ * the projects pipeline; `PipelineMobileSwitch` (rendered on both pages) flips to leads.
+ */
+const PIPELINE_MOBILE: NavItem = {
+  to: '/dashboard/projects',
+  label: 'צינורת',
+  icon: SquareKanban,
+  exact: false,
+  activeMatch: (pathname) => pathname.startsWith('/dashboard/projects') || pathname.startsWith('/dashboard/leads'),
+}
 
 export interface NavGroup {
   readonly label: string
@@ -30,7 +45,7 @@ export interface NavGroup {
 export const NAV_GROUPS: readonly NavGroup[] = [
   { label: 'היום', items: [HOME] },
   { label: 'עבודה שוטפת', items: [CALENDAR, CONVERSATIONS] },
-  { label: 'צינורת', items: [LEADS, CUSTOMERS] },
+  { label: 'צינורת', items: [LEADS, PROJECTS, CUSTOMERS] },
   { label: 'תובנות', items: [ANALYTICS] },
 ]
 
@@ -38,11 +53,10 @@ export const NAV_GROUPS: readonly NavGroup[] = [
 export const NAV_ITEMS: readonly NavItem[] = NAV_GROUPS.flatMap((group) => group.items)
 
 /**
- * The mobile bottom tab bar (track-b B6.6): capped at 5, the conventional ceiling for a phone's
- * bottom bar. Analytics moves to the drawer — reflective, periodic use, not the moment-to-moment
- * work the other five destinations serve.
+ * The mobile bottom tab bar (track-b B6.6/B6.7): capped at 5, the conventional ceiling for a
+ * phone's bottom bar. Analytics moves to the drawer, and leads+projects share one combined slot.
  */
-export const MOBILE_NAV_ITEMS: readonly NavItem[] = [HOME, CALENDAR, CONVERSATIONS, LEADS, CUSTOMERS]
+export const MOBILE_NAV_ITEMS: readonly NavItem[] = [HOME, CALENDAR, CONVERSATIONS, PIPELINE_MOBILE, CUSTOMERS]
 
 /** Secondary destinations shown in the mobile drawer, alongside notifications/settings/AI status. */
 export const DRAWER_NAV_ITEMS: readonly NavItem[] = [ANALYTICS]

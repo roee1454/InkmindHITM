@@ -1,28 +1,21 @@
 import { create } from 'zustand'
-import type { PipelineFilter } from '../utils/pipeline-filter'
 
+/** The leads-without-project page (track-b B6.7) has nothing to filter by stage or artist —
+ *  there is no project yet — so this store only carries search and pagination. */
 interface LeadsUiState {
   searchQuery: string
-  filter: PipelineFilter
-  artistId: string
   currentPage: number
 
   setSearchQuery: (query: string) => void
-  setFilter: (filter: PipelineFilter) => void
-  setArtistId: (artistId: string) => void
   setCurrentPage: (page: number) => void
   resetFilters: () => void
 }
 
 export const useLeadsUiStore = create<LeadsUiState>((set) => ({
   searchQuery: '',
-  filter: 'open',
-  artistId: 'all',
   currentPage: 1,
 
   setSearchQuery: (searchQuery) => set({ searchQuery, currentPage: 1 }),
-  setFilter: (filter) => set({ filter, currentPage: 1 }),
-  setArtistId: (artistId) => set({ artistId, currentPage: 1 }),
   setCurrentPage: (currentPage) => set({ currentPage }),
-  resetFilters: () => set({ searchQuery: '', filter: 'open', artistId: 'all', currentPage: 1 }),
+  resetFilters: () => set({ searchQuery: '', currentPage: 1 }),
 }))

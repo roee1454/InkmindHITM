@@ -1,20 +1,20 @@
 import type { PipelineProject, ProjectStage } from '@/features/projects/types'
 
-/** The board's stage filter: a stage, every open project, or the customers without one. */
-export type PipelineFilter = 'open' | ProjectStage | 'no_project'
+/** The projects pipeline's stage filter: a stage, or every open project. Leads without a
+ *  project live on their own page (track-b B6.7), not as a filter here. */
+export type PipelineFilter = 'open' | ProjectStage
 
 const CLOSED: ProjectStage[] = ['completed', 'lost']
 
 export const OPEN_STAGES: ProjectStage[] = ['inquiry', 'consultation_scheduled', 'consultation_done', 'quoted', 'booked', 'in_progress']
 
 export function matchesStage(project: PipelineProject, filter: PipelineFilter): boolean {
-  if (filter === 'no_project') return false
   if (filter === 'open') return !CLOSED.includes(project.stage)
   return project.stage === filter
 }
 
-export function countByFilter(projects: PipelineProject[], noProjectCount: number): Record<PipelineFilter, number> {
-  const counts = { open: 0, no_project: noProjectCount } as Record<PipelineFilter, number>
+export function countByFilter(projects: PipelineProject[]): Record<PipelineFilter, number> {
+  const counts = { open: 0 } as Record<PipelineFilter, number>
   for (const stage of [...OPEN_STAGES, ...CLOSED]) counts[stage] = 0
   for (const project of projects) {
     counts[project.stage] += 1

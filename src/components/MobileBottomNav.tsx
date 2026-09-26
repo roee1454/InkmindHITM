@@ -1,8 +1,14 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useLocation } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '#/lib/utils.ts'
 import { getUnseenMessagesCount } from '#/features/conversations/server/messages.ts'
 import { MOBILE_NAV_ITEMS } from './navigation.ts'
+import type { NavItem } from './navigation.ts'
+
+function isItemActive(item: NavItem, pathname: string): boolean {
+  if (item.activeMatch) return item.activeMatch(pathname)
+  return item.exact ? pathname === item.to : pathname.startsWith(item.to)
+}
 
 interface MobileBottomNavProps {
   className?: string
@@ -17,6 +23,7 @@ interface MobileBottomNavProps {
  * `4rem + inset` so page content clears the whole thing.
  */
 export function MobileBottomNav({ className }: MobileBottomNavProps) {
+  const location = useLocation()
   const { data: unseenMessagesCount = 0 } = useQuery({
     queryKey: ['unseen-messages-count'],
     queryFn: () => getUnseenMessagesCount(),
@@ -35,34 +42,31 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <ul className="flex h-16 items-stretch">
-        {MOBILE_NAV_ITEMS.map((item) => (
-          <li key={item.to} className="flex-1">
-            <Link
-              to={item.to}
-              activeOptions={{ exact: item.exact }}
-              activeProps={{ className: 'text-primary font-extrabold' }}
-              inactiveProps={{ className: 'text-muted-foreground font-bold' }}
-              className="relative flex h-full flex-col items-center justify-center gap-1 font-assistant text-xs no-underline transition-colors duration-150 hover:no-underline active:no-underline active:bg-muted"
-            >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <span className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-primary" />
+        {MOBILE_NAV_ITEMS.map((item) => {
+          const active = isItemActive(item, location.pathname)
+          return (
+            <li key={item.to} className="flex-1">
+              <Link
+                to={item.to}
+                className={cn(
+                  'relative flex h-full flex-col items-center justify-center gap-1 font-assistant text-xs no-underline transition-colors duration-150 hover:no-underline active:no-underline active:bg-muted',
+                  active ? 'text-primary font-extrabold' : 'text-muted-foreground font-bold',
+                )}
+              >
+                {active && <span className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-primary" />}
+                <span className="relative">
+                  <item.icon size={22} />
+                  {item.to === '/dashboard/conversations' && unseenMessagesCount > 0 && (
+                    <span className="absolute -top-1.5 -end-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-success px-1 text-2xs font-extrabold leading-none text-white">
+                      {unseenMessagesCount}
+                    </span>
                   )}
-                  <span className="relative">
-                    <item.icon size={22} />
-                    {item.to === '/dashboard/conversations' && unseenMessagesCount > 0 && (
-                      <span className="absolute -top-1.5 -end-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-success px-1 text-2xs font-extrabold leading-none text-white">
-                        {unseenMessagesCount}
-                      </span>
-                    )}
-                  </span>
-                  <span>{item.label}</span>
-                </>
-              )}
-            </Link>
-          </li>
-        ))}
+                </span>
+                <span>{item.label}</span>
+              </Link>
+            </li>
+          )
+        })}
       </ul>
     </nav>
   )

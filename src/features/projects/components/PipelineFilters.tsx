@@ -10,7 +10,6 @@ const FILTERS: { id: PipelineFilter; label: string }[] = [
   ...OPEN_STAGES.map((stage) => ({ id: stage, label: PROJECT_STAGE_LABELS[stage] })),
   { id: 'completed', label: PROJECT_STAGE_LABELS.completed },
   { id: 'lost', label: 'אבודים' },
-  { id: 'no_project', label: 'ללא פרויקט' },
 ]
 
 interface PipelineFiltersProps {

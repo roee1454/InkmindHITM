@@ -1295,11 +1295,11 @@
 
 - **מה זה משפר:** הבלבול "לא ברור מה העמוד הזה מציג" — כל עמוד עונה לשאלה אחת: מי עוד לא נהיה עבודה, ומי כבר כן.
 
-- **UI ב-CRM:** עמוד "לידים" חדש עם loading/empty/error משלו; עמוד "פרויקטים" ממשיך את עיצוב ה-pipeline, מעוצב מחדש דרך `impeccable craft`/`polish`. ניווט בין השניים: B6.6.
+- **UI ב-CRM:** עמוד "לידים" חדש עם loading/empty/error משלו; עמוד "פרויקטים" ממשיך את עיצוב ה-pipeline הקיים כמו שהוא (הפיצול הזה הוא מבני, לא רה-דיזיין — ליטוש חזותי לטבלת ה-pipeline עצמה, אם ירצו, הוא פריט נפרד עתידי, באותו רוח כמו B6.8 ליומן). ניווט בין השניים: B6.6, פלוס מתג מובייל (ראה "מה בוצע בפועל").
 
 - **סוכן הוואטסאפ:** אין שינוי.
 
-- **שרת ולוגיקה:** `listPipeline` מתפצל לשתי קריאות שרת (או פרמטר סינון) במקום החזרה משולבת אחת. אין שינוי בלוגיקת השלבים עצמה.
+- **שרת ולוגיקה:** בפועל נשאר **קריאה אחת** ל-`listPipeline` (לא שתי קריאות שרת כפי שתוכנן) — שני העמודים משתפים את אותו `pipelineQueryKey`, כך שמעבר בין "לידים" ל"פרויקטים" לא שולח שאילתה נוספת (ה-cache כבר שם). ראה "מה בוצע בפועל".
 
 - **DB וסכמה:** אין שינוי.
 
@@ -1308,6 +1308,24 @@
 - **טסטים:** unit לפיצול (מה עובר לאיזה עמוד). הטסטים הקיימים ל-`listPipeline`/`matchesStage`/`countByFilter` נשארים.
 
 - **מה יורד:** `LeadsWithoutProjectList` וה-tab/chip המשולב `no_project` בתוך `PipelineFilters` כפי שתוכננו ב-B2.6 — עוברים לעמוד "לידים" הנפרד. `leadsUiStore` מתפצל בהתאם לשני העמודים (הסרת `filter === 'no_project'` מהסטור המשותף).
+
+- **מה בוצע בפועל (27/9/2026):**
+
+- רכיבי ה-pipeline (`PipelineFilters`, `PipelineList`, `PipelineProjectSummary`, `PipelineRowActions`, `pipeline-filter.ts`) עברו מ-`features/leads/` ל-`features/projects/` (`git mv`, שינוי נתיבי יבוא בלבד) — הם היו כבר תלויים אך ורק ב-`features/projects/*`, אז זו הזזה נקייה שמתאימה את המבנה ל-feature-sliced אחרי שהפיצול הפך אותם לרכיב פרויקטים בלעדי.
+
+- `PipelineFilter` איבד את הערך `'no_project'` (הוא route נפרד עכשיו, לא צ'יפ). `matchesStage`/`countByFilter` פשוטים בהתאם — `countByFilter` כבר לא מקבל `noProjectCount`.
+
+- שני עמודים חדשים: `src/features/projects/ProjectsPage.tsx` (הפייפליין: פילטרים, טבלה/כרטיסים, `MarkProjectLostDialog`, `ProjectPanel`, pagination) ו-`src/features/leads/LeadsPage.tsx` (רזה: חיפוש, `LeadsWithoutProjectList`, pagination) — **שניהם קוראים ל-`listPipeline` עם אותו `pipelineQueryKey`** במקום שתי קריאות נפרדות שתוכננו, כדי לא לכפול סריקת טבלאות מלאה על אותו מקור נתונים.
+
+- `useProjectsUiStore` חדש (search/filter/artist/page) ב-`features/projects/store/`; `useLeadsUiStore` צומצם ל-search/page בלבד.
+
+- `PipelineMobileSwitch` חדש (`features/projects/components/`) — מתג שני-כפתורים במובייל בלבד ("פרויקטים" | "לידים"), מוצג בראש שני העמודים.
+
+- ניווט (המשך B6.6): נוסף `PROJECTS` ל-`navigation.ts`, קבוצת "צינורת" בדסקטופ הפכה ל-`[לידים, פרויקטים, לקוחות]`. במובייל, `PIPELINE_MOBILE` (יעד ברירת מחדל `/dashboard/projects`) מחליף את "לידים" בטאב התחתון, עם `activeMatch` מותאם אישית שקורא גם `/dashboard/leads` וגם `/dashboard/projects` כפעילים — `NavItem` קיבל שדה `activeMatch?` אופציונלי, ו-`MobileBottomNav` מחשב "פעיל" ידנית במקום להישען רק על ההתאמה המובנית של `Link`.
+
+- `route.tsx` חדש ל-`/dashboard/projects` (זהה במבנה ל-`leads.tsx`), ו-`pnpm generate-routes` הורץ לעדכון `routeTree.gen.ts`.
+
+- `798`/`798` טסטים, `tsc` ו-eslint נקיים.
 
 ### B6.8 יומן: עיצוב מחדש מלא
 - **מה זה:** `CalendarPage.tsx` ו-`CalendarGrid` מתעצבים מחדש דרך `impeccable craft`: תצוגת מסך-מלא במקום כרטיסייה בתוך ה-`max-w-5xl` המשותף לשאר העמודים, כרטיסי פגישה חדשים עם היררכיית מידע ברורה, ושכבות ניווט חודש/שבוע/יום מובחנות (today/selected/תפוס).
