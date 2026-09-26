@@ -324,7 +324,6 @@ export async function processHealthDeclaration(
       phone: canonicalPhone,
       whatsapp_chat_id: canonicalPhone,
       source: surveySource || 'google_form',
-      lead_stage: 'intake',
       health_declaration_signed: true,
       health_declaration_date: payload.submittedAt,
       health_declaration_url: payload.formUrl || '',

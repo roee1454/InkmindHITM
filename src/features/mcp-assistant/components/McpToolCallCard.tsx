@@ -13,7 +13,6 @@ export const TOOL_LABELS: Record<string, string> = {
   mark_appointment_status: 'הצעת עדכון סטטוס',
   search_leads: 'חיפוש לידים',
   get_lead: 'פרטי ליד',
-  update_lead_stage: 'הצעת שינוי שלב',
   get_customer: 'פרטי לקוח/ה',
   add_customer_note: 'הצעת הוספת הערה',
   list_unpaid_deposits: 'תורים ללא מקדמה',

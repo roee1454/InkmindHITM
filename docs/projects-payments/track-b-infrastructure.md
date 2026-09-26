@@ -190,7 +190,7 @@
 
 - יש ייעוץ `completed` → `consultation_done`.
 
-- יש ייעוץ `pending` או `confirmed` → `consultation_scheduled`.
+- For production VPS: I&nbsp;יש ייעוץ `pending` או `confirmed` → `consultation_scheduled`.
 
 - אחרת → `inquiry`.
 
@@ -590,13 +590,20 @@
 - **טסטים:** unit ל-`applyFactGuards` על כל שורה בטבלה, ו-unit לכלים שדוחים בזמן ביצוע.
 
 - **מה בוצע בפועל (25/9/2026):**
-  - `src/integrations/ai/tools/fact-guards.ts` מכיל את `toConversationFacts` ו-`applyFactGuards`. העובדות נגזרות מהתורים שה-bot turn כבר טוען, כך שלא נוספה אף שאילתה. בינתיים יש בהן רק את מה שהשומרים צריכים: התורים העתידיים, הסטטוס שלהם, והאם המקדמה הוסדרה. B4.1 ירחיב אותן בפרטי הפרויקט.
-  - השורות של `start_booking` עם `scope` עוברות ל-B4.2, כי הפרמטר עצמו נוסף שם. הנעילה של `choose_booking_track` עוברת ל-B4.3, כי שם מוגדר מתי מותר ייעוץ נוסף.
-  - שלושה כלים קיבלו בדיקה בזמן ריצה:
-    - `request_reschedule` כבר לא מסלים לצוות כשאין תור.
-    - `flag_earlier_preference` פועל רק על תור מאושר.
-    - `confirm_booking_final` בודק `canTransition` לפני שהוא נועל את התור.
-  - **מה ירד:** העותק המקומי של `toConversationState` ב-`run-bot-turn.server.ts`, והבדיקה הכפולה של המקדמה ב-`confirm_booking_final`, שעברה ל-`isHoldReadyToConfirm`.
+
+- `src/integrations/ai/tools/fact-guards.ts` מכיל את `toConversationFacts` ו-`applyFactGuards`. העובדות נגזרות מהתורים שה-bot turn כבר טוען, כך שלא נוספה אף שאילתה. בינתיים יש בהן רק את מה שהשומרים צריכים: התורים העתידיים, הסטטוס שלהם, והאם המקדמה הוסדרה. B4.1 ירחיב אותן בפרטי הפרויקט.
+
+- השורות של `start_booking` עם `scope` עוברות ל-B4.2, כי הפרמטר עצמו נוסף שם. הנעילה של `choose_booking_track` עוברת ל-B4.3, כי שם מוגדר מתי מותר ייעוץ נוסף.
+
+- שלושה כלים קיבלו בדיקה בזמן ריצה:
+
+- `request_reschedule` כבר לא מסלים לצוות כשאין תור.
+
+- `flag_earlier_preference` פועל רק על תור מאושר.
+
+- `confirm_booking_final` בודק `canTransition` לפני שהוא נועל את התור.
+
+- **מה ירד:** העותק המקומי של `toConversationState` ב-`run-bot-turn.server.ts`, והבדיקה הכפולה של המקדמה ב-`confirm_booking_final`, שעברה ל-`isHoldReadyToConfirm`.
 
 - **מה יורד:** הוראות ב-`STATE_PROMPTS` שמבקשות מהמודל לא להציע ביטול, דחייה או הקדמה כשאין תור, כי השומר מסיר את הכלי. בדיקות אד-הוק בתוך הכלים שטוענות בעצמן את אותן עובדות עוברות ל-`ConversationFacts`. `STATE_TOOLS` מצטמצם למה שתלוי בשלב הדיאלוג בלבד.
 
@@ -628,12 +635,18 @@
 - **טסטים:** unit לכל מקרה, ו-dry-run ב-`lifecycle-service.test.ts`.
 
 - **מה בוצע בפועל (25/9/2026):**
-  - הפונקציה הטהורה נמצאת ב-`conversations/utils/state-drift.ts`, והטעינה והביצוע ב-`server/reconciler.server.ts`. ב-lifecycle היא רצה בתור `processConversationDrift`.
-  - היא רצה **אחרי** שאר המעבדים של ה-tick ולא במקביל אליהם, כדי לא להתחרות בהם על אותה שיחה. ב-dry-run היא מדלגת על שיחות שמעבד אחר כבר מתכנן להזיז.
-  - בנוסף למקרים שבתוכנית, היא מכסה את כל ארבעת שלבי ההחזקה, ותור שהצוות אישר ידנית (מעבר ל-`AWAITING_APPOINTMENT`).
-  - שיחה שנכנסה למצב שלה לפני פחות מ-30 דקות לא נוגעים בה.
-  - הרצת ניסיון על ה-DB של הפיתוח לא מצאה אף שיחה לתקן.
-  - **מה ירד:** העותק של תוויות המצבים בכלי הלידים של ה-MCP, שעבר ל-`CONVERSATION_STATE_LABELS` ב-`conversations/utils/labels.ts`. בבדיקת החפיפה עם ה-lifecycle לא נמצא מה להסיר: שחרור ההחזקה אחרי 48 שעות והקידום אחרי תור הם שמבצעים את המעבר, וה-reconciler רק תופס סטיות. עוד שני עותקים של התוויות, ב-`RecentLeadsCard` וב-`STAGE_CONFIG`, יורדים ב-B6.4 וב-B7.
+
+- הפונקציה הטהורה נמצאת ב-`conversations/utils/state-drift.ts`, והטעינה והביצוע ב-`server/reconciler.server.ts`. ב-lifecycle היא רצה בתור `processConversationDrift`.
+
+- היא רצה **אחרי** שאר המעבדים של ה-tick ולא במקביל אליהם, כדי לא להתחרות בהם על אותה שיחה. ב-dry-run היא מדלגת על שיחות שמעבד אחר כבר מתכנן להזיז.
+
+- בנוסף למקרים שבתוכנית, היא מכסה את כל ארבעת שלבי ההחזקה, ותור שהצוות אישר ידנית (מעבר ל-`AWAITING_APPOINTMENT`).
+
+- שיחה שנכנסה למצב שלה לפני פחות מ-30 דקות לא נוגעים בה.
+
+- הרצת ניסיון על ה-DB של הפיתוח לא מצאה אף שיחה לתקן.
+
+- **מה ירד:** העותק של תוויות המצבים בכלי הלידים של ה-MCP, שעבר ל-`CONVERSATION_STATE_LABELS` ב-`conversations/utils/labels.ts`. בבדיקת החפיפה עם ה-lifecycle לא נמצא מה להסיר: שחרור ההחזקה אחרי 48 שעות והקידום אחרי תור הם שמבצעים את המעבר, וה-reconciler רק תופס סטיות. עוד שני עותקים של התוויות, ב-`RecentLeadsCard` וב-`STAGE_CONFIG`, יורדים ב-B6.4 וב-B7.
 
 - **מה יורד:** קוד שמתקן מצב שיחה בתוך תהליכי ה-lifecycle, ושה-reconciler מכסה עכשיו: לבדוק חפיפה עם `processPastConfirmedAppointments` ועם השחרור של `RELEASABLE_STATES`. תיקון שנשאר כפול במקום אחר יורד משם.
 
@@ -659,11 +672,16 @@
 - **טסטים:** unit לכלי, ו-integration למעבר.
 
 - **מה בוצע בפועל (25/9/2026):**
-  - `record_nps_score` כותב ל-`nps_score` של הפרויקט שהשיחה מצביעה עליו (`active_project`). ציון שכבר נרשם לפרויקט לא נדרס.
-  - שיחה בלי פרויקט: הציון עובר לצוות כהתראה, כדי שלא ילך לאיבוד.
-  - המעבר ל-`AWAIT_NPS_SCORE` נבנה ב-B5.5. הוא חייב להצמיד את הפרויקט שהסתיים ל-`active_project`, כי `COMPLETED` מנקה אותו.
-  - **באג שנמצא:** ב-PocketBase, שדה מספר שלא מולא נקרא כ-0 ולא כ-null. לכן הסינון הישן, `nps_score = null`, לא התאים אף פעם.
-  - **מה ירד:** `getCompletedAppointmentAwaitingNpsForBot` (הניחוש של 14 הימים) והטסט שלו, והשדה `tattoo_info.last_nps_score`, שנכתב ואף אחד לא קרא אותו. השדה `appointments.nps_score` עבר ל-B9.7.
+
+- `record_nps_score` כותב ל-`nps_score` של הפרויקט שהשיחה מצביעה עליו (`active_project`). ציון שכבר נרשם לפרויקט לא נדרס.
+
+- שיחה בלי פרויקט: הציון עובר לצוות כהתראה, כדי שלא ילך לאיבוד.
+
+- המעבר ל-`AWAIT_NPS_SCORE` נבנה ב-B5.5. הוא חייב להצמיד את הפרויקט שהסתיים ל-`active_project`, כי `COMPLETED` מנקה אותו.
+
+- **באג שנמצא:** ב-PocketBase, שדה מספר שלא מולא נקרא כ-0 ולא כ-null. לכן הסינון הישן, `nps_score = null`, לא התאים אף פעם.
+
+- **מה ירד:** `getCompletedAppointmentAwaitingNpsForBot` (הניחוש של 14 הימים) והטסט שלו, והשדה `tattoo_info.last_nps_score`, שנכתב ואף אחד לא קרא אותו. השדה `appointments.nps_score` עבר ל-B9.10.
 
 - **מה יורד:** הניחוש "תור שהושלם ב-14 הימים האחרונים" ב-[bot-appointments.server.ts](../../src/features/calendar/server/bot-appointments.server.ts) (Bug 17), וה-mocks והטסטים שבנויים עליו.
 
@@ -679,6 +697,17 @@
 - **טסטים:** עדכון `cluster6-state-machine-sync.test.ts`.
 
 - **מה יורד:** ההעתקה ל-`lead_stage` בתוך `transition()`, והטסטים ב-`cluster6-state-machine-sync.test.ts` שבודקים את הסנכרון (Bug 43). `stateToLeadStage` והשדה עצמו: B9.5.
+
+- **מה בוצע בפועל (26/9/2026):**
+  - התוכנית הניחה שהקוראים יעברו רק ב-B5.4, B6.4 ו-B7. כדי לנתק כבר עכשיו, כל קורא עבר למקור האמת שלו:
+    - **הדשבורד:** ליד הוא לקוח שמחזור החיים שלו `lead` או `prospect`, והשיחה שלו לא סגורה. מצב השיחה מוצג במקום השלב. זה פתרון ביניים עד שב-B6.4 הספירה תעבור לשלבי הפרויקט.
+    - **`get_customer` ב-MCP:** מחזיר את מחזור החיים.
+    - **תפוגת לידים:** יוצאת מהשיחות. לקוח ב-`PROJECT_IN_PROGRESS` או ב-`AWAIT_NPS_SCORE` כבר לא נחשב ליד שמתקרר.
+    - **`listLeads`:** לא נופל יותר ל-`lead_stage`.
+  - **`update_lead_stage` הוסר כבר עכשיו, לא ב-B7.** מאז B3.2 הוא כתב רק ל-`lead_stage`, ואחרי B3.7 אף אחד כבר לא קורא את השדה, כך שהכלי לא עשה כלום. יחד איתו ירדו `moveLead`, `commitLeadsAction`, `LEADS_WRITE_TOOLS`, `canEditLead` (`leads/utils/permissions.ts`), והתוויות והטסטים שלהם. `update_project_stage` מתווסף ב-B7.
+  - `loadCustomerLifecycles` (`customers/server/customer-lifecycle.server.ts`) הוא עכשיו מקור אחד למחזור החיים, ומשמש את רשימת הלקוחות, את הדשבורד ואת ה-MCP.
+  - **באג שנמצא:** טופס הצהרת הבריאות יצר לקוח חדש עם `lead_stage: 'intake'`, ערך שלא קיים ב-select. לכן PocketBase דחה יצירה של לקוח שמגיע לראשונה דרך הטופס. התיקון: הכתיבה הוסרה.
+  - **מה ירד:** כל הכתיבות וכל הקריאות של `lead_stage`, `stateToLeadStage`, הפעולה `expire_lead`, המפתחות הישנים באותיות קטנות ב-`RecentLeadsCard` ומפת התוויות שלו (התוויות מגיעות עכשיו מ-`CONVERSATION_STATE_LABELS`), ו-`LEAD_STAGE_LABELS` ב-MCP. השדה עצמו ב-DB נשאר עד B9.5.
 
 ---
 
@@ -1182,7 +1211,7 @@
 | B9.2 | `deposit_paid` → `payments` | היום ה-hook מעתיק מהדגל לתשלום. `confirmDepositReceived` עובר לכתוב `payment` ישירות, וה-hook מתהפך: מהתשלום לדגל. אחרי שכל הקוראים עוברים, הדגל וה-hook מוסרים |
 | B9.3 | `price_min`, `price_max`, `deposit_amount`, `payment_receipt_url` על התור | עוברים ל-`projects.quote_*` ול-`payments` |
 | B9.4 | `price_amount` | כל ההפניות מוסרות (השדה לא קיים בסכמה) |
-| B9.5 | `lead_stage` ו-`stateToLeadStage` | הסרה. `audit_log` מאוחד לתוך `state_transitions`, כולל העברת השורות הקיימות |
+| B9.5 | השדה `customers.lead_stage` | מאז B3.7 אף אחד לא קורא או כותב אותו, ו-`stateToLeadStage` כבר נמחק. נשאר רק להסיר את השדה במיגרציה. `audit_log` מאוחד לתוך `state_transitions`, כולל העברת השורות הקיימות |
 | B9.6 | `pocketbase/schema/build_schema.py` | מחיקה. אף סקריפט לא משתמש בו, והמיגרציות הן מקור האמת |
-| B9.7 | `appointments.nps_score` | אף אחד לא קורא או כותב אותו מאז B3.6 (הציון נשמר על הפרויקט). יורד במיגרציה אחרי שבודקים שאין בו ערכים, ואם יש, מעבירים אותם ל-`projects.nps_score` |
-| B9.8 | תיעוד | `architecture.md` §9 מתעדכן. ב-`design-system.md` §2 עדיין כתוב emerald/amber/rose, בזמן שה-eslint אוכף tokens (`status-done` / `status-wait` / `status-dead`), אז הוא מתעדכן לפיהם |
+| B9.10 | `appointments.nps_score` | אף אחד לא קורא או כותב אותו מאז B3.6 (הציון נשמר על הפרויקט). יורד במיגרציה אחרי שבודקים שאין בו ערכים, ואם יש, מעבירים אותם ל-`projects.nps_score` |
+| B9.7 | תיעוד | `architecture.md` §9 מתעדכן. ב-`design-system.md` §2 עדיין כתוב emerald/amber/rose, בזמן שה-eslint אוכף tokens (`status-done` / `status-wait` / `status-dead`), אז הוא מתעדכן לפיהם |

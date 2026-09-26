@@ -1,11 +1,7 @@
 import { z } from 'zod'
-import { listLeads, moveLead } from '@/features/leads/server/leads'
-import { canEditLead } from '@/features/leads/utils/permissions'
+import { listLeads } from '@/features/leads/server/leads'
 import { conversationStateLabel } from '@/features/conversations/utils/labels'
-import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
-import { fuzzySearchByName, mcpReadTool, mcpWriteTool } from './shared'
-import type { McpToolContext } from './shared'
-import type { McpActionDiff } from '../types'
+import { fuzzySearchByName, mcpReadTool } from './shared'
 
 const stageEnum = z.enum([
   'NEW',
@@ -22,7 +18,7 @@ const stageEnum = z.enum([
   'COMPLETED',
 ])
 
-export function buildLeadsTools(ctx: McpToolContext) {
+export function buildLeadsTools() {
   return {
     search_leads: mcpReadTool(
       'מחפש לידים (לקוחות פוטנציאליים) לפי שם/טלפון חלקי ו/או שלב במשפך, ממוין לפי התאמת שם — ההתאמה הקרובה ביותר קודם. סובלני לטעויות הקלדה ולשם חלקי.',
@@ -66,53 +62,5 @@ export function buildLeadsTools(ctx: McpToolContext) {
         return { status: 'success', message: 'פרטי הליד.', data: { ...lead, stageLabel: conversationStateLabel(lead.stage) } }
       },
     ),
-
-    update_lead_stage: mcpWriteTool(
-      ctx,
-      'update_lead_stage',
-      'מציע להעביר ליד לשלב אחר במשפך. לעולם לא מבצע את השינוי מיד — רק מציג הצעה לאישור הבעלים.',
-      z.object({ customerId: z.string(), stage: stageEnum }),
-      async ({ customerId, stage }) => {
-        const su = await getSuperuserClient()
-        const customer = await su.collection('customers').getOne(customerId)
-        let assignedStaffId: string | null = null
-        try {
-          const conversation = await su
-            .collection('conversations')
-            .getFirstListItem(`customer = "${customerId}"`, { fields: 'assigned_staff' })
-          assignedStaffId = (conversation.assigned_staff as string) || null
-        } catch {
-          // no conversation yet — unassigned, editable by anyone
-        }
-        if (!canEditLead(ctx.staff, assignedStaffId)) {
-          throw new Error('הליד הזה משויך לאיש/אשת צוות אחר/ת — לבעלים אין הרשאת עריכה עליו כרגע.')
-        }
-        const currentStage = (customer.lead_stage as string) || 'new'
-        return {
-          summary: `שינוי שלב — ${(customer.name as string) || 'ליד'}`,
-          rows: [
-            {
-              label: (customer.name as string) || (customer.phone as string) || 'ליד',
-              before: conversationStateLabel(currentStage),
-              after: conversationStateLabel(stage),
-            },
-          ],
-        } satisfies McpActionDiff
-      },
-    ),
   }
 }
-
-/** The only place `update_lead_stage` actually mutates — routes through the exact same
- *  `canEditLead`-gated path the leads board's drag-and-drop uses, so MCP can never bypass a
- *  permission rule the rest of the app enforces. */
-export async function commitLeadsAction(toolName: string, args: Record<string, unknown>): Promise<string> {
-  if (toolName === 'update_lead_stage') {
-    const { customerId, stage } = args as { customerId: string; stage: string }
-    await moveLead({ data: { customerId, stage: stage as never } })
-    return 'שלב הליד עודכן בהצלחה.'
-  }
-  throw new Error(`Unknown leads action: ${toolName}`)
-}
-
-export const LEADS_WRITE_TOOLS = new Set(['update_lead_stage'])

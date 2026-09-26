@@ -1,18 +1,11 @@
 import { z } from 'zod'
+import { loadCustomerLifecycles } from '@/features/customers/server/customer-lifecycle.server'
+import { CUSTOMER_LIFECYCLE_LABELS } from '@/features/customers/utils/lifecycle'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { toYmd, minutesToTime } from '@/lib/date-utils'
 import { mcpReadTool, mcpWriteTool } from './shared'
 import type { McpToolContext } from './shared'
 import type { McpActionDiff } from '../types'
-
-const LEAD_STAGE_LABELS: Record<string, string> = {
-  new: 'חדש',
-  intake: 'איסוף פרטים',
-  awaiting_price: 'ממתין להצעת מחיר',
-  awaiting_payment: 'ממתין לתשלום מקדמה',
-  booked: 'נקבע תור',
-  expired: 'פג תוקף',
-}
 
 export function buildCustomerTools(ctx: McpToolContext) {
   return {
@@ -23,10 +16,11 @@ export function buildCustomerTools(ctx: McpToolContext) {
         const su = await getSuperuserClient()
         const customer = await su.collection('customers').getOne(customerId).catch(() => null)
         if (!customer) return { status: 'error', message: 'לקוח/ה לא נמצא/ה.' }
-        const appointments = await su.collection('appointments').getList(1, 10, {
-          filter: `customer = "${customerId}"`,
-          sort: '-start_time',
-        })
+        const [appointments, lifecycleOf] = await Promise.all([
+          su.collection('appointments').getList(1, 10, { filter: `customer = "${customerId}"`, sort: '-start_time' }),
+          loadCustomerLifecycles(su),
+        ])
+        const lifecycle = lifecycleOf(customer.id)
         return {
           status: 'success',
           message: 'פרטי הלקוח/ה.',
@@ -36,8 +30,8 @@ export function buildCustomerTools(ctx: McpToolContext) {
             phone: customer.phone,
             email: customer.email,
             isVip: Boolean(customer.is_vip),
-            leadStage: customer.lead_stage,
-            leadStageLabel: LEAD_STAGE_LABELS[customer.lead_stage as string] || customer.lead_stage,
+            lifecycle,
+            lifecycleLabel: CUSTOMER_LIFECYCLE_LABELS[lifecycle],
             notes: customer.notes,
             recentAppointments: appointments.items.map((a) => {
               const d = new Date(a.start_time as string)

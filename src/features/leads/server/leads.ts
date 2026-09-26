@@ -1,8 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
-import { z } from 'zod'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { getSession } from '@/lib/session.server'
-import { canEditLead } from '../utils/permissions'
 import type { RecordModel } from 'pocketbase'
 import type { LeadStage, UILead } from '../types'
 import { STAGE_CONFIG } from '../types'
@@ -14,7 +12,7 @@ async function requireSession() {
 }
 
 function toUILead(customer: RecordModel, conversation: RecordModel | undefined): UILead {
-  const rawStage = (conversation?.state || customer.lead_stage || 'NEW') as LeadStage
+  const rawStage = (conversation?.state || 'NEW') as LeadStage
   const stage = rawStage in STAGE_CONFIG ? rawStage : 'NEW'
 
   return {
@@ -49,46 +47,3 @@ export const listLeads = createServerFn({ method: 'GET' }).handler(async (): Pro
     (lead) => lead.assignedStaffId === session.staff.id || lead.assignedStaffId === null,
   )
 })
-
-const moveLeadSchema = z.object({
-  customerId: z.string(),
-  stage: z.enum([
-    'NEW',
-    'WANTS_TO_BOOK',
-    'COLLECTING_INFO',
-    'WAITLIST',
-    'AWAIT_PRICE_OFFER',
-    'AWAIT_HEALTH_NOTICE',
-    'AWAIT_PAYMENT',
-    'AWAIT_FINAL_CONFIRMATION',
-    'AWAITING_APPOINTMENT',
-    'PROJECT_IN_PROGRESS',
-    'AWAIT_NPS_SCORE',
-    'COMPLETED',
-  ]),
-})
-
-export const moveLead = createServerFn({ method: 'POST' })
-  .validator(moveLeadSchema)
-  .handler(async ({ data }): Promise<void> => {
-    const session = await requireSession()
-    const su = await getSuperuserClient()
-
-    let assignedStaffId: string | null = null
-    try {
-      const conversation = await su
-        .collection('conversations')
-        .getFirstListItem(`customer = "${data.customerId}"`, { fields: 'id,assigned_staff' })
-      assignedStaffId = (conversation.assigned_staff as string) || null
-    } catch {
-      // no conversation yet for this customer — treated as unassigned, editable by anyone
-    }
-
-    if (!canEditLead(session.staff, assignedStaffId)) {
-      throw new Error('הליד הזה משויך לאיש צוות אחר — אין לך הרשאת עריכה.')
-    }
-
-    // Only the lead label. The bot's dialogue state is not a lead stage: it changes through the
-    // state machine alone (the projects pipeline replaces this, see docs/projects-payments).
-    await su.collection('customers').update(data.customerId, { lead_stage: data.stage })
-  })

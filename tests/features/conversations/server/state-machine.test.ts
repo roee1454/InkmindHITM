@@ -98,28 +98,6 @@ describe('transition()', () => {
     expect(from).toBe('NEW')
   })
 
-  it('syncs customer lead_stage on transition', async () => {
-    const customerUpdates: Array<Record<string, unknown>> = []
-    const su = {
-      collection: (name: string) => ({
-        getOne: async (id: string) => {
-          if (name === 'conversations') return { id: 'conv1', state: 'NEW', customer: 'cust1' }
-          if (name === 'customers') return { id: 'cust1', lead_stage: 'new' }
-          return { id }
-        },
-        update: async (_id: string, fields: Record<string, unknown>) => {
-          if (name === 'customers') customerUpdates.push(fields)
-          return fields
-        },
-        create: async (fields: Record<string, unknown>) => fields,
-      }),
-    }
-
-    await transition(su as never, 'conv1', 'WANTS_TO_BOOK', { actor: 'bot', reason: 'start_booking' })
-    expect(customerUpdates).toHaveLength(1)
-    expect(customerUpdates[0]).toMatchObject({ lead_stage: 'WANTS_TO_BOOK' })
-  })
-
   it('allows AWAIT_FINAL_CONFIRMATION to transition to AWAIT_PAYMENT and AWAIT_PRICE_OFFER', async () => {
     const { su, updates } = fakeSu('AWAIT_FINAL_CONFIRMATION')
     const { from } = await transition(su, 'conv1', 'AWAIT_PAYMENT', {

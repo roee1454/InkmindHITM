@@ -1,8 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   TRANSITIONS,
-  transition,
-  stateToLeadStage,
 } from '@/features/conversations/server/state-machine'
 import { buildBaseTools } from '@/integrations/ai/tools/base.server'
 import { buildBookingTools } from '@/integrations/ai/tools/booking'
@@ -29,8 +27,8 @@ vi.mock('@/features/projects/server/inquiry-project.server', () => ({
   ensureInquiryProject: (...args: unknown[]) => ensureInquiryProject(...args),
 }))
 
-describe('Cluster 6: State Machine & Lead Stage Sync', () => {
-  describe('TRANSITIONS and stateToLeadStage', () => {
+describe('Cluster 6: State Machine', () => {
+  describe('TRANSITIONS', () => {
     it('supports WANTS_TO_BOOK, WAITLIST, and AWAIT_HEALTH_NOTICE legal transitions', () => {
       expect(TRANSITIONS.NEW).toContain('WANTS_TO_BOOK')
       expect(TRANSITIONS.WANTS_TO_BOOK).toContain('COLLECTING_INFO')
@@ -53,61 +51,6 @@ describe('Cluster 6: State Machine & Lead Stage Sync', () => {
       expect(TRANSITIONS.AWAIT_FINAL_CONFIRMATION).toContain('AWAITING_APPOINTMENT')
     })
 
-    it('maps every conversation state to a 1:1 identical CRM lead_stage', () => {
-      expect(stateToLeadStage('NEW')).toBe('NEW')
-      expect(stateToLeadStage('WANTS_TO_BOOK')).toBe('WANTS_TO_BOOK')
-      expect(stateToLeadStage('COLLECTING_INFO')).toBe('COLLECTING_INFO')
-      expect(stateToLeadStage('WAITLIST')).toBe('WAITLIST')
-      expect(stateToLeadStage('AWAIT_PRICE_OFFER')).toBe('AWAIT_PRICE_OFFER')
-      expect(stateToLeadStage('AWAIT_HEALTH_NOTICE')).toBe('AWAIT_HEALTH_NOTICE')
-      expect(stateToLeadStage('AWAIT_PAYMENT')).toBe('AWAIT_PAYMENT')
-      expect(stateToLeadStage('AWAIT_FINAL_CONFIRMATION')).toBe('AWAIT_FINAL_CONFIRMATION')
-      expect(stateToLeadStage('AWAITING_APPOINTMENT')).toBe('AWAITING_APPOINTMENT')
-      expect(stateToLeadStage('AWAIT_NPS_SCORE')).toBe('AWAIT_NPS_SCORE')
-      expect(stateToLeadStage('COMPLETED')).toBe('COMPLETED')
-    })
-
-    it('transition() synchronizes customer.lead_stage automatically (Bug 43)', async () => {
-      let customerStage = 'NEW'
-      const su = {
-        collection: (name: string) => ({
-          getOne: async (id: string) => {
-            if (name === 'conversations') return { id: 'conv1', state: 'NEW', customer: 'cust1' }
-            if (name === 'customers') return { id: 'cust1', lead_stage: customerStage }
-            return { id }
-          },
-          update: async (_id: string, fields: Record<string, unknown>) => {
-            if (name === 'customers' && 'lead_stage' in fields) {
-              customerStage = fields.lead_stage as string
-            }
-            return fields
-          },
-          create: async (fields: Record<string, unknown>) => fields,
-        }),
-      }
-
-      // 1. Move to WANTS_TO_BOOK
-      await transition(su as never, 'conv1', 'WANTS_TO_BOOK', { actor: 'bot', reason: 'start_booking' })
-      expect(customerStage).toBe('WANTS_TO_BOOK')
-
-      // 2. Move to COLLECTING_INFO
-      su.collection = (name: string) => ({
-        getOne: async (id: string) => {
-          if (name === 'conversations') return { id: 'conv1', state: 'WANTS_TO_BOOK', customer: 'cust1' }
-          if (name === 'customers') return { id: 'cust1', lead_stage: customerStage }
-          return { id }
-        },
-        update: async (_id: string, fields: Record<string, unknown>) => {
-          if (name === 'customers' && 'lead_stage' in fields) {
-            customerStage = fields.lead_stage as string
-          }
-          return fields
-        },
-        create: async (fields: Record<string, unknown>) => fields,
-      })
-      await transition(su as never, 'conv1', 'COLLECTING_INFO', { actor: 'bot', reason: 'route_chosen' })
-      expect(customerStage).toBe('COLLECTING_INFO')
-    })
   })
 
   describe('start_booking and Bug 19: wiping tattoo_info for returning clients', () => {
@@ -354,46 +297,39 @@ describe('Cluster 6: State Machine & Lead Stage Sync', () => {
       expect(updatedIds).not.toContain('c3')
     })
 
-    it('processExpiredLeads expires leads inactive for 7 days with no future appointments', async () => {
+    it('processExpiredLeads closes the conversation of a lead inactive for 7 days with nothing booked', async () => {
       const now = new Date('2026-09-20T12:00:00Z')
       const eightDaysAgo = new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000).toISOString()
       const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      const conversations: Record<string, { id: string; state: string; customer: string; last_message_at: string }> = {
+        conv_exp: { id: 'conv_exp', state: 'COLLECTING_INFO', customer: 'c_expired', last_message_at: eightDaysAgo },
+        conv_act: { id: 'conv_act', state: 'COLLECTING_INFO', customer: 'c_active', last_message_at: twoDaysAgo },
+      }
 
-      const customers = [
-        { id: 'c_expired', lead_stage: 'COLLECTING_INFO', updated: eightDaysAgo },
-        { id: 'c_active', lead_stage: 'COLLECTING_INFO', updated: twoDaysAgo },
-      ]
-
-      const updatedCustomers: Array<{ id: string; stage: string }> = []
+      let listFilter = ''
+      const updates: Array<{ id: string; fields: Record<string, unknown> }> = []
       const su = {
+        filter: (raw: string) => raw,
         collection: (name: string) => ({
-          getFullList: async () => customers,
-          getList: async () => ({ totalItems: 0 }), // no active appointments
-          getFirstListItem: async (filter: string) => {
-            if (filter.includes('c_expired')) {
-              return { id: 'conv_exp', state: 'COLLECTING_INFO', customer: 'c_expired', last_message_at: eightDaysAgo }
-            }
-            return { id: 'conv_act', state: 'COLLECTING_INFO', customer: 'c_active', last_message_at: twoDaysAgo }
+          getFullList: async (opts: { filter: string }) => {
+            listFilter = opts.filter
+            return Object.values(conversations)
           },
-          update: async (id: string, fields: any) => {
-            if (name === 'customers' && fields.lead_stage) {
-              updatedCustomers.push({ id, stage: fields.lead_stage })
-            }
+          getList: async () => ({ totalItems: 0 }), // nothing booked
+          getOne: async (id: string) => conversations[id] ?? { id },
+          update: async (id: string, fields: Record<string, unknown>) => {
+            if (name === 'conversations') updates.push({ id, fields })
             return fields
-          },
-          getOne: async (id: string) => {
-            if (name === 'conversations') return { id, state: 'COLLECTING_INFO', customer: 'c_expired' }
-            if (name === 'customers') return { id, lead_stage: 'COMPLETED' }
-            return { id }
           },
           create: async () => ({}),
         }),
       }
 
-      const expiredCount = await processExpiredLeads(su as never, now)
-      expect(expiredCount).toBe(1)
-      expect(updatedCustomers).toEqual([{ id: 'c_expired', stage: 'COMPLETED' }])
+      expect(await processExpiredLeads(su as never, now)).toBe(1)
+      expect(updates).toEqual([{ id: 'conv_exp', fields: expect.objectContaining({ state: 'COMPLETED', status: 'closed' }) }])
+      // A customer between sessions or asked for feedback isn't a lead going cold.
+      expect(listFilter).toContain("state != 'PROJECT_IN_PROGRESS'")
+      expect(listFilter).toContain("state != 'AWAIT_NPS_SCORE'")
     })
   })
 })
-

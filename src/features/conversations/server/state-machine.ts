@@ -14,7 +14,6 @@
  */
 import type PocketBase from 'pocketbase'
 import type { ConversationState } from '@/integrations/ai/prompts'
-import type { LeadStage } from '@/features/leads/types'
 import { addSystemNotification } from '@/features/notifications/server/notifications'
 
 export const TRANSITIONS: Record<ConversationState, ConversationState[]> = {
@@ -54,10 +53,6 @@ const VALID_STATES = new Set(Object.keys(TRANSITIONS) as ConversationState[])
 /** A stored state, or NEW for anything unknown (matches the agent's fallback). */
 export function toConversationState(raw: unknown): ConversationState {
   return VALID_STATES.has(raw as ConversationState) ? (raw as ConversationState) : 'NEW'
-}
-
-export function stateToLeadStage(state: ConversationState): LeadStage {
-  return state
 }
 
 export class InvalidTransitionError extends Error {
@@ -157,20 +152,6 @@ export async function transition(
     ...(to === 'COMPLETED' ? { active_project: '' } : {}),
     ...(opts.extraFields ?? {}),
   })
-
-  // Sync customer lead_stage (Bug 43)
-  const customerId = conversation.customer as string | undefined
-  if (customerId) {
-    try {
-      const customer = await su.collection('customers').getOne(customerId)
-      const targetStage = stateToLeadStage(to)
-      if (customer.lead_stage !== targetStage) {
-        await su.collection('customers').update(customerId, { lead_stage: targetStage })
-      }
-    } catch (err) {
-      console.warn(`[state-machine] Failed to sync customer lead_stage for ${customerId}:`, err)
-    }
-  }
 
   if (from !== to) {
     console.log(`[state-machine] ${from} → ${to} (${opts.actor}: ${opts.reason}) conversation=${conversationId}`)

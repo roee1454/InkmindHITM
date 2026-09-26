@@ -91,7 +91,7 @@ export async function runMcpTurn({ staff, conversationId, text }: RunMcpTurnInpu
   const toolCtx: McpToolContext = { su, staff, proposals }
   const tools = {
     ...buildCalendarTools(toolCtx),
-    ...buildLeadsTools(toolCtx),
+    ...buildLeadsTools(),
     ...buildPaymentsTools(),
     ...buildMessagingTools(toolCtx),
     ...buildCustomerTools(toolCtx),

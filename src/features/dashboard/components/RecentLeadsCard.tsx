@@ -1,27 +1,17 @@
 import { ChevronLeft } from '@/components/ui/icon'
+import { conversationStateLabel } from '@/features/conversations/utils/labels'
 import { useIsMobile } from '#/hooks/useMediaQuery'
 
-const STAGE_TRANSLATIONS: Record<string, { label: string; pill: string }> = {
-  // Lowercase legacy keys
-  new: { label: 'פנייה חדשה', pill: 'bg-muted text-muted-foreground' },
-  intake: { label: 'איסוף פרטים', pill: 'bg-muted text-muted-foreground' },
-  awaiting_price: { label: 'ממתין להצעת מחיר', pill: 'bg-primary/10 text-primary' },
-  awaiting_payment: { label: 'ממתין למקדמה', pill: 'bg-warning/12 text-warning' },
-  booked: { label: 'נקבע תור', pill: 'bg-success/12 text-success' },
-  expired: { label: 'פג תוקף', pill: 'bg-destructive/10 text-destructive' },
-  // LeadStage uppercase keys
-  NEW: { label: 'ליד חדש', pill: 'bg-muted text-muted-foreground' },
-  WANTS_TO_BOOK: { label: 'בירור מסלול', pill: 'bg-muted text-muted-foreground' },
-  COLLECTING_INFO: { label: 'איסוף פרטים', pill: 'bg-muted text-muted-foreground' },
-  WAITLIST: { label: 'רשימת המתנה', pill: 'bg-muted text-muted-foreground' },
-  AWAIT_PRICE_OFFER: { label: 'ממתין לתמחור', pill: 'bg-primary/10 text-primary' },
-  AWAIT_HEALTH_NOTICE: { label: 'הצהרת בריאות', pill: 'bg-primary/10 text-primary' },
-  AWAIT_PAYMENT: { label: 'ממתין למקדמה', pill: 'bg-warning/12 text-warning' },
-  AWAIT_FINAL_CONFIRMATION: { label: 'אישור סופי', pill: 'bg-warning/12 text-warning' },
-  AWAITING_APPOINTMENT: { label: 'נקבע תור', pill: 'bg-success/12 text-success' },
-  PROJECT_IN_PROGRESS: { label: 'באמצע פרויקט', pill: 'bg-accent-soft text-accent-ink' },
-  AWAIT_NPS_SCORE: { label: 'משוב ודירוג', pill: 'bg-success/12 text-success' },
-  COMPLETED: { label: 'סגור / הושלם', pill: 'bg-success/12 text-success' },
+/** Pill color per bot dialogue state; the label comes from CONVERSATION_STATE_LABELS. */
+const STAGE_PILL: Partial<Record<string, string>> = {
+  AWAIT_PRICE_OFFER: 'bg-primary/10 text-primary',
+  AWAIT_HEALTH_NOTICE: 'bg-primary/10 text-primary',
+  AWAIT_PAYMENT: 'bg-warning/12 text-warning',
+  AWAIT_FINAL_CONFIRMATION: 'bg-warning/12 text-warning',
+  AWAITING_APPOINTMENT: 'bg-success/12 text-success',
+  PROJECT_IN_PROGRESS: 'bg-accent-soft text-accent-ink',
+  AWAIT_NPS_SCORE: 'bg-success/12 text-success',
+  COMPLETED: 'bg-success/12 text-success',
 }
 
 /** Row caps that the card's fixed height is sized around — keep the two in step. */
@@ -70,9 +60,9 @@ export function RecentLeadsCard({ leads, onViewAll, onLeadClick }: RecentLeadsCa
       {visibleLeads.length > 0 ? (
         <div className="min-h-0 flex-1 divide-y divide-border/60 overflow-hidden">
           {visibleLeads.map((lead) => {
-            const translation = STAGE_TRANSLATIONS[lead.stage] ?? {
-              label: lead.stage,
-              pill: 'bg-muted text-muted-foreground',
+            const translation = {
+              label: conversationStateLabel(lead.stage),
+              pill: STAGE_PILL[lead.stage] ?? 'bg-muted text-muted-foreground',
             }
             const displayName = lead.name || 'לקוח ללא שם'
 

@@ -351,7 +351,6 @@ async function findOrCreateCustomer(
         phone,
         whatsapp_chat_id: phone,
         source: attribution.source,
-        lead_stage: 'NEW',
       })
     } catch (createErr: unknown) {
       // In case of unique violation or concurrent write from another process, fallback to fetch

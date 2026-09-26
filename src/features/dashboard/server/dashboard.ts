@@ -2,6 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { requireAuth } from '@/features/settings/server/helpers.server'
 import { toYmd, minutesToTime } from '#/features/calendar/utils/date-utils'
+import { loadCustomerLifecycles } from '@/features/customers/server/customer-lifecycle.server'
 
 export interface DashboardMetrics {
   appointmentsTodayCount: number
@@ -33,12 +34,11 @@ export const getDashboardData = createServerFn({ method: 'GET' }).handler(
 
     const todayStr = toYmd(new Date())
 
-    const [rawCustomers, rawAppointments, conversations] = await Promise.all([
+    const [rawCustomers, rawAppointments, conversations, lifecycleOf] = await Promise.all([
       su.collection('customers').getFullList({ sort: '-updated' }),
       su.collection('appointments').getFullList({ expand: 'customer', sort: 'start_time' }),
-      !isAdmin
-        ? su.collection('conversations').getFullList({ fields: 'id,customer,assigned_staff' })
-        : Promise.resolve([]),
+      su.collection('conversations').getFullList({ fields: 'id,customer,assigned_staff,state' }),
+      loadCustomerLifecycles(su),
     ])
 
     const appointmentRecords = isAdmin
@@ -59,17 +59,23 @@ export const getDashboardData = createServerFn({ method: 'GET' }).handler(
       customerRecords = rawCustomers.filter((c) => assignedCustomerIds.has(c.id))
     }
 
-    // Active leads = customers whose lead_stage is not 'expired' (or 'lost')
-    const activeLeads = customerRecords.filter((c) => (c.lead_stage as string) !== 'expired')
-    const newLeadsCount = activeLeads.filter((c) => (c.lead_stage as string) === 'new' || !c.lead_stage).length
-    const awaitingPriceCount = activeLeads.filter((c) => (c.lead_stage as string) === 'awaiting_price').length
+    // Interim until track-b B6.4 counts by project stage: a lead is a customer who never had a
+    // session (lifecycle lead/prospect) and whose conversation isn't closed; the bot's dialogue
+    // state stands in for where they are.
+    const stateByCustomer = new Map(conversations.map((c) => [c.customer as string, (c.state as string) || 'NEW']))
+    const activeLeads = customerRecords.filter((c) => {
+      const lifecycle = lifecycleOf(c.id)
+      return (lifecycle === 'lead' || lifecycle === 'prospect') && stateByCustomer.get(c.id) !== 'COMPLETED'
+    })
+    const newLeadsCount = activeLeads.filter((c) => lifecycleOf(c.id) === 'lead').length
+    const awaitingPriceCount = activeLeads.filter((c) => stateByCustomer.get(c.id) === 'AWAIT_PRICE_OFFER').length
     const totalActiveLeads = activeLeads.length
     const totalCustomersCount = customerRecords.length
 
     const recentLeads = activeLeads.slice(0, 10).map((c) => ({
       chatId: (c.whatsapp_chat_id as string) || c.id,
       name: (c.name as string) || null,
-      stage: (c.lead_stage as string) || 'new',
+      stage: stateByCustomer.get(c.id) ?? 'NEW',
       style: (c.notes as string) || null,
     }))
 

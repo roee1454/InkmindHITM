@@ -16,10 +16,6 @@ vi.mock('@/integrations/whatsapp-cloud-api/settings.server', () => ({
 }))
 vi.mock('@/features/leads/server/leads', () => ({
   listLeads: vi.fn(),
-  moveLead: vi.fn(),
-}))
-vi.mock('@/features/leads/utils/permissions', () => ({
-  canEditLead: vi.fn().mockReturnValue(true),
 }))
 
 let getSuperuserClient: typeof GetSuperuserClient
@@ -46,7 +42,6 @@ const ARGS = {
   timeSlot: '11:00',
   durationMinutes: 120,
   status: 'pending',
-  stage: 'intake',
   text: 'שלום',
   note: 'הערה',
   waitlistEntryId: 'entry1',

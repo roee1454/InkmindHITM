@@ -27,8 +27,6 @@ function describeAction(action: LifecyclePlannedAction): string {
       return `תזכורת לצוות לסגור את הסשן ${action.appointmentId} עם מחיר סופי`
     case 'cancel_stale_pending':
       return `ביטול התור הממתין ${action.appointmentId} (48 שעות)`
-    case 'expire_lead':
-      return `סגירת הליד הלא פעיל ${action.customerId}`
     case 'transition_conversation':
       return `מעבר השיחה ${action.conversationId} ל-${action.to}`
     case 'reconcile_conversation':

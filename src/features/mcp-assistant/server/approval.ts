@@ -1,6 +1,5 @@
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { commitCalendarAction, CALENDAR_WRITE_TOOLS } from './tool-servers/calendar.server'
-import { commitLeadsAction, LEADS_WRITE_TOOLS } from './tool-servers/leads.server'
 import { commitMessagingAction, MESSAGING_WRITE_TOOLS } from './tool-servers/messaging.server'
 import { commitCustomersAction, CUSTOMERS_WRITE_TOOLS } from './tool-servers/customers.server'
 import { commitWaitlistAction, WAITLIST_WRITE_TOOLS } from './tool-servers/waitlist.server'
@@ -10,7 +9,6 @@ import type { McpAction, McpActionDiff } from './types'
  *  instead of re-deriving the union by hand — see `tool-registration.test.ts`. */
 export const WRITE_TOOL_NAMES = new Set([
   ...CALENDAR_WRITE_TOOLS,
-  ...LEADS_WRITE_TOOLS,
   ...MESSAGING_WRITE_TOOLS,
   ...CUSTOMERS_WRITE_TOOLS,
   ...WAITLIST_WRITE_TOOLS,
@@ -63,7 +61,6 @@ export async function createPendingAction(input: {
  *  indirectly, through `executeAction` below. */
 export function dispatchCommit(toolName: string, args: Record<string, unknown>): Promise<string> {
   if (CALENDAR_WRITE_TOOLS.has(toolName)) return commitCalendarAction(toolName, args)
-  if (LEADS_WRITE_TOOLS.has(toolName)) return commitLeadsAction(toolName, args)
   if (MESSAGING_WRITE_TOOLS.has(toolName)) return commitMessagingAction(toolName, args)
   if (CUSTOMERS_WRITE_TOOLS.has(toolName)) return commitCustomersAction(toolName, args)
   if (WAITLIST_WRITE_TOOLS.has(toolName)) return commitWaitlistAction(toolName, args)

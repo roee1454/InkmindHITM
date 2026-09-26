@@ -42,7 +42,6 @@ export type LifecyclePlannedAction =
   | { kind: 'complete_appointment'; appointmentId: string }
   | { kind: 'remind_close_out'; appointmentId: string }
   | { kind: 'cancel_stale_pending'; appointmentId: string }
-  | { kind: 'expire_lead'; customerId: string }
   | { kind: 'transition_conversation'; conversationId: string; to: string; reason: string }
   | { kind: 'reconcile_conversation'; conversationId: string; from: string; to: string | null; reason: string }
 
@@ -546,47 +545,42 @@ export const LEAD_INACTIVITY_EXPIRY_DAYS = 7
 
 /**
  * 6. Process Expired Inactive Leads
- * Closes leads inactive for 7 days with no future appointments and marks them expired.
+ * Closes the conversation of a lead inactive for 7 days with no upcoming appointment.
  */
 export async function processExpiredLeads(su: PocketBase, now: Date = new Date(), options: LifecycleRunOptions = {}): Promise<number> {
   const expiryMs = LEAD_INACTIVITY_EXPIRY_DAYS * DAY_MS
   const nowMs = now.getTime()
 
-  const customers = await su.collection('customers').getFullList({
-    filter: 'lead_stage != "COMPLETED" && lead_stage != "AWAITING_APPOINTMENT"',
+  // A customer between sessions of a project, or asked for feedback, isn't a lead going cold.
+  const conversations = await su.collection('conversations').getFullList({
+    filter: "state != 'COMPLETED' && state != 'AWAITING_APPOINTMENT' && state != 'PROJECT_IN_PROGRESS' && state != 'AWAIT_NPS_SCORE'",
+    expand: 'customer',
   }).catch(() => [])
 
   let count = 0
-  for (const customer of customers) {
-    // Check if customer has any active or future appointments
+  for (const conv of conversations) {
+    const customerId = conv.customer as string
+    if (!customerId) continue
     const activeAppts = await su.collection('appointments').getList(1, 1, {
-      filter: `customer = "${customer.id}" && (status = "confirmed" || status = "pending")`,
+      filter: su.filter("customer = {:c} && (status = 'confirmed' || status = 'pending')", { c: customerId }),
     }).catch(() => ({ totalItems: 0 }))
-
     if (activeAppts.totalItems > 0) continue
 
-    const conv = await su.collection('conversations').getFirstListItem(`customer = "${customer.id}"`).catch(() => null)
-    const lastActivityStr = (conv?.last_message_at || customer.updated || customer.created) as string
-    const lastActivityMs = new Date(lastActivityStr).getTime()
+    const customer = conv.expand?.customer as RecordModel | undefined
+    const lastActivityStr = (conv.last_message_at || customer?.updated || conv.created) as string
+    if (nowMs - new Date(lastActivityStr).getTime() < expiryMs) continue
 
-    if (nowMs - lastActivityMs >= expiryMs) {
-      await effect(options, { kind: 'expire_lead', customerId: customer.id }, () =>
-        su.collection('customers').update(customer.id, { lead_stage: 'COMPLETED' }).catch(() => null),
-      )
-      if (conv && conv.state !== 'COMPLETED') {
-        await effect(
-          options,
-          { kind: 'transition_conversation', conversationId: conv.id, to: 'COMPLETED', reason: 'lead_inactivity_expiry_7d' },
-          () =>
-            transition(su, conv.id, 'COMPLETED', {
-              actor: 'system',
-              reason: 'lead_inactivity_expiry_7d',
-              extraFields: { status: 'closed' },
-            }).catch(() => null),
-        )
-      }
-      count++
-    }
+    await effect(
+      options,
+      { kind: 'transition_conversation', conversationId: conv.id, to: 'COMPLETED', reason: 'lead_inactivity_expiry_7d' },
+      () =>
+        transition(su, conv.id, 'COMPLETED', {
+          actor: 'system',
+          reason: 'lead_inactivity_expiry_7d',
+          extraFields: { status: 'closed' },
+        }).catch(() => null),
+    )
+    count++
   }
 
   return count

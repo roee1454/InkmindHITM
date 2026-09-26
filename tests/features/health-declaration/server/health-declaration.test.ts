@@ -285,7 +285,6 @@ describe('Health Declaration Integration', () => {
             name: 'נועה ברק',
             phone: '+972501234567',
             whatsapp_chat_id: '+972501234567',
-            lead_stage: 'awaiting_payment',
           },
         ],
         appointments: [
@@ -349,7 +348,6 @@ describe('Health Declaration Integration', () => {
             name: 'יוסי כהן',
             phone: '+972528889900',
             whatsapp_chat_id: '+972528889900',
-            lead_stage: 'awaiting_payment',
           },
         ],
         appointments: [

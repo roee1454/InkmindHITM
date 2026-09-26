@@ -2,17 +2,12 @@ import { beforeAll, describe, expect, it, vi } from 'vitest'
 import type { getSuperuserClient as GetSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import type { listLeads as ListLeads } from '@/features/leads/server/leads'
 import type { buildLeadsTools as BuildLeadsTools } from '@/features/mcp-assistant/server/tool-servers/leads.server'
-import type { McpToolContext } from '@/features/mcp-assistant/server/tool-servers/shared'
 
 vi.mock('@/integrations/pocketbase/superuser.server', () => ({
   getSuperuserClient: vi.fn(),
 }))
 vi.mock('@/features/leads/server/leads', () => ({
   listLeads: vi.fn(),
-  moveLead: vi.fn(),
-}))
-vi.mock('@/features/leads/utils/permissions', () => ({
-  canEditLead: vi.fn().mockReturnValue(true),
 }))
 
 let getSuperuserClient: typeof GetSuperuserClient
@@ -34,8 +29,7 @@ const LEADS = [
 async function callSearchLeads(input: { query?: string; stage?: 'NEW' | 'WANTS_TO_BOOK' | 'COLLECTING_INFO' | 'WAITLIST' | 'AWAIT_PRICE_OFFER' | 'AWAIT_HEALTH_NOTICE' | 'AWAIT_PAYMENT' | 'AWAIT_FINAL_CONFIRMATION' | 'AWAITING_APPOINTMENT' | 'AWAIT_NPS_SCORE' | 'COMPLETED' }) {
   vi.mocked(listLeads).mockResolvedValue(LEADS)
   vi.mocked(getSuperuserClient).mockResolvedValue(undefined as never)
-  const ctx = { su: undefined, staff: undefined, proposals: [] } as unknown as McpToolContext
-  const tools = buildLeadsTools(ctx)
+  const tools = buildLeadsTools()
   return (tools.search_leads as unknown as { execute: (input: unknown) => Promise<{ data: unknown[] }> }).execute(input)
 }
 

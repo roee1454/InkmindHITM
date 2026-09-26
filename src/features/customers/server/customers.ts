@@ -4,10 +4,7 @@ import { z } from 'zod'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { requireAuth } from '@/features/settings/server/helpers.server'
 import { toCanonicalE164Phone } from '@/lib/phone'
-import { loadProjectPolicy } from '@/features/settings/server/project-policy'
-import { projectStageOf } from '@/features/projects/utils/labels'
-import { deriveCustomerLifecycle } from '../utils/lifecycle'
-import type { LifecycleProject } from '../utils/lifecycle'
+import { loadCustomerLifecycles } from './customer-lifecycle.server'
 import type { Customer } from '../types'
 
 export const getCustomers = createServerFn({ method: 'GET' }).handler(
@@ -16,31 +13,14 @@ export const getCustomers = createServerFn({ method: 'GET' }).handler(
     const su = await getSuperuserClient()
     const isAdmin = session.staff.role === 'owner' || session.staff.role === 'admin'
 
-    const [allCustomers, allAppointments, conversations, projects, policy] = await Promise.all([
+    const [allCustomers, allAppointments, conversations, lifecycleOf] = await Promise.all([
       su.collection('customers').getFullList({ sort: '-created' }),
       su.collection('appointments').getFullList().catch(() => []),
       !isAdmin
         ? su.collection('conversations').getFullList({ fields: 'id,customer,assigned_staff' })
         : Promise.resolve([]),
-      su.collection('projects').getFullList({ fields: 'id,customer,stage,created' }).catch(() => []),
-      loadProjectPolicy(su),
+      loadCustomerLifecycles(su),
     ])
-
-    // Lifecycle is a fact about the customer, so it reads every appointment, not only this artist's.
-    const sessionDatesByProject = new Map<string, string[]>()
-    for (const appt of allAppointments) {
-      if (appt.kind !== 'session' || appt.status !== 'completed' || !appt.project) continue
-      const dates = sessionDatesByProject.get(appt.project as string) ?? []
-      dates.push(appt.start_time as string)
-      sessionDatesByProject.set(appt.project as string, dates)
-    }
-    const projectsByCustomer = new Map<string, LifecycleProject[]>()
-    for (const project of projects) {
-      const list = projectsByCustomer.get(project.customer as string) ?? []
-      list.push({ stage: projectStageOf(project.stage), createdAt: project.created as string, sessionDates: sessionDatesByProject.get(project.id) ?? [] })
-      projectsByCustomer.set(project.customer as string, list)
-    }
-    const now = new Date()
 
     const appointmentRecords = isAdmin
       ? allAppointments
@@ -85,7 +65,7 @@ export const getCustomers = createServerFn({ method: 'GET' }).handler(
         updatedAt: item.updated as string,
         visits: stats.visits,
         totalSpend: stats.totalSpend,
-        lifecycle: deriveCustomerLifecycle(projectsByCustomer.get(item.id) ?? [], now, policy.dormantAfterMonths),
+        lifecycle: lifecycleOf(item.id),
         healthDeclarationSigned: Boolean(item.health_declaration_signed),
         healthDeclarationDate: (item.health_declaration_date as string) || null,
         healthDeclarationUrl: (item.health_declaration_url as string) || null,
