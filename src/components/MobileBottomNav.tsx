@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '#/lib/utils.ts'
 import { getUnseenMessagesCount } from '#/features/conversations/server/messages.ts'
-import { NAV_ITEMS } from './navigation.ts'
+import { MOBILE_NAV_ITEMS } from './navigation.ts'
 
 interface MobileBottomNavProps {
   className?: string
@@ -35,7 +35,7 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <ul className="flex h-16 items-stretch">
-        {NAV_ITEMS.map((item) => (
+        {MOBILE_NAV_ITEMS.map((item) => (
           <li key={item.to} className="flex-1">
             <Link
               to={item.to}

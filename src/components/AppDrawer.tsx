@@ -18,6 +18,7 @@ import { getAiSettings } from '#/features/settings/server/ai.ts'
 import { getUnreadNotificationsCount } from '#/features/notifications/server/notifications.ts'
 import type { StaffRecord } from '#/integrations/pocketbase/types.ts'
 import { clearSessionCache } from '@/features/auth/utils/session-cache'
+import { DRAWER_NAV_ITEMS } from '#/components/navigation.ts'
 
 const ROLE_LABELS: Record<string, string> = {
   owner: 'בעלים',
@@ -32,7 +33,9 @@ interface AppDrawerProps {
 }
 
 /**
- * Secondary navigation for mobile — settings, notifications, AI status and logout. The five
+ * Secondary navigation for mobile — settings, notifications, AI status, logout, and any
+ * destination that doesn't fit the bottom tab bar's 5-slot cap (analytics, track-b B6.6:
+ * reflective/periodic use, not the moment-to-moment work the bottom bar serves). The five
  * primary destinations live in the bottom tab bar, not here.
  *
  * Deliberately does not render <Sidebar>: that is `sticky h-svh w-72` with its own scroll
@@ -87,6 +90,20 @@ export function AppDrawer({ open, onOpenChange, staff }: AppDrawerProps) {
               </span>
             </Link>
           )}
+
+          {DRAWER_NAV_ITEMS.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              activeOptions={{ exact: item.exact }}
+              activeProps={{ className: 'bg-primary/10 text-primary font-extrabold' }}
+              inactiveProps={{ className: 'text-muted-foreground font-bold' }}
+              className="mt-4 flex h-[46px] items-center gap-2.5 rounded-2xl px-3.5 font-assistant text-sm transition-colors duration-150 active:bg-muted"
+            >
+              <item.icon size={18} />
+              <span>{item.label}</span>
+            </Link>
+          ))}
 
           <Link
             to="/dashboard/notifications"

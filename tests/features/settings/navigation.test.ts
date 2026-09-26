@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { SETTINGS_SUB_ITEMS, routeTitle, settingsBackTarget } from '@/components/navigation'
+import {
+  DRAWER_NAV_ITEMS,
+  MOBILE_NAV_ITEMS,
+  NAV_GROUPS,
+  NAV_ITEMS,
+  SETTINGS_SUB_ITEMS,
+  routeTitle,
+  settingsBackTarget,
+} from '@/components/navigation'
 
 describe('Settings Navigation & 4-Tab IA', () => {
   it('consolidates settings to 4 screens in the specified order', () => {
@@ -48,6 +56,27 @@ describe('Settings Navigation & 4-Tab IA', () => {
     expect(settingsBackTarget('/dashboard/settings/team', {}, false)).toEqual({
       to: '/dashboard',
     })
+  })
+})
+
+describe('primary navigation grouping (track-b B6.6)', () => {
+  it('groups every primary destination by intent, with no item duplicated or dropped', () => {
+    const grouped = NAV_GROUPS.flatMap((g) => g.items.map((i) => i.to))
+    expect(grouped).toEqual(NAV_ITEMS.map((i) => i.to))
+    expect(new Set(grouped).size).toBe(grouped.length)
+    expect(NAV_GROUPS.map((g) => g.label)).toEqual(['היום', 'עבודה שוטפת', 'צינורת', 'תובנות'])
+  })
+
+  it('caps the mobile bottom bar at 5 tabs and moves analytics to the drawer', () => {
+    expect(MOBILE_NAV_ITEMS.length).toBeLessThanOrEqual(5)
+    expect(MOBILE_NAV_ITEMS.some((i) => i.to === '/dashboard/analytics')).toBe(false)
+    expect(DRAWER_NAV_ITEMS.map((i) => i.to)).toContain('/dashboard/analytics')
+  })
+
+  it('still resolves a mobile top-bar title for every primary destination', () => {
+    for (const item of NAV_ITEMS) {
+      expect(routeTitle(item.to)).toBe(item.label)
+    }
   })
 })
 

@@ -1,17 +1,51 @@
 import { CalendarDays, ChartBar, Home, MessageSquare, SquareKanban, Users } from '@/components/ui/icon'
 
+export interface NavItem {
+  readonly to: string
+  readonly label: string
+  readonly icon: typeof Home
+  readonly exact: boolean
+}
+
+const HOME: NavItem = { to: '/dashboard', label: 'בית', icon: Home, exact: true }
+const CALENDAR: NavItem = { to: '/dashboard/calendar', label: 'תורים', icon: CalendarDays, exact: false }
+// TODO(B6.7): this becomes the combined "צינורת" tab (label + icon unchanged) once
+// /dashboard/projects exists — routes to whichever of leads/projects was last open, with an
+// in-page switcher at the top. See docs/projects-payments/track-b-infrastructure.md B6.7.
+const LEADS: NavItem = { to: '/dashboard/leads', label: 'לידים', icon: SquareKanban, exact: false }
+const CUSTOMERS: NavItem = { to: '/dashboard/customers', label: 'לקוחות', icon: Users, exact: false }
+const CONVERSATIONS: NavItem = { to: '/dashboard/conversations', label: 'שיחות', icon: MessageSquare, exact: false }
+const ANALYTICS: NavItem = { to: '/dashboard/analytics', label: 'אנליטיקות', icon: ChartBar, exact: false }
+
+export interface NavGroup {
+  readonly label: string
+  readonly items: readonly NavItem[]
+}
+
 /**
- * Single source of truth for primary navigation, shared by the desktop Sidebar, the mobile
- * bottom tab bar, the drawer, and the mobile top bar's title.
+ * Desktop sidebar grouping, by intent rather than by menu order (track-b B6.6): today's
+ * overview, the day-to-day work, the pipeline of work coming in, and the reflective/periodic
+ * view. Group labels are hidden when the sidebar is collapsed to its icon-only rail.
  */
-export const NAV_ITEMS = [
-  { to: '/dashboard', label: 'בית', icon: Home, exact: true },
-  { to: '/dashboard/calendar', label: 'תורים', icon: CalendarDays, exact: false },
-  { to: '/dashboard/leads', label: 'לידים', icon: SquareKanban, exact: false },
-  { to: '/dashboard/customers', label: 'לקוחות', icon: Users, exact: false },
-  { to: '/dashboard/conversations', label: 'שיחות', icon: MessageSquare, exact: false },
-  { to: '/dashboard/analytics', label: 'אנליטיקות', icon: ChartBar, exact: false },
-] as const
+export const NAV_GROUPS: readonly NavGroup[] = [
+  { label: 'היום', items: [HOME] },
+  { label: 'עבודה שוטפת', items: [CALENDAR, CONVERSATIONS] },
+  { label: 'צינורת', items: [LEADS, CUSTOMERS] },
+  { label: 'תובנות', items: [ANALYTICS] },
+]
+
+/** Flat view of every primary destination. `routeTitle` and the mobile top bar title read this. */
+export const NAV_ITEMS: readonly NavItem[] = NAV_GROUPS.flatMap((group) => group.items)
+
+/**
+ * The mobile bottom tab bar (track-b B6.6): capped at 5, the conventional ceiling for a phone's
+ * bottom bar. Analytics moves to the drawer — reflective, periodic use, not the moment-to-moment
+ * work the other five destinations serve.
+ */
+export const MOBILE_NAV_ITEMS: readonly NavItem[] = [HOME, CALENDAR, CONVERSATIONS, LEADS, CUSTOMERS]
+
+/** Secondary destinations shown in the mobile drawer, alongside notifications/settings/AI status. */
+export const DRAWER_NAV_ITEMS: readonly NavItem[] = [ANALYTICS]
 
 export const SETTINGS_SUB_ITEMS = [
   { id: 'general', label: 'כללי', route: '/dashboard/settings/general' },

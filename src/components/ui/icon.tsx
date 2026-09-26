@@ -81,6 +81,7 @@ import {
   SealCheck as PhSealCheck,
   ShieldCheck as PhShieldCheck,
   ShieldWarning as PhShieldWarning,
+  SidebarSimpleIcon as PhSidebarSimple,
   SignOut as PhSignOut,
   SlidersHorizontal as PhSlidersHorizontal,
   Sparkle as PhSparkle,
@@ -215,6 +216,7 @@ export const SendHorizontal = styled(PhPaperPlaneRight, 'duotone')
 export const Settings = styled(PhGear, 'duotone')
 export const ShieldAlert = styled(PhShieldWarning, 'duotone')
 export const ShieldCheck = styled(PhShieldCheck, 'duotone')
+export const SidebarToggle = styled(PhSidebarSimple, 'bold')
 export const SlidersHorizontal = styled(PhSlidersHorizontal, 'bold')
 export const Sparkle = styled(PhSparkle, 'duotone')
 export const Sparkles = styled(PhSparkle, 'duotone')
