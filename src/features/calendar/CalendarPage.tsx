@@ -34,6 +34,7 @@ import type {StaffMember, CurrentStaffInfo} from '@/features/settings/server/sta
 import { getWorkingHours } from '@/features/settings/server/profiles'
 import { useCalendarUiStore } from './store/calendarUiStore'
 import { nextSessionValues, tattooAfterConsultationValues } from './utils/follow-up'
+import type { QuoteToSend } from './components/BotQuoteBanner'
 import { useIsMobile } from '#/hooks/useMediaQuery'
 import { Pagination } from '@/components/ui/pagination'
 import { useToast } from '@/components/ui/ToastProvider'
@@ -287,9 +288,9 @@ export const CalendarPage: React.FC = () => {
     }
   }
 
-  const handleSendQuote = (priceMinIls: number, priceMaxIls: number, depositAmount: number, durationMinutes: number) => {
+  const handleSendQuote = (quote: QuoteToSend) => {
     if (!editingAppointment) return
-    sendQuoteMutation.mutate({ appointmentId: editingAppointment.id, priceMinIls, priceMaxIls, depositAmount, durationMinutes })
+    sendQuoteMutation.mutate({ appointmentId: editingAppointment.id, ...quote })
   }
 
 

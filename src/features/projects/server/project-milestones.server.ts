@@ -64,12 +64,13 @@ async function updateProject(su: PocketBase, projectId: string, fields: Record<s
 export async function recordProjectQuote(
   su: PocketBase,
   projectId: string,
-  quote: { min: number; max: number },
+  quote: { min: number; max: number; /** undefined leaves the estimate as it was; null = not known yet. */ estimatedSessions?: number | null },
   now: Date,
 ): Promise<void> {
   await su.collection('projects').update(projectId, {
     quote_min: quote.min,
     quote_max: quote.max,
+    ...(quote.estimatedSessions !== undefined ? { estimated_sessions: quote.estimatedSessions ?? 0 } : {}),
     quote_sent_at: now.toISOString(),
     ...attribution('staff', 'price_quote_sent'),
   })

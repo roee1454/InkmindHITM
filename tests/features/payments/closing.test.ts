@@ -40,8 +40,8 @@ const appt = (id: string, kind: LedgerAppointment['kind'], status: LedgerAppoint
 })
 
 describe('defaultIsLastSession', () => {
-  it('is the last session when nothing else is booked and nobody estimated otherwise', () => {
-    expect(defaultIsLastSession([appt('c', 'consultation', 'completed'), appt('s1', 'session', 'confirmed')], 's1', null)).toBe(true)
+  it('leaves it to staff when nothing else is booked and nobody estimated the sessions', () => {
+    expect(defaultIsLastSession([appt('c', 'consultation', 'completed'), appt('s1', 'session', 'confirmed')], 's1', null)).toBeNull()
   })
 
   it('is not the last session while another session is booked', () => {
@@ -55,6 +55,6 @@ describe('defaultIsLastSession', () => {
   })
 
   it('ignores cancelled sessions and consultations', () => {
-    expect(defaultIsLastSession([appt('c', 'consultation', 'pending'), appt('x', 'session', 'cancelled'), appt('s1', 'session', 'confirmed')], 's1', null)).toBe(true)
+    expect(defaultIsLastSession([appt('c', 'consultation', 'pending'), appt('x', 'session', 'cancelled'), appt('s1', 'session', 'confirmed')], 's1', 1)).toBe(true)
   })
 })

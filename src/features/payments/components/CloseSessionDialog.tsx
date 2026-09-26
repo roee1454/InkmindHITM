@@ -13,6 +13,7 @@ import { defaultIsLastSession } from '../utils/closing'
 import type { NewPayment } from '../types'
 import { ClosingPreview } from './ClosingPreview'
 import { PaymentRowsEditor } from './PaymentRowsEditor'
+import { LastSessionQuestion } from './LastSessionQuestion'
 import type { PaymentRowDraft } from './PaymentRowsEditor'
 
 function toNewPayments(rows: PaymentRowDraft[]): NewPayment[] {
@@ -42,9 +43,10 @@ export function CloseSessionDialog({
   const [lastSessionChoice, setLastSessionChoice] = useState<boolean | null>(null)
   const [scheduleNext, setScheduleNext] = useState(false)
   const { finance, close } = useCloseSession(appointment.projectId, open, () => onOpenChange(false))
-  const isLastSession =
+  // null = staff must choose (no estimate and nothing else booked).
+  const isLastSession: boolean | null =
     lastSessionChoice ?? (finance.data ? defaultIsLastSession(finance.data.appointments, appointment.id, finance.data.estimatedSessions) : false)
-  const offerNextSession = Boolean(onScheduleNextSession) && !isLastSession
+  const offerNextSession = Boolean(onScheduleNextSession) && isLastSession === false
 
   useEffect(() => {
     if (!open) return
@@ -59,10 +61,10 @@ export function CloseSessionDialog({
 
   const price = Number(finalPrice) > 0 ? Number(finalPrice) : null
   const newPayments = toNewPayments(rows)
-  const canSubmit = (chargeWaived || price !== null) && !close.isPending
+  const canSubmit = (chargeWaived || price !== null) && isLastSession !== null && !close.isPending
 
   const submit = () => {
-    if (!canSubmit) return
+    if (!canSubmit || isLastSession === null) return
     const bookNext = offerNextSession && scheduleNext
     close.mutate(
       { appointmentId: appointment.id, finalPrice: chargeWaived ? null : price, chargeWaived, payments: newPayments, completesProject: isLastSession },
@@ -114,10 +116,14 @@ export function CloseSessionDialog({
             {formatDatabaseError(finance.error, 'לא הצלחנו לטעון את מצב התשלומים של הפרויקט.')}
           </p>
         )}
-        <label className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Switch checked={isLastSession} onCheckedChange={setLastSessionChoice} disabled={close.isPending || !finance.data} />
-          זה הסשן האחרון בפרויקט (הפרויקט יסומן כהושלם)
-        </label>
+        {isLastSession === null ? (
+          <LastSessionQuestion onChoose={setLastSessionChoice} disabled={close.isPending} />
+        ) : (
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Switch checked={isLastSession} onCheckedChange={setLastSessionChoice} disabled={close.isPending || !finance.data} />
+            זה הסשן האחרון בפרויקט (הפרויקט יסומן כהושלם)
+          </label>
+        )}
         {offerNextSession && (
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <Switch checked={scheduleNext} onCheckedChange={setScheduleNext} disabled={close.isPending} />
@@ -125,7 +131,7 @@ export function CloseSessionDialog({
           </label>
         )}
 
-        {finance.data && (
+        {finance.data && isLastSession !== null && (
           <ClosingPreview
             finance={finance.data}
             appointmentId={appointment.id}

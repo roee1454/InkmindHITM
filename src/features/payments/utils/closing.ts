@@ -25,16 +25,17 @@ const BILLABLE = ['session', 'touch_up']
 
 /**
  * Whether closing this session most likely finishes the piece: no other session is still booked,
- * and the estimate (when there is one) has been reached. Staff can always change it.
+ * and the artist's estimate has been reached. null when there's nothing to go on (no estimate and
+ * nothing booked): staff must say, since a wrong guess would end a multi-session project.
  */
 export function defaultIsLastSession(
   appointments: LedgerAppointment[],
   closingId: string,
   estimatedSessions: number | null,
-): boolean {
+): boolean | null {
   const others = appointments.filter((a) => a.id !== closingId && BILLABLE.includes(a.kind))
   if (others.some((a) => a.status === 'pending' || a.status === 'confirmed')) return false
-  if (estimatedSessions === null) return true
+  if (estimatedSessions === null) return null
   const doneAfterThis = others.filter((a) => a.kind === 'session' && a.status === 'completed').length + 1
   return doneAfterThis >= estimatedSessions
 }

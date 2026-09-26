@@ -10,6 +10,7 @@ import { ImageGalleryDialog } from './ImageGalleryDialog'
 import { formatPhoneForDisplay } from '@/lib/phone'
 import { ProjectTimeline } from './ProjectTimeline'
 import { SessionCloseOutSection } from '@/features/payments/components/SessionCloseOutSection'
+import type { QuoteToSend } from './BotQuoteBanner'
 import { ProjectPanel } from '@/features/projects/components/ProjectPanel'
 
 interface StaffItem {
@@ -25,7 +26,7 @@ interface EditAppointmentDialogProps {
   onSave: (data: AppointmentFormValues) => void
   isSaving: boolean
   error: string | null
-  onSendQuote: (priceMinIls: number, priceMaxIls: number, depositAmount: number, durationMinutes: number) => void
+  onSendQuote: (quote: QuoteToSend) => void
   isSendingQuote: boolean
   onDelete?: (id: string) => void
   isDeleting?: boolean

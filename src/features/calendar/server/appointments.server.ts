@@ -33,6 +33,8 @@ import { canTransition, toConversationState, transition } from '@/features/conve
 import { quoteTargetState } from '../utils/price-quote'
 import { applyConversationAdvance, findConversationWaitingOn, isConsultation, planConversationAdvance } from '@/features/conversations/server/after-appointment.server'
 import { reconcileCustomerConversation } from '@/features/conversations/server/reconciler.server'
+import { loadProjectPolicy } from '@/features/settings/server/project-policy'
+import { buildPriceQuoteMessage } from '../utils/price-quote-message'
 import { cancelPendingBotTurn } from '@/integrations/ai/agent.server'
 import { isHealthDeclarationValid } from '@/features/health-declaration/server/health-service'
 
@@ -498,6 +500,8 @@ export interface SendPriceQuoteServerInput {
   durationMinutes?: number
   date?: string
   timeSlot?: string
+  /** The artist's estimate of how many sessions the tattoo takes; null = not known yet. Defaults to 1. */
+  estimatedSessions?: number | null
 }
 
 export async function sendPriceQuoteToCustomerHandler(data: SendPriceQuoteServerInput) {
@@ -603,79 +607,23 @@ export async function sendPriceQuoteToCustomerHandler(data: SendPriceQuoteServer
     throw new Error('השיחה עם הלקוח נמצאת בשלב שלא מאפשר לשלוח הצעת מחיר. ההודעה לא נשלחה. בדקו את השיחה (אפשר לאפס את שיחת הבוט) ונסו שוב.')
   }
 
-  let messageBody: string
-  const durationLabel = formatDurationHebrew(effectiveDurationMinutes)
-  const locationLine = '📍 איפה: שוהם מרקט קומה מינוס אחת, יש חנייה בשפע במתחם INKMIND!'
-
-  if (isSketch) {
-    const hasDeposit = data.depositAmount != null && data.depositAmount > 0
-    if (needsHealthDeclaration) {
-      messageBody = [
-        'היי! הצוות עבר על הפרטים, הנה פרטי פגישת הייעוץ: ✨',
-        '',
-        `🗓 מועד: ${dayName}, ${dateFormatted} בשעה ${timeFormatted}${staffName ? ` אצל ${staffName}` : ''}.`,
-        `⏱ משך משוער: ${durationLabel}.`,
-        hasDeposit
-          ? `מקדמה לשריון: ₪${data.depositAmount} (תקוזז מעלות הקעקוע).`
-          : 'פגישת הייעוץ ללא עלות.',
-        locationLine,
-        '',
-        '📝 לפני שריון התור, יש למלא הצהרת בריאות קצרה בקישור הבא:',
-        healthFormUrl,
-        hasDeposit
-          ? 'לאחר מילוי ההצהרה נשלח את פרטי התשלום לשריון סופי.'
-          : 'לאחר מילוי ההצהרה התור ייקבע ביומן.',
-      ].filter(Boolean).join('\n')
-    } else {
-      messageBody = [
-        'היי! הנה סיכום הפרטים של פגישת הייעוץ: ✨',
-        '',
-        `🗓 מועד: ${dayName}, ${dateFormatted} בשעה ${timeFormatted}${staffName ? ` אצל ${staffName}` : ''}.`,
-        `⏱ משך משוער: ${durationLabel}.`,
-        hasDeposit
-          ? `מקדמה לשריון: ₪${data.depositAmount} (תקוזז מעלות הקעקוע).`
-          : 'פגישת הייעוץ ללא עלות.',
-        locationLine,
-        hasDeposit && policy.paymentInstructions ? `\n📲 פרטי תשלום למקדמה (ביט / PayBox / העברה):\n${policy.paymentInstructions}` : '',
-        hasDeposit ? `\n${cancellationPolicyText}` : '',
-        hasDeposit ? '\nלאחר ההעברה יש לשלוח כאן צילום מסך של האסמכתה ונסגור את המועד!' : '',
-      ].filter(Boolean).join('\n')
-    }
-  } else {
-    const priceRange =
-      data.priceMinIls === data.priceMaxIls
-        ? `₪${data.priceMinIls.toLocaleString()}`
-        : `₪${data.priceMinIls.toLocaleString()}–${data.priceMaxIls.toLocaleString()}`
-
-    if (needsHealthDeclaration) {
-      messageBody = [
-        'היי! הצוות עבר על הפרטים, הנה פרטי התור לקעקוע: ✨',
-        '',
-        `🗓 מועד: ${dayName}, ${dateFormatted} בשעה ${timeFormatted}${staffName ? ` אצל ${staffName}` : ''}.`,
-        `⏱ משך משוער: ${durationLabel}.`,
-        `💰 מחיר משוער: ${priceRange}.`,
-        `💳 מקדמה לשריון: ₪${data.depositAmount}.`,
-        locationLine,
-        '',
-        '📝 לפני שריון התור, יש למלא הצהרת בריאות קצרה בקישור הבא:',
-        healthFormUrl,
-        'לאחר מילוי ההצהרה נשלח את פרטי התשלום לשריון סופי.',
-      ].filter(Boolean).join('\n')
-    } else {
-      messageBody = [
-        'היי! הנה סיכום הפרטים של פרטי התור לקעקוע: ✨',
-        '',
-        `🗓 מועד: ${dayName}, ${dateFormatted} בשעה ${timeFormatted}${staffName ? ` אצל ${staffName}` : ''}.`,
-        `⏱ משך משוער: ${durationLabel}.`,
-        `💰 מחיר משוער: ${priceRange}.`,
-        `💳 מקדמה לשריון: ₪${data.depositAmount}.`,
-        locationLine,
-        policy.paymentInstructions ? `\n📲 פרטי תשלום למקדמה (ביט / PayBox / העברה):\n${policy.paymentInstructions}` : '',
-        `\n${cancellationPolicyText}`,
-        '\nלאחר ההעברה יש לשלוח כאן צילום מסך של האסמכתה ונסגור את התור!',
-      ].filter(Boolean).join('\n')
-    }
-  }
+  // Not sent (an older caller) = one session; null = the artist doesn't know yet.
+  const estimatedSessions = isSketch ? null : data.estimatedSessions === undefined ? 1 : data.estimatedSessions
+  const messageBody = buildPriceQuoteMessage({
+    isSketch,
+    needsHealthDeclaration,
+    when: `${dayName}, ${dateFormatted} בשעה ${timeFormatted}`,
+    staffName,
+    durationLabel: formatDurationHebrew(effectiveDurationMinutes),
+    priceMin: data.priceMinIls,
+    priceMax: data.priceMaxIls,
+    depositAmount: data.depositAmount,
+    estimatedSessions,
+    healingPeriodDays: (await loadProjectPolicy(su)).healingPeriodDays,
+    paymentInstructions: policy.paymentInstructions ?? null,
+    cancellationPolicyText,
+    healthFormUrl,
+  })
 
   let wamid: string
   try {
@@ -692,7 +640,7 @@ export async function sendPriceQuoteToCustomerHandler(data: SendPriceQuoteServer
   // The quote belongs to the project (it moves the funnel to "quoted"); recorded only once the
   // message went out. A consultation's details aren't a price quote.
   if (!isSketch && appointment.project) {
-    await recordProjectQuote(su, appointment.project as string, { min: data.priceMinIls, max: data.priceMaxIls }, now).catch((err: unknown) =>
+    await recordProjectQuote(su, appointment.project as string, { min: data.priceMinIls, max: data.priceMaxIls, estimatedSessions: data.estimatedSessions }, now).catch((err: unknown) =>
       console.error(`[price-quote] recording the quote on project ${String(appointment.project)} failed:`, err),
     )
   }

@@ -8,6 +8,9 @@ import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { sendPriceQuoteToCustomer } from '@/features/calendar/server/appointments'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui/ToastProvider'
+import { SESSION_ESTIMATE_HINT, SESSION_ESTIMATE_OPTIONS } from '@/features/calendar/utils/session-estimate'
+import { QuoteChoiceChips } from './QuoteChoiceChips'
+import { QuotePriceRange } from './QuotePriceRange'
 
 // 30-minute increments, 1–6 hours — matches AppointmentFormFields' duration select.
 const TATTOO_DURATION_PRESETS = [90, 120, 150, 180, 240, 360].map((minutes) => ({
@@ -65,6 +68,7 @@ export function PriceQuoteSheet({
   const [deposit, setDeposit] = useState(
     initialDeposit ?? (isSketch ? '150' : '350'),
   )
+  const [estimatedSessions, setEstimatedSessions] = useState<number | null>(1)
 
   useEffect(() => {
     if (open) {
@@ -72,6 +76,7 @@ export function PriceQuoteSheet({
       setPriceMin(initialPriceMin)
       setPriceMax(initialPriceMax)
       setDeposit(initialDeposit ?? (isSketch ? '150' : '350'))
+      setEstimatedSessions(1)
     }
   }, [open, initialDurationMinutes, initialPriceMin, initialPriceMax, initialDeposit, isSketch])
 
@@ -94,6 +99,7 @@ export function PriceQuoteSheet({
           priceMaxIls: isSketch ? 0 : Math.max(parsedMin, parsedMax),
           depositAmount: deposit === 'ללא' ? 0 : Number(deposit) || (isSketch ? 150 : 350),
           durationMinutes: duration,
+          ...(isSketch ? {} : { estimatedSessions }),
         },
       })
     },
@@ -121,32 +127,12 @@ export function PriceQuoteSheet({
       }
       contentClassName="max-w-lg space-y-5"
     >
-      {/* Duration Selector */}
-      <div className="space-y-2">
-        <Label className="text-xs font-extrabold text-foreground block">
-          {isSketch ? 'משך פגישת הסקיצה' : 'משך עבודה משוער'}
-        </Label>
-        <div className="grid grid-cols-4 gap-2">
-          {durationPresets.map((preset) => {
-            const isSelected = duration === preset.value
-            return (
-              <button
-                type="button"
-                key={preset.value}
-                onClick={() => setDuration(preset.value)}
-                className={cn(
-                  'h-10 rounded-xl border text-xs font-extrabold transition-all cursor-pointer select-none active:scale-[0.96] flex items-center justify-center',
-                  isSelected
-                    ? 'border-primary bg-primary text-primary-foreground shadow-xs'
-                    : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground',
-                )}
-              >
-                {preset.label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
+      <QuoteChoiceChips
+        label={isSketch ? 'משך פגישת הסקיצה' : 'משך עבודה משוער'}
+        options={durationPresets}
+        value={duration}
+        onChange={setDuration}
+      />
 
       {/* Price Range Inputs or Sketch Notice */}
       {isSketch ? (
@@ -160,39 +146,18 @@ export function PriceQuoteSheet({
           </p>
         </div>
       ) : (
-        <div className="space-y-2">
-          <Label className="text-xs font-extrabold text-foreground block">
-            טווח מחירים משוער
-          </Label>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="relative">
-              <Input
-                type="number"
-                inputMode="numeric"
-                placeholder="מינימום"
-                value={priceMin}
-                onChange={(e) => setPriceMin(e.target.value)}
-                className="h-12 rounded-2xl text-base font-bold tabular-nums pl-8"
-              />
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
-                ₪
-              </span>
-            </div>
-            <div className="relative">
-              <Input
-                type="number"
-                inputMode="numeric"
-                placeholder="מקסימום"
-                value={priceMax}
-                onChange={(e) => setPriceMax(e.target.value)}
-                className="h-12 rounded-2xl text-base font-bold tabular-nums pl-8"
-              />
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
-                ₪
-              </span>
-            </div>
-          </div>
-        </div>
+        <QuotePriceRange min={priceMin} max={priceMax} onMinChange={setPriceMin} onMaxChange={setPriceMax} />
+      )}
+
+      {!isSketch && (
+        <QuoteChoiceChips
+          label="מספר מפגשים משוער"
+          hint={SESSION_ESTIMATE_HINT}
+          options={SESSION_ESTIMATE_OPTIONS}
+          value={estimatedSessions}
+          onChange={setEstimatedSessions}
+          columns={5}
+        />
       )}
 
       {/* Deposit Field + Quick Chips */}

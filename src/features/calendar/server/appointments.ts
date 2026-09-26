@@ -129,6 +129,7 @@ export const sendPriceQuoteSchema = z.object({
   durationMinutes: z.number().min(15).optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   timeSlot: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
+  estimatedSessions: z.number().int().min(1).max(50).nullable().optional(),
 })
 
 export const sendPriceQuoteToCustomer = createServerFn({ method: 'POST' })

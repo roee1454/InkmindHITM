@@ -82,4 +82,20 @@ describe('project milestones', () => {
     expect(await pb.collection('projects').getOne(hold.project as string)).toMatchObject({ stage: 'quoted', quote_min: 1200, quote_max: 1600 })
     expect(await lastProjectTransition(hold.project as string)).toMatchObject({ to: 'quoted', reason: 'price_quote_sent' })
   })
+
+  it("keeps the artist's estimate of the sessions with the quote, and a later quote without one leaves it", async () => {
+    const customer = await createCustomer(pb)
+    const hold = await booking(customer.id, 'session', 'pending', 96)
+    const project = hold.project as string
+
+    await recordProjectQuote(pb, project, { min: 1200, max: 1600, estimatedSessions: 3 }, new Date())
+    expect((await pb.collection('projects').getOne(project)).estimated_sessions).toBe(3)
+
+    await recordProjectQuote(pb, project, { min: 1300, max: 1700 }, new Date())
+    expect((await pb.collection('projects').getOne(project)).estimated_sessions).toBe(3)
+
+    // Not known yet: stored empty.
+    await recordProjectQuote(pb, project, { min: 1300, max: 1700, estimatedSessions: null }, new Date())
+    expect((await pb.collection('projects').getOne(project)).estimated_sessions).toBe(0)
+  })
 })

@@ -6,7 +6,6 @@ import {
   Needle,
   PencilLine,
   Plus,
-  PaperPlaneTilt,
   TriangleAlert,
   Image as ImageIcon,
   Receipt,
@@ -28,6 +27,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import type { ApiAppointment, ApiGoogleConnection, AppointmentFormValues, AppointmentStatus } from '../types'
 import { STATUS_LABELS } from '../types'
 import { useWorkingHoursCheck } from '../hooks/useWorkingHoursCheck'
+import { BotQuoteBanner } from './BotQuoteBanner'
+import type { QuoteToSend } from './BotQuoteBanner'
 import { formatDuration } from '@/features/conversations/utils/format'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui/ToastProvider'
@@ -53,7 +54,7 @@ interface AppointmentFormFieldsProps {
   staff: StaffItem[]
   googleConnections: ApiGoogleConnection[]
   appointment?: ApiAppointment | null
-  onSendQuote?: (priceMinIls: number, priceMaxIls: number, depositAmount: number, durationMinutes: number) => void
+  onSendQuote?: (quote: QuoteToSend) => void
   isSendingQuote?: boolean
   onOpenGallery?: (images: string[], index: number) => void
   isEdit?: boolean
@@ -513,48 +514,8 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
             </div>
           )}
 
-          {/* Bot Price Quote Banner (if applicable) */}
           {appointment?.source === 'ai_bot' && appointment.status === 'pending' && onSendQuote && (
-            <div className="space-y-2 rounded-2xl border border-primary/25 bg-primary/5 p-3.5 mt-2 text-right" dir="rtl">
-              <div className="flex items-center gap-1.5">
-                <Coins size={14} className="text-primary" />
-                <p className="text-sm font-bold text-foreground">
-                  {isSketch ? 'בקשת פגישת סקיצה מהבוט — ממתינה לאישור ושריון' : 'בקשת הזמנה מהבוט — ממתינה להצעת מחיר'}
-                </p>
-              </div>
-              <p className="text-mini text-muted-foreground">
-                {isSketch
-                  ? 'אשר/י את מועד הפגישה והגדר/י מקדמת שריון (אם נדרש) ואז שלח/י ללקוח אישור בוואטסאפ.'
-                  : 'מלא/י טווח מחיר ומקדמה למעלה ואז שלח/י ללקוח את הצעת המחיר ישירות בוואטסאפ.'}
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={
-                  readOnly ||
-                  isSendingQuote ||
-                  (!isSketch && (values.priceMinIls == null || values.priceMaxIls == null)) ||
-                  values.depositAmount == null
-                }
-                onClick={() =>
-                  values.depositAmount != null &&
-                  onSendQuote(
-                    isSketch ? 0 : (values.priceMinIls ?? 0),
-                    isSketch ? 0 : (values.priceMaxIls ?? 0),
-                    values.depositAmount,
-                    values.durationMinutes,
-                  )
-                }
-                className="w-full mt-1 font-bold text-xs"
-              >
-                <PaperPlaneTilt size={13} className="ms-1.5" />
-                {isSendingQuote
-                  ? 'שולח אישור…'
-                  : isSketch
-                    ? 'שלח אישור פגישה ללקוח בוואטסאפ'
-                    : 'שלח הצעת מחיר ללקוח בוואטסאפ'}
-              </Button>
-            </div>
+            <BotQuoteBanner values={values} readOnly={readOnly} isSending={isSendingQuote} onSend={onSendQuote} />
           )}
         </TabsContent>
 
