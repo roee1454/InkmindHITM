@@ -725,10 +725,30 @@ export const KNOWN_TEMPLATE_METADATA: Record<
     description: 'תזכורת אחרונה יום לפני התור כולל הנחיות הגעה והיערכות',
     paramLabels: ['שם הלקוח/ה', 'שעת התור', 'שם המקעקע/ת'],
   },
-  aftercare_check: {
-    label: 'ביקורת החלמה והוראות טיפול',
-    description: 'מעקב החלמה לאחר קעקוע ופתיחת שיחה חוזרת',
-    paramLabels: ['שם הלקוח/ה', 'שם המקעקע/ת או הסטודיו'],
+  healing_check: {
+    label: 'בדיקת החלמה',
+    description: 'בסוף תקופת ההחלמה אחרי סשן',
+    paramLabels: ['שם הלקוח/ה'],
+  },
+  healing_check_next_session: {
+    label: 'בדיקת החלמה והזמנה לסשן הבא',
+    description: 'בסוף תקופת ההחלמה, באמצע פרויקט של כמה מפגשים',
+    paramLabels: ['שם הלקוח/ה'],
+  },
+  review_request: {
+    label: 'בקשת ביקורת',
+    description: 'בסוף הפרויקט, עם הקישור לביקורת בגוגל',
+    paramLabels: ['שם הלקוח/ה', 'קישור לביקורת בגוגל'],
+  },
+  nps_request: {
+    label: 'שאלת משוב (1–10)',
+    description: 'בסוף הפרויקט, כשהסטודיו שואל קודם על דירוג',
+    paramLabels: ['שם הלקוח/ה'],
+  },
+  consultation_followup: {
+    label: 'מעקב אחרי פגישת ייעוץ',
+    description: 'כמה ימים אחרי ייעוץ, כשלא נקבע קעקוע',
+    paramLabels: ['שם הלקוח/ה'],
   },
   general_update: {
     label: 'עדכון כללי / יצירת קשר',

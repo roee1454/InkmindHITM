@@ -1,17 +1,16 @@
-import { Worker, type Job } from 'bullmq'
+import { Worker } from 'bullmq'
+import type { Job } from 'bullmq'
 import type PocketBase from 'pocketbase'
 import { createRedisConnection } from './redis-connection'
-import {
-  CONVERSATION_TURN_QUEUE_NAME,
-  type ConversationTurnQueueData,
-  type LifecycleMessageJobData,
-} from './conversation-turn-queue'
+import { CONVERSATION_TURN_QUEUE_NAME } from './conversation-turn-queue'
+import type { ConversationTurnQueueData, LifecycleMessageJobData } from './conversation-turn-queue'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { conversationLock } from '@/lib/async-lock'
 import { runBotTurnInner } from '@/integrations/ai/agent.server'
 import { transcribeAudioWithGroq } from '@/integrations/audio/server/groq-whisper'
 import { logWhatsAppError } from '@/features/settings/server/whatsapp-error-log'
 import { dispatchLifecycleMessage, markTriggerSent } from '@/features/lifecycle/server/lifecycle-service'
+import { awaitFeedbackScore, markProjectTriggerSent } from '@/features/lifecycle/server/project-lifecycle.server'
 
 declare global {
 
@@ -100,6 +99,9 @@ async function processLifecycleMessage(job: Job<LifecycleMessageJobData>): Promi
     if (onSuccess.kind === 'appointment_trigger') {
       const apt = await su.collection('appointments').getOne(onSuccess.appointmentId)
       await markTriggerSent(su, onSuccess.appointmentId, apt.lifecycle_sent, onSuccess.trigger, new Date().toISOString())
+    } else if (onSuccess.kind === 'project_trigger') {
+      await markProjectTriggerSent(su, onSuccess.projectId, onSuccess.trigger, new Date().toISOString())
+      if (onSuccess.awaitScore && conversation) await awaitFeedbackScore(su, conversation.id, onSuccess.projectId)
     } else {
       const conv = await su.collection('conversations').getOne(onSuccess.conversationId)
       const rawTattooInfo = (conv.tattoo_info as Record<string, unknown>) || {}

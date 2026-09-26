@@ -4,11 +4,8 @@ import type { FakePocketBase } from '@/test-utils/fakePocketBase'
 import {
   normalizePhoneForWhatsApp,
   formatAppointmentDateTime,
-  hasTriggerBeenSent,
   processReminders3Days,
   processReminders1Day,
-  processPostSessionAftercare,
-  processHealingFollowUp,
   processStalledConversations,
   runLifecycleTick,
 } from '@/features/lifecycle/server/lifecycle-service'
@@ -56,18 +53,6 @@ describe('lifecycle-service', () => {
       expect(res.dayName).toBe('ראשון')
     })
 
-    it('detects previously sent triggers in both string and object shapes', () => {
-      const aptWithStrings = { id: 'apt1', lifecycle_sent: ['reminder_3d', 'reminder_1d'] } as any
-      expect(hasTriggerBeenSent(aptWithStrings, 'reminder_3d')).toBe(true)
-      expect(hasTriggerBeenSent(aptWithStrings, 'aftercare')).toBe(false)
-
-      const aptWithObjects = {
-        id: 'apt2',
-        lifecycle_sent: [{ trigger: 'aftercare', sent_at: '2026-09-01T10:00:00Z' }],
-      } as any
-      expect(hasTriggerBeenSent(aptWithObjects, 'aftercare')).toBe(true)
-      expect(hasTriggerBeenSent(aptWithObjects, 'reminder_1d')).toBe(false)
-    })
   })
 
   describe('processReminders3Days', () => {
@@ -162,94 +147,6 @@ describe('lifecycle-service', () => {
     })
   })
 
-  describe('processPostSessionAftercare (Template F)', () => {
-    it('sends Template F review request for completed appointments within 48 hours', async () => {
-      const now = new Date('2026-09-02T14:00:00.000Z')
-      // Appointment ended 4 hours ago
-      const startTime = new Date('2026-09-02T08:00:00.000Z').toISOString()
-
-      su._seed('customers', [{ id: 'cust1', name: 'תומר', phone: '0545556677' }])
-      su._seed('staff', [{ id: 'staff1', name: 'דור' }])
-      su._seed('appointments', [
-        {
-          id: 'apt1',
-          customer: 'cust1',
-          staff: 'staff1',
-          status: 'completed',
-          type: 'tattoo',
-          start_time: startTime,
-          duration_minutes: 120,
-          lifecycle_sent: [],
-        },
-      ])
-
-      const count = await processPostSessionAftercare(su as unknown as PocketBase, now)
-      expect(count).toBe(1)
-
-      expect(enqueueLifecycleMessage).toHaveBeenCalledTimes(1)
-      const job = enqueueLifecycleMessage.mock.calls[0]![0]
-      expect(job.triggerName).toBe('aftercare')
-      expect(job.messageBody).toContain('תודה רבה שבחרת בסטודיו שלנו השבוע ! 💫')
-      expect(job.messageBody).toContain('https://g.co/kgs/HUr9g2G')
-      expect(job.messageBody).toContain('easy.co.il')
-      expect(job.onSuccess).toEqual({ kind: 'appointment_trigger', appointmentId: 'apt1', trigger: 'aftercare' })
-    })
-  })
-
-  describe('processHealingFollowUp', () => {
-    it('sends healing follow-up 14–21 days post session for tattoo appointments', async () => {
-      const now = new Date('2026-09-20T10:00:00.000Z')
-      // Appointment was 16 days ago
-      const startTime = new Date('2026-09-04T10:00:00.000Z').toISOString()
-
-      su._seed('customers', [{ id: 'cust1', name: 'עומר', phone: '0523334455' }])
-      su._seed('staff', [{ id: 'staff1', name: 'דור' }])
-      su._seed('appointments', [
-        {
-          id: 'apt1',
-          customer: 'cust1',
-          staff: 'staff1',
-          status: 'completed',
-          type: 'tattoo',
-          start_time: startTime,
-          lifecycle_sent: [],
-        },
-      ])
-
-      const count = await processHealingFollowUp(su as unknown as PocketBase, now)
-      expect(count).toBe(1)
-
-      expect(enqueueLifecycleMessage).toHaveBeenCalledTimes(1)
-      const job = enqueueLifecycleMessage.mock.calls[0]![0]
-      expect(job.triggerName).toBe('healing_check')
-      expect(job.messageBody).toContain('עברו כשבועיים מאז הקעקוע שלך')
-      expect(job.messageBody).toContain('תמונה של התוצאה המוחלמת')
-      expect(job.onSuccess).toEqual({ kind: 'appointment_trigger', appointmentId: 'apt1', trigger: 'healing_check' })
-    })
-
-    it('skips healing follow-up for sketch consults (type: sketch)', async () => {
-      const now = new Date('2026-09-20T10:00:00.000Z')
-      const startTime = new Date('2026-09-04T10:00:00.000Z').toISOString()
-
-      su._seed('customers', [{ id: 'cust1', name: 'עומר', phone: '0523334455' }])
-      su._seed('staff', [{ id: 'staff1', name: 'דור' }])
-      su._seed('appointments', [
-        {
-          id: 'apt1',
-          customer: 'cust1',
-          staff: 'staff1',
-          status: 'completed',
-          type: 'sketch',
-          start_time: startTime,
-          lifecycle_sent: [],
-        },
-      ])
-
-      const count = await processHealingFollowUp(su as unknown as PocketBase, now)
-      expect(count).toBe(0)
-    })
-  })
-
   describe('processStalledConversations', () => {
     it('sends gentle nudge to conversations stalled for >20h (within 24h Meta window)', async () => {
       const now = new Date('2026-09-02T12:00:00.000Z')
@@ -305,12 +202,14 @@ describe('lifecycle-service', () => {
       expect(result).toEqual({
         reminders3d: 0,
         reminders1d: 0,
-        aftercare: 0,
         healingChecks: 0,
         stalledNudges: 0,
-        expiredLeads: 0,
+        projectFeedback: 0,
+        consultationFollowups: 0,
+        projectsLost: 0,
         pastCompleted: 0,
         stalePendingCancelled: 0,
+        staffDigest: 0,
         reconciled: 0,
         total: 0,
       })

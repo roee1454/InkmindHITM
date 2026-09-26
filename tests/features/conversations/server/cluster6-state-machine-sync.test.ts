@@ -9,8 +9,6 @@ import {
 } from '@/integrations/ai/prompts'
 import {
   processStalledConversations,
-  processExpiredLeads,
-  LEAD_INACTIVITY_EXPIRY_DAYS,
 } from '@/features/lifecycle/server/lifecycle-service'
 
 // Sending + marking stalled_nudge_sent now happens inside the BullMQ conversation-turn worker,
@@ -242,10 +240,6 @@ describe('Cluster 6: State Machine', () => {
   })
 
   describe('Lifecycle Nudge (20 Hours) and Stalled Lead Expiry (7 Days)', () => {
-    it('hardcodes LEAD_INACTIVITY_EXPIRY_DAYS to 7', () => {
-      expect(LEAD_INACTIVITY_EXPIRY_DAYS).toBe(7)
-    })
-
     it('processStalledConversations nudges at 20 hours (within Meta 24h window)', async () => {
       const now = new Date('2026-09-20T12:00:00Z')
       const exactly20hAgo = new Date(now.getTime() - 20.5 * 60 * 60 * 1000).toISOString()
@@ -297,39 +291,5 @@ describe('Cluster 6: State Machine', () => {
       expect(updatedIds).not.toContain('c3')
     })
 
-    it('processExpiredLeads closes the conversation of a lead inactive for 7 days with nothing booked', async () => {
-      const now = new Date('2026-09-20T12:00:00Z')
-      const eightDaysAgo = new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000).toISOString()
-      const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString()
-      const conversations: Record<string, { id: string; state: string; customer: string; last_message_at: string }> = {
-        conv_exp: { id: 'conv_exp', state: 'COLLECTING_INFO', customer: 'c_expired', last_message_at: eightDaysAgo },
-        conv_act: { id: 'conv_act', state: 'COLLECTING_INFO', customer: 'c_active', last_message_at: twoDaysAgo },
-      }
-
-      let listFilter = ''
-      const updates: Array<{ id: string; fields: Record<string, unknown> }> = []
-      const su = {
-        filter: (raw: string) => raw,
-        collection: (name: string) => ({
-          getFullList: async (opts: { filter: string }) => {
-            listFilter = opts.filter
-            return Object.values(conversations)
-          },
-          getList: async () => ({ totalItems: 0 }), // nothing booked
-          getOne: async (id: string) => conversations[id] ?? { id },
-          update: async (id: string, fields: Record<string, unknown>) => {
-            if (name === 'conversations') updates.push({ id, fields })
-            return fields
-          },
-          create: async () => ({}),
-        }),
-      }
-
-      expect(await processExpiredLeads(su as never, now)).toBe(1)
-      expect(updates).toEqual([{ id: 'conv_exp', fields: expect.objectContaining({ state: 'COMPLETED', status: 'closed' }) }])
-      // A customer between sessions or asked for feedback isn't a lead going cold.
-      expect(listFilter).toContain("state != 'PROJECT_IN_PROGRESS'")
-      expect(listFilter).toContain("state != 'AWAIT_NPS_SCORE'")
-    })
   })
 })

@@ -9,62 +9,20 @@ import { applyConversationAdvance, isConsultation, planConversationAdvance } fro
 import { applyReconcileAction, planReconciliation } from '@/features/conversations/server/reconciler.server'
 import { logWhatsAppError } from '@/features/settings/server/whatsapp-error-log'
 import { addSystemNotification } from '@/features/notifications/server/notifications'
-import { enqueueLifecycleMessage } from '@/lib/queue/conversation-turn-queue'
-import type { LifecycleMessageJobData } from '@/lib/queue/conversation-turn-queue'
+import { loadProjectPolicy } from '@/features/settings/server/project-policy'
+import { dispatchMessage, effect } from './lifecycle-run'
+import type { LifecyclePlannedAction, LifecycleRunOptions } from './lifecycle-run'
+import { processConsultationFollowups, processProjectFeedback, processStaffDigest, processStalledProjects } from './project-lifecycle.server'
+import { healingCheckMessage } from '../utils/lifecycle-messages'
+import { healingCheckDue } from '../utils/lifecycle-rules'
+import { triggerSent, withTriggerSent } from '../utils/triggers'
+import type { LifecycleTrigger } from '../utils/triggers'
 
 import { normalizePhoneForWhatsApp } from '@/lib/phone'
 
-export const LIFECYCLE_TEMPLATE_MAP: Record<string, string> = {
-  reminder_3d: 'appointment_reminder_3d',
-  reminder_1d: 'appointment_reminder_1d',
-  aftercare: 'aftercare_check',
-  healing_check: 'aftercare_check',
-}
-
-export type LifecycleTrigger =
-  | 'reminder_3d'
-  | 'reminder_1d'
-  | 'aftercare'
-  | 'healing_check'
-  | 'close_out_reminder'
 export { normalizePhoneForWhatsApp }
 
 const HOUR_MS = 60 * 60 * 1000
-const DAY_MS = 24 * HOUR_MS
-
-/**
- * Everything a tick would do, as data. A dry run (see lifecycle-simulation.ts) collects these
- * instead of acting, which is how lifecycle timing is tested at any simulated "now" without
- * moving the machine's clock — moving it poisons every timestamp and cache written meanwhile.
- */
-export type LifecyclePlannedAction =
-  | { kind: 'message'; trigger: string; customerId: string; body: string; target: LifecycleMessageJobData['onSuccess'] }
-  | { kind: 'complete_appointment'; appointmentId: string }
-  | { kind: 'remind_close_out'; appointmentId: string }
-  | { kind: 'cancel_stale_pending'; appointmentId: string }
-  | { kind: 'transition_conversation'; conversationId: string; to: string; reason: string }
-  | { kind: 'reconcile_conversation'; conversationId: string; from: string; to: string | null; reason: string }
-
-export interface LifecycleRunOptions {
-  /** Record the plan without sending messages or writing records. */
-  dryRun?: boolean
-  /** When set, every action (dry or real) is appended here. */
-  plan?: LifecyclePlannedAction[]
-}
-
-/** Runs one side effect, or in a dry run only records it. */
-async function effect(options: LifecycleRunOptions, action: LifecyclePlannedAction, apply: () => Promise<unknown>): Promise<void> {
-  options.plan?.push(action)
-  if (!options.dryRun) await apply()
-}
-
-function dispatchMessage(options: LifecycleRunOptions, job: LifecycleMessageJobData): Promise<void> {
-  return effect(
-    options,
-    { kind: 'message', trigger: job.triggerName, customerId: job.customerId, body: job.messageBody, target: job.onSuccess },
-    () => enqueueLifecycleMessage(job),
-  )
-}
 
 export function formatAppointmentDateTime(iso: string) {
   const d = new Date(iso)
@@ -94,17 +52,6 @@ export function formatAppointmentDateTime(iso: string) {
   }
 }
 
-export function hasTriggerBeenSent(apt: RecordModel, trigger: LifecycleTrigger): boolean {
-  const sent = Array.isArray(apt.lifecycle_sent) ? apt.lifecycle_sent : []
-  return sent.some((item: unknown) => {
-    if (typeof item === 'string') return item === trigger
-    if (item && typeof item === 'object' && 'trigger' in item) {
-      return (item as { trigger: string }).trigger === trigger
-    }
-    return false
-  })
-}
-
 export async function markTriggerSent(
   su: PocketBase,
   aptId: string,
@@ -112,17 +59,12 @@ export async function markTriggerSent(
   trigger: LifecycleTrigger,
   nowIso: string,
 ): Promise<void> {
-  const list = Array.isArray(currentSent) ? [...currentSent] : []
-  list.push({ trigger, sent_at: nowIso })
-  await su.collection('appointments').update(aptId, {
-    lifecycle_sent: list,
-  })
+  await su.collection('appointments').update(aptId, { lifecycle_sent: withTriggerSent(currentSent, trigger, nowIso) })
 }
 
 export interface DispatchMessageParams {
   su: PocketBase
   customer: RecordModel
-  staffName?: string
   messageBody: string
   triggerName: string
   templateName?: string
@@ -132,7 +74,6 @@ export interface DispatchMessageParams {
 export async function dispatchLifecycleMessage({
   su,
   customer,
-  staffName,
   messageBody,
   triggerName,
   templateName,
@@ -163,7 +104,7 @@ export async function dispatchLifecycleMessage({
       if (err instanceof WhatsAppApiError && err.code === 131047) {
         // Bug 30: 24-hour customer window closed. Fallback to approved WhatsApp Template.
         console.warn(`[lifecycle] WhatsApp 24h window closed for ${phone}; attempting approved template send...`)
-        const effectiveTemplateName = templateName ?? LIFECYCLE_TEMPLATE_MAP[triggerName]
+        const effectiveTemplateName = templateName
         if (effectiveTemplateName) {
           try {
             const client = createWhatsAppClient(settings)
@@ -171,15 +112,7 @@ export async function dispatchLifecycleMessage({
               to: phone,
               templateName: effectiveTemplateName,
               languageCode: 'he',
-              components: templateComponents ?? [
-                {
-                  type: 'body',
-                  parameters: [
-                    { type: 'text', text: customer.name || 'לקוח/ה יקר/ה' },
-                    { type: 'text', text: staffName || 'הסטודיו' },
-                  ],
-                },
-              ],
+              components: templateComponents ?? [],
             })
             if (res?.wamid) {
               wamid = res.wamid
@@ -273,7 +206,7 @@ export async function processReminders3Days(su: PocketBase, now: Date = new Date
   const maxMs = 84 * HOUR_MS // 84h
 
   for (const apt of appointments) {
-    if (hasTriggerBeenSent(apt, 'reminder_3d')) continue
+    if (triggerSent(apt.lifecycle_sent, 'reminder_3d')) continue
 
     const startMs = new Date(apt.start_time).getTime()
     const diffMs = startMs - nowMs
@@ -299,7 +232,6 @@ export async function processReminders3Days(su: PocketBase, now: Date = new Date
 
     await dispatchMessage(options, {
       customerId: customer.id,
-      staffName: artistName,
       messageBody: message,
       triggerName: 'reminder_3d',
       templateName: 'appointment_reminder_3d',
@@ -338,7 +270,7 @@ export async function processReminders1Day(su: PocketBase, now: Date = new Date(
   const maxMs = 30 * HOUR_MS // 30h
 
   for (const apt of appointments) {
-    if (hasTriggerBeenSent(apt, 'reminder_1d')) continue
+    if (triggerSent(apt.lifecycle_sent, 'reminder_1d')) continue
 
     const startMs = new Date(apt.start_time).getTime()
     const diffMs = startMs - nowMs
@@ -370,7 +302,6 @@ export async function processReminders1Day(su: PocketBase, now: Date = new Date(
 
     await dispatchMessage(options, {
       customerId: customer.id,
-      staffName: artistName,
       messageBody: message,
       triggerName: 'reminder_1d',
       templateName: 'appointment_reminder_1d',
@@ -393,95 +324,37 @@ export async function processReminders1Day(su: PocketBase, now: Date = new Date(
 }
 
 /**
- * 3. Post-Session Aftercare & Reviews (aftercare) — Template F
- * Evaluates completed appointments within the last 48 hours.
+ * 4. Healing check (healing_check): during the last week of the healing period after a session
+ * (not a consultation or a touch-up). Between sessions, with nothing booked, it also invites
+ * booking the next one.
  */
-export async function processPostSessionAftercare(su: PocketBase, now: Date = new Date(), options: LifecycleRunOptions = {}): Promise<number> {
+export async function processHealingFollowUp(su: PocketBase, now: Date = new Date(), options: LifecycleRunOptions = {}, healingPeriodDays?: number): Promise<number> {
+  const healingDays = healingPeriodDays ?? (await loadProjectPolicy(su)).healingPeriodDays
   const appointments = await su.collection('appointments').getFullList({
-    filter: 'status = "completed"',
-    expand: 'customer,staff',
+    filter: su.filter("status = 'completed' && kind = 'session' && start_time >= {:since}", { since: new Date(now.getTime() - (healingDays + 1) * 24 * HOUR_MS) }),
+    expand: 'customer,project',
   }).catch(() => [])
 
   let count = 0
-  const nowMs = now.getTime()
-  const maxAgeMs = 48 * HOUR_MS // up to 48 hours after appointment
-  const minAgeMs = 30 * 60 * 1000 // wait at least 30 mins after appointment end
-
   for (const apt of appointments) {
-    if (hasTriggerBeenSent(apt, 'aftercare')) continue
-
-    const startMs = new Date(apt.start_time).getTime()
-    const durationMs = (Number(apt.duration_minutes) || 120) * 60 * 1000
-    const endMs = startMs + durationMs
-
-    const ageMs = nowMs - endMs
-    if (ageMs < minAgeMs || ageMs > maxAgeMs) continue
-
+    if (triggerSent(apt.lifecycle_sent, 'healing_check') || !healingCheckDue(apt.start_time as string, healingDays, now)) continue
     const customer = apt.expand?.customer as RecordModel | undefined
     if (!customer) continue
-
-    // Template F verbatim
-    const message = `תודה רבה שבחרת בסטודיו שלנו השבוע ! 💫
-נשמח אם תשתפו אותנו בחוויה שלכם ותעזרו לנו להשתפר ולהגיע ללקוחות חדשים.
-לחוות דעת בגוגל לחצו כאן: https://g.co/kgs/HUr9g2G
-ולאיזי כאן: https://easy.co.il/page/10068219?utm_medium=social&utm_source=easy_app&utm_campaign=bizpage_header_share
-
-תודה על הזמן והפרגון,
-מצפים לראות אתכם שוב!
-צוות ink mind tattoo`
+    const project = apt.expand?.project as RecordModel | undefined
+    const nextBooked = project
+      ? (await su.collection('appointments').getList(1, 1, {
+          filter: su.filter("project = {:p} && (status = 'pending' || status = 'confirmed')", { p: project.id }),
+          fields: 'id',
+        })).totalItems > 0
+      : false
+    const message = healingCheckMessage({ name: (customer.name as string) || null, inviteNextSession: project?.stage === 'in_progress' && !nextBooked })
 
     await dispatchMessage(options, {
       customerId: customer.id,
-      messageBody: message,
-      triggerName: 'aftercare',
-      onSuccess: { kind: 'appointment_trigger', appointmentId: apt.id, trigger: 'aftercare' },
-    })
-    count++
-  }
-
-  return count
-}
-
-/**
- * 4. Healing Check-in (healing_check)
- * Evaluates completed tattoos 14 to 21 days after appointment date.
- */
-export async function processHealingFollowUp(su: PocketBase, now: Date = new Date(), options: LifecycleRunOptions = {}): Promise<number> {
-  const appointments = await su.collection('appointments').getFullList({
-    filter: 'status = "completed"',
-    expand: 'customer,staff',
-  }).catch(() => [])
-
-  let count = 0
-  const nowMs = now.getTime()
-  const minMs = 14 * DAY_MS // 14 days
-  const maxMs = 21 * DAY_MS // 21 days
-
-  for (const apt of appointments) {
-    // Only check tattoos, not sketch consults
-    if (apt.type === 'sketch') continue
-    if (hasTriggerBeenSent(apt, 'healing_check')) continue
-
-    const startMs = new Date(apt.start_time).getTime()
-    const ageMs = nowMs - startMs
-    if (ageMs < minMs || ageMs > maxMs) continue
-
-    const customer = apt.expand?.customer as RecordModel | undefined
-    if (!customer) continue
-
-    const customerName = customer.name ? ` ${customer.name}` : ''
-    const message = [
-      `היי${customerName}! עברו כשבועיים מאז הקעקוע שלך בסטודיו שלנו 💫`,
-      '',
-      'איך הקעקוע החלים? הכל מרגיש רגוע וטוב?',
-      'נשמח בטירוף אם תשלח/י לנו תמונה של התוצאה המוחלמת ✨',
-      "וכמובן שאנחנו כאן תמיד לכל שאלה או טאץ'-אפ במידת הצורך :)",
-    ].join('\n')
-
-    await dispatchMessage(options, {
-      customerId: customer.id,
-      messageBody: message,
+      messageBody: message.body,
       triggerName: 'healing_check',
+      templateName: message.templateName,
+      templateComponents: message.templateComponents,
       onSuccess: { kind: 'appointment_trigger', appointmentId: apt.id, trigger: 'healing_check' },
     })
     count++
@@ -541,57 +414,12 @@ export async function processStalledConversations(su: PocketBase, now: Date = ne
   return count
 }
 
-export const LEAD_INACTIVITY_EXPIRY_DAYS = 7
-
-/**
- * 6. Process Expired Inactive Leads
- * Closes the conversation of a lead inactive for 7 days with no upcoming appointment.
- */
-export async function processExpiredLeads(su: PocketBase, now: Date = new Date(), options: LifecycleRunOptions = {}): Promise<number> {
-  const expiryMs = LEAD_INACTIVITY_EXPIRY_DAYS * DAY_MS
-  const nowMs = now.getTime()
-
-  // A customer between sessions of a project, or asked for feedback, isn't a lead going cold.
-  const conversations = await su.collection('conversations').getFullList({
-    filter: "state != 'COMPLETED' && state != 'AWAITING_APPOINTMENT' && state != 'PROJECT_IN_PROGRESS' && state != 'AWAIT_NPS_SCORE'",
-    expand: 'customer',
-  }).catch(() => [])
-
-  let count = 0
-  for (const conv of conversations) {
-    const customerId = conv.customer as string
-    if (!customerId) continue
-    const activeAppts = await su.collection('appointments').getList(1, 1, {
-      filter: su.filter("customer = {:c} && (status = 'confirmed' || status = 'pending')", { c: customerId }),
-    }).catch(() => ({ totalItems: 0 }))
-    if (activeAppts.totalItems > 0) continue
-
-    const customer = conv.expand?.customer as RecordModel | undefined
-    const lastActivityStr = (conv.last_message_at || customer?.updated || conv.created) as string
-    if (nowMs - new Date(lastActivityStr).getTime() < expiryMs) continue
-
-    await effect(
-      options,
-      { kind: 'transition_conversation', conversationId: conv.id, to: 'COMPLETED', reason: 'lead_inactivity_expiry_7d' },
-      () =>
-        transition(su, conv.id, 'COMPLETED', {
-          actor: 'system',
-          reason: 'lead_inactivity_expiry_7d',
-          extraFields: { status: 'closed' },
-        }).catch(() => null),
-    )
-    count++
-  }
-
-  return count
-}
-
 /**
  * 7. Process Past Confirmed Appointments (>24h after start)
  * - Consultations complete automatically (nothing to enter) and the conversation moves on.
  * - Sessions and touch-ups are closed by staff together with their final price
- *   (src/features/payments/server/close-session.server.ts); staff get one reminder instead, and the
- *   conversation still leaves AWAITING_APPOINTMENT on schedule.
+ *   (src/features/payments/server/close-session.server.ts); the daily staff digest lists the ones
+ *   still open (project-lifecycle.server.ts), and the conversation leaves AWAITING_APPOINTMENT on schedule.
  */
 export async function processPastConfirmedAppointments(su: PocketBase, now: Date = new Date(), options: LifecycleRunOptions = {}): Promise<number> {
   const threshold = new Date(now.getTime() - 24 * HOUR_MS)
@@ -610,22 +438,8 @@ export async function processPastConfirmedAppointments(su: PocketBase, now: Date
         await effect(options, { kind: 'transition_conversation', ...advance }, () =>
           applyConversationAdvance(su, advance, 'system').catch(() => null),
         )
+        count++
       }
-
-      if (hasTriggerBeenSent(apt, 'close_out_reminder')) continue
-      const customerName = (apt.expand?.customer?.name as string) || 'לקוח'
-      const { dateStr } = formatAppointmentDateTime(apt.start_time as string)
-      // One failing reminder must not stop the rest of the tick.
-      await effect(options, { kind: 'remind_close_out', appointmentId: apt.id }, async () => {
-        await addSystemNotification({
-          title: 'סשן ממתין לסגירה',
-          message: `הסשן של ${customerName} מ-${dateStr} הסתיים. יש להזין מחיר סופי ולסגור אותו ביומן.`,
-          type: 'warning',
-          link: '/dashboard/calendar',
-        })
-        await markTriggerSent(su, apt.id, apt.lifecycle_sent, 'close_out_reminder', now.toISOString())
-      }).catch((err: unknown) => console.error(`[lifecycle] close-out reminder for ${apt.id} failed:`, err))
-      count++
       continue
     }
 
@@ -716,12 +530,14 @@ export async function processConversationDrift(su: PocketBase, now: Date = new D
 export interface LifecycleTickResult {
   reminders3d: number
   reminders1d: number
-  aftercare: number
   healingChecks: number
   stalledNudges: number
-  expiredLeads: number
+  projectFeedback: number
+  consultationFollowups: number
+  projectsLost: number
   pastCompleted: number
   stalePendingCancelled: number
+  staffDigest: number
   reconciled: number
   total: number
   /** Present when the caller asked for the plan (always for dry runs). */
@@ -730,11 +546,10 @@ export interface LifecycleTickResult {
 
 /**
  * Main Tick Engine:
- * Runs all lifecycle processors idempotently. `reminders3d/1d`, `aftercare`, `healingChecks`
- * and `stalledNudges` count messages *enqueued* onto the conversation-turn BullMQ queue this
- * tick (src/lib/queue/conversation-turn-worker.ts actually sends them and marks the trigger
- * sent on success) — not confirmed sends. `expiredLeads`/`pastCompleted` are still applied
- * synchronously here since they only mutate records, no WhatsApp send involved.
+ * Runs all lifecycle processors idempotently. The message counts (reminders, healing checks,
+ * stalled nudges, project feedback, consultation follow-ups) are messages *enqueued* onto the
+ * conversation-turn BullMQ queue this tick (src/lib/queue/conversation-turn-worker.ts sends them and
+ * marks them sent on success) — not confirmed sends. The rest only change records and apply here.
  */
 export async function runLifecycleTick(
   su: PocketBase,
@@ -742,33 +557,23 @@ export async function runLifecycleTick(
   options: LifecycleRunOptions = {},
 ): Promise<LifecycleTickResult> {
   const run: LifecycleRunOptions = { ...options, plan: options.plan ?? (options.dryRun ? [] : undefined) }
-  const [reminders3d, reminders1d, aftercare, healingChecks, stalledNudges, expiredLeads, pastCompleted, stalePendingCancelled] =
+  const policy = await loadProjectPolicy(su)
+  const [reminders3d, reminders1d, healingChecks, stalledNudges, projectFeedback, consultationFollowups, projectsLost, pastCompleted, stalePendingCancelled, staffDigest] =
     await Promise.all([
       processReminders3Days(su, now, run),
       processReminders1Day(su, now, run),
-      processPostSessionAftercare(su, now, run),
-      processHealingFollowUp(su, now, run),
+      processHealingFollowUp(su, now, run, policy.healingPeriodDays),
       processStalledConversations(su, now, run),
-      processExpiredLeads(su, now, run),
+      processProjectFeedback(su, now, run, policy),
+      processConsultationFollowups(su, now, run, policy),
+      processStalledProjects(su, now, run, policy),
       processPastConfirmedAppointments(su, now, run),
       processStalePendingAppointments(su, now, run),
+      processStaffDigest(su, now, run),
     ])
   const reconciled = await processConversationDrift(su, now, run)
 
-  const total =
-    reminders3d + reminders1d + aftercare + healingChecks + stalledNudges + expiredLeads + pastCompleted + stalePendingCancelled + reconciled
-  return {
-    reminders3d,
-    reminders1d,
-    aftercare,
-    healingChecks,
-    stalledNudges,
-    expiredLeads,
-    pastCompleted,
-    stalePendingCancelled,
-    reconciled,
-    total,
-    plan: run.plan,
-  }
+  const counts = { reminders3d, reminders1d, healingChecks, stalledNudges, projectFeedback, consultationFollowups, projectsLost, pastCompleted, stalePendingCancelled, staffDigest, reconciled }
+  const total = Object.values(counts).reduce((sum, n) => sum + n, 0)
+  return { ...counts, total, plan: run.plan }
 }
-

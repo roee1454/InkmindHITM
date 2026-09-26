@@ -6,7 +6,7 @@ import { CalendarClock, Loader2 } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
 import { formatDatabaseError } from '@/lib/pocketbase-error'
 import { simulateLifecycleTick } from '@/features/lifecycle/server/lifecycle-simulation'
-import type { LifecyclePlannedAction } from '@/features/lifecycle/server/lifecycle-service'
+import type { LifecyclePlannedAction } from '@/features/lifecycle/server/lifecycle-run'
 
 const PRESETS = [
   { hours: 20, label: '+20 שעות' },
@@ -23,8 +23,10 @@ function describeAction(action: LifecyclePlannedAction): string {
       return `הודעת ${action.trigger} ללקוח ${action.customerId}`
     case 'complete_appointment':
       return `סימון התור ${action.appointmentId} כהושלם`
-    case 'remind_close_out':
-      return `תזכורת לצוות לסגור את הסשן ${action.appointmentId} עם מחיר סופי`
+    case 'mark_project_lost':
+      return `סימון הפרויקט ${action.projectId} כאבוד (אין מענה)`
+    case 'staff_digest':
+      return `סיכום יומי לצוות: ${action.count} סשנים ממתינים לסגירה`
     case 'cancel_stale_pending':
       return `ביטול התור הממתין ${action.appointmentId} (48 שעות)`
     case 'transition_conversation':

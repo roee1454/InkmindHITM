@@ -1,6 +1,6 @@
 import { Queue, QueueEvents } from 'bullmq'
 import type { TemplateComponent } from '@/integrations/whatsapp-cloud-api/client'
-import type { LifecycleTrigger } from '@/features/lifecycle/server/lifecycle-service'
+import type { LifecycleTrigger, ProjectLifecycleTrigger } from '@/features/lifecycle/utils/triggers'
 import { createRedisConnection } from './redis-connection'
 
 export const CONVERSATION_TURN_QUEUE_NAME = 'conversation-turn'
@@ -18,10 +18,11 @@ export interface ConversationTurnJobData {
 export type LifecycleMessageOnSuccess =
   | { kind: 'appointment_trigger'; appointmentId: string; trigger: LifecycleTrigger }
   | { kind: 'stalled_nudge'; conversationId: string }
+  /** `awaitScore`: the message asked for a 1–10 score, so the conversation waits for the answer. */
+  | { kind: 'project_trigger'; projectId: string; trigger: ProjectLifecycleTrigger; awaitScore?: boolean }
 
 export interface LifecycleMessageJobData {
   customerId: string
-  staffName?: string
   messageBody: string
   triggerName: string
   templateName?: string
@@ -79,7 +80,12 @@ export async function enqueueConversationTurn(data: ConversationTurnJobData): Pr
 /** Deterministic jobId per (trigger, target) so a lifecycle tick that somehow overlaps the
  *  previous one's queued-but-not-yet-processed job dedupes instead of double-sending. */
 function lifecycleJobId(data: LifecycleMessageJobData): string {
-  const target = data.onSuccess.kind === 'appointment_trigger' ? data.onSuccess.appointmentId : data.onSuccess.conversationId
+  const target =
+    data.onSuccess.kind === 'appointment_trigger'
+      ? data.onSuccess.appointmentId
+      : data.onSuccess.kind === 'project_trigger'
+        ? data.onSuccess.projectId
+        : data.onSuccess.conversationId
   return `lifecycle:${data.triggerName}:${target}`
 }
 

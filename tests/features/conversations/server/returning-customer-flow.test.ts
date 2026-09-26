@@ -186,7 +186,7 @@ describe('Returning Customer Architecture & Health Validity', () => {
       expect(conversationUpdates[0]).toMatchObject({ state: 'WANTS_TO_BOOK', status: 'bot_active' })
     })
 
-    it('leaves a past tattoo session open for staff to close, reminds them once, and still moves the conversation on', async () => {
+    it('leaves a past tattoo session open for staff to close (the daily digest lists it) and still moves the conversation on', async () => {
       const { su, appointmentUpdates, conversationUpdates } = mockStudio({
         id: 'apt_session',
         customer: 'cust_1',
@@ -200,26 +200,11 @@ describe('Returning Customer Architecture & Health Validity', () => {
       const count = await processPastConfirmedAppointments(su, now)
 
       expect(count).toBe(1)
-      expect(addSystemNotification).toHaveBeenCalledWith(expect.objectContaining({ title: 'סשן ממתין לסגירה' }))
-      expect(appointmentUpdates).toEqual([
-        { lifecycle_sent: [{ trigger: 'close_out_reminder', sent_at: now.toISOString() }] },
-      ])
+      // No per-session reminder any more: processStaffDigest lists every unclosed session once a day.
+      expect(addSystemNotification).not.toHaveBeenCalled()
+      expect(appointmentUpdates).toEqual([])
       // The bot must stop treating the session as upcoming even before staff close it.
       expect(conversationUpdates[0]).toMatchObject({ state: 'COMPLETED', active_project: '' })
-    })
-
-    it('does not remind twice', async () => {
-      const { su, appointmentUpdates } = mockStudio({
-        id: 'apt_session',
-        customer: 'cust_1',
-        status: 'confirmed',
-        kind: 'session',
-        start_time: pastStartTime,
-        lifecycle_sent: [{ trigger: 'close_out_reminder', sent_at: now.toISOString() }],
-      })
-
-      expect(await processPastConfirmedAppointments(su, now)).toBe(0)
-      expect(appointmentUpdates).toEqual([])
     })
   })
 })

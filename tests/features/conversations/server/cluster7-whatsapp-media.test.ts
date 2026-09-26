@@ -8,7 +8,7 @@ import {
 import { parseWebhookPayload } from '@/integrations/whatsapp-cloud-api/webhook'
 import { transcribeAudioWithGroq, DEFAULT_WHISPER_PROMPT } from '@/integrations/audio/server/groq-whisper'
 import { phoneLock } from '@/lib/async-lock'
-import { dispatchLifecycleMessage, LIFECYCLE_TEMPLATE_MAP } from '@/features/lifecycle/server/lifecycle-service'
+import { dispatchLifecycleMessage } from '@/features/lifecycle/server/lifecycle-service'
 import { parseTemplateParameters } from '@/features/conversations/server/messages'
 import { determineMediaCategory } from '@/features/conversations/server/webhook'
 import type PocketBase from 'pocketbase'
@@ -322,13 +322,6 @@ describe('Cluster 7: Webhook, WhatsApp Cloud API, Audio & Media Audit', () => {
   // Bug 30: Lifecycle Reminders Outside 24h Window & Template Fallback
   // --------------------------------------------------------------------------
   describe('Bug 30: Lifecycle template fallback outside 24h window', () => {
-    it('maps lifecycle trigger names to approved template names', () => {
-      expect(LIFECYCLE_TEMPLATE_MAP['reminder_3d']).toBe('appointment_reminder_3d')
-      expect(LIFECYCLE_TEMPLATE_MAP['reminder_1d']).toBe('appointment_reminder_1d')
-      expect(LIFECYCLE_TEMPLATE_MAP['aftercare']).toBe('aftercare_check')
-      expect(LIFECYCLE_TEMPLATE_MAP['healing_check']).toBe('aftercare_check')
-    })
-
     it('falls back to sendTemplate when sendText fails with 131047 (window closed)', async () => {
       let textAttempts = 0
       let templateSent = false
@@ -385,7 +378,6 @@ describe('Cluster 7: Webhook, WhatsApp Cloud API, Audio & Media Audit', () => {
       const ok = await dispatchLifecycleMessage({
         su: mockSu,
         customer: mockCustomer,
-        staffName: 'יובל',
         messageBody: 'תזכורת תור בעוד 3 ימים',
         triggerName: 'reminder_3d',
         templateName: 'appointment_reminder_3d',
