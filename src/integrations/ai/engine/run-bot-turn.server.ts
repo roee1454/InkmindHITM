@@ -11,6 +11,8 @@ import type { WhatsAppClient } from '@/integrations/whatsapp-cloud-api/client'
 import { getWhatsAppSettings } from '@/integrations/whatsapp-cloud-api/settings.server'
 import { getActiveAppointmentsForBot, getPastCustomerAppointmentsInfo } from '@/features/calendar/server/bot-appointments.server'
 import { toConversationState } from '@/features/conversations/server/state-machine'
+import { toLedgerAppointment } from '@/features/payments/server/project-finance.server'
+import { loadProjectPromptContext } from './project-context.server'
 import { isHealthDeclarationValid } from '@/features/health-declaration/server/health-service'
 import { conversationLock } from '@/lib/async-lock'
 import { toYmd, minutesToTime } from '@/lib/date-utils'
@@ -124,7 +126,7 @@ export async function runBotTurnInner({ su, conversationId, customerId, force }:
         date: toYmd(d),
         timeSlot: minutesToTime(d.getHours() * 60 + d.getMinutes()),
         artistName: staffRec?.name,
-        type: (a.type as string) || 'tattoo',
+        kind: toLedgerAppointment(a).kind,
         tattooDescription: (a.tattoo_description as string) || undefined,
         status: (a.status as string) || undefined,
       }
@@ -152,6 +154,9 @@ export async function runBotTurnInner({ su, conversationId, customerId, force }:
       ? extractCleanStaffInstruction(latestStaffInstruction.body as string)
       : null
 
+    const now = new Date()
+    const projectContext = await loadProjectPromptContext(su, (conversation.active_project as string) || '', now)
+
     const dynamicPrompt = buildDynamicSystemPrompt({
       bookingDate: mappedActiveAppointments[0]?.date ?? null,
       bookingTime: mappedActiveAppointments[0]?.timeSlot ?? null,
@@ -170,6 +175,8 @@ export async function runBotTurnInner({ su, conversationId, customerId, force }:
       healthDeclarationValidityMonths: settings.healthDeclaration.validityMonths,
       healthDeclarationFormUrl: settings.healthDeclaration.formUrl,
       activeStaffInstruction,
+      projectContext,
+      now,
     })
 
     const history = buildHistory(effectiveMessages, conversation.last_processed_message_id as string | null)

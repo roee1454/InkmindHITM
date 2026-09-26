@@ -106,7 +106,7 @@ export const STATE_TOOLS: Record<ConversationState, string[]> = {
   ],
 }
 
-export const STATE_PROMPTS: Record<ConversationState, () => string> = {
+export const STATE_PROMPTS: Record<ConversationState, (healthDeclarationFormUrl?: string | null) => string> = {
   NEW: () => `
 <workflow_state current="NEW">
 שלב הברכה והקבלה כעוזר מייעץ (NEW):

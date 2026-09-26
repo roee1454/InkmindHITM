@@ -1,4 +1,6 @@
 import { sanitizePromptText } from '@/lib/sanitization'
+import type { AppointmentKind } from '@/features/calendar/types'
+import { buildProjectContextBlock } from './project-context'
 import type {
   BuildStaticSystemPromptInput,
   BuildDynamicSystemPromptInput,
@@ -7,6 +9,12 @@ import { BASE_PROMPT, HEBREW_PERSONA_SUFFIX, HANDOFF_GENERIC, HANDOFF_ARTIST_ASS
 import { STATE_PROMPTS } from './state-prompts'
 import { getAllowedToolNames, toolExplanations } from './tool-explanations'
 import { buildTemporalReference } from './temporal'
+
+const APPOINTMENT_KIND_PROMPT_LABELS: Record<AppointmentKind, string> = {
+  consultation: 'פגישת ייעוץ',
+  session: 'סשן קעקוע',
+  touch_up: "טאץ'-אפ",
+}
 
 export function buildStaticSystemPrompt(
   input: BuildStaticSystemPromptInput,
@@ -32,7 +40,7 @@ export function buildStaticSystemPrompt(
     block = `${block}\n\n<tools_guide>\nהנחיות לכלים הזמינים בסבב זה:\n${toolExplanations(allowed)}\n</tools_guide>`
   } else {
     const allowed = getAllowedToolNames(state, false, null)
-    const promptFn = STATE_PROMPTS[state] as (url?: string | null) => string
+    const promptFn = STATE_PROMPTS[state]
     block = `${promptFn(healthDeclarationFormUrl)}\n\n<tools_guide>\nהנחיות לכלים הזמינים בשלב זה:\n${toolExplanations(allowed)}\n</tools_guide>`
   }
 
@@ -126,13 +134,13 @@ export function buildDynamicSystemPrompt(
     const list = activeAppointments
       .map(
         (a, idx) =>
-          `- תור ${idx + 1} [מזהה: ${a.id}]: ${a.type === 'sketch' ? 'פגישת סקיצה' : 'סשן קעקוע'}${a.tattooDescription ? ` ("${a.tattooDescription}")` : ''} בתאריך ${a.date} בשעה ${a.timeSlot}${a.artistName ? ` אצל ${a.artistName}` : ''} (סטטוס: ${a.status === 'confirmed' ? 'מאושר' : 'ממתין'})`,
+          `- תור ${idx + 1} [מזהה: ${a.id}]: ${APPOINTMENT_KIND_PROMPT_LABELS[a.kind]}${a.tattooDescription ? ` ("${a.tattooDescription}")` : ''} בתאריך ${a.date} בשעה ${a.timeSlot}${a.artistName ? ` אצל ${a.artistName}` : ''} (סטטוס: ${a.status === 'confirmed' ? 'מאושר' : 'ממתין'})`,
       )
       .join('\n')
     bookingInfo = `\n\n<active_appointments>\n[תורים עתידיים פעילים של הלקוח]\nללקוח יש ${activeAppointments.length} תורים פעילים במערכת:\n${list}\nשים לב: אם הלקוח שואל על התורים שלו, ענה לו במדויק לפי הרשימה הזו. אם הוא מבקש לבטל, להזיז או להקדים תור, ודא מולו באיזה תור מדובר והעבר את ה-appointmentId המתאים לכלי.\n</active_appointments>`
   } else if (activeAppointments && activeAppointments.length === 1) {
     const a = activeAppointments[0]!
-    const typeLabel = a.type === 'sketch' ? 'פגישת סקיצה' : 'סשן קעקוע'
+    const typeLabel = APPOINTMENT_KIND_PROMPT_LABELS[a.kind]
     const artistPart = a.artistName ? ` אצל ${a.artistName}` : ''
     const descPart = a.tattooDescription
       ? ` (תיאור: "${a.tattooDescription}")`
@@ -175,5 +183,7 @@ export function buildDynamicSystemPrompt(
 </active_staff_directive>`
     : ''
 
-  return `<dynamic_context>${buildTemporalReference()}${customerProfile}${bookingInfo}${tattooDetails}${staffDirectiveBlock}\n</dynamic_context>`
+  const projectBlock = buildProjectContextBlock(input.projectContext ?? null, input.now ?? new Date())
+
+  return `<dynamic_context>${buildTemporalReference()}${customerProfile}${bookingInfo}${projectBlock}${tattooDetails}${staffDirectiveBlock}\n</dynamic_context>`
 }

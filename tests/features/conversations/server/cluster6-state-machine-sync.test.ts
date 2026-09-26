@@ -207,7 +207,7 @@ describe('Cluster 6: State Machine', () => {
             id: 'appt1',
             date: '2026-09-20',
             timeSlot: '14:00',
-            type: 'tattoo',
+            kind: 'session',
             artistName: 'רואי',
             status: 'confirmed',
             tattooDescription: 'דרקון יפני שחור על האמה',

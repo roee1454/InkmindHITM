@@ -1,3 +1,6 @@
+import type { AppointmentKind } from '@/features/calendar/types'
+import type { ProjectPromptContext } from './project-context'
+
 export type ConversationState =
   | 'NEW'
   | 'WANTS_TO_BOOK'
@@ -39,7 +42,7 @@ export interface ActiveAppointmentPromptSummary {
   id: string
   date: string
   timeSlot: string
-  type: string
+  kind: AppointmentKind
   artistName?: string | null
   status?: string
   tattooDescription?: string | null
@@ -63,4 +66,8 @@ export interface BuildDynamicSystemPromptInput {
   healthDeclarationValidityMonths?: number
   healthDeclarationFormUrl?: string | null
   activeStaffInstruction?: string | null
+  /** The project the conversation is about (prompts/project-context.ts); null when there's none. */
+  projectContext?: ProjectPromptContext | null
+  /** Injectable for tests; defaults to the current time. */
+  now?: Date
 }
