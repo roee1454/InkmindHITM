@@ -4,7 +4,7 @@ import { ensureInquiryProject } from '@/features/projects/server/inquiry-project
 import { loadProjectPolicy } from '@/features/settings/server/project-policy'
 import type { ConversationState } from '../prompts'
 import { BOOKING_SCOPES, defaultBookingScope, touchUpTerms } from './booking-scope'
-import { findNextSessionProject, findTouchUpProject } from './booking-scope.server'
+import { findNextSessionProject, findTouchUpProject, hadConsultation } from './booking-scope.server'
 
 /** The resting states a new booking can start from. */
 const BOOKING_START_STATES: ConversationState[] = ['NEW', 'COMPLETED', 'AWAITING_APPOINTMENT', 'PROJECT_IN_PROGRESS']
@@ -108,10 +108,21 @@ export function buildBaseTools(ctx: ToolFactoryContext) {
       'מגדיר את מסלול התיאום שנבחר (sketch לפגישת סקיצה וייעוץ כ-30 דק\', או tattoo לסשן קעקוע ישיר) ומעביר את השיחה לשלב איסוף הפרטים (COLLECTING_INFO). קרא לכלי ברגע שהלקוח בוחר כיוון, או כשמוסר פרטים על מועד או רעיון.',
       z.object({
         track: z.enum(['sketch', 'tattoo']).describe('סוג התור שנבחר: sketch לסקיצה/ייעוץ, tattoo לקעקוע ישיר'),
+        customerAskedForConsultation: z
+          .boolean()
+          .optional()
+          .describe('true רק אם הלקוח ביקש במפורש פגישת ייעוץ נוספת, אחרי שכבר עבר ייעוץ בפרויקט הזה'),
       }),
-      async ({ track }) => {
+      async ({ track, customerAskedForConsultation }) => {
         // After a consultation the project is already active and the tattoo continues it.
-        await ensureInquiryProject(su, conversationId, customerId, 'continue')
+        const projectId = await ensureInquiryProject(su, conversationId, customerId, 'continue')
+        if (track === 'sketch' && !customerAskedForConsultation && (await hadConsultation(su, projectId))) {
+          return {
+            status: 'error',
+            message:
+              "הלקוח כבר עבר פגישת ייעוץ בפרויקט הזה, והמסלול הוא סשן קעקוע: קרא שוב עם tattoo. רק אם הלקוח ביקש במפורש ייעוץ נוסף, קרא עם sketch ו-customerAskedForConsultation: true.",
+          }
+        }
         await transitionState('COLLECTING_INFO', {
           reason: 'choose_booking_track',
           extraFields: {

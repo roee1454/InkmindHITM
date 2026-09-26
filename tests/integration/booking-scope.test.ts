@@ -122,3 +122,23 @@ describe('a touch-up', () => {
     expect((await pb.collection('conversations').getOne(conv.id)).tattoo_info).toMatchObject({ bookingScope: 'touch_up', touchUpTerms: 'free' })
   })
 })
+
+describe('after a consultation', () => {
+  it('books the tattoo, and a second consultation only when the customer asked for one', async () => {
+    const customer = await createCustomer(pb)
+    const consultation = await pb.collection('appointments').create({
+      customer: customer.id,
+      staff: staffId,
+      kind: 'consultation',
+      start_time: hoursFromNow(-24 * 2),
+      ...statusChange('completed', 'staff', 'test'),
+    })
+    const conv = await conversationIn('WANTS_TO_BOOK', customer.id, consultation.project as string)
+
+    expect(await run(conv.id, customer.id, 'choose_booking_track', { track: 'sketch' })).toMatchObject({ status: 'error' })
+    expect((await pb.collection('conversations').getOne(conv.id)).state).toBe('WANTS_TO_BOOK')
+
+    expect(await run(conv.id, customer.id, 'choose_booking_track', { track: 'sketch', customerAskedForConsultation: true })).toMatchObject({ status: 'success' })
+    expect(await pb.collection('conversations').getOne(conv.id)).toMatchObject({ state: 'COLLECTING_INFO', active_project: consultation.project })
+  })
+})

@@ -81,6 +81,12 @@ describe('the project context the bot reads', () => {
     expect(block()).toContain('מספר המפגשים וסיום העבודה נקבעים על ידי האמן בלבד')
   })
 
+  it('tells the bot a consultation is behind the customer, so the next booking is the tattoo', () => {
+    const afterConsultation = block({ stage: 'consultation_done', estimatedSessions: null, appointments: [appt('c1', 'consultation', 'completed', '2026-09-28T10:00:00')] })
+    expect(afterConsultation).toContain('הלקוח כבר עבר פגישת ייעוץ בפרויקט הזה. המסלול הוא סשן קעקוע')
+    expect(block()).not.toContain('עבר פגישת ייעוץ')
+  })
+
   it('adds nothing when the conversation has no project', () => {
     expect(buildProjectContextBlock(null, now)).toBe('')
   })

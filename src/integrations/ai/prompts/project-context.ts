@@ -38,6 +38,8 @@ export interface ProjectPromptContext {
   nextSessionFrom: string | null
   healingGap: string
   touchUp: TouchUpRule
+  /** A consultation is done and no session yet: the next booking is the tattoo itself. */
+  afterConsultation: boolean
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -67,6 +69,7 @@ export function toProjectPromptContext(source: ProjectContextSource, now: Date):
     nextSessionFrom: waitingForNext ? toYmd(new Date(lastSession + source.healingPeriodDays * DAY_MS)) : null,
     healingGap: healingGapLabel(source.healingPeriodDays),
     touchUp: source.touchUp,
+    afterConsultation: sessions.length === 0 && source.appointments.some((a) => a.kind === 'consultation' && a.status === 'completed'),
   }
 }
 
@@ -98,6 +101,9 @@ export function buildProjectContextBlock(ctx: ProjectPromptContext | null, now: 
   const balance = balanceLine(ctx.balance)
   const lines = [
     `- עבודה: "${ctx.title}" (שלב: ${ctx.stageLabel})`,
+    ctx.afterConsultation
+      ? "- הלקוח כבר עבר פגישת ייעוץ בפרויקט הזה. המסלול הוא סשן קעקוע: אל תציע ייעוץ נוסף אלא אם הלקוח ביקש במפורש. כשהוא רוצה לקבוע, קרא ל-'choose_booking_track' עם tattoo."
+      : null,
     scopeLine(ctx),
     nextSessionLine(ctx, toYmd(now)),
     ctx.quote ? `- מחיר משוער${perSession ? ' לכל מפגש' : ''}: ₪${ctx.quote.min.toLocaleString()}–${ctx.quote.max.toLocaleString()}.` : null,

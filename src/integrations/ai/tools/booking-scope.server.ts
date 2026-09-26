@@ -28,3 +28,12 @@ export async function findTouchUpProject(su: PocketBase, conversationId: string,
   })
   return page.items[0] ?? null
 }
+
+/** Whether the project already had its consultation: the next booking is then the tattoo itself. */
+export async function hadConsultation(su: PocketBase, projectId: string): Promise<boolean> {
+  const page = await su.collection('appointments').getList(1, 1, {
+    filter: su.filter("project = {:p} && kind = 'consultation' && status = 'completed'", { p: projectId }),
+    fields: 'id',
+  })
+  return page.totalItems > 0
+}
