@@ -1,3 +1,6 @@
+import type { DepositPerSession } from '@/lib/project-policy'
+import { perSessionDepositNote } from '@/lib/customer-finance-wording'
+
 /**
  * The WhatsApp message staff send with an appointment's quote: when, with whom, how long, the price,
  * the deposit, and for a tattoo how much of the work this is — so the customer knows up front that a
@@ -18,6 +21,7 @@ export interface PriceQuoteMessageInput {
   /** Tattoo only: the artist's estimate, or null when they don't know yet. */
   estimatedSessions: number | null
   healingPeriodDays: number
+  depositPerSession: DepositPerSession
   paymentInstructions: string | null
   cancellationPolicyText: string
   healthFormUrl: string
@@ -73,7 +77,9 @@ function tattooMessage(input: PriceQuoteMessageInput, whenLine: string): string[
     `⏱ משך משוער: ${input.durationLabel}.`,
     `💰 מחיר משוער${perSession ? ' לכל מפגש' : ''}: ${range}.`,
     ...scopeLines(input),
-    `💳 מקדמה לשריון: ₪${input.depositAmount ?? 0}.`,
+    perSession
+      ? `💳 מקדמה לשריון המפגש הראשון: ₪${input.depositAmount ?? 0}. ${perSessionDepositNote(input.depositPerSession)}`
+      : `💳 מקדמה לשריון: ₪${input.depositAmount ?? 0}.`,
     LOCATION_LINE,
   ]
   if (input.needsHealthDeclaration) {

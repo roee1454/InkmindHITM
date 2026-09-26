@@ -38,6 +38,7 @@ function project(overrides: Partial<ProjectContextSource> = {}) {
       balance: { billed: 1200, paid: 1200, refunded: 0, due: 0, credit: 0 },
       healingPeriodDays: 21,
       touchUp: { kind: 'undecided' },
+      depositApplication: 'first_session',
       ...overrides,
     },
     now,

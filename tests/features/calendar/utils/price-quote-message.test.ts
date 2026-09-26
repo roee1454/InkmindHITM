@@ -13,6 +13,7 @@ const tattoo = (overrides: Partial<PriceQuoteMessageInput> = {}): PriceQuoteMess
   depositAmount: 300,
   estimatedSessions: 1,
   healingPeriodDays: 21,
+  depositPerSession: 'required',
   paymentInstructions: 'ביט 050-0000000',
   cancellationPolicyText: 'מדיניות ביטול',
   healthFormUrl: 'https://forms.example/health',
@@ -33,6 +34,11 @@ describe('buildPriceQuoteMessage', () => {
     const message = buildPriceQuoteMessage(tattoo({ estimatedSessions: 3 }))
     expect(message).toContain('💰 מחיר משוער לכל מפגש: ₪1,200–1,500.')
     expect(message).toContain('צפויה להתפרס על כ-3 מפגשים. זה המפגש הראשון, ואת הבאים נקבע בהפרש של כ-3 שבועות לצורך החלמה.')
+    expect(message).toContain('💳 מקדמה לשריון המפגש הראשון: ₪300. לכל מפגש נגבית מקדמה משלו, שמקוזזת מהתשלום על אותו מפגש.')
+  })
+
+  it('says the deposit is taken once when the studio does not ask one per session', () => {
+    expect(buildPriceQuoteMessage(tattoo({ estimatedSessions: 3, depositPerSession: 'not_required' }))).toContain('המקדמה נגבית פעם אחת, לשריון המפגש הראשון.')
   })
 
   it('says it may take more than one session when the artist does not know yet', () => {

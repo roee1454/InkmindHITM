@@ -29,6 +29,7 @@ export async function loadProjectPromptContext(su: PocketBase, projectId: string
         balance: finance.balance,
         healingPeriodDays: policy.healingPeriodDays,
         touchUp: policy.touchUp,
+        depositApplication: policy.depositApplication,
       },
       now,
     )

@@ -1,18 +1,29 @@
+import type { DepositApplication, DepositPerSession } from './project-policy'
+
 /**
  * How the bot talks about a customer's money, worded once. Every number comes from the project's
  * ledger (payments/utils/balance.ts); the bot never computes a balance or names a final price
  * itself. Whether a deposit is refunded is staff's call: that rule lives with the cancellation
  * policy (cancellation-policy.ts, BOT_DEPOSIT_FOLLOW_UP_INSTRUCTION).
  *
- * How a deposit is set against multi-session work is still the studio's open decision (track A,
- * A2), so the credit line stays neutral: true whichever session it ends up counted against.
+ * Which session a deposit is set against is the studio's setting (docs/projects-payments/decisions.md:
+ * every session takes its own deposit, set against that session).
  */
 function ils(amount: number): string {
   return `₪${amount.toLocaleString()}`
 }
 
-export function depositCreditLine(amount: number): string {
-  return `המקדמה ששולמה (${ils(amount)}) רשומה ותקוזז מהתשלום על העבודה.`
+export function depositCreditLine(amount: number, application: DepositApplication): string {
+  return application === 'last_session'
+    ? `המקדמה ששולמה (${ils(amount)}) רשומה ותקוזז מהתשלום על המפגש האחרון.`
+    : `המקדמה ששולמה (${ils(amount)}) רשומה ותקוזז מהתשלום על המפגש שלה.`
+}
+
+/** In the quote of multi-session work: how deposits work across the sessions. */
+export function perSessionDepositNote(depositPerSession: DepositPerSession): string {
+  return depositPerSession === 'required'
+    ? 'לכל מפגש נגבית מקדמה משלו, שמקוזזת מהתשלום על אותו מפגש.'
+    : 'המקדמה נגבית פעם אחת, לשריון המפגש הראשון.'
 }
 
 /** The project's money state for the customer, or null when there's nothing to say yet. */

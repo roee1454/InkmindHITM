@@ -34,6 +34,7 @@ const source = (overrides: Partial<ProjectContextSource> = {}): ProjectContextSo
   balance: { billed: 1200, paid: 300, refunded: 0, due: 900, credit: 0 },
   healingPeriodDays: 21,
   touchUp: { kind: 'undecided' },
+  depositApplication: 'first_session',
   ...overrides,
 })
 
@@ -67,7 +68,7 @@ describe('the project context the bot reads', () => {
 
   it('states the money only from the ledger: verified deposits and the balance', () => {
     const text = block({ payments: [deposit(300), deposit(500, 'pending_verification')] })
-    expect(text).toContain('המקדמה ששולמה (₪300) רשומה ותקוזז מהתשלום על העבודה.')
+    expect(text).toContain('המקדמה ששולמה (₪300) רשומה ותקוזז מהתשלום על המפגש שלה.')
     expect(text).toContain('יתרה לתשלום על סשנים שהסתיימו: ₪900.')
     expect(text).toContain('אל תחשב יתרות')
   })

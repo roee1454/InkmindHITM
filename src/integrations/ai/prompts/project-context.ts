@@ -2,7 +2,7 @@ import type { LedgerAppointment, LedgerPayment, ProjectBalance } from '@/feature
 import type { ProjectStage } from '@/features/projects/types'
 import { PROJECT_STAGE_LABELS } from '@/features/projects/utils/labels'
 import { healingGapLabel } from '@/features/calendar/utils/price-quote-message'
-import type { TouchUpRule } from '@/lib/project-policy'
+import type { DepositApplication, TouchUpRule } from '@/lib/project-policy'
 import { minutesToTime, toYmd } from '@/lib/date-utils'
 import { balanceLine, depositCreditLine, LEDGER_NUMBERS_ONLY_RULE, NO_FINAL_PRICE_RULE } from '@/lib/customer-finance-wording'
 
@@ -23,6 +23,7 @@ export interface ProjectContextSource {
   balance: ProjectBalance
   healingPeriodDays: number
   touchUp: TouchUpRule
+  depositApplication: DepositApplication
 }
 
 export interface ProjectPromptContext {
@@ -38,6 +39,7 @@ export interface ProjectPromptContext {
   nextSessionFrom: string | null
   healingGap: string
   touchUp: TouchUpRule
+  depositApplication: DepositApplication
   /** A consultation is done and no session yet: the next booking is the tattoo itself. */
   afterConsultation: boolean
 }
@@ -69,6 +71,7 @@ export function toProjectPromptContext(source: ProjectContextSource, now: Date):
     nextSessionFrom: waitingForNext ? toYmd(new Date(lastSession + source.healingPeriodDays * DAY_MS)) : null,
     healingGap: healingGapLabel(source.healingPeriodDays),
     touchUp: source.touchUp,
+    depositApplication: source.depositApplication,
     afterConsultation: sessions.length === 0 && source.appointments.some((a) => a.kind === 'consultation' && a.status === 'completed'),
   }
 }
@@ -107,7 +110,7 @@ export function buildProjectContextBlock(ctx: ProjectPromptContext | null, now: 
     scopeLine(ctx),
     nextSessionLine(ctx, toYmd(now)),
     ctx.quote ? `- מחיר משוער${perSession ? ' לכל מפגש' : ''}: ₪${ctx.quote.min.toLocaleString()}–${ctx.quote.max.toLocaleString()}.` : null,
-    ctx.depositPaid > 0 ? `- ${depositCreditLine(ctx.depositPaid)}` : null,
+    ctx.depositPaid > 0 ? `- ${depositCreditLine(ctx.depositPaid, ctx.depositApplication)}` : null,
     balance ? `- ${balance}` : null,
     touchUpLine(ctx.touchUp),
   ].filter((line): line is string => Boolean(line))

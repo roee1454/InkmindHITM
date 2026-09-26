@@ -607,6 +607,7 @@ export async function sendPriceQuoteToCustomerHandler(data: SendPriceQuoteServer
     throw new Error('השיחה עם הלקוח נמצאת בשלב שלא מאפשר לשלוח הצעת מחיר. ההודעה לא נשלחה. בדקו את השיחה (אפשר לאפס את שיחת הבוט) ונסו שוב.')
   }
 
+  const projectPolicy = await loadProjectPolicy(su)
   // Not sent (an older caller) = one session; null = the artist doesn't know yet.
   const estimatedSessions = isSketch ? null : data.estimatedSessions === undefined ? 1 : data.estimatedSessions
   const messageBody = buildPriceQuoteMessage({
@@ -619,7 +620,8 @@ export async function sendPriceQuoteToCustomerHandler(data: SendPriceQuoteServer
     priceMax: data.priceMaxIls,
     depositAmount: data.depositAmount,
     estimatedSessions,
-    healingPeriodDays: (await loadProjectPolicy(su)).healingPeriodDays,
+    healingPeriodDays: projectPolicy.healingPeriodDays,
+    depositPerSession: projectPolicy.depositPerSession,
     paymentInstructions: policy.paymentInstructions ?? null,
     cancellationPolicyText,
     healthFormUrl,
