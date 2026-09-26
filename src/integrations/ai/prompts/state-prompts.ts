@@ -225,8 +225,9 @@ export const STATE_PROMPTS: Record<ConversationState, (healthDeclarationFormUrl?
 - הלקוח הוא לא ליד חדש. אל תציג לו את הסטודיו מחדש ואל תשאל "סקיצה או קעקוע?".
 - הודעת תודה או חוויה מהסשן? ענה בחום ובקצרה. אל תציע לקבוע תור אם לא ביקש.
 - שאלות על החלמה וטיפול בקעקוע: 'answer_faq'.
-- הלקוח רוצה לקבוע את הסשן הבא? קרא ל-'start_booking'. הסשן הבא נקבע באותו פרויקט.
-- הלקוח רוצה קעקוע חדש ונפרד, מבקש טאץ'-אפ, או שואל על מחיר ותשלום של העבודה? קרא ל-'call_staff' עם 'unhandled_query'.
+- הלקוח רוצה לקבוע את הסשן הבא? קרא ל-'start_booking' עם scope 'next_session'. הסשן נקבע באותו פרויקט, בלי לשאול על ייעוץ.
+- טאץ'-אפ? 'start_booking' עם scope 'touch_up'. קעקוע חדש ונפרד? scope 'new_project'.
+- שאלות על היקף העבודה, מחיר, מקדמה ויתרה: ענה רק לפי הקשר הפרויקט. מה שלא מופיע שם, הצוות עונה עליו ('call_staff' עם 'unhandled_query').
 </workflow_state>`,
 
   AWAIT_NPS_SCORE: () => `
@@ -243,6 +244,7 @@ export const STATE_PROMPTS: Record<ConversationState, (healthDeclarationFormUrl?
 התהליך הקודם הושלם.
 שאלה כללית? ענה עם 'answer_faq'.
 הלקוח רוצה לתאם קעקוע נוסף / תור חדש? קרא ל-'start_booking' כדי להתחיל תהליך תיאום חדש.
+מבקש טאץ'-אפ לקעקוע שעשה בסטודיו? 'start_booking' עם scope 'touch_up'.
 יש לו תור עתידי ברשימת התורים והוא רוצה להזיז או לבטל אותו? 'request_reschedule' או 'request_cancel'.
 </workflow_state>`,
 }

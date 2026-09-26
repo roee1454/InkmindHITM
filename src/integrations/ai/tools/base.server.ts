@@ -1,6 +1,13 @@
 import { z } from 'zod'
 import type { ToolFactoryContext } from './types'
 import { ensureInquiryProject } from '@/features/projects/server/inquiry-project.server'
+import { loadProjectPolicy } from '@/features/settings/server/project-policy'
+import type { ConversationState } from '../prompts'
+import { BOOKING_SCOPES, defaultBookingScope, touchUpTerms } from './booking-scope'
+import { findNextSessionProject, findTouchUpProject } from './booking-scope.server'
+
+/** The resting states a new booking can start from. */
+const BOOKING_START_STATES: ConversationState[] = ['NEW', 'COMPLETED', 'AWAITING_APPOINTMENT', 'PROJECT_IN_PROGRESS']
 
 export function buildBaseTools(ctx: ToolFactoryContext) {
   const {
@@ -11,39 +18,88 @@ export function buildBaseTools(ctx: ToolFactoryContext) {
     waClient,
     customerPhone,
     transitionState,
+    updateConversation,
+    notifyStaff,
     botTool,
   } = ctx
 
+  /** The next session of the piece under way: same project, a tattoo session, no track question. */
+  async function startNextSession() {
+    const project = await findNextSessionProject(su, conversationId)
+    if (!project) {
+      return {
+        status: 'error',
+        message: "ללקוח אין קעקוע שנמצא באמצע עבודה. אם הוא רוצה קעקוע חדש, קרא ל-start_booking עם scope 'new_project'.",
+      }
+    }
+    await transitionState('COLLECTING_INFO', {
+      reason: 'start_booking_next_session',
+      extraFields: { active_project: project.id, tattoo_info: { appointmentType: 'tattoo', bookingScope: 'next_session' } },
+    })
+    return {
+      status: 'success',
+      message: `קביעת הסשן הבא של "${String(project.title)}" החלה. זה סשן קעקוע באותו פרויקט: אל תשאל על פגישת ייעוץ. המשך באמן, מועדים ובדיקת זמינות, לפי המועד המומלץ בהקשר הפרויקט.`,
+    }
+  }
+
+  /** A touch-up of a finished (or in-progress) piece, on the studio's terms. */
+  async function startTouchUp() {
+    const project = await findTouchUpProject(su, conversationId, customerId)
+    if (!project) {
+      return {
+        status: 'error',
+        message: "לא נמצא קעקוע קודם של הלקוח בסטודיו שאפשר לעשות לו טאץ'-אפ. שאל אם מדובר בקעקוע חדש, או קרא ל-call_staff.",
+      }
+    }
+    const policy = await loadProjectPolicy(su)
+    const terms = touchUpTerms(policy.touchUp, (project.completed_at as string) || null, new Date())
+    if (terms === 'ask_staff') {
+      await updateConversation({ status: 'escalated', is_staff_called: true, staff_call_reason: 'touch_up_request', active_project: project.id })
+      await notifyStaff("בקשת טאץ'-אפ", `הלקוח מבקש טאץ'-אפ ל"${String(project.title)}". מדיניות הטאץ'-אפ של הסטודיו עוד לא הוגדרה, ולכן הבקשה עברה אליכם.`)
+      return {
+        status: 'success',
+        message: "הבקשה לטאץ'-אפ הועברה לצוות. אמור ללקוח בקצרה שהצוות יחזור אליו לגבי הטאץ'-אפ. אל תבטיח מחיר או מועד.",
+      }
+    }
+    await transitionState('COLLECTING_INFO', {
+      reason: 'start_booking_touch_up',
+      extraFields: { active_project: project.id, tattoo_info: { appointmentType: 'tattoo', bookingScope: 'touch_up', touchUpTerms: terms } },
+    })
+    return {
+      status: 'success',
+      message:
+        terms === 'free'
+          ? `קביעת טאץ'-אפ ל"${String(project.title)}" החלה. הטאץ'-אפ בתקופה שבה הוא ללא עלות לפי מדיניות הסטודיו. המשך באמן ומועד.`
+          : `קביעת טאץ'-אפ ל"${String(project.title)}" החלה. הטאץ'-אפ בתשלום לפי מדיניות הסטודיו, והצוות יתמחר אותו. המשך באמן ומועד, ואל תנקוב במחיר.`,
+    }
+  }
+
   return {
     start_booking: botTool(
-      'מתחיל תהליך תיאום תור חדש ומעביר לשלב בירור מסלול התיאום (WANTS_TO_BOOK). קרא לכלי זה אך ורק כאשר הלקוח מביע במפורש רצון לתאם תור או לקבוע פגישה.',
-      z.object({}),
-      async () => {
-        if (
-          conversationState !== 'NEW' &&
-          conversationState !== 'COMPLETED' &&
-          conversationState !== 'AWAITING_APPOINTMENT' &&
-          conversationState !== 'PROJECT_IN_PROGRESS'
-        ) {
+      "מתחיל תהליך תיאום תור. קרא לכלי אך ורק כשהלקוח מביע במפורש רצון לקבוע. scope: 'new_project' לקעקוע חדש ונפרד, 'next_session' לסשן הבא של קעקוע שבאמצע עבודה, 'touch_up' לטאץ'-אפ של קעקוע קיים. אם לא ברור, שאל את הלקוח.",
+      z.object({
+        scope: z.enum(BOOKING_SCOPES).optional().describe("ברירת מחדל: next_session כשהלקוח באמצע פרויקט, אחרת new_project"),
+      }),
+      async ({ scope }) => {
+        if (!BOOKING_START_STATES.includes(conversationState)) {
           return {
             status: 'error',
             message: `השיחה כבר נמצאת בתהליך עבודה פעיל במצב ${conversationState}.`,
           }
         }
-        // A new booking is a new project (a second tattoo next to an upcoming one included), except
-        // between sessions of a project in progress, where it books the next session of that project.
-        // Interim until track-b B4.2: start_booking's `scope` lets the customer pick either there.
-        const nextSession = conversationState === 'PROJECT_IN_PROGRESS'
-        await ensureInquiryProject(su, conversationId, customerId, nextSession ? 'continue' : 'new')
+        const effective = scope ?? defaultBookingScope(conversationState)
+        if (effective === 'next_session') return startNextSession()
+        if (effective === 'touch_up') return startTouchUp()
+
+        // A new booking is a new project (a second tattoo next to an upcoming one included).
+        await ensureInquiryProject(su, conversationId, customerId, 'new')
         await transitionState('WANTS_TO_BOOK', {
-          reason: nextSession ? 'start_booking_next_session' : 'start_booking',
+          reason: 'start_booking',
           extraFields: { tattoo_info: null },
         })
         return {
           status: 'success',
-          message: nextSession
-            ? "תהליך התיאום של הסשן הבא בפרויקט החל. המסלול הוא סשן קעקוע: קרא ל-'choose_booking_track' עם tattoo בלי לשאול את הלקוח על פגישת ייעוץ."
-            : 'תהליך התיאום החל ומצב השיחה עודכן ל-WANTS_TO_BOOK. הצג ללקוח בטבעיות את שתי האפשרויות: פגישת ייעוץ וסקיצה אישית בסטודיו (כ-30 דק) או סשן קעקוע ישיר.',
+          message: 'תהליך התיאום החל ומצב השיחה עודכן ל-WANTS_TO_BOOK. הצג ללקוח בטבעיות את שתי האפשרויות: פגישת ייעוץ וסקיצה אישית בסטודיו (כ-30 דק) או סשן קעקוע ישיר.',
         }
       }
     ),

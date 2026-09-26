@@ -473,6 +473,8 @@ export interface CreatePendingHoldInput {
   durationHours: number
   tattooDescription: string
   type?: 'tattoo' | 'sketch'
+  /** Only for a touch-up; otherwise the kind follows the type (pb_hooks/lib/projects.js). */
+  kind?: 'touch_up'
   allowException?: boolean
 }
 
@@ -488,7 +490,7 @@ export async function createPendingHoldForBot(
   su: PocketBase,
   input: CreatePendingHoldInput,
 ): Promise<CreatePendingHoldResult> {
-  const { customerId, staffId, date, timeSlot, durationHours, tattooDescription, type = 'tattoo', allowException = false } = input
+  const { customerId, staffId, date, timeSlot, durationHours, tattooDescription, type = 'tattoo', kind, allowException = false } = input
   if (slotIsInPast(date, timeSlot)) return { status: 'date_in_past', appointmentId: null }
   const closure = await isStudioClosedOn(su, date)
   if (closure.closed) return { status: 'studio_closed', appointmentId: null }
@@ -559,6 +561,7 @@ export async function createPendingHoldForBot(
       duration_minutes: durationHours * 60,
       ...statusChange('pending', 'bot', 'bot_hold'),
       type,
+      ...(kind ? { kind } : {}),
       tattoo_description: tattooDescription,
       source: 'ai_bot',
       is_exception: allowException,

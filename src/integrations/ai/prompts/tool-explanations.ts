@@ -5,7 +5,7 @@ const TOOL_EXPLANATIONS: Partial<Record<string, string>> = {
   start_conversation:
     "- 'start_conversation': קרא לכלי מיד כשהלקוח פונה בפעם הראשונה כדי לאתחל שיחה.",
   start_booking:
-    "- 'start_booking': קרא לכלי כאשר הלקוח מביע רצון לתאם תור או לקבוע פגישה, כדי לעבור לשלב בירור מסלול התיאום.",
+    "- 'start_booking': קרא לכלי כאשר הלקוח מביע רצון לתאם תור. scope: 'new_project' לקעקוע חדש, 'next_session' לסשן הבא של קעקוע שבאמצע עבודה, 'touch_up' לטאץ'-אפ.",
   suggest_artists:
     "- 'suggest_artists': מציג את אמני הסטודיו בהודעה מרוכזת עם שמותיהם, תחום התמחותם התמציתי (לפי ה-bio) וקישור לתיק העבודות, כדי שהלקוח יוכל לבחור או להתרשם.",
   check_availability:

@@ -43,6 +43,7 @@ export const STAFF_REASON_LABELS: Record<string, string> = {
   unhandled_query: 'שאלה ללא מענה',
   consultation_alert: 'נדרש ייעוץ',
   security_alert: 'התראת אבטחה',
+  touch_up_request: "בקשת טאץ'-אפ",
   system_whatsapp_error: 'תקלת וואטסאפ',
   system_database_error: 'תקלת מערכת',
   system_model_error: 'תקלת מודל AI',

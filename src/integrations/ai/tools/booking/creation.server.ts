@@ -7,6 +7,9 @@ import { sanitizePromptText } from '@/lib/sanitization'
 import { syncAppointmentToGoogle } from '@/integrations/google-calendar/server/google-sync.server'
 import { DETERMINISTIC_TEMPLATES, sendDeterministicMessage } from '../../engine/deterministic-templates'
 import { isHoldReadyToConfirm } from '../fact-guards'
+import { followUpStaffNote } from '../booking-scope'
+import type { BookingScope, TouchUpTerms } from '../booking-scope'
+import { loadProjectPolicy } from '@/features/settings/server/project-policy'
 
 export function buildBookingCreationTools(ctx: ToolFactoryContext) {
   const { su, conversationId, customerId, transitionState, notifyStaff, botTool } = ctx
@@ -38,9 +41,14 @@ export function buildBookingCreationTools(ctx: ToolFactoryContext) {
         const effectiveDuration = finalType === 'sketch' && (durationHours === 2 || !durationHours) ? 0.5 : durationHours
         const cleanDesignDescription = sanitizePromptText(designDescription || (finalType === 'sketch' ? 'פגישת סקיצה וייעוץ' : 'קעקוע כללי'), 300)
         const cleanPlacementSpot = sanitizePromptText(placementSpot || 'טרם נקבע', 100)
+        // Set by start_booking: the next session or a touch-up of a piece the studio already has.
+        const bookingScope = convTattooInfo?.bookingScope as BookingScope | undefined
+        const touchUpTermsChosen = convTattooInfo?.touchUpTerms as TouchUpTerms | undefined
+        const isFollowUp = bookingScope === 'next_session' || bookingScope === 'touch_up'
 
         let hasInspirationPhoto = false
-        if (!customerDeclinedPhotos && finalType !== 'sketch') {
+        // The studio already has the piece for a next session or a touch-up: no inspiration photo needed.
+        if (!customerDeclinedPhotos && finalType !== 'sketch' && !isFollowUp) {
           const hasPhoto = await su.collection('messages').getList(1, 1, {
             filter: `conversation = "${conversationId}" && direction = "inbound" && type = "image"`,
           }).then(r => r.totalItems > 0)
@@ -72,6 +80,7 @@ export function buildBookingCreationTools(ctx: ToolFactoryContext) {
           timeSlot,
           durationHours: effectiveDuration,
           type: finalType,
+          ...(bookingScope === 'touch_up' ? { kind: 'touch_up' as const } : {}),
           allowException,
           tattooDescription: finalType === 'sketch'
             ? (cleanDesignDescription.startsWith('פגישת סקיצה') ? cleanDesignDescription : `פגישת סקיצה: ${cleanDesignDescription}`) + ` (מיקום: ${cleanPlacementSpot})`
@@ -115,6 +124,8 @@ export function buildBookingCreationTools(ctx: ToolFactoryContext) {
               durationHours: effectiveDuration,
               customerDeclinedPhotos,
               hasInspirationPhoto,
+              ...(bookingScope ? { bookingScope } : {}),
+              ...(touchUpTermsChosen ? { touchUpTerms: touchUpTermsChosen } : {}),
             },
           },
         })
@@ -124,9 +135,10 @@ export function buildBookingCreationTools(ctx: ToolFactoryContext) {
           // on the inline card inside the thread — sending staff away from the chat
           // they just read was the core HITL friction.
           const isSketch = finalType === 'sketch'
+          const note = followUpStaffNote(bookingScope, touchUpTermsChosen, (await loadProjectPolicy(su)).depositPerSession)
           await notifyStaff(
-            isSketch ? 'בקשת פגישת סקיצה חדשה — ממתינה לאישור' : 'בקשת הזמנה חדשה — ממתינה להצעת מחיר',
-            `${customer?.name || 'לקוח'} מבקש/ת ${isSketch ? 'פגישת סקיצה עבור' : ''} ${cleanDesignDescription} (${cleanPlacementSpot}) בתאריך ${date} בשעה ${timeSlot}. הזן מחיר ומקדמה בכרטיס שבראש השיחה.`,
+            note?.title ?? (isSketch ? 'בקשת פגישת סקיצה חדשה — ממתינה לאישור' : 'בקשת הזמנה חדשה — ממתינה להצעת מחיר'),
+            `${customer?.name || 'לקוח'} מבקש/ת ${isSketch ? 'פגישת סקיצה עבור' : ''} ${cleanDesignDescription} (${cleanPlacementSpot}) בתאריך ${date} בשעה ${timeSlot}. ${note?.detail ?? 'הזן מחיר ומקדמה בכרטיס שבראש השיחה.'}`,
             'info',
             `/dashboard/conversations?chatId=${conversationId}`
           )

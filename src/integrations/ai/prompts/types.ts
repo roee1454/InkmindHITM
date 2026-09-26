@@ -26,6 +26,7 @@ export const CALL_STAFF_REASONS = [
   'unhandled_query',
   'consultation_alert',
   'security_alert',
+  'touch_up_request',
 ] as const
 export type CallStaffReason = (typeof CALL_STAFF_REASONS)[number]
 
