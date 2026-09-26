@@ -9,6 +9,7 @@ const addSystemNotification = vi.fn().mockResolvedValue(null)
 vi.mock('@/features/notifications/server/notifications', () => ({ addSystemNotification: (...args: unknown[]) => addSystemNotification(...args) }))
 
 const { processConversationDrift } = await import('@/features/lifecycle/server/lifecycle-service')
+const { reconcileCustomerConversation } = await import('@/features/conversations/server/reconciler.server')
 
 // The lifecycle reconciler (track-b B3.5): a conversation whose state contradicts the appointments and
 // the project is corrected through the state machine, and staff are told. The tick runs an hour
@@ -104,5 +105,46 @@ describe('the reconciler', () => {
     const alreadyMoved = { dryRun: true, plan: [{ kind: 'transition_conversation' as const, conversationId: conv.id, to: 'COLLECTING_INFO', reason: 'stale' }] }
     await processConversationDrift(pb, anHourAhead(), alreadyMoved)
     expect(alreadyMoved.plan.filter((a) => a.conversationId === conv.id)).toHaveLength(1)
+  })
+})
+
+describe('right after staff change the calendar', () => {
+  it('moves a conversation between sessions to the next session staff booked on the spot, without telling staff', async () => {
+    const customer = await createCustomer(pb)
+    const session = await pb.collection('appointments').create({
+      customer: customer.id,
+      kind: 'session',
+      start_time: hoursFromNow(-3),
+      final_price: 800,
+      ...statusChange('completed', 'staff', 'test'),
+    })
+    // Closing the session left the conversation between sessions, a moment ago.
+    const conv = await conversationIn('PROJECT_IN_PROGRESS', customer.id, { active_project: session.project })
+    const next = await pb.collection('appointments').create({
+      customer: customer.id,
+      project: session.project,
+      kind: 'session',
+      start_time: hoursFromNow(24 * 21),
+      ...statusChange('confirmed', 'staff', 'staff_created'),
+    })
+    addSystemNotification.mockClear()
+
+    await reconcileCustomerConversation(pb, customer.id)
+
+    expect(next.project).toBe(session.project)
+    expect(await pb.collection('conversations').getOne(conv.id)).toMatchObject({ state: 'AWAITING_APPOINTMENT', active_project: session.project })
+    expect(await lastTransition(conv.id)).toMatchObject({ from: 'PROJECT_IN_PROGRESS', to: 'AWAITING_APPOINTMENT', reason: 'reconciler_session_booked' })
+    expect(addSystemNotification).not.toHaveBeenCalled()
+  })
+
+  it('sends a conversation back to collecting info as soon as staff cancel its hold', async () => {
+    const customer = await createCustomer(pb)
+    const hold = await appointment(customer.id, 'pending')
+    const conv = await conversationIn('AWAIT_PRICE_OFFER', customer.id, { active_project: hold.project })
+    await pb.collection('appointments').update(hold.id, statusChange('cancelled', 'staff', 'calendar'))
+
+    await reconcileCustomerConversation(pb, customer.id)
+
+    expect((await pb.collection('conversations').getOne(conv.id)).state).toBe('COLLECTING_INFO')
   })
 })

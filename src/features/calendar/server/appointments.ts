@@ -105,8 +105,13 @@ export const deleteAppointment = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const { handleDeleteEntity } = await import('@/features/database/server/delete-entity.server')
     const { describeDeleteFailure } = await import('@/features/database/utils/delete-messages')
+    const { getSuperuserClient } = await import('@/integrations/pocketbase/superuser.server')
+    const { reconcileCustomerConversation } = await import('@/features/conversations/server/reconciler.server')
+    const su = await getSuperuserClient()
+    const customerId = ((await su.collection('appointments').getOne(data.id, { fields: 'customer' }).catch(() => null))?.customer as string) || ''
     const result = await handleDeleteEntity({ collection: 'appointments', id: data.id })
     if (result.status !== 'deleted') throw describeDeleteFailure('appointments', result)
+    if (customerId) await reconcileCustomerConversation(su, customerId)
     return { ok: true }
   })
 

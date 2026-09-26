@@ -32,6 +32,7 @@ import { getStudioPolicyForBot } from '@/features/settings/server/policy'
 import { canTransition, toConversationState, transition } from '@/features/conversations/server/state-machine'
 import { quoteTargetState } from '../utils/price-quote'
 import { applyConversationAdvance, findConversationWaitingOn, isConsultation, planConversationAdvance } from '@/features/conversations/server/after-appointment.server'
+import { reconcileCustomerConversation } from '@/features/conversations/server/reconciler.server'
 import { cancelPendingBotTurn } from '@/integrations/ai/agent.server'
 import { isHealthDeclarationValid } from '@/features/health-declaration/server/health-service'
 
@@ -285,6 +286,7 @@ export async function createAppointmentHandler(data: CreateAppointmentServerInpu
     link: '/dashboard/calendar',
   }).catch(() => null)
 
+  if (created.customer) await reconcileCustomerConversation(su, created.customer as string)
   return { id: created.id }
 }
 
@@ -448,6 +450,9 @@ export async function handleUpdateAppointment(
     if (updated) await advanceConversationAfterManualStatus(su, updated, data.status)
   }
 
+  // Whatever else changed (confirmed, cancelled, moved), the conversation follows the calendar now.
+  const customerId = (before?.customer as string) || data.customerId
+  if (customerId) await reconcileCustomerConversation(su, customerId)
   return { id: data.id }
 }
 

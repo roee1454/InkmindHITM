@@ -33,6 +33,7 @@ import { getCurrentStaffInfo, getStaffList   } from '@/features/settings/server/
 import type {StaffMember, CurrentStaffInfo} from '@/features/settings/server/staff';
 import { getWorkingHours } from '@/features/settings/server/profiles'
 import { useCalendarUiStore } from './store/calendarUiStore'
+import { nextSessionValues, tattooAfterConsultationValues } from './utils/follow-up'
 import { useIsMobile } from '#/hooks/useMediaQuery'
 import { Pagination } from '@/components/ui/pagination'
 import { useToast } from '@/components/ui/ToastProvider'
@@ -96,24 +97,13 @@ export const CalendarPage: React.FC = () => {
       updateAppointmentMutation.mutate({ id: sketch.id, body: { status: 'completed' } })
     }
     setEditingAppointment(null)
-    setCreateInitialValues({
-      // Same project as the consultation: the session is its follow-up, not a new piece of work.
-      projectId: sketch.projectId,
-      customerId: sketch.customerId,
-      chatId: sketch.chatId,
-      leadName: sketch.leadName ?? '',
-      leadPhone: sketch.leadPhone ?? '',
-      type: 'tattoo',
-      staffId: sketch.staffId,
-      durationMinutes: 180,
-      tattooDescription: sketch.style ?? '',
-      notes: sketch.hasDeposit && sketch.depositAmount ? `שולמה מקדמת סקיצה בסך ₪${sketch.depositAmount} לקיזוז` : '',
-      status: 'pending',
-      priceMinIls: null,
-      priceMaxIls: null,
-      depositAmount: sketch.hasDeposit ? sketch.depositAmount : null,
-      depositPaid: false,
-    })
+    setCreateInitialValues(tattooAfterConsultationValues(sketch))
+    setIsCreating(true)
+  }
+
+  const handleScheduleNextSession = (session: ApiAppointment) => {
+    setEditingAppointment(null)
+    setCreateInitialValues(nextSessionValues(session))
     setIsCreating(true)
   }
 
@@ -583,6 +573,7 @@ export const CalendarPage: React.FC = () => {
         onDelete={(id) => deleteAppointmentMutation.mutate(id)}
         isDeleting={deleteAppointmentMutation.isPending}
         onContinueToTattoo={handleContinueToTattoo}
+        onScheduleNextSession={handleScheduleNextSession}
         currentStaff={currentStaff}
         projectAppointments={
           editingAppointment?.projectId ? appointments.filter((a) => a.projectId === editingAppointment.projectId) : []

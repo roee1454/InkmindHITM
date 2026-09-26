@@ -10,7 +10,15 @@ import { CloseSessionDialog } from './CloseSessionDialog'
  * In the appointment dialog: a session whose time has come asks to be closed with its final price;
  * a closed one shows what it cost and where the project's money stands.
  */
-export function SessionCloseOutSection({ appointment, readOnly }: { appointment: ApiAppointment; readOnly: boolean }) {
+export function SessionCloseOutSection({
+  appointment,
+  readOnly,
+  onScheduleNextSession,
+}: {
+  appointment: ApiAppointment
+  readOnly: boolean
+  onScheduleNextSession?: (session: ApiAppointment) => void
+}) {
   const [closing, setClosing] = useState(false)
   if (appointment.kind === 'consultation' || !appointment.projectId) return null
 
@@ -46,7 +54,7 @@ export function SessionCloseOutSection({ appointment, readOnly }: { appointment:
           סגירת סשן
         </Button>
       </div>
-      <CloseSessionDialog appointment={appointment} open={closing} onOpenChange={setClosing} />
+      <CloseSessionDialog appointment={appointment} open={closing} onOpenChange={setClosing} onScheduleNextSession={onScheduleNextSession} />
     </>
   )
 }

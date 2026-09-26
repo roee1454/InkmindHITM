@@ -26,6 +26,11 @@ export const StepStatusNotes: React.FC<StepStatusNotesProps> = ({ values, onChan
             ))}
           </SelectContent>
         </Select>
+        {values.status === 'pending' && (
+          <p className="text-2xs text-muted-foreground">
+            תור ממתין הוא החזקה עד אישור. אם לא יאושר תוך 48 שעות הוא משתחרר אוטומטית, והלקוח לא מקבל עליו תזכורות.
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-1.5">

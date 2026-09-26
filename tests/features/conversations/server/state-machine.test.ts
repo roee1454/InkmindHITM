@@ -34,7 +34,7 @@ describe('TRANSITIONS table', () => {
 
   it('moves between sessions of a project in progress and out of it only where the table allows', () => {
     expect(TRANSITIONS.AWAITING_APPOINTMENT).toContain('PROJECT_IN_PROGRESS')
-    expect(TRANSITIONS.PROJECT_IN_PROGRESS.sort()).toEqual(['AWAIT_NPS_SCORE', 'COLLECTING_INFO', 'COMPLETED', 'NEW', 'WANTS_TO_BOOK'])
+    expect(TRANSITIONS.PROJECT_IN_PROGRESS.sort()).toEqual(['AWAITING_APPOINTMENT', 'AWAIT_NPS_SCORE', 'COLLECTING_INFO', 'COMPLETED', 'NEW', 'WANTS_TO_BOOK'])
     expect(TRANSITIONS.COMPLETED).toContain('AWAIT_NPS_SCORE')
     // Nothing in the middle of a booking lands between sessions; only a finished appointment does.
     for (const [from, targets] of Object.entries(TRANSITIONS)) {

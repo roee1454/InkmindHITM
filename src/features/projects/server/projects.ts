@@ -59,3 +59,10 @@ export const moveAppointmentToProject = createServerFn({ method: 'POST' })
     const { handleMoveAppointment } = await import('./project-details.server')
     return handleMoveAppointment(data)
   })
+
+export const listOpenProjects = createServerFn({ method: 'GET' })
+  .validator(z.object({ customerId: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    const { handleListOpenProjects } = await import('./customer-projects.server')
+    return handleListOpenProjects(data.customerId)
+  })

@@ -30,6 +30,8 @@ interface EditAppointmentDialogProps {
   onDelete?: (id: string) => void
   isDeleting?: boolean
   onContinueToTattoo?: (sketchAppointment: ApiAppointment) => void
+  /** Opens the booking form for the next session of this appointment's project. */
+  onScheduleNextSession?: (session: ApiAppointment) => void
   currentStaff?: CurrentStaffInfo | null
   /** All appointments of this appointment's project, including itself. */
   projectAppointments?: ApiAppointment[]
@@ -78,6 +80,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   onDelete,
   isDeleting = false,
   onContinueToTattoo,
+  onScheduleNextSession,
   projectAppointments = [],
   currentStaff,
 }) => {
@@ -172,7 +175,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
                 </div>
               )}
 
-              {appointment && <SessionCloseOutSection appointment={appointment} readOnly={isReadOnly} />}
+              {appointment && <SessionCloseOutSection appointment={appointment} readOnly={isReadOnly} onScheduleNextSession={onScheduleNextSession} />}
 
               {appointment && <ProjectTimeline appointments={projectAppointments} currentId={appointment.id} />}
               {appointment?.projectId && (

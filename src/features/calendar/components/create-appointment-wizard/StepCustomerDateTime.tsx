@@ -6,6 +6,7 @@ import { HourPicker } from '@/components/ui/hour-picker'
 import type { AppointmentFormValues } from '../../types'
 import { customersQueryOptions } from '@/features/customers/utils/customers-query'
 import { AddCustomerDialog } from './AddCustomerDialog'
+import { ProjectPicker } from './ProjectPicker'
 import { Needle, PencilLine } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
 import { formatPhoneForDisplay, phoneMatchesQuery } from '@/lib/phone'
@@ -177,6 +178,8 @@ export const StepCustomerDateTime: React.FC<StepCustomerDateTimeProps> = ({ valu
                         customerId: c.id,
                         leadName: c.name || '',
                         leadPhone: c.phone || '',
+                        // Another customer's projects don't apply: the picker chooses again.
+                        ...(c.id !== values.customerId ? { projectId: undefined } : {}),
                       })
                       setIsOpen(false)
                     }}
@@ -193,6 +196,8 @@ export const StepCustomerDateTime: React.FC<StepCustomerDateTimeProps> = ({ valu
           </>
         )}
       </div>
+
+      <ProjectPicker customerId={values.customerId} projectId={values.projectId} onChange={(projectId) => onChange({ projectId })} />
 
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">
@@ -213,6 +218,7 @@ export const StepCustomerDateTime: React.FC<StepCustomerDateTimeProps> = ({ valu
             customerId: customer.id,
             leadName: customer.name || 'לקוח',
             leadPhone: customer.phone || '',
+            projectId: null,
           })
         }
       />

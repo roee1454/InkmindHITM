@@ -2,8 +2,13 @@ import type { ConversationState } from './types'
 import { STAFF_MESSAGE_TAG } from './base-prompt'
 
 export const STATE_TOOLS: Record<ConversationState, string[]> = {
+  // The appointment tools appear in the resting states too, for an appointment staff booked by hand;
+  // tools/fact-guards.ts removes them when the customer has nothing booked.
   NEW: [
     'start_booking',
+    'request_reschedule',
+    'request_cancel',
+    'flag_earlier_preference',
     'answer_faq',
     'suggest_artists',
     'check_availability',
@@ -73,6 +78,9 @@ export const STATE_TOOLS: Record<ConversationState, string[]> = {
   ],
   PROJECT_IN_PROGRESS: [
     'start_booking',
+    'request_reschedule',
+    'request_cancel',
+    'flag_earlier_preference',
     'answer_faq',
     'check_availability',
     'get_available_slots',
@@ -84,6 +92,9 @@ export const STATE_TOOLS: Record<ConversationState, string[]> = {
   AWAIT_NPS_SCORE: ['record_nps_score', 'call_staff', 'answer_faq', 'send_message'],
   COMPLETED: [
     'start_booking',
+    'request_reschedule',
+    'request_cancel',
+    'flag_earlier_preference',
     'answer_faq',
     'suggest_artists',
     'check_availability',
@@ -103,7 +114,7 @@ export const STATE_PROMPTS: Record<ConversationState, () => string> = {
 תפקידך עזרן דיגיטלי: לענות על שאלות כלליות, להסביר על תהליכים, להציג את אמני הסטודיו (עם suggest_artists), ולתת מענה לשאלות על מחירים משוערים, מיקום וזמנים.
 עקרונות לשלב זה:
 1. מענה פתוח: ענה בסבלנות ובפשטות. אל תדחף באגרסיביות לתיאום תור אם הלקוח מתעניין במידע כללי בלבד.
-2. לקוח ששואל על תור קיים שלו: אם יש לו תור עתידי במערכת, ענה לו במדויק מתי התור שלו, באיזו שעה ועם איזה מקעקע.
+2. לקוח ששואל על תור קיים שלו: אם יש לו תור עתידי במערכת, ענה לו במדויק מתי התור שלו, באיזו שעה ועם איזה מקעקע. רוצה להזיז אותו? שאל מה המועד המועדף וקרא ל-'request_reschedule'. רוצה לבטל? 'request_cancel'.
 3. פניות בנושא פירסינג: הסטודיו אינו מתאם פירסינג דרך הבוט. הפנה באדיבות ישירות לדולב בטלפון 055-3063884.
 4. בירור מועדים או כוונה לתאם: אם הלקוח שואל על מועדים או זמינות ("פנויים מחר?", "מתי יש מקום?"), בדוק זמינות ישירות עם הכלים ('check_availability' / 'get_available_slots') והצע מועדים בטבעיות. אם הלקוח מביע רצון מפורש לקבוע תור ("אני רוצה לעשות קעקוע", "בא לי לקבוע"), חובה מוחלטת לקרוא ל-'start_booking' כדי לפתוח את שלב בירור המסלול (WANTS_TO_BOOK). איסור מוחלט לנחש מסלול או לקפוץ ישירות לקביעת קעקוע ללא מעבר ב-WANTS_TO_BOOK.
 5. לקוח חוזר: ברך אותו בחום כחבר ותיק (לפי המידע בכרטיס הלקוח), ואם הוא מתעניין בקעקוע חדש, הצע לו להתקדם עם 'start_booking'.
@@ -209,7 +220,8 @@ export const STATE_PROMPTS: Record<ConversationState, () => string> = {
   PROJECT_IN_PROGRESS: () => `
 <workflow_state current="PROJECT_IN_PROGRESS">
 שלב פרויקט בתהליך (PROJECT_IN_PROGRESS):
-הלקוח באמצע קעקוע רב-מפגשי: לפחות סשן אחד כבר נעשה, העבודה עוד לא הסתיימה, ואין לו כרגע תור עתידי.
+הלקוח באמצע קעקוע רב-מפגשי: לפחות סשן אחד כבר נעשה, והעבודה עוד לא הסתיימה.
+- אם ברשימת התורים מופיע תור עתידי, הסשן הבא כבר נקבע: ענה עליו, אל תציע לקבוע שוב. רוצה להזיז? 'request_reschedule'. לבטל? 'request_cancel'.
 - הלקוח הוא לא ליד חדש. אל תציג לו את הסטודיו מחדש ואל תשאל "סקיצה או קעקוע?".
 - הודעת תודה או חוויה מהסשן? ענה בחום ובקצרה. אל תציע לקבוע תור אם לא ביקש.
 - שאלות על החלמה וטיפול בקעקוע: 'answer_faq'.
@@ -231,5 +243,6 @@ export const STATE_PROMPTS: Record<ConversationState, () => string> = {
 התהליך הקודם הושלם.
 שאלה כללית? ענה עם 'answer_faq'.
 הלקוח רוצה לתאם קעקוע נוסף / תור חדש? קרא ל-'start_booking' כדי להתחיל תהליך תיאום חדש.
+יש לו תור עתידי ברשימת התורים והוא רוצה להזיז או לבטל אותו? 'request_reschedule' או 'request_cancel'.
 </workflow_state>`,
 }

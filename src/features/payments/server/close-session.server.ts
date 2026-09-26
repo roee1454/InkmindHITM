@@ -5,6 +5,7 @@ import { requireAuth } from '@/features/settings/server/helpers.server'
 import type { StaffRecord } from '@/integrations/pocketbase/types'
 import { statusChange } from '@/features/calendar/utils/appointment-transitions'
 import { applyConversationAdvance, isConsultation, planConversationAdvance } from '@/features/conversations/server/after-appointment.server'
+import { reconcileCustomerConversation } from '@/features/conversations/server/reconciler.server'
 import { createStaleReferenceError } from '@/lib/stale-reference'
 import { firstBatchRequestError, formatDatabaseError } from '@/lib/pocketbase-error'
 import { closeOutLock } from '@/lib/async-lock'
@@ -87,6 +88,7 @@ async function closeSessionExclusive(input: CloseSessionInput, actor: Actor, su:
 
   const advance = await planConversationAdvance(su, appointment, { upcomingAfter: now, reason: 'session_closed' }).catch(() => null)
   if (advance) await applyConversationAdvance(su, advance, 'staff').catch((err: unknown) => console.error('[close-session] conversation advance failed:', err))
+  if (appointment.customer) await reconcileCustomerConversation(su, appointment.customer as string)
 
   return loadProjectFinance(su, projectId)
 }

@@ -23,15 +23,28 @@ function toNewPayments(rows: PaymentRowDraft[]): NewPayment[] {
  * Closes a tattoo session: its final price (or "no charge") and the money received on the spot,
  * saved together. Earlier deposits are already recorded and count automatically.
  */
-export function CloseSessionDialog({ appointment, open, onOpenChange }: { appointment: ApiAppointment; open: boolean; onOpenChange: (open: boolean) => void }) {
+export function CloseSessionDialog({
+  appointment,
+  open,
+  onOpenChange,
+  onScheduleNextSession,
+}: {
+  appointment: ApiAppointment
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  /** When set, staff can book the next session right after closing this one. */
+  onScheduleNextSession?: (session: ApiAppointment) => void
+}) {
   const [finalPrice, setFinalPrice] = useState('')
   const [chargeWaived, setChargeWaived] = useState(false)
   const [rows, setRows] = useState<PaymentRowDraft[]>([{ method: 'cash', amount: '' }])
   // null until staff touch it: follows the default computed from the project.
   const [lastSessionChoice, setLastSessionChoice] = useState<boolean | null>(null)
+  const [scheduleNext, setScheduleNext] = useState(false)
   const { finance, close } = useCloseSession(appointment.projectId, open, () => onOpenChange(false))
   const isLastSession =
     lastSessionChoice ?? (finance.data ? defaultIsLastSession(finance.data.appointments, appointment.id, finance.data.estimatedSessions) : false)
+  const offerNextSession = Boolean(onScheduleNextSession) && !isLastSession
 
   useEffect(() => {
     if (!open) return
@@ -39,6 +52,7 @@ export function CloseSessionDialog({ appointment, open, onOpenChange }: { appoin
     setChargeWaived(appointment.kind === 'touch_up')
     setRows([{ method: 'cash', amount: '' }])
     setLastSessionChoice(null)
+    setScheduleNext(false)
     close.reset()
     // Reset only when the dialog opens for an appointment, not on every render of `close`.
   }, [open, appointment.id])
@@ -49,7 +63,11 @@ export function CloseSessionDialog({ appointment, open, onOpenChange }: { appoin
 
   const submit = () => {
     if (!canSubmit) return
-    close.mutate({ appointmentId: appointment.id, finalPrice: chargeWaived ? null : price, chargeWaived, payments: newPayments, completesProject: isLastSession })
+    const bookNext = offerNextSession && scheduleNext
+    close.mutate(
+      { appointmentId: appointment.id, finalPrice: chargeWaived ? null : price, chargeWaived, payments: newPayments, completesProject: isLastSession },
+      { onSuccess: () => bookNext && onScheduleNextSession?.(appointment) },
+    )
   }
 
   return (
@@ -100,6 +118,12 @@ export function CloseSessionDialog({ appointment, open, onOpenChange }: { appoin
           <Switch checked={isLastSession} onCheckedChange={setLastSessionChoice} disabled={close.isPending || !finance.data} />
           זה הסשן האחרון בפרויקט (הפרויקט יסומן כהושלם)
         </label>
+        {offerNextSession && (
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Switch checked={scheduleNext} onCheckedChange={setScheduleNext} disabled={close.isPending} />
+            לקבוע עכשיו את הסשן הבא (ייפתח טופס תור באותו פרויקט)
+          </label>
+        )}
 
         {finance.data && (
           <ClosingPreview

@@ -10,7 +10,7 @@ import type { InboundFacts } from './inbound-routing'
  */
 export interface DriftFacts {
   /** Pending and confirmed appointments that started less than a day ago or later. */
-  openAppointments: Array<{ status: 'pending' | 'confirmed' }>
+  openAppointments: Array<{ status: 'pending' | 'confirmed'; startsAt: string }>
   activeProject: InboundFacts['activeProject']
   /** When the conversation entered its current state (state_transitions); null when unknown. */
   stateEnteredAt: string | null
@@ -42,10 +42,18 @@ function afterNothingBooked(project: DriftFacts['activeProject']): DriftCorrecti
   return move('COMPLETED', 'reconciler_nothing_booked')
 }
 
-export function detectStateDrift(input: { state: ConversationState; hasActiveProject: boolean; facts: DriftFacts; now: Date }): DriftCorrection | null {
+export function detectStateDrift(input: {
+  state: ConversationState
+  hasActiveProject: boolean
+  facts: DriftFacts
+  now: Date
+  /** 0 right after a change staff made themselves: nothing of theirs is still in flight. */
+  graceMinutes?: number
+}): DriftCorrection | null {
   const { state, facts, now } = input
+  const graceMinutes = input.graceMinutes ?? DRIFT_GRACE_MINUTES
   const entered = facts.stateEnteredAt ? new Date(facts.stateEnteredAt).getTime() : NaN
-  if (!Number.isNaN(entered) && now.getTime() - entered < DRIFT_GRACE_MINUTES * 60_000) return null
+  if (!Number.isNaN(entered) && now.getTime() - entered < graceMinutes * 60_000) return null
 
   const project = facts.activeProject
   const hasPending = facts.openAppointments.some((a) => a.status === 'pending')
@@ -57,7 +65,14 @@ export function detectStateDrift(input: { state: ConversationState; hasActivePro
     return hasConfirmed ? move('AWAITING_APPOINTMENT', 'reconciler_booking_confirmed') : move('COLLECTING_INFO', 'reconciler_hold_gone')
   }
   if (state === 'AWAITING_APPOINTMENT') return facts.openAppointments.length > 0 ? null : afterNothingBooked(project)
-  if (state === 'PROJECT_IN_PROGRESS') return !project || project.closed ? move('COMPLETED', 'reconciler_project_closed') : null
+  if (state === 'PROJECT_IN_PROGRESS') {
+    // Staff booked the next session themselves (right after closing this one, say). Only an
+    // appointment that hasn't started counts: one under way is still the session that just ended.
+    if (facts.openAppointments.some((a) => a.status === 'confirmed' && new Date(a.startsAt).getTime() > now.getTime())) {
+      return move('AWAITING_APPOINTMENT', 'reconciler_session_booked')
+    }
+    return !project || project.closed ? move('COMPLETED', 'reconciler_project_closed') : null
+  }
   if (BOOKING_STATES.includes(state) && input.hasActiveProject && (!project || project.closed)) {
     // A new booking must not land in a finished or lost project.
     return { to: null, clearProject: true, reason: 'reconciler_project_closed' }
