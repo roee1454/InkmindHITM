@@ -5,6 +5,7 @@ import { getWorkingHours } from '@/features/settings/server/profiles'
 import type { WorkingHoursWindow } from '@/lib/working-hours'
 import { getAppointments, getGoogleCalendarConnections } from '../server/appointments'
 import type { ApiAppointment, ApiGoogleConnection } from '../types'
+import { artistAvatarMap } from '../utils/artist-avatars'
 
 /**
  * Everything the calendar screen reads (track-b B6.8). Pulled out of `CalendarPage` so the page
@@ -42,15 +43,7 @@ export function useCalendarData(selectedArtist: string) {
 
   const connections = googleConnections.data ?? []
   const staffList = staff.data ?? []
-  const artistAvatars: Record<string, string> = {}
-  for (const connection of connections) {
-    if (connection.status === 'connected' && connection.googleAccountPicture) {
-      artistAvatars[connection.staffId] = connection.googleAccountPicture
-    }
-  }
-  for (const member of staffList) {
-    if (member.avatar && !artistAvatars[member.id]) artistAvatars[member.id] = member.avatar
-  }
+  const artistAvatars = artistAvatarMap(connections, staffList)
 
   return {
     currentStaff: currentStaff.data,

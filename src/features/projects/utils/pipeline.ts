@@ -14,6 +14,7 @@ export interface PipelineInput {
     primaryStaff: string | null
     quoteMin: number | null
     quoteMax: number | null
+    estimatedSessions: number | null
     lostReason: string | null
     lostNote: string | null
   }[]
@@ -71,6 +72,9 @@ export function buildPipeline(input: PipelineInput, viewer: PipelineViewer, now:
       .sort((a, b) => a.startTime.localeCompare(b.startTime))[0]
     const staffId = project.primaryStaff ?? next?.staff ?? null
     const balance = computeProjectBalance(appointments, paymentsByProject.get(project.id) ?? [])
+    const doneSessions = appointments
+      .filter((a) => a.kind === 'session' && a.status === 'completed')
+      .sort((a, b) => b.startTime.localeCompare(a.startTime))
 
     projects.push({
       projectId: project.id,
@@ -87,6 +91,9 @@ export function buildPipeline(input: PipelineInput, viewer: PipelineViewer, now:
       quoteMin: project.quoteMin,
       quoteMax: project.quoteMax,
       nextAppointmentAt: next?.startTime ?? null,
+      sessionsDone: doneSessions.length,
+      estimatedSessions: project.estimatedSessions,
+      lastSessionAt: doneSessions[0]?.startTime ?? null,
       lostReason: lostReasonOf(project.lostReason),
       lostNote: project.lostNote,
       due: balance.due,

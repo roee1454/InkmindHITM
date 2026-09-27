@@ -1,43 +1,49 @@
 import React, { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { AlertCircle } from '@/components/ui/icon'
-import { Pagination } from '@/components/ui/pagination'
 import type { StaffRecord, StaffRole } from '@/integrations/pocketbase/types'
 import { phoneMatchesQuery } from '@/lib/phone'
+import { useIsMobile } from '#/hooks/useMediaQuery'
+import { useArtistAvatars } from '@/features/calendar/hooks/use-artist-avatars'
 import { listPipeline } from './server/pipeline'
-import { pipelineQueryKey, useProjectMilestones } from './hooks/use-project-milestones'
-import { MarkProjectLostDialog } from './components/MarkProjectLostDialog'
+import { pipelineQueryKey } from './hooks/use-project-milestones'
 import { ProjectPanel } from './components/ProjectPanel'
-import { PipelineFilters } from './components/PipelineFilters'
-import { PipelineList } from './components/PipelineList'
+import { ProjectBoard } from './components/ProjectBoard'
+import { ProjectCard } from './components/ProjectCard'
+import { ProjectsToolbar } from './components/ProjectsToolbar'
 import { PipelineMobileSwitch } from './components/PipelineMobileSwitch'
 import { ProjectsSkeleton } from './components/ProjectsSkeleton'
 import { useProjectsUiStore } from './store/projectsUiStore'
-import { countByFilter, matchesStage } from './utils/pipeline-filter'
+import { CLOSED_COLUMNS, OPEN_COLUMNS, groupByColumn, sortForColumn } from './utils/board'
 import type { PipelineProject } from './types'
-
-const ITEMS_PER_PAGE = 12
 
 interface ProjectsPageProps {
   staff?: StaffRecord | { id: string; role: StaffRole; name?: string; email?: string }
 }
 
-function matchesSearch(term: string, name: string | null, phone: string, extra = ''): boolean {
+const ALL_COLUMNS = [...OPEN_COLUMNS, ...CLOSED_COLUMNS]
+const CLOSED_STAGES = new Set(CLOSED_COLUMNS.flatMap((c) => c.stages))
+
+function matchesSearch(term: string, project: PipelineProject): boolean {
   if (!term) return true
-  return Boolean(name?.toLowerCase().includes(term) || extra.toLowerCase().includes(term) || phoneMatchesQuery(phone, term))
+  return Boolean(
+    project.customerName?.toLowerCase().includes(term) ||
+      project.title.toLowerCase().includes(term) ||
+      phoneMatchesQuery(project.customerPhone, term),
+  )
 }
 
 /**
- * The projects pipeline (track-b B6.7): every piece of work and the stage it's in. Stages are
- * derived from what happened, so there's nothing to drag — staff only mark a project lost,
- * reopen it, or open it. Split from the old combined leads/projects board: customers who haven't
- * started a project yet live on the leads page (`/dashboard/leads`), not here.
+ * The projects page (track-b B6.10): every piece of work, laid out by where it stands. A board on
+ * desktop, one lane at a time on a phone. Customers who haven't started a project yet live on the
+ * leads page; opening a card brings up the project panel with its timeline and lifecycle actions.
  */
 export const ProjectsPage: React.FC<ProjectsPageProps> = ({ staff }) => {
-  const { searchQuery, filter, artistId, currentPage, setSearchQuery, setFilter, setArtistId, setCurrentPage, resetFilters } = useProjectsUiStore()
-  const { reopen } = useProjectMilestones()
-  const [losing, setLosing] = useState<PipelineProject | null>(null)
+  const { searchQuery, artistId, showClosed, mobileColumn, setSearchQuery, setArtistId, setShowClosed, setMobileColumn, resetFilters } =
+    useProjectsUiStore()
   const [openProjectId, setOpenProjectId] = useState<string | null>(null)
+  const isMobile = useIsMobile()
+  const artistAvatars = useArtistAvatars()
 
   const query = useQuery({ queryKey: pipelineQueryKey, queryFn: () => listPipeline(), staleTime: 30_000, refetchOnWindowFocus: true })
   const now = useMemo(() => new Date(), [query.dataUpdatedAt])
@@ -51,67 +57,94 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ staff }) => {
   }, [projects])
 
   const term = searchQuery.toLowerCase().trim()
-  const byArtist = projects.filter((p) => artistId === 'all' || p.staffId === artistId)
-  const searched = byArtist.filter((p) => matchesSearch(term, p.customerName, p.customerPhone, p.title))
-  const counts = countByFilter(searched)
+  const visible = projects.filter((p) => (artistId === 'all' || p.staffId === artistId) && matchesSearch(term, p))
+  const closedCount = visible.filter((p) => CLOSED_STAGES.has(p.stage)).length
+  const grouped = groupByColumn(visible, ALL_COLUMNS)
+  const mobileColumns = ALL_COLUMNS.map((column) => ({ ...column, count: grouped.get(column.id)?.length ?? 0 }))
 
-  const visibleProjects = searched.filter((p) => matchesStage(p, filter))
-  const totalPages = Math.ceil(visibleProjects.length / ITEMS_PER_PAGE) || 1
-  const page = Math.min(Math.max(1, currentPage), totalPages)
-  const pageSlice = visibleProjects.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
+  const body = () => {
+    if (query.isLoading) return <ProjectsSkeleton />
+    if (projects.length === 0) {
+      return (
+        <div className="flex h-full flex-col items-center justify-center gap-1.5 px-6 text-center">
+          <p className="text-sm font-bold text-foreground">עדיין אין פרויקטים</p>
+          <p className="max-w-sm text-xs text-muted-foreground">
+            פרויקט נפתח לבד כשלקוח מבקש לקבוע בשיחה, או כשקובעים לו תור ביומן. מכאן תראו איפה כל עבודה עומדת.
+          </p>
+        </div>
+      )
+    }
+    if (visible.length === 0) {
+      return (
+        <div className="flex h-full flex-col items-center justify-center gap-2 text-sm font-semibold text-muted-foreground">
+          <span>לא נמצאו פרויקטים התואמים את החיפוש</span>
+          <button type="button" onClick={resetFilters} className="cursor-pointer font-bold text-primary hover:underline">
+            אפס סינונים
+          </button>
+        </div>
+      )
+    }
+    if (isMobile) {
+      const lane = sortForColumn(grouped.get(mobileColumn) ?? [], now)
+      return (
+        <div className="flex h-full flex-col gap-2 overflow-y-auto p-4">
+          {lane.length > 0 ? (
+            lane.map((project) => (
+              <ProjectCard
+                key={project.projectId}
+                project={project}
+                now={now}
+                avatarUrl={project.staffId ? artistAvatars[project.staffId] : null}
+                onOpen={() => setOpenProjectId(project.projectId)}
+              />
+            ))
+          ) : (
+            <p className="py-10 text-center text-xs font-medium text-muted-foreground">אין כאן כרגע פרויקטים</p>
+          )}
+        </div>
+      )
+    }
+    return (
+      <ProjectBoard
+        columns={showClosed ? CLOSED_COLUMNS : OPEN_COLUMNS}
+        projects={visible}
+        now={now}
+        artistAvatars={artistAvatars}
+        onOpenProject={(project) => setOpenProjectId(project.projectId)}
+      />
+    )
+  }
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-[18px] font-assistant lg:gap-6" dir="rtl">
-      <div className="page-head hidden lg:flex">
-        <h1>פרויקטים</h1>
-        <p>כל עבודה והשלב שלה, מהפנייה הראשונה ועד סיום הפרויקט</p>
+    <div className="flex h-full min-h-0 flex-col bg-background font-assistant" dir="rtl">
+      <div className="px-4 pt-3 lg:hidden">
+        <PipelineMobileSwitch active="projects" />
       </div>
 
-      <PipelineMobileSwitch active="projects" />
+      <ProjectsToolbar
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        artists={isAdmin ? artists : []}
+        artistId={artistId}
+        onArtistChange={setArtistId}
+        openCount={visible.length - closedCount}
+        closedCount={closedCount}
+        showClosed={showClosed}
+        onShowClosedChange={setShowClosed}
+        mobileColumns={mobileColumns}
+        mobileColumn={mobileColumn}
+        onMobileColumnChange={setMobileColumn}
+      />
 
       {query.error && (
-        <div className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">
+        <div className="flex items-center gap-2 border-b border-destructive/20 bg-destructive/10 px-4 py-2.5 text-sm font-semibold text-destructive">
           <AlertCircle size={15} className="shrink-0" />
           <span>{query.error.message || 'שגיאה בטעינת הפרויקטים'}</span>
         </div>
       )}
 
-      <PipelineFilters
-        searchQuery={searchQuery}
-        onSearchQueryChange={setSearchQuery}
-        filter={filter}
-        onFilterChange={setFilter}
-        counts={counts}
-        artists={isAdmin ? artists : []}
-        artistId={artistId}
-        onArtistChange={setArtistId}
-      />
+      <div className="min-h-0 flex-1">{body()}</div>
 
-      {query.isLoading ? (
-        <ProjectsSkeleton />
-      ) : visibleProjects.length > 0 ? (
-        <div className="flex flex-col gap-4">
-          <PipelineList
-            projects={pageSlice}
-            now={now}
-            onMarkLost={setLosing}
-            onReopen={(p) => reopen.mutate(p.projectId)}
-            onOpenProject={(p) => setOpenProjectId(p.projectId)}
-          />
-          <Pagination currentPage={page} totalPages={totalPages} onPageChange={(next) => React.startTransition(() => setCurrentPage(next))} totalItems={visibleProjects.length} itemsPerPage={ITEMS_PER_PAGE} itemLabel="פרויקטים" />
-        </div>
-      ) : (
-        <div className="flex h-44 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border text-center text-sm font-semibold text-muted-foreground">
-          <span>{term || artistId !== 'all' ? 'לא נמצאו פרויקטים התואמים את החיפוש' : 'אין כרגע פרויקטים בשלב הזה'}</span>
-          {(term || artistId !== 'all' || filter !== 'open') && (
-            <button type="button" onClick={resetFilters} className="cursor-pointer text-sm font-bold text-primary hover:underline">
-              אפס סינונים
-            </button>
-          )}
-        </div>
-      )}
-
-      {losing && <MarkProjectLostDialog projectId={losing.projectId} projectTitle={losing.title} open onOpenChange={(open) => !open && setLosing(null)} />}
       <ProjectPanel projectId={openProjectId} onClose={() => setOpenProjectId(null)} />
     </div>
   )

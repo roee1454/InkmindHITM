@@ -53,9 +53,13 @@ function DashboardLayout() {
   const location = useLocation()
   const navigate = useNavigate()
   const isConversations = location.pathname.startsWith('/dashboard/conversations')
-  // The calendar is a full-bleed screen like the chat thread (track-b B6.8): it owns its own
-  // scroll so the grid fills the viewport instead of sitting in a card inside a padded page.
-  const isFlushScreen = isConversations || location.pathname.startsWith('/dashboard/calendar')
+  // The calendar and the projects board are full-bleed screens like the chat thread (track-b
+  // B6.8, B6.10): they own their own scroll so the grid or the board fills the viewport instead of
+  // sitting in a card inside a padded page.
+  const isFlushScreen =
+    isConversations ||
+    location.pathname.startsWith('/dashboard/calendar') ||
+    location.pathname.startsWith('/dashboard/projects')
 
   // Real-time subscriptions for messages, conversations, and notifications
   useDashboardRealtime({

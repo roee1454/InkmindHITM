@@ -35,6 +35,8 @@ export async function loadPipeline(su: PocketBase, viewer: PipelineViewer, now: 
         primaryStaff: text(p.primary_staff),
         quoteMin: positive(p.quote_min),
         quoteMax: positive(p.quote_max),
+        // An unset PocketBase number reads as 0, which here means "no estimate", not "zero sessions".
+        estimatedSessions: positive(p.estimated_sessions),
         lostReason: text(p.lost_reason),
         lostNote: text(p.lost_note),
       })),

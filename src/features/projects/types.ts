@@ -37,6 +37,12 @@ export interface PipelineProject {
   quoteMax: number | null
   /** The next pending/confirmed appointment, if any. */
   nextAppointmentAt: string | null
+  /** Completed sessions, for "session 2 of ~3" on work in progress. */
+  sessionsDone: number
+  /** The artist's estimate, entered with the quote; null when nobody gave one. */
+  estimatedSessions: number | null
+  /** Start of the latest completed session: how long the work has been idle between sessions. */
+  lastSessionAt: string | null
   lostReason: LostReason | null
   lostNote: string | null
   due: number

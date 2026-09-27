@@ -8,8 +8,8 @@ const admin = { id: 'owner1', role: 'owner' }
 function input(overrides: Partial<PipelineInput> = {}): PipelineInput {
   return {
     projects: [
-      { id: 'p1', customer: 'c1', title: 'שרוול', stage: 'in_progress', stageChangedAt: '2026-09-20T10:00:00Z', primaryStaff: 'artist1', quoteMin: 4500, quoteMax: 6000, lostReason: null, lostNote: null },
-      { id: 'p2', customer: 'c2', title: 'ורד', stage: 'lost', stageChangedAt: '2026-09-01T10:00:00Z', primaryStaff: null, quoteMin: null, quoteMax: null, lostReason: 'price', lostNote: 'יקר' },
+      { id: 'p1', customer: 'c1', title: 'שרוול', stage: 'in_progress', stageChangedAt: '2026-09-20T10:00:00Z', primaryStaff: 'artist1', quoteMin: 4500, quoteMax: 6000, estimatedSessions: 3, lostReason: null, lostNote: null },
+      { id: 'p2', customer: 'c2', title: 'ורד', stage: 'lost', stageChangedAt: '2026-09-01T10:00:00Z', primaryStaff: null, quoteMin: null, quoteMax: null, estimatedSessions: null, lostReason: 'price', lostNote: 'יקר' },
     ],
     customers: [
       { id: 'c1', name: 'דנה', phone: '+972521111111', source: 'instagram', updatedAt: '2026-09-20T10:00:00Z' },
@@ -50,6 +50,9 @@ describe('buildPipeline', () => {
       quoteMin: 4500,
       quoteMax: 6000,
       nextAppointmentAt: '2026-10-05T10:00:00Z',
+      sessionsDone: 1,
+      estimatedSessions: 3,
+      lastSessionAt: '2026-09-10T10:00:00Z',
       lostReason: null,
       lostNote: null,
       due: 1500,
@@ -76,7 +79,7 @@ describe('buildPipeline', () => {
   it('falls back to the artist of the next appointment and ignores unknown values', () => {
     const { projects } = buildPipeline(
       input({
-        projects: [{ id: 'p1', customer: 'c1', title: '', stage: 'bogus', stageChangedAt: null, primaryStaff: null, quoteMin: null, quoteMax: null, lostReason: 'weird', lostNote: null }],
+        projects: [{ id: 'p1', customer: 'c1', title: '', stage: 'bogus', stageChangedAt: null, primaryStaff: null, quoteMin: null, quoteMax: null, estimatedSessions: null, lostReason: 'weird', lostNote: null }],
       }),
       admin,
       now,
@@ -105,6 +108,14 @@ describe('project formatting', async () => {
     expect(formatQuote(null, null)).toBeNull()
     expect(formatQuote(1500, 1500)).toBe(formatQuote(1500, null))
     expect(formatQuote(4500, 6000)).toMatch(/4,500.*6,000/)
+  })
+
+  it('isolates a range left-to-right so it reads low→high inside Hebrew text', () => {
+    const range = formatQuote(4500, 6000)!
+    expect(range.startsWith('⁦')).toBe(true)
+    expect(range.endsWith('⁩')).toBe(true)
+    // A single price needs no isolate — there's nothing to reorder.
+    expect(formatQuote(1500, 1500)).not.toContain('⁦')
   })
 
   it('formats a slot compactly and tolerates bad input', () => {
