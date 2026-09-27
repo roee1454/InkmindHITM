@@ -62,7 +62,9 @@ export const AppointmentRowCard: React.FC<AppointmentRowCardProps> = ({
     >
       {/* Time column */}
       <div className="w-24 shrink-0 pt-0.5 text-right">
-        <span className="text-xs font-extrabold text-foreground block tabular-nums">
+        {/* `dir=ltr`: a bidi-neutral dash between two LTR clocks renders the range backwards
+            in an RTL page ("14:00 – 11:00" for an 11:00 appointment). */}
+        <span dir="ltr" className="block text-xs font-extrabold tabular-nums text-foreground">
           {timeRange}
         </span>
         <span className="text-micro text-muted-foreground font-medium block mt-0.5">

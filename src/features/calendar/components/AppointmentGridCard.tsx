@@ -83,7 +83,9 @@ export const AppointmentGridCard: React.FC<AppointmentGridCardProps> = ({
             )}
           </div>
 
-          <span className="shrink-0 truncate text-2xs font-semibold tabular-nums text-muted-foreground">
+          {/* `dir=ltr`: a bidi-neutral dash between two LTR clocks renders the range backwards
+              in an RTL page ("14:00 – 11:00" for an 11:00 appointment). */}
+          <span dir="ltr" className="shrink-0 truncate text-2xs font-semibold tabular-nums text-muted-foreground">
             {isCompact
               ? appointment.timeSlot
               : formatAppointmentTimeRange(appointment.timeSlot, appointment.durationMinutes || 120)}

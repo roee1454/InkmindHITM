@@ -74,9 +74,11 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
 
   return (
     <div dir="rtl" className="h-full overflow-auto font-assistant">
-      {/* Single-day mode fits any phone, so it must not inherit the week view's scroll floor. */}
-      <div className={dayCount === 1 ? '' : 'min-w-[840px]'}>
-        <div className="sticky top-0 z-20 flex border-b border-border bg-card">
+      {/* `min-h-full` + `flex-1` on the body: when the working day is shorter than the viewport,
+          the day columns stretch to the bottom instead of ending mid-screen over dead space.
+          Single-day mode fits any phone, so it must not inherit the week view's scroll floor. */}
+      <div className={cn('flex min-h-full flex-col', dayCount === 1 ? '' : 'min-w-[840px]')}>
+        <div className="sticky top-0 z-20 flex shrink-0 border-b border-border bg-card">
           <div className="sticky start-0 z-10 w-14 shrink-0 bg-card" />
           {days.map((day) => {
             const dayAppointments = appointments.filter((a) => a.date === toYmd(day))
@@ -117,21 +119,22 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
           })}
         </div>
 
-        <div className="flex">
-          <div className="sticky start-0 z-10 w-14 shrink-0 bg-card">
+        <div className="flex flex-1">
+          <div className="sticky start-0 z-10 flex w-14 shrink-0 flex-col bg-card">
             {hours.map((hour) => (
               <div
                 key={hour}
                 style={{ height: rowHeight }}
-                className="border-b border-border px-2 pt-1 text-center text-2xs font-medium tabular-nums text-muted-foreground"
+                className="shrink-0 border-b border-border px-2 pt-1 text-center text-2xs font-medium tabular-nums text-muted-foreground"
               >
                 {minutesToTime(hour * 60)}
               </div>
             ))}
+            <div className="flex-1" />
           </div>
 
           {days.map((day) => (
-            <div key={toYmd(day)} className={cn('relative flex-1 border-s border-border', isToday(day) && 'bg-muted/20')}>
+            <div key={toYmd(day)} className={cn('relative flex flex-1 flex-col border-s border-border', isToday(day) && 'bg-muted/20')}>
               {hours.map((hour) => (
                 <button
                   key={hour}
@@ -140,7 +143,7 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
                   style={{ height: rowHeight }}
                   aria-label={`קבע תור ל-${toYmd(day)} בשעה ${minutesToTime(hour * 60)}`}
                   className={cn(
-                    'group/slot relative block w-full cursor-pointer border-b border-border transition-colors duration-150 hover:bg-accent-soft',
+                    'group/slot relative block w-full shrink-0 cursor-pointer border-b border-border transition-colors duration-150 hover:bg-accent-soft',
                     isOutsideHours(day, hour) && 'bg-muted/40',
                   )}
                 >
