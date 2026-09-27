@@ -5,6 +5,7 @@ import { XIcon } from '@/components/ui/icon'
 import { Dialog as SheetPrimitive } from "radix-ui"
 
 import { cn } from "#/lib/utils.ts"
+import { useDragToDismiss } from "#/hooks/useDragToDismiss"
 
 /**
  * Slide-over panel, built on the same Radix Dialog primitive as `dialog.tsx`.
@@ -62,10 +63,16 @@ function SheetContent({
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
 }) {
+  const panelRef = React.useRef<HTMLDivElement>(null)
+  const overlayRef = React.useRef<HTMLDivElement>(null)
+  const dismissRef = React.useRef<HTMLButtonElement>(null)
+  const dragHandlers = useDragToDismiss({ panelRef, overlayRef, onDismiss: () => dismissRef.current?.click() })
+
   return (
     <SheetPortal>
-      <SheetOverlay />
+      <SheetOverlay ref={overlayRef} />
       <SheetPrimitive.Content
+        ref={panelRef}
         data-slot="sheet-content"
         tabIndex={-1}
         onOpenAutoFocus={(e) => {
@@ -97,7 +104,18 @@ function SheetContent({
         {...props}
       >
         {side === "bottom" && (
-          <div className="mx-auto h-1.5 w-10 shrink-0 rounded-full bg-foreground/15" />
+          <>
+            {/* The grabber follows the finger (useDragToDismiss). Its `::before` widens the touch
+                target to ~200×30px without moving the bar or the layout under it; `sticky` keeps it
+                reachable when the panel itself is the scroll container. */}
+            <div
+              aria-hidden
+              className="sticky top-0 z-10 mx-auto h-1.5 w-10 shrink-0 cursor-grab touch-none rounded-full bg-foreground/15 transition-colors duration-150 before:absolute before:-inset-x-20 before:-inset-y-3 before:content-[''] data-[dragging]:cursor-grabbing data-[dragging]:bg-foreground/30"
+              {...dragHandlers}
+            />
+            {/* Closing goes through Radix like any other close, so every caller's `onOpenChange` runs. */}
+            <SheetPrimitive.Close ref={dismissRef} tabIndex={-1} aria-hidden className="hidden" />
+          </>
         )}
         {children}
         {showCloseButton && (
