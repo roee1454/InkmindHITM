@@ -32,21 +32,23 @@ export function ProjectsToolbar(props: ProjectsToolbarProps) {
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="hidden text-lg font-extrabold tracking-tight text-foreground lg:block">פרויקטים</h1>
 
+        {/* Search and the artist filter share one row on a phone too: search takes the width, the
+            filter sits beside it at a fixed size, both the same height. */}
         <SearchInput
-          // `basis-full`, not `w-full`: a `flex-1` basis of 0 overrides width, which left the search
-          // squeezed beside the artist select on a phone instead of on its own line.
-          containerClassName="order-last basis-full lg:order-none lg:max-w-md lg:flex-1 lg:basis-auto"
-          size="default"
+          containerClassName="min-w-0 flex-1 lg:max-w-md"
+          size="sm"
           variant="card"
-          placeholder="חיפוש לפי שם, טלפון או פרויקט..."
+          placeholder="חיפוש לקוח או פרויקט..."
           value={props.searchQuery}
           onChange={props.onSearchQueryChange}
         />
 
-        <div className="ms-auto flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2 lg:ms-auto">
           {props.artists.length > 0 && (
             <Select value={props.artistId} onValueChange={props.onArtistChange}>
-              <SelectTrigger className="h-9 w-40 rounded-lg text-sm" aria-label="סינון לפי מקעקע">
+              {/* The trigger sizes itself through `data-[size=*]:h-*`, which a plain `h-*` can't beat —
+                  override on the same variant so it matches the search's height. */}
+              <SelectTrigger size="sm" className="w-36 rounded-xl px-3 text-sm data-[size=sm]:h-9.5 md:text-sm lg:w-40" aria-label="סינון לפי מקעקע">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent dir="rtl" align="end">

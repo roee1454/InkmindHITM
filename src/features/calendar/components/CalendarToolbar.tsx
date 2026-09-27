@@ -137,7 +137,7 @@ export function CalendarToolbar(props: CalendarToolbarProps) {
       {showFilters && (
         <div className="flex flex-wrap items-center gap-2">
           <Select value={props.selectedArtist} onValueChange={props.onSelectedArtistChange}>
-            <SelectTrigger className="h-9 w-full rounded-lg text-sm sm:w-48" aria-label="סינון לפי מקעקע">
+            <SelectTrigger size="sm" className="w-full rounded-lg px-3 text-sm data-[size=sm]:h-9 md:text-sm sm:w-48" aria-label="סינון לפי מקעקע">
               <SelectValue />
             </SelectTrigger>
             <SelectContent align="end" dir="rtl" className="font-assistant">
@@ -161,7 +161,7 @@ export function CalendarToolbar(props: CalendarToolbarProps) {
           </Select>
 
           <Select value={props.selectedStatus} onValueChange={(value) => props.onSelectedStatusChange(value as StatusFilter)}>
-            <SelectTrigger className="h-9 w-full rounded-lg text-sm sm:w-44" aria-label="סינון לפי סטטוס">
+            <SelectTrigger size="sm" className="w-full rounded-lg px-3 text-sm data-[size=sm]:h-9 md:text-sm sm:w-44" aria-label="סינון לפי סטטוס">
               <SelectValue />
             </SelectTrigger>
             <SelectContent align="end" dir="rtl" className="font-assistant">
