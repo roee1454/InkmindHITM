@@ -109,7 +109,7 @@ export function ConversationList({ selectedId, onSelect }: ConversationListProps
                 {seg.badge && (
                   <span
                     className={cn(
-                      'inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-3xs font-extrabold tabular-nums leading-none',
+                      'inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-2xs font-extrabold tabular-nums leading-none',
                       active
                         ? 'bg-primary-foreground/20 text-primary-foreground'
                         : 'bg-status-wait-soft text-status-wait',

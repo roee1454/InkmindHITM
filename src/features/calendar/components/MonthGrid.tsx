@@ -132,7 +132,6 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
                   <AppointmentMonthChip
                     key={appointment.id}
                     appointment={appointment}
-                    artistAvatars={artistAvatars}
                     onSelect={() => onSelectAppointment(appointment)}
                   />
                 ))}

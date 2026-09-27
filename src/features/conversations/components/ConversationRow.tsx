@@ -47,7 +47,7 @@ export function ConversationRow({
 
           <div className="flex items-center gap-1.5 shrink-0">
             {conversation.unreadCount > 0 && (
-              <span className="flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-primary px-1 text-3xs font-extrabold text-primary-foreground leading-none tabular-nums">
+              <span className="flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-primary px-1 text-2xs font-extrabold text-primary-foreground leading-none tabular-nums">
                 {conversation.unreadCount}
               </span>
             )}

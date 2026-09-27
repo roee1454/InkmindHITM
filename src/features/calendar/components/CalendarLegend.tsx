@@ -1,58 +1,73 @@
 import React from 'react'
-import { Info, Needle, PencilLine, TriangleAlert } from '@/components/ui/icon'
+import { Needle, PencilLine } from '@/components/ui/icon'
+import { MARKER_DOT, MARKER_LABELS } from '../utils/appointment-visual'
 
-const BUSY_STRIPES_PREVIEW: React.CSSProperties = {
-  backgroundImage:
-    'repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(148, 148, 148, 0.25) 4px, rgba(148, 148, 148, 0.25) 8px)',
-}
-
+/**
+ * What the calendar's four visual channels mean (track-b B6.8). It lives in a popover behind the
+ * toolbar's info button rather than as a permanent strip under the grid, which cost ~40px of grid
+ * height on every screen to explain something staff learn once.
+ */
 export const CalendarLegend: React.FC = () => {
   return (
-    <div
-      dir="rtl"
-      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border bg-muted/20 px-4 py-2.5 font-assistant text-2xs text-muted-foreground select-none"
-    >
-      <div className="flex items-center gap-1.5 font-bold text-foreground/80 shrink-0">
-        <Info size={13} className="text-muted-foreground shrink-0" />
-        <span>מקרא יומן:</span>
+    <div dir="rtl" className="flex flex-col gap-3 p-4 font-assistant text-xs">
+      <p className="text-sm font-extrabold text-foreground">מקרא היומן</p>
+
+      <div className="flex flex-col gap-2">
+        <div className="flex items-start gap-2">
+          <span className="mt-0.5 flex shrink-0 gap-0.5">
+            <span className="size-3 rounded border border-artist-1/45 bg-artist-1/[0.08]" />
+            <span className="size-3 rounded border border-artist-2/45 bg-artist-2/[0.08]" />
+            <span className="size-3 rounded border border-artist-5/45 bg-artist-5/[0.08]" />
+          </span>
+          <span className="text-muted-foreground">
+            <span className="font-bold text-foreground">צבע = מקעקע.</span> לכל מקעקע צבע קבוע משלו.
+          </span>
+        </div>
+
+        <div className="flex items-start gap-2">
+          <span className="mt-0.5 flex shrink-0 gap-1 text-muted-foreground">
+            <Needle size={13} />
+            <PencilLine size={13} />
+          </span>
+          <span className="text-muted-foreground">
+            <span className="font-bold text-foreground">אייקון = סוג.</span> מחט לסשן קעקוע, עיפרון לפגישת ייעוץ.
+          </span>
+        </div>
+
+        <div className="flex items-start gap-2">
+          <span className="mt-0.5 size-3 shrink-0 rounded border border-dashed border-muted-foreground/60" />
+          <span className="text-muted-foreground">
+            <span className="font-bold text-foreground">מסגרת מקווקוות = טרם אושר.</span> התור עוד לא סופי.
+          </span>
+        </div>
+
+        <div className="flex items-start gap-2">
+          <span className={`mt-1 size-2 shrink-0 rounded-full ${MARKER_DOT.approval}`} />
+          <span className="text-muted-foreground">
+            <span className="font-bold text-foreground">נקודה כהה = {MARKER_LABELS.approval}.</span>
+          </span>
+        </div>
+
+        <div className="flex items-start gap-2">
+          <span className={`mt-1 size-2 shrink-0 rounded-full ${MARKER_DOT.close_out}`} />
+          <span className="text-muted-foreground">
+            <span className="font-bold text-foreground">נקודה כתומה = {MARKER_LABELS.close_out}.</span> הסשן נגמר ולא הוזן מחיר סופי.
+          </span>
+        </div>
+
+        <div className="flex items-start gap-2">
+          <span className="mt-0.5 size-3 shrink-0 rounded border border-border bg-muted opacity-55" />
+          <span className="text-muted-foreground">
+            <span className="font-bold text-foreground">מעומעם = הושלם או בוטל.</span> תור שבוטל מוצג גם עם קו חוצה.
+          </span>
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-        <div className="flex items-center gap-1.5">
-          <div className="flex size-4.5 items-center justify-center rounded bg-primary/10 text-primary border border-primary/20 shrink-0">
-            <Needle size={11} />
-          </div>
-          <span className="font-medium">סשן קעקוע</span>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <div className="flex size-4.5 items-center justify-center rounded border border-dashed border-accent-ink/70 bg-accent-ink/10 text-accent-ink shrink-0">
-            <PencilLine size={10} />
-          </div>
-          <span className="font-medium">פגישת סקיצה (קו מקווקו)</span>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <span className="size-2 rounded-full bg-warning ring-1 ring-card shrink-0" />
-          <span className="font-medium">ממתין לאישור</span>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <TriangleAlert size={12} className="text-warning shrink-0" />
-          <span className="font-medium">מחוץ לשעות העבודה</span>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <span
-            style={BUSY_STRIPES_PREVIEW}
-            className="size-3.5 rounded border border-border bg-muted/60 shrink-0"
-          />
-          <span className="font-medium">חסימת יומן חיצוני (Google)</span>
-        </div>
-      </div>
+      <p className="border-t border-border pt-2.5 text-2xs text-muted-foreground">
+        מחיר, מקדמה, הצהרת בריאות ותיאור הקעקוע מופיעים כשמעבירים את העכבר על התור, ובפתיחת התור עצמו.
+      </p>
     </div>
   )
 }
 
 export default CalendarLegend
-

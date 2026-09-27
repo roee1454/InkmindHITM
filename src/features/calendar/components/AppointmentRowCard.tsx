@@ -2,6 +2,7 @@ import React from 'react'
 import { PencilLine, Needle, FileCheck, TriangleAlert } from '@/components/ui/icon'
 import type { ApiAppointment } from '../types'
 import { artistColor } from '../utils/artist-colors'
+import { appointmentVisual, MARKER_LABELS } from '../utils/appointment-visual'
 import {
   formatAppointmentDurationLabel,
   formatAppointmentPrice,
@@ -10,7 +11,6 @@ import {
 } from '../utils/appointment-status'
 import { cn } from '@/lib/utils'
 import { appointmentKindLabel } from '../utils/project-position'
-import { appointmentNeedsCloseOut } from '@/features/payments/utils/balance'
 import { extractMedicalAlerts } from '@/features/health-declaration/utils/health-alerts'
 import { isHealthDeclarationValid } from '@/features/health-declaration/utils/validity'
 
@@ -26,7 +26,8 @@ export const AppointmentRowCard: React.FC<AppointmentRowCardProps> = ({
   onSelect,
 }) => {
   const isSketch = appointment.type === 'sketch'
-  const visual = getAppointmentStatusVisual(appointment.status)
+  const status = getAppointmentStatusVisual(appointment.status)
+  const visual = appointmentVisual(appointment, Date.now())
   const artist = artistColor(appointment.staffId)
   const timeRange = formatAppointmentTimeRange(appointment.timeSlot, appointment.durationMinutes || 120)
   const durationLabel = formatAppointmentDurationLabel(appointment.durationMinutes || 120)
@@ -51,12 +52,12 @@ export const AppointmentRowCard: React.FC<AppointmentRowCardProps> = ({
       type="button"
       onClick={onSelect}
       className={cn(
-        'group/row w-full flex items-start gap-3 p-3.5 rounded-2xl border text-right transition-all duration-150 cursor-pointer select-none',
-        'bg-card hover:bg-muted/40 hover:border-border hover:shadow-xs active:scale-[0.99]',
-        isSketch
-          ? 'border-dashed border-accent-ink/60 bg-accent-ink/[0.03] hover:bg-accent-ink/[0.07]'
-          : 'border-border/80',
-        visual.isCancelled && 'opacity-50 grayscale line-through',
+        'group/row flex w-full cursor-pointer select-none items-start gap-3 rounded-xl border p-3.5 text-right transition-colors duration-150 active:scale-[0.99]',
+        artist.surface,
+        'hover:border-accent-ink/50',
+        visual.dashed && 'border-dashed',
+        visual.muted && 'opacity-60',
+        visual.struck && 'line-through',
       )}
     >
       {/* Time column */}
@@ -78,26 +79,19 @@ export const AppointmentRowCard: React.FC<AppointmentRowCardProps> = ({
               {clientName}
             </span>
 
-            {isSketch ? (
-              <span className="inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-3xs font-extrabold bg-accent-ink/15 text-accent-ink border border-accent-ink/30 shrink-0">
-                <PencilLine size={9} />
-                <span>סקיצה</span>
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-3xs font-bold bg-primary/10 text-primary border border-primary/20 shrink-0">
-                <Needle size={9} />
-                <span>{appointmentKindLabel(appointment.kind, appointment.projectPosition)}</span>
-              </span>
-            )}
+            <span className="inline-flex shrink-0 items-center gap-1 text-2xs font-bold text-muted-foreground">
+              {isSketch ? <PencilLine size={11} /> : <Needle size={11} />}
+              <span>{isSketch ? 'ייעוץ' : appointmentKindLabel(appointment.kind, appointment.projectPosition)}</span>
+            </span>
           </div>
 
-          {appointmentNeedsCloseOut(appointment, Date.now()) ? (
-            <span className="rounded-full px-2 py-0.5 text-micro font-bold shrink-0 bg-warning/10 text-warning border border-warning/30">
-              ממתין לסגירה
+          {visual.marker === 'close_out' ? (
+            <span className="shrink-0 rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-2xs font-bold text-warning">
+              {MARKER_LABELS.close_out}
             </span>
           ) : (
-            <span className={cn('rounded-full px-2 py-0.5 text-micro font-bold shrink-0', visual.badgeClass)}>
-              {visual.label}
+            <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-2xs font-bold', status.badgeClass)}>
+              {status.label}
             </span>
           )}
         </div>
@@ -134,7 +128,7 @@ export const AppointmentRowCard: React.FC<AppointmentRowCardProps> = ({
 
           <div className="flex items-center gap-2 shrink-0">
             {appointment.hasDeposit && (
-              <span className="inline-flex items-center gap-0.5 text-3xs font-bold text-status-done">
+              <span className="inline-flex items-center gap-0.5 text-2xs font-bold text-status-done">
                 מקדמה שולמה ✓
               </span>
             )}
@@ -149,7 +143,7 @@ export const AppointmentRowCard: React.FC<AppointmentRowCardProps> = ({
                       : 'הצהרת בריאות חתומה ומאושרת'
                 }
                 className={cn(
-                  'inline-flex items-center gap-0.5 text-3xs font-bold',
+                  'inline-flex items-center gap-0.5 text-2xs font-bold',
                   alerts.length > 0
                     ? 'text-destructive'
                     : isExpired
@@ -175,7 +169,7 @@ export const AppointmentRowCard: React.FC<AppointmentRowCardProps> = ({
             {appointment.isException && (
               <span
                 title="נקבע מחוץ לשעות הפעילות"
-                className="inline-flex items-center gap-0.5 text-3xs font-bold text-warning"
+                className="inline-flex items-center gap-0.5 text-2xs font-bold text-warning"
               >
                 <TriangleAlert size={11} />
                 <span>חריגה</span>
