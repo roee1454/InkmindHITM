@@ -52,9 +52,12 @@ interface CalendarToolbarProps {
  * the screen for the grid itself.
  */
 export function CalendarToolbar(props: CalendarToolbarProps) {
-  const filtersActive = props.selectedArtist !== 'all' || props.selectedStatus !== 'all'
-  const [filtersOpen, setFiltersOpen] = React.useState(false)
-  const showFilters = filtersOpen || filtersActive
+  const activeFilterCount = Number(props.selectedArtist !== 'all') + Number(props.selectedStatus !== 'all')
+  const filtersActive = activeFilterCount > 0
+  // The panel opens only on request. It used to force itself open whenever a filter was set, and
+  // the calendar starts filtered to the signed-in artist, so it took two rows on every visit; the
+  // count on the button now says the view is filtered.
+  const [showFilters, setShowFilters] = React.useState(false)
 
   return (
     <div
@@ -107,13 +110,22 @@ export function CalendarToolbar(props: CalendarToolbarProps) {
 
           <button
             type="button"
-            onClick={() => setFiltersOpen((open) => !open)}
+            onClick={() => setShowFilters((open) => !open)}
             aria-pressed={showFilters}
-            aria-label="סינון"
+            aria-expanded={showFilters}
+            aria-label={filtersActive ? `סינון · ${activeFilterCount} פעילים` : 'סינון'}
             title="סינון"
-            className={cn('tap-target size-9', filtersActive ? 'text-primary' : 'text-muted-foreground')}
+            className={cn(
+              'tap-target relative size-9',
+              showFilters ? 'bg-muted text-foreground' : filtersActive ? 'text-foreground' : 'text-muted-foreground',
+            )}
           >
             <SlidersHorizontal size={17} />
+            {filtersActive && (
+              <span className="absolute -top-0.5 -end-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-2xs font-extrabold tabular-nums text-primary-foreground">
+                {activeFilterCount}
+              </span>
+            )}
           </button>
 
           <Popover>
