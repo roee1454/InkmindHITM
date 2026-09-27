@@ -80,6 +80,11 @@ export const CalendarPage: React.FC = () => {
     [appointments, selectedArtist],
   )
   const statusCounts = useMemo(() => countByStatus(byArtist), [byArtist])
+  // Narrows the day view's resource columns the same way the artist filter narrows everything else.
+  const gridStaff = useMemo(
+    () => (selectedArtist === 'all' ? staff : staff.filter((s) => s.id === selectedArtist)),
+    [staff, selectedArtist],
+  )
   const visible = useMemo(
     () => filterAppointments(appointments, { artistId: selectedArtist, status: selectedStatus, query: searchQuery }),
     [appointments, selectedArtist, selectedStatus, searchQuery],
@@ -169,11 +174,12 @@ export const CalendarPage: React.FC = () => {
           onAnchorDateChange={setAnchorDate}
           appointments={visible}
           busyPeriods={BUSY_PERIODS}
+          staff={gridStaff}
           artistAvatars={artistAvatars}
           workingHours={workingHours}
           hourRange={hourRange}
           onSelectAppointment={openEdit}
-          onSelectSlot={(date, timeSlot) => openCreate({ slot: { date, timeSlot } })}
+          onSelectSlot={(date, timeSlot, staffId) => openCreate({ slot: { date, timeSlot }, initialValues: staffId ? { staffId } : undefined })}
         />
       )}
 

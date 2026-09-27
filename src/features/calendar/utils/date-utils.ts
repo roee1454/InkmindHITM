@@ -24,14 +24,6 @@ export function weekDays(anchor: Date): Date[] {
   return Array.from({ length: 7 }, (_, i) => addDays(start, i))
 }
 
-/**
- * The day columns the grid should render. `1` is the phone's single-day view; `7` must stay
- * byte-identical to `weekDays` so the desktop path is provably unchanged.
- */
-export function visibleDays(anchor: Date, dayCount: 1 | 7): Date[] {
-  return dayCount === 1 ? [anchor] : weekDays(anchor)
-}
-
 export function formatDayTitle(anchor: Date): string {
   return `${HEBREW_DAYS_LONG[anchor.getDay()]}, ${anchor.getDate()} ${HEBREW_MONTHS[anchor.getMonth()]}`
 }

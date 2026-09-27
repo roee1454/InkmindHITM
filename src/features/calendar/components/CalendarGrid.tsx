@@ -1,12 +1,14 @@
 import React from 'react'
 import { cn } from '#/lib/utils.ts'
 import { useIsMobile } from '#/hooks/useMediaQuery'
+import type { StaffMember } from '@/features/settings/server/staff'
 import type { ApiAppointment, ApiExternalBusyPeriod } from '../types'
 import type { WorkingHoursWindow } from '@/lib/working-hours'
 import type { GridHourRange } from '../utils/grid-hours'
 import type { CalendarViewMode } from '../utils/view-mode'
 import { WeekGrid } from './WeekGrid'
 import { MonthGrid } from './MonthGrid'
+import { DayResourceGrid } from './DayResourceGrid'
 import { DailyAppointmentCards } from './DailyAppointmentCards'
 import { HEBREW_DAYS_SHORT, isSameDay, isToday, toYmd, weekDays } from '../utils/date-utils'
 
@@ -19,11 +21,12 @@ interface CalendarGridProps {
   onAnchorDateChange: (date: Date) => void
   appointments: ApiAppointment[]
   busyPeriods: ApiExternalBusyPeriod[]
+  staff: StaffMember[]
   artistAvatars: Record<string, string>
   workingHours: WorkingHoursWindow[] | null
   hourRange: GridHourRange
   onSelectAppointment: (appointment: ApiAppointment) => void
-  onSelectSlot: (date: string, timeSlot: string) => void
+  onSelectSlot: (date: string, timeSlot: string, staffId?: string) => void
 }
 
 /**
@@ -36,6 +39,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   onAnchorDateChange,
   appointments,
   busyPeriods,
+  staff,
   artistAvatars,
   workingHours,
   hourRange,
@@ -84,6 +88,16 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               onNewAppointment={() => onSelectSlot(toYmd(anchorDate), '10:00')}
             />
           </div>
+        ) : mode === 'day' ? (
+          <DayResourceGrid
+            date={anchorDate}
+            appointments={appointments}
+            busyPeriods={busyPeriods}
+            staff={staff}
+            artistAvatars={artistAvatars}
+            onSelectAppointment={onSelectAppointment}
+            onSelectSlot={onSelectSlot}
+          />
         ) : mode === 'month' ? (
           <MonthGrid
             anchorDate={anchorDate}
@@ -103,7 +117,6 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             hourRange={hourRange}
             onSelectAppointment={onSelectAppointment}
             onSelectSlot={onSelectSlot}
-            dayCount={mode === 'day' ? 1 : 7}
           />
         )}
       </div>

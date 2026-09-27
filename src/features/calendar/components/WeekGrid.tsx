@@ -1,20 +1,20 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useState } from 'react'
 import { Plus } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
-import { useIsMobile } from '#/hooks/useMediaQuery'
 import type { ApiAppointment, ApiExternalBusyPeriod } from '../types'
 import type { WorkingHoursWindow } from '@/lib/working-hours'
 import { fitsWithinWorkingHours } from '@/lib/working-hours'
 import { layoutOverlaps } from '../utils/overlap-layout'
 import { hoursIn } from '../utils/grid-hours'
 import type { GridHourRange } from '../utils/grid-hours'
-import { HEBREW_DAYS_LONG, isToday, minutesToTime, timeToMinutes, toYmd, visibleDays } from '../utils/date-utils'
+import { useFillRowHeight } from '../hooks/use-fill-row-height'
+import { HEBREW_DAYS_LONG, isToday, minutesToTime, timeToMinutes, toYmd, weekDays } from '../utils/date-utils'
 import { DayOverviewDialog } from './DayOverviewDialog'
 import { AppointmentGridCard } from './AppointmentGridCard'
 
-/** The floor for an hour row. Rows grow past it to fill the screen; they never shrink below it. */
-const MIN_ROW_HEIGHT_DESKTOP = 64
-const MIN_ROW_HEIGHT_MOBILE = 56
+const MIN_ROW_HEIGHT = 64
+/** A card in a 7-way split has no room for a name; the overview dialog covers it instead. */
+const MAX_VISIBLE_COLUMNS = 3
 
 const BUSY_STRIPES: React.CSSProperties = {
   backgroundImage:
@@ -30,9 +30,14 @@ interface WeekGridProps {
   hourRange: GridHourRange
   onSelectAppointment: (appointment: ApiAppointment) => void
   onSelectSlot: (date: string, timeSlot: string) => void
-  dayCount?: 1 | 7
 }
 
+/**
+ * The week overview (track-b B6.8): columns are dates, so a day with several artists working
+ * shows all of them at once — this is the "how busy is the week" screen. The day-by-day workspace
+ * is `DayResourceGrid`, one column per artist, which is where a real scheduling conflict (the same
+ * artist double-booked) actually shows up as one.
+ */
 export const WeekGrid: React.FC<WeekGridProps> = ({
   anchorDate,
   appointments,
@@ -42,33 +47,11 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
   hourRange,
   onSelectAppointment,
   onSelectSlot,
-  dayCount = 7,
 }) => {
   const [dayOverviewDate, setDayOverviewDate] = useState<Date | null>(null)
-  const isMobile = useIsMobile()
-  const days = visibleDays(anchorDate, dayCount)
+  const days = weekDays(anchorDate)
   const hours = hoursIn(hourRange)
-
-  // A studio that works 10:00–19:00 has nine rows; at a fixed height those leave a third of a
-  // desktop screen empty. Measure what the screen actually gives us and divide it between the
-  // rows instead. Measuring the scroll container (whose height its parent fixes) rather than the
-  // rows keeps this out of a resize loop.
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const headerRef = useRef<HTMLDivElement>(null)
-  const [availableHeight, setAvailableHeight] = useState(0)
-  useEffect(() => {
-    const el = scrollRef.current
-    if (!el) return
-    const measure = () => setAvailableHeight(el.clientHeight - (headerRef.current?.offsetHeight ?? 0))
-    measure()
-    const observer = new ResizeObserver(measure)
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
-
-  const minRowHeight = isMobile ? MIN_ROW_HEIGHT_MOBILE : MIN_ROW_HEIGHT_DESKTOP
-  const rowHeight =
-    availableHeight > 0 ? Math.max(minRowHeight, Math.floor(availableHeight / hours.length)) : minRowHeight
+  const { scrollRef, headerRef, rowHeight } = useFillRowHeight(hours.length, MIN_ROW_HEIGHT)
   const gridStartMinutes = hourRange.startHour * 60
   const gridEndMinutes = (hourRange.endHour + 1) * 60
 
@@ -95,9 +78,8 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
   return (
     <div ref={scrollRef} dir="rtl" className="h-full overflow-auto font-assistant">
       {/* `min-h-full` + `flex-1` on the body: when the working day is shorter than the viewport,
-          the day columns stretch to the bottom instead of ending mid-screen over dead space.
-          Single-day mode fits any phone, so it must not inherit the week view's scroll floor. */}
-      <div className={cn('flex min-h-full flex-col', dayCount === 1 ? '' : 'min-w-[840px]')}>
+          the day columns stretch to the bottom instead of ending mid-screen over dead space. */}
+      <div className="flex min-h-full min-w-[840px] flex-col">
         <div ref={headerRef} className="sticky top-0 z-20 flex shrink-0 border-b border-border bg-card">
           <div className="sticky start-0 z-10 w-14 shrink-0 bg-card" />
           {days.map((day) => {
@@ -197,11 +179,10 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
               })}
 
               {appointmentsForDay(day).map(({ appointment, startMinutes, column, columnCount, span }) => {
-                const is7Day = dayCount === 7
-                if (is7Day && column >= 3) return null
+                if (column >= MAX_VISIBLE_COLUMNS) return null
 
-                const effectiveColumnCount = is7Day ? Math.min(columnCount, 3) : columnCount
-                const isOverflowSlot = is7Day && columnCount > 3 && column === 2
+                const effectiveColumnCount = Math.min(columnCount, MAX_VISIBLE_COLUMNS)
+                const isOverflowSlot = columnCount > MAX_VISIBLE_COLUMNS && column === MAX_VISIBLE_COLUMNS - 1
                 // A card may span several columns, so its width no longer follows its offset.
                 const unit = 100 / effectiveColumnCount
                 const visibleSpan = Math.max(1, Math.min(span, effectiveColumnCount - column))
@@ -223,7 +204,7 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
                     artistAvatars={artistAvatars}
                     onSelect={() => onSelectAppointment(appointment)}
                     isOverflowSlot={isOverflowSlot}
-                    overflowCount={columnCount - 2}
+                    overflowCount={columnCount - (MAX_VISIBLE_COLUMNS - 1)}
                     onOverflowClick={() => setDayOverviewDate(day)}
                   />
                 )
