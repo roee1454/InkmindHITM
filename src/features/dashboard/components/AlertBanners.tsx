@@ -3,39 +3,49 @@ import { ArrowLeft } from '@/components/ui/icon'
 interface AlertBannersProps {
   receiptApprovalCount: number
   awaitingPriceCount: number
-  onNavigateToLeads: () => void
+  /** Both actions happen in the conversation thread's approval rows, so both lead there. */
+  onOpenConversations: () => void
 }
 
-export function AlertBanners({ receiptApprovalCount, awaitingPriceCount, onNavigateToLeads }: AlertBannersProps) {
-  const total = receiptApprovalCount + awaitingPriceCount
-  if (total === 0) return null
+/**
+ * The things waiting on a human, one row each so staff see what kind of work it is — a single
+ * "N items need you" line used to hide whether it was money to confirm or a price to give.
+ */
+export function AlertBanners({ receiptApprovalCount, awaitingPriceCount, onOpenConversations }: AlertBannersProps) {
+  const alerts = [
+    receiptApprovalCount > 0 && {
+      key: 'receipt',
+      text: receiptApprovalCount === 1 ? 'אסמכתת העברה אחת ממתינה לאישור שלך' : `${receiptApprovalCount} אסמכתאות העברה ממתינות לאישור שלך`,
+    },
+    awaitingPriceCount > 0 && {
+      key: 'price',
+      text: awaitingPriceCount === 1 ? 'לקוח אחד ממתין להצעת מחיר' : `${awaitingPriceCount} לקוחות ממתינים להצעת מחיר`,
+    },
+  ].filter((a): a is { key: string; text: string } => Boolean(a))
 
-  let message: string
-  if (receiptApprovalCount > 0 && awaitingPriceCount > 0) {
-    message = `${total} פניות ממתינות לטיפול שלך`
-  } else if (receiptApprovalCount > 0) {
-    message = `${receiptApprovalCount} מקדמות ממתינות לאישור קבלה שלך`
-  } else {
-    message = `${awaitingPriceCount} פניות ממתינות לתמחור שלך`
-  }
+  if (alerts.length === 0) return null
 
   return (
-    <div
-      onClick={onNavigateToLeads}
-      className="group flex cursor-pointer select-none items-center justify-between rounded-2xl border border-primary/25 bg-primary/10 px-5 py-3.5 shadow-xs transition-all duration-150 ease-native hover:bg-primary/15 hover:border-primary/40 active:scale-[0.99] md:rounded-3xl"
-    >
-      <div className="flex items-center gap-3">
-        <span className="relative flex size-2.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-          <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
-        </span>
-        <span className="text-sm font-bold text-foreground">{message}</span>
-      </div>
-      <div className="flex items-center gap-1 text-sm font-extrabold text-primary transition-transform group-hover:translate-x-[-2px]">
-        <span>לטיפול</span>
-        <ArrowLeft size={16} />
-      </div>
+    <div className="card-native divide-y divide-border overflow-hidden font-assistant" dir="rtl">
+      {alerts.map((alert) => (
+        <button
+          key={alert.key}
+          type="button"
+          onClick={onOpenConversations}
+          className="group flex w-full cursor-pointer select-none items-center justify-between gap-3 px-5 py-3.5 text-right transition-colors duration-150 hover:bg-muted/50 active:bg-muted"
+        >
+          <span className="flex items-center gap-3">
+            <span className="size-2 shrink-0 rounded-full bg-warning" />
+            <span className="text-sm font-bold text-foreground">{alert.text}</span>
+          </span>
+          <span className="flex shrink-0 items-center gap-1 text-sm font-extrabold text-accent-ink">
+            לטיפול
+            <ArrowLeft size={16} />
+          </span>
+        </button>
+      ))}
     </div>
   )
 }
+
 export default AlertBanners

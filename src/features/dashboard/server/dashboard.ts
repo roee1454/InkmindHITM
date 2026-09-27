@@ -3,6 +3,7 @@ import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { requireAuth } from '@/features/settings/server/helpers.server'
 import { toYmd, minutesToTime } from '#/features/calendar/utils/date-utils'
 import { loadCustomerLifecycles } from '@/features/customers/server/customer-lifecycle.server'
+import { awaitsReceiptApproval } from '../utils/alerts'
 
 export interface DashboardMetrics {
   appointmentsTodayCount: number
@@ -10,6 +11,7 @@ export interface DashboardMetrics {
   totalActiveLeads: number
   totalCustomersCount: number
   awaitingPriceCount: number
+  receiptApprovalCount: number
   recentLeads: Array<{
     chatId: string
     name: string | null
@@ -80,6 +82,7 @@ export const getDashboardData = createServerFn({ method: 'GET' }).handler(
     }))
 
     let appointmentsTodayCount = 0
+    let receiptApprovalCount = 0
     const closeAppointments: DashboardMetrics['closeAppointments'] = []
 
     for (const appt of appointmentRecords) {
@@ -92,6 +95,8 @@ export const getDashboardData = createServerFn({ method: 'GET' }).handler(
       if (dateStr === todayStr && appt.status !== 'cancelled') {
         appointmentsTodayCount++
       }
+
+      if (awaitsReceiptApproval(appt)) receiptApprovalCount++
 
       if (appt.status !== 'cancelled' && dateStr >= todayStr) {
         closeAppointments.push({
@@ -113,6 +118,7 @@ export const getDashboardData = createServerFn({ method: 'GET' }).handler(
       totalActiveLeads,
       totalCustomersCount,
       awaitingPriceCount,
+      receiptApprovalCount,
       recentLeads,
       closeAppointments: closeAppointments.slice(0, 10),
     }

@@ -58,7 +58,7 @@ export const FunnelDropoffCard: React.FC<FunnelDropoffCardProps> = ({ funnel, to
 
                 {/* Drop-off notice */}
                 {hasNext && stage.dropoffCount > 0 && (
-                  <div className="flex items-center justify-between rounded-lg bg-muted/30 px-3 py-1.5 text-[11px] text-muted-foreground sm:text-xs">
+                  <div className="flex items-center justify-between rounded-lg bg-muted/30 px-3 py-1.5 text-2xs text-muted-foreground sm:text-xs">
                     <span>{dropoffLabel}:</span>
                     <span className="font-bold tabular-nums text-foreground">
                       {stage.dropoffCount} לקוחות ({stage.dropoffPercent}%)

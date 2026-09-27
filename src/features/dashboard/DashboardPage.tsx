@@ -41,6 +41,7 @@ export function DashboardHomePage({ staffName = 'אורח' }: DashboardHomePageP
   const newLeadsCount = dashboardData?.newLeadsCount ?? 0
   const totalActiveLeads = dashboardData?.totalActiveLeads ?? 0
   const awaitingPriceCount = dashboardData?.awaitingPriceCount ?? 0
+  const receiptApprovalCount = dashboardData?.receiptApprovalCount ?? 0
   const recentLeads = dashboardData?.recentLeads ?? []
   const closeAppointments = dashboardData?.closeAppointments ?? []
 
@@ -82,16 +83,17 @@ export function DashboardHomePage({ staffName = 'אורח' }: DashboardHomePageP
         <DashboardSkeleton />
       ) : (
         <>
+          {/* What needs a human comes before what only reports (track-b B6.9). */}
+          <AlertBanners
+            receiptApprovalCount={receiptApprovalCount}
+            awaitingPriceCount={awaitingPriceCount}
+            onOpenConversations={() => navigate({ to: '/dashboard/conversations' })}
+          />
+
           <MetricsSummary
             appointmentsTodayCount={appointmentsTodayCount}
             newLeadsCount={newLeadsCount}
             totalLeads={totalActiveLeads}
-          />
-
-          <AlertBanners
-            receiptApprovalCount={0}
-            awaitingPriceCount={awaitingPriceCount}
-            onNavigateToLeads={() => navigate({ to: '/dashboard/leads' })}
           />
 
           <div className="grid grid-cols-1 gap-[18px] lg:grid-cols-2 lg:gap-6">

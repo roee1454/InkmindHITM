@@ -85,7 +85,7 @@ export const ArtistsAndStylesCard: React.FC<ArtistsAndStylesCardProps> = ({
       <div className="border-t border-border/60 bg-muted/20 px-5 py-3 text-xs sm:px-6">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 text-muted-foreground">
           <div className="space-y-0.5">
-            <span className="block text-[11px] font-medium text-muted-foreground">זמן ממוצע לשריון</span>
+            <span className="block text-2xs font-medium text-muted-foreground">זמן ממוצע לשריון</span>
             <span className="font-bold tabular-nums text-foreground">
               {health.avgTimeToBookHours > 0
                 ? health.avgTimeToBookHours < 24
@@ -95,19 +95,19 @@ export const ArtistsAndStylesCard: React.FC<ArtistsAndStylesCardProps> = ({
             </span>
           </div>
           <div className="space-y-0.5">
-            <span className="block text-[11px] font-medium text-muted-foreground">סקיצה מול קעקוע</span>
+            <span className="block text-2xs font-medium text-muted-foreground">סקיצה מול קעקוע</span>
             <span className="font-bold tabular-nums text-foreground">
               {health.sketchAppointmentsCount} סקיצה / {health.tattooAppointmentsCount} קעקוע
             </span>
           </div>
           <div className="space-y-0.5">
-            <span className="block text-[11px] font-medium text-muted-foreground">שיעור ביטולים</span>
+            <span className="block text-2xs font-medium text-muted-foreground">שיעור ביטולים</span>
             <span className="font-bold tabular-nums text-foreground">
               {health.cancellationRate}%
             </span>
           </div>
           <div className="space-y-0.5">
-            <span className="block text-[11px] font-medium text-muted-foreground">השתלטות שיחה ידנית</span>
+            <span className="block text-2xs font-medium text-muted-foreground">השתלטות שיחה ידנית</span>
             <span className="font-bold tabular-nums text-foreground">
               {health.humanTakeoverRate}% מהשיחות
             </span>

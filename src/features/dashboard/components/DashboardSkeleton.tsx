@@ -1,10 +1,10 @@
 import { Skeleton } from '@/components/ui/skeleton'
 
-function StatTileSkeleton() {
+function StatSkeleton() {
   return (
-    <div className="flex flex-col justify-center gap-1.5 rounded-2xl border border-border bg-card p-3.5 shadow-xs sm:p-5 lg:rounded-3xl lg:p-6">
-      <Skeleton className="h-7 w-12 sm:h-9 sm:w-16 lg:h-10 lg:w-20" />
-      <Skeleton className="h-3.5 w-16 sm:h-4 sm:w-24" />
+    <div className="flex flex-col gap-1.5 bg-card px-4 py-3.5 sm:px-5 sm:py-4">
+      <Skeleton className="h-3.5 w-16" />
+      <Skeleton className="h-8 w-12" />
     </div>
   )
 }
@@ -37,10 +37,10 @@ function DashboardCardSkeleton() {
 export function DashboardSkeleton() {
   return (
     <div className="flex flex-col gap-[18px] lg:gap-6">
-      <div className="grid grid-cols-3 gap-3 lg:gap-4">
-        <StatTileSkeleton />
-        <StatTileSkeleton />
-        <StatTileSkeleton />
+      <div className="grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-border bg-border">
+        <StatSkeleton />
+        <StatSkeleton />
+        <StatSkeleton />
       </div>
       <div className="grid grid-cols-1 gap-[18px] lg:grid-cols-2 lg:gap-6">
         <DashboardCardSkeleton />

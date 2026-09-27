@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ui/skeleton'
+import { StatStrip } from '@/components/StatStrip'
 import { getStudioAnalytics } from './server/analytics'
 import { SourceBreakdownChart } from './components/SourceBreakdownChart'
 import { FunnelDropoffCard } from './components/FunnelDropoffCard'
@@ -60,60 +61,14 @@ export const AnalyticsPage: React.FC = () => {
         <AnalyticsSkeleton />
       ) : (
         <>
-          {/* 4 Core KPI Summary Tiles - NO icons, pure typography */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 font-assistant">
-            {/* KPI 1: Total Leads */}
-            <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-3.5 shadow-xs transition-shadow duration-150 sm:p-5 lg:rounded-3xl lg:p-6">
-              <span className="text-xs font-bold text-muted-foreground sm:text-sm">
-                סך לידים חדשים
-              </span>
-              <span className="my-1 text-2xl font-extrabold tracking-tight text-foreground tabular-nums sm:text-3xl lg:text-4xl">
-                {analytics.totalLeads}
-              </span>
-              <span className="text-[11px] font-medium text-muted-foreground sm:text-xs">
-                פניות ראשונות בוואטסאפ
-              </span>
-            </div>
-
-            {/* KPI 2: Booked Appointments */}
-            <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-3.5 shadow-xs transition-shadow duration-150 sm:p-5 lg:rounded-3xl lg:p-6">
-              <span className="text-xs font-bold text-muted-foreground sm:text-sm">
-                תורים שנקבעו
-              </span>
-              <span className="my-1 text-2xl font-extrabold tracking-tight text-foreground tabular-nums sm:text-3xl lg:text-4xl">
-                {analytics.totalBookedCustomers}
-              </span>
-              <span className="text-[11px] font-medium text-muted-foreground sm:text-xs">
-                תורים מאושרים או שבוצעו
-              </span>
-            </div>
-
-            {/* KPI 3: Conversion Rate */}
-            <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-3.5 shadow-xs transition-shadow duration-150 sm:p-5 lg:rounded-3xl lg:p-6">
-              <span className="text-xs font-bold text-muted-foreground sm:text-sm">
-                יחס המרה לתור
-              </span>
-              <span className="my-1 text-2xl font-extrabold tracking-tight text-foreground tabular-nums sm:text-3xl lg:text-4xl">
-                {analytics.overallConversionRate}%
-              </span>
-              <span className="text-[11px] font-medium text-muted-foreground sm:text-xs">
-                מכלל הפניות בתקופה
-              </span>
-            </div>
-
-            {/* KPI 4: Attributed Revenue */}
-            <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-3.5 shadow-xs transition-shadow duration-150 sm:p-5 lg:rounded-3xl lg:p-6">
-              <span className="text-xs font-bold text-muted-foreground sm:text-sm">
-                הכנסות מיוחסות
-              </span>
-              <span className="my-1 text-2xl font-extrabold tracking-tight text-foreground tabular-nums sm:text-3xl lg:text-4xl">
-                ₪{analytics.totalRevenueIls.toLocaleString()}
-              </span>
-              <span className="text-[11px] font-medium text-muted-foreground sm:text-xs">
-                מקדמות ותשלומים שנגבו
-              </span>
-            </div>
-          </div>
+          <StatStrip
+            stats={[
+              { label: 'לידים חדשים', value: analytics.totalLeads, hint: 'פניות ראשונות בוואטסאפ' },
+              { label: 'תורים שנקבעו', value: analytics.totalBookedCustomers, hint: 'מאושרים או שבוצעו' },
+              { label: 'המרה לתור', value: `${analytics.overallConversionRate}%`, hint: 'מכלל הפניות בתקופה' },
+              { label: 'הכנסות מיוחסות', value: `₪${analytics.totalRevenueIls.toLocaleString()}`, hint: 'מקדמות ותשלומים שנגבו' },
+            ]}
+          />
 
           {/* Section 1: Source Breakdown Chart & Funnel Drop-off Side-by-Side on desktop */}
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
@@ -141,14 +96,11 @@ export const AnalyticsPage: React.FC = () => {
 function AnalyticsSkeleton() {
   return (
     <div className="flex flex-col gap-5 font-assistant lg:gap-6" dir="rtl">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="flex flex-col justify-between gap-2 rounded-2xl border border-border bg-card p-3.5 shadow-xs sm:p-5 lg:rounded-3xl lg:p-6"
-          >
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-8 w-24 sm:h-9 lg:h-10" />
+          <div key={i} className="flex flex-col gap-1.5 bg-card px-4 py-3.5 sm:px-5 sm:py-4">
+            <Skeleton className="h-3.5 w-20" />
+            <Skeleton className="h-8 w-24" />
             <Skeleton className="h-3 w-28" />
           </div>
         ))}
