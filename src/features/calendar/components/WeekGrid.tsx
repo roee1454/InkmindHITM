@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Plus } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '#/hooks/useMediaQuery'
@@ -12,9 +12,9 @@ import { HEBREW_DAYS_LONG, isToday, minutesToTime, timeToMinutes, toYmd, visible
 import { DayOverviewDialog } from './DayOverviewDialog'
 import { AppointmentGridCard } from './AppointmentGridCard'
 
-/** Hour rows are taller on a desktop, where there's room for a session card to breathe. */
-const ROW_HEIGHT_DESKTOP = 64
-const ROW_HEIGHT_MOBILE = 56
+/** The floor for an hour row. Rows grow past it to fill the screen; they never shrink below it. */
+const MIN_ROW_HEIGHT_DESKTOP = 64
+const MIN_ROW_HEIGHT_MOBILE = 56
 
 const BUSY_STRIPES: React.CSSProperties = {
   backgroundImage:
@@ -46,9 +46,29 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
 }) => {
   const [dayOverviewDate, setDayOverviewDate] = useState<Date | null>(null)
   const isMobile = useIsMobile()
-  const rowHeight = isMobile ? ROW_HEIGHT_MOBILE : ROW_HEIGHT_DESKTOP
   const days = visibleDays(anchorDate, dayCount)
   const hours = hoursIn(hourRange)
+
+  // A studio that works 10:00–19:00 has nine rows; at a fixed height those leave a third of a
+  // desktop screen empty. Measure what the screen actually gives us and divide it between the
+  // rows instead. Measuring the scroll container (whose height its parent fixes) rather than the
+  // rows keeps this out of a resize loop.
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const headerRef = useRef<HTMLDivElement>(null)
+  const [availableHeight, setAvailableHeight] = useState(0)
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const measure = () => setAvailableHeight(el.clientHeight - (headerRef.current?.offsetHeight ?? 0))
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  const minRowHeight = isMobile ? MIN_ROW_HEIGHT_MOBILE : MIN_ROW_HEIGHT_DESKTOP
+  const rowHeight =
+    availableHeight > 0 ? Math.max(minRowHeight, Math.floor(availableHeight / hours.length)) : minRowHeight
   const gridStartMinutes = hourRange.startHour * 60
   const gridEndMinutes = (hourRange.endHour + 1) * 60
 
@@ -73,12 +93,12 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
   const busyForDay = (day: Date) => busyPeriods.filter((b) => toYmd(new Date(b.startsAt)) === toYmd(day))
 
   return (
-    <div dir="rtl" className="h-full overflow-auto font-assistant">
+    <div ref={scrollRef} dir="rtl" className="h-full overflow-auto font-assistant">
       {/* `min-h-full` + `flex-1` on the body: when the working day is shorter than the viewport,
           the day columns stretch to the bottom instead of ending mid-screen over dead space.
           Single-day mode fits any phone, so it must not inherit the week view's scroll floor. */}
       <div className={cn('flex min-h-full flex-col', dayCount === 1 ? '' : 'min-w-[840px]')}>
-        <div className="sticky top-0 z-20 flex shrink-0 border-b border-border bg-card">
+        <div ref={headerRef} className="sticky top-0 z-20 flex shrink-0 border-b border-border bg-card">
           <div className="sticky start-0 z-10 w-14 shrink-0 bg-card" />
           {days.map((day) => {
             const dayAppointments = appointments.filter((a) => a.date === toYmd(day))
