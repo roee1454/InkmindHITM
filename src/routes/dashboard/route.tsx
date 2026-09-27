@@ -53,6 +53,9 @@ function DashboardLayout() {
   const location = useLocation()
   const navigate = useNavigate()
   const isConversations = location.pathname.startsWith('/dashboard/conversations')
+  // The calendar is a full-bleed screen like the chat thread (track-b B6.8): it owns its own
+  // scroll so the grid fills the viewport instead of sitting in a card inside a padded page.
+  const isFlushScreen = isConversations || location.pathname.startsWith('/dashboard/calendar')
 
   // Real-time subscriptions for messages, conversations, and notifications
   useDashboardRealtime({
@@ -131,7 +134,7 @@ function DashboardLayout() {
 
           <main
             className={
-              isConversations
+              isFlushScreen
                 ? // Deliberately NOT `flex-1`: in a flex column that sets flex-basis:0 and
                   // grow:1, which overrides this height — the fixed bottom nav would then
                   // overlay the last 64px of the thread, hiding the composer.

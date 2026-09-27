@@ -1,4 +1,5 @@
-import { addDays, startOfWeek, HEBREW_DAYS_LONG, HEBREW_MONTHS } from '@/lib/date-utils'
+import { addDays, formatMonthTitle, startOfWeek, HEBREW_DAYS_LONG, HEBREW_MONTHS } from '@/lib/date-utils'
+import type { CalendarViewMode } from './view-mode'
 
 export {
   HEBREW_DAYS_SHORT,
@@ -40,4 +41,12 @@ export function formatWeekRange(anchor: Date): string {
   const start = days[0] ?? anchor
   const end = days[6] ?? anchor
   return `${start.getDate()} ${HEBREW_MONTHS[start.getMonth()]} – ${end.getDate()} ${HEBREW_MONTHS[end.getMonth()]}`
+}
+
+/** What the toolbar shows as the current context — the date range is the screen's title (B6.8). */
+export function calendarTitle(mode: CalendarViewMode, anchor: Date): string {
+  if (mode === 'list') return 'כל התורים'
+  if (mode === 'day') return formatDayTitle(anchor)
+  if (mode === 'week') return formatWeekRange(anchor)
+  return formatMonthTitle(anchor)
 }

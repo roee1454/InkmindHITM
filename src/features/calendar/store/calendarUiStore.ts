@@ -1,41 +1,39 @@
 import { create } from 'zustand'
-import type { ApiAppointment } from '../types'
-import type { CalendarMode } from '../components/CalendarGrid'
-import type { ViewMode } from '../components/CalendarViewToggle'
+import type { ApiAppointment, AppointmentFormValues } from '../types'
+import type { StatusFilter } from '../utils/filter-appointments'
+import type { CalendarViewMode } from '../utils/view-mode'
 
 interface CalendarUiState {
-  viewMode: ViewMode
-  calendarMode: CalendarMode
+  /** One four-way view control (track-b B6.8), replacing the old viewMode + calendarMode pair. */
+  mode: CalendarViewMode
   anchorDate: Date
-  selectedStatus: string
+  selectedStatus: StatusFilter
   selectedArtist: string
   hasInitializedDefaultArtist: boolean
   searchQuery: string
 
   isCreating: boolean
   createSlot: { date: string; timeSlot: string } | null
+  /** Pre-filled fields when booking a follow-up (next session, tattoo after a consultation). */
+  createInitialValues: Partial<AppointmentFormValues> | null
   editingAppointment: ApiAppointment | null
   formError: string | null
 
-  // Actions
-  setViewMode: (viewMode: ViewMode) => void
-  setCalendarMode: (calendarMode: CalendarMode) => void
+  setMode: (mode: CalendarViewMode) => void
   setAnchorDate: (anchorDate: Date) => void
-  setSelectedStatus: (selectedStatus: string) => void
+  setSelectedStatus: (selectedStatus: StatusFilter) => void
   setSelectedArtist: (selectedArtist: string) => void
   setHasInitializedDefaultArtist: (hasInitialized: boolean) => void
   setSearchQuery: (searchQuery: string) => void
-  setIsCreating: (isCreating: boolean) => void
-  setCreateSlot: (slot: { date: string; timeSlot: string } | null) => void
   setEditingAppointment: (appointment: ApiAppointment | null) => void
   setFormError: (formError: string | null) => void
-  openCreate: (slot?: { date: string; timeSlot: string } | null) => void
+  openCreate: (options?: { slot?: { date: string; timeSlot: string } | null; initialValues?: Partial<AppointmentFormValues> | null }) => void
+  closeCreate: () => void
   openEdit: (appointment: ApiAppointment) => void
 }
 
 export const useCalendarUiStore = create<CalendarUiState>((set) => ({
-  viewMode: 'calendar',
-  calendarMode: 'week',
+  mode: 'week',
   anchorDate: new Date(),
   selectedStatus: 'all',
   selectedArtist: 'all',
@@ -44,29 +42,20 @@ export const useCalendarUiStore = create<CalendarUiState>((set) => ({
 
   isCreating: false,
   createSlot: null,
+  createInitialValues: null,
   editingAppointment: null,
   formError: null,
 
-  setViewMode: (viewMode) => set({ viewMode }),
-  setCalendarMode: (calendarMode) => set({ calendarMode }),
+  setMode: (mode) => set({ mode }),
   setAnchorDate: (anchorDate) => set({ anchorDate }),
   setSelectedStatus: (selectedStatus) => set({ selectedStatus }),
   setSelectedArtist: (selectedArtist) => set({ selectedArtist }),
   setHasInitializedDefaultArtist: (hasInitializedDefaultArtist) => set({ hasInitializedDefaultArtist }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
-  setIsCreating: (isCreating) => set({ isCreating }),
-  setCreateSlot: (createSlot) => set({ createSlot }),
   setEditingAppointment: (editingAppointment) => set({ editingAppointment }),
   setFormError: (formError) => set({ formError }),
-  openCreate: (slot = null) =>
-    set({
-      formError: null,
-      createSlot: slot,
-      isCreating: true,
-    }),
-  openEdit: (appointment) =>
-    set({
-      formError: null,
-      editingAppointment: appointment,
-    }),
+  openCreate: ({ slot = null, initialValues = null } = {}) =>
+    set({ formError: null, createSlot: slot, createInitialValues: initialValues, isCreating: true }),
+  closeCreate: () => set({ isCreating: false, createSlot: null, createInitialValues: null, formError: null }),
+  openEdit: (appointment) => set({ formError: null, editingAppointment: appointment }),
 }))

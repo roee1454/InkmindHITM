@@ -1,24 +1,20 @@
 import React, { useState } from 'react'
 import { Plus } from '@/components/ui/icon'
+import { cn } from '@/lib/utils'
+import { useIsMobile } from '#/hooks/useMediaQuery'
 import type { ApiAppointment, ApiExternalBusyPeriod } from '../types'
 import type { WorkingHoursWindow } from '@/lib/working-hours'
 import { fitsWithinWorkingHours } from '@/lib/working-hours'
 import { layoutOverlaps } from '../utils/overlap-layout'
-import {
-  HEBREW_DAYS_LONG,
-  isToday,
-  minutesToTime,
-  timeToMinutes,
-  toYmd,
-  visibleDays,
-} from '../utils/date-utils'
+import { hoursIn } from '../utils/grid-hours'
+import type { GridHourRange } from '../utils/grid-hours'
+import { HEBREW_DAYS_LONG, isToday, minutesToTime, timeToMinutes, toYmd, visibleDays } from '../utils/date-utils'
 import { DayOverviewDialog } from './DayOverviewDialog'
 import { AppointmentGridCard } from './AppointmentGridCard'
 
-const START_HOUR = 8
-const END_HOUR = 20
-const ROW_HEIGHT = 56
-const HOURS = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i)
+/** Hour rows are taller on a desktop, where there's room for a session card to breathe. */
+const ROW_HEIGHT_DESKTOP = 64
+const ROW_HEIGHT_MOBILE = 56
 
 const BUSY_STRIPES: React.CSSProperties = {
   backgroundImage:
@@ -31,6 +27,7 @@ interface WeekGridProps {
   busyPeriods: ApiExternalBusyPeriod[]
   artistAvatars: Record<string, string>
   workingHours: WorkingHoursWindow[] | null
+  hourRange: GridHourRange
   onSelectAppointment: (appointment: ApiAppointment) => void
   onSelectSlot: (date: string, timeSlot: string) => void
   dayCount?: 1 | 7
@@ -42,23 +39,33 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
   busyPeriods,
   artistAvatars,
   workingHours,
+  hourRange,
   onSelectAppointment,
   onSelectSlot,
   dayCount = 7,
 }) => {
   const [dayOverviewDate, setDayOverviewDate] = useState<Date | null>(null)
+  const isMobile = useIsMobile()
+  const rowHeight = isMobile ? ROW_HEIGHT_MOBILE : ROW_HEIGHT_DESKTOP
   const days = visibleDays(anchorDate, dayCount)
+  const hours = hoursIn(hourRange)
+  const gridStartMinutes = hourRange.startHour * 60
+  const gridEndMinutes = (hourRange.endHour + 1) * 60
 
   const isOutsideHours = (day: Date, hour: number) =>
     !!workingHours && !fitsWithinWorkingHours(workingHours, toYmd(day), minutesToTime(hour * 60), 1)
 
   const appointmentsForDay = (day: Date) => {
-    const dayAppointments = appointments.filter((a) => a.date === toYmd(day))
-    const timed = dayAppointments.map((appointment) => {
-      const startMinutes = timeToMinutes(appointment.timeSlot)
-      const durationHours = (appointment.durationMinutes || 120) / 60
-      return { appointment, startMinutes, endMinutes: startMinutes + durationHours * 60 }
-    })
+    const timed = appointments
+      .filter((a) => a.date === toYmd(day))
+      .map((appointment) => {
+        const startMinutes = timeToMinutes(appointment.timeSlot)
+        return {
+          appointment,
+          startMinutes,
+          endMinutes: startMinutes + (appointment.durationMinutes || 120),
+        }
+      })
     const overlapLayout = layoutOverlaps(timed)
     return timed.map((item) => ({ ...item, ...overlapLayout.get(item)! }))
   }
@@ -66,57 +73,43 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
   const busyForDay = (day: Date) => busyPeriods.filter((b) => toYmd(new Date(b.startsAt)) === toYmd(day))
 
   return (
-    <div dir="rtl" className="overflow-x-auto font-assistant">
+    <div dir="rtl" className="h-full overflow-auto font-assistant">
       {/* Single-day mode fits any phone, so it must not inherit the week view's scroll floor. */}
       <div className={dayCount === 1 ? '' : 'min-w-[840px]'}>
-        {/* Day headers */}
-        <div className="flex border-b border-border">
-          <div className="w-16 shrink-0" />
+        <div className="sticky top-0 z-20 flex border-b border-border bg-card">
+          <div className="sticky start-0 z-10 w-14 shrink-0 bg-card" />
           {days.map((day) => {
-            const dayAppts = appointments.filter((a) => a.date === toYmd(day))
+            const dayAppointments = appointments.filter((a) => a.date === toYmd(day))
             const today = isToday(day)
             return (
-              <div
-                key={toYmd(day)}
-                className={`group relative flex-1 border-r border-border px-2 py-2 text-center transition-colors ${
-                  today ? 'bg-card/60' : 'hover:bg-muted/30'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-mini text-muted-foreground font-semibold">
-                    {HEBREW_DAYS_LONG[day.getDay()]}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onSelectSlot(toYmd(day), '10:00')
-                    }}
-                    className="size-5 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-primary hover:bg-primary/15 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
-                    title={`קבע תור ל-${toYmd(day)}`}
-                    aria-label={`קבע תור ל-${toYmd(day)}`}
-                  >
-                    <Plus size={12} />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-center gap-1.5">
+              <div key={toYmd(day)} className="group relative flex-1 border-s border-border px-2 py-2">
+                <div className="flex items-center justify-between gap-1">
                   <button
                     type="button"
                     onClick={() => setDayOverviewDate(day)}
-                    className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full transition-all cursor-pointer hover:ring-2 hover:ring-primary/40 ${
-                      today
-                        ? 'bg-primary text-primary-foreground font-extrabold shadow-xs'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
-                    }`}
-                    title={`צפה בכל הפגישות של ${day.getDate()}`}
+                    title={`כל הפגישות של ${day.getDate()}`}
+                    className={cn(
+                      'flex cursor-pointer items-center gap-1.5 rounded-lg px-1.5 py-0.5 transition-colors duration-150',
+                      today ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted',
+                    )}
                   >
-                    <span className="text-sm font-bold">{day.getDate()}</span>
-                    {dayAppts.length > 0 && (
-                      <span className={`text-2xs font-extrabold px-1.5 py-0.2 rounded-full ${today ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-                        {dayAppts.length}
+                    <span className="text-2xs font-bold">{HEBREW_DAYS_LONG[day.getDay()]}</span>
+                    <span className="text-sm font-extrabold tabular-nums">{day.getDate()}</span>
+                    {dayAppointments.length > 0 && (
+                      <span className={cn('text-2xs font-bold tabular-nums', today ? 'text-primary-foreground/70' : 'text-muted-foreground/70')}>
+                        {dayAppointments.length}
                       </span>
                     )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onSelectSlot(toYmd(day), minutesToTime(hourRange.startHour * 60 + 120))}
+                    title={`קבע תור ל-${toYmd(day)}`}
+                    aria-label={`קבע תור ל-${toYmd(day)}`}
+                    className="flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground/60 opacity-0 transition-all duration-150 group-hover:opacity-100 hover:bg-muted hover:text-foreground"
+                  >
+                    <Plus size={13} />
                   </button>
                 </div>
               </div>
@@ -124,15 +117,13 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
           })}
         </div>
 
-        {/* Hour rows */}
         <div className="flex">
-          {/* Hour labels */}
-          <div className="w-16 shrink-0">
-            {HOURS.map((hour) => (
+          <div className="sticky start-0 z-10 w-14 shrink-0 bg-card">
+            {hours.map((hour) => (
               <div
                 key={hour}
-                style={{ height: ROW_HEIGHT }}
-                className="border-b border-border px-2 pt-1 text-center text-mini text-muted-foreground font-medium tabular-nums"
+                style={{ height: rowHeight }}
+                className="border-b border-border px-2 pt-1 text-center text-2xs font-medium tabular-nums text-muted-foreground"
               >
                 {minutesToTime(hour * 60)}
               </div>
@@ -140,23 +131,21 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
           </div>
 
           {days.map((day) => (
-            <div
-              key={toYmd(day)}
-              className={`relative flex-1 border-r border-border ${isToday(day) ? 'bg-card/30' : ''}`}
-            >
-              {HOURS.map((hour) => (
+            <div key={toYmd(day)} className={cn('relative flex-1 border-s border-border', isToday(day) && 'bg-muted/20')}>
+              {hours.map((hour) => (
                 <button
                   key={hour}
                   type="button"
                   onClick={() => onSelectSlot(toYmd(day), minutesToTime(hour * 60))}
-                  style={{ height: ROW_HEIGHT }}
-                  className={`group/slot relative block w-full border-b border-border transition-colors duration-150 hover:bg-primary/[0.08] cursor-pointer ${
-                    isOutsideHours(day, hour) ? 'bg-muted/40' : ''
-                  }`}
+                  style={{ height: rowHeight }}
                   aria-label={`קבע תור ל-${toYmd(day)} בשעה ${minutesToTime(hour * 60)}`}
+                  className={cn(
+                    'group/slot relative block w-full cursor-pointer border-b border-border transition-colors duration-150 hover:bg-accent-soft',
+                    isOutsideHours(day, hour) && 'bg-muted/40',
+                  )}
                 >
-                  <span className="opacity-0 group-hover/slot:opacity-100 transition-opacity duration-150 absolute top-1.5 right-2 text-micro text-primary font-bold inline-flex items-center gap-1 pointer-events-none select-none">
-                    <Plus size={10} /> {minutesToTime(hour * 60)}
+                  <span className="pointer-events-none absolute end-2 top-1.5 select-none text-2xs font-bold text-muted-foreground opacity-0 transition-opacity duration-150 group-hover/slot:opacity-100">
+                    {minutesToTime(hour * 60)}
                   </span>
                 </button>
               ))}
@@ -164,13 +153,13 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
               {busyForDay(day).map((busy) => {
                 const start = new Date(busy.startsAt)
                 const end = new Date(busy.endsAt)
-                const startMinutes = start.getHours() * 60 + start.getMinutes() - START_HOUR * 60
-                const durationHours = (end.getTime() - start.getTime()) / 3_600_000
-                const rawTop = (startMinutes / 60) * ROW_HEIGHT
+                const startMinutes = start.getHours() * 60 + start.getMinutes()
+                const rawTop = ((startMinutes - gridStartMinutes) / 60) * rowHeight
                 const top = Math.max(rawTop, 0)
                 const clippedAtTop = top - rawTop
-                const maxHeight = (END_HOUR + 1 - START_HOUR) * ROW_HEIGHT - top
-                const height = Math.min(durationHours * ROW_HEIGHT - clippedAtTop, maxHeight)
+                const maxHeight = ((gridEndMinutes - gridStartMinutes) / 60) * rowHeight - top
+                const durationHours = (end.getTime() - start.getTime()) / 3_600_000
+                const height = Math.min(durationHours * rowHeight - clippedAtTop, maxHeight)
                 if (maxHeight <= 0 || height <= 0) return null
 
                 return (
@@ -179,33 +168,22 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
                     style={{ top, height: Math.max(height, 24), ...BUSY_STRIPES }}
                     className="pointer-events-none absolute inset-x-1 z-[5] overflow-hidden rounded-lg border border-border bg-muted/50 px-2 py-1 text-right"
                   >
-                    <div className="flex items-center gap-1 truncate text-micro font-semibold text-muted-foreground">
-                      חסימת יומן חיצוני
-                    </div>
-                    <div className="truncate text-micro text-muted-foreground/80">
-                      {minutesToTime(start.getHours() * 60 + start.getMinutes())}–{minutesToTime(end.getHours() * 60 + end.getMinutes())}
-                    </div>
+                    <div className="truncate text-2xs font-semibold text-muted-foreground">חסימת יומן חיצוני</div>
                   </div>
                 )
               })}
 
-              {appointmentsForDay(day).map(({ appointment, startMinutes: absoluteStartMinutes, column, columnCount }) => {
+              {appointmentsForDay(day).map(({ appointment, startMinutes, column, columnCount }) => {
                 const is7Day = dayCount === 7
-                if (is7Day && column >= 3) {
-                  return null
-                }
+                if (is7Day && column >= 3) return null
 
                 const effectiveColumnCount = is7Day ? Math.min(columnCount, 3) : columnCount
                 const isOverflowSlot = is7Day && columnCount > 3 && column === 2
 
-                const startMinutes = absoluteStartMinutes - START_HOUR * 60
-                const durationHours = (appointment.durationMinutes || 120) / 60
-                const top = (startMinutes / 60) * ROW_HEIGHT
-                const maxHeight = (END_HOUR + 1 - START_HOUR) * ROW_HEIGHT - top
-                const height = Math.min(durationHours * ROW_HEIGHT, maxHeight)
+                const top = ((startMinutes - gridStartMinutes) / 60) * rowHeight
+                const maxHeight = ((gridEndMinutes - gridStartMinutes) / 60) * rowHeight - top
+                const height = Math.min(((appointment.durationMinutes || 120) / 60) * rowHeight, maxHeight)
                 if (top < 0 || maxHeight <= 0) return null
-
-                const widthPercent = 100 / effectiveColumnCount
 
                 return (
                   <AppointmentGridCard
@@ -215,7 +193,7 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
                     height={height}
                     column={column}
                     columnCount={columnCount}
-                    widthPercent={widthPercent}
+                    widthPercent={100 / effectiveColumnCount}
                     artistAvatars={artistAvatars}
                     onSelect={() => onSelectAppointment(appointment)}
                     isOverflowSlot={isOverflowSlot}
@@ -229,7 +207,6 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
         </div>
       </div>
 
-      {/* Day Overview Dialog for dense or expanded viewing */}
       <DayOverviewDialog
         date={dayOverviewDate}
         open={dayOverviewDate !== null}

@@ -48,16 +48,18 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
   }
 
   return (
-    <div dir="rtl" className="font-assistant">
-      <div className="grid grid-cols-7 border-b border-border">
+    <div dir="rtl" className="h-full overflow-y-auto font-assistant">
+      <div className="sticky top-0 z-20 grid grid-cols-7 border-b border-border bg-card">
         {HEBREW_DAYS_SHORT.map((label) => (
-          <div key={label} className="py-3 text-center text-mini font-bold text-muted-foreground">
+          <div key={label} className="py-2.5 text-center text-2xs font-bold text-muted-foreground">
             {label}
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7">
+      {/* Rows share the leftover height so the month fills a full-bleed screen instead of
+          leaving dead space under it, but never shrink below a readable cell. */}
+      <div className="grid min-h-[calc(100%-2.5rem)] grid-cols-7 [grid-auto-rows:minmax(112px,1fr)]">
         {weeks.flat().map((day) => {
           const outside = !isSameMonth(day, anchorDate)
           const today = isToday(day)
@@ -70,9 +72,9 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
             <div
               key={toYmd(day)}
               className={cn(
-                'min-h-[112px] border-b border-l border-border p-1.5 flex flex-col justify-between group transition-colors select-none @container',
+                'group flex select-none flex-col justify-between border-b border-s border-border p-1.5 transition-colors @container',
                 outside ? 'bg-muted/30' : 'bg-card/20',
-                today && 'bg-primary/[0.04]',
+                today && 'bg-accent-soft/40',
               )}
             >
               {/* Day cell header */}
@@ -119,7 +121,7 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
                     key={busy.googleEventId}
                     style={BUSY_STRIPES}
                     title={`חסימה: ${timeOf(busy.startsAt)}`}
-                    className="pointer-events-none flex h-[22px] w-full min-w-0 items-center gap-1 overflow-hidden rounded-md border border-border bg-muted/40 px-1.5 text-right text-[10.5px] text-muted-foreground"
+                    className="pointer-events-none flex h-[22px] w-full min-w-0 items-center gap-1 overflow-hidden rounded-md border border-border bg-muted/40 px-1.5 text-right text-2xs text-muted-foreground"
                   >
                     <span className="shrink-0 font-semibold tabular-nums">{timeOf(busy.startsAt)}</span>
                     <span className="hidden @[70px]:inline truncate">חסימה</span>
@@ -143,7 +145,7 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
                       e.stopPropagation()
                       setDayOverviewDate(day)
                     }}
-                    className="w-full mt-1 flex h-5 min-w-0 items-center justify-center gap-1 rounded-md bg-muted/60 hover:bg-primary/15 text-muted-foreground hover:text-primary px-1 text-[10px] font-extrabold transition-all cursor-pointer border border-border shadow-xs overflow-hidden"
+                    className="mt-1 flex h-5 w-full min-w-0 cursor-pointer items-center justify-center gap-1 overflow-hidden rounded-md border border-border bg-muted/60 px-1 text-2xs font-extrabold text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
                   >
                     <span className="hidden @[85px]:inline truncate">+ עוד {hiddenCount} פגישות</span>
                     <span className="@[85px]:hidden">+{hiddenCount}</span>
