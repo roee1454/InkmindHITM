@@ -196,12 +196,15 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
                 )
               })}
 
-              {appointmentsForDay(day).map(({ appointment, startMinutes, column, columnCount }) => {
+              {appointmentsForDay(day).map(({ appointment, startMinutes, column, columnCount, span }) => {
                 const is7Day = dayCount === 7
                 if (is7Day && column >= 3) return null
 
                 const effectiveColumnCount = is7Day ? Math.min(columnCount, 3) : columnCount
                 const isOverflowSlot = is7Day && columnCount > 3 && column === 2
+                // A card may span several columns, so its width no longer follows its offset.
+                const unit = 100 / effectiveColumnCount
+                const visibleSpan = Math.max(1, Math.min(span, effectiveColumnCount - column))
 
                 const top = ((startMinutes - gridStartMinutes) / 60) * rowHeight
                 const maxHeight = ((gridEndMinutes - gridStartMinutes) / 60) * rowHeight - top
@@ -214,9 +217,9 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
                     appointment={appointment}
                     top={top}
                     height={height}
-                    column={column}
                     columnCount={columnCount}
-                    widthPercent={100 / effectiveColumnCount}
+                    offsetPercent={unit * column}
+                    widthPercent={unit * visibleSpan}
                     artistAvatars={artistAvatars}
                     onSelect={() => onSelectAppointment(appointment)}
                     isOverflowSlot={isOverflowSlot}

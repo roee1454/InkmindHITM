@@ -14,8 +14,10 @@ interface AppointmentGridCardProps {
   appointment: ApiAppointment
   top: number
   height: number
-  column: number
   columnCount: number
+  /** Distance from the inline start edge of the day column, in percent. */
+  offsetPercent: number
+  /** Width in percent — an appointment with free columns beside it spans more than one. */
   widthPercent: number
   artistAvatars: Record<string, string>
   onSelect: () => void
@@ -35,8 +37,8 @@ export const AppointmentGridCard: React.FC<AppointmentGridCardProps> = ({
   appointment,
   top,
   height,
-  column,
   columnCount,
+  offsetPercent,
   widthPercent,
   artistAvatars,
   onSelect,
@@ -54,7 +56,7 @@ export const AppointmentGridCard: React.FC<AppointmentGridCardProps> = ({
   return (
     <div
       onClick={(e) => e.stopPropagation()}
-      style={{ top, height: Math.max(height, 22), insetInlineEnd: `${column * widthPercent}%`, width: `${widthPercent}%` }}
+      style={{ top, height: Math.max(height, 22), insetInlineEnd: `${offsetPercent}%`, width: `${widthPercent}%` }}
       className="absolute z-10 p-0.5 @container"
     >
       <button
