@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { artistColor } from '../utils/artist-colors'
 import { appointmentVisual, MARKER_DOT, MARKER_LABELS } from '../utils/appointment-visual'
 import { buildAppointmentTooltip, formatAppointmentTimeRange } from '../utils/appointment-status'
+import { ArtistBadge } from './ArtistBadge'
 import type { ApiAppointment } from '../types'
 
 /** Below this the block only has room for one line. */
@@ -16,6 +17,7 @@ interface AppointmentGridCardProps {
   column: number
   columnCount: number
   widthPercent: number
+  artistAvatars: Record<string, string>
   onSelect: () => void
   isOverflowSlot?: boolean
   overflowCount?: number
@@ -36,6 +38,7 @@ export const AppointmentGridCard: React.FC<AppointmentGridCardProps> = ({
   column,
   columnCount,
   widthPercent,
+  artistAvatars,
   onSelect,
   isOverflowSlot = false,
   overflowCount = 0,
@@ -46,12 +49,13 @@ export const AppointmentGridCard: React.FC<AppointmentGridCardProps> = ({
   const visual = appointmentVisual(appointment, Date.now())
   const isCompact = height < COMPACT_HEIGHT
   const KindIcon = isSketch ? PencilLine : Needle
+  const avatarUrl = appointment.staffId ? artistAvatars[appointment.staffId] : null
 
   return (
     <div
       onClick={(e) => e.stopPropagation()}
       style={{ top, height: Math.max(height, 22), insetInlineEnd: `${column * widthPercent}%`, width: `${widthPercent}%` }}
-      className="absolute z-10 p-0.5"
+      className="absolute z-10 p-0.5 @container"
     >
       <button
         type="button"
@@ -71,7 +75,13 @@ export const AppointmentGridCard: React.FC<AppointmentGridCardProps> = ({
       >
         <div className={cn('flex h-full min-w-0 gap-1.5', isCompact ? 'items-center' : 'flex-col justify-start')}>
           <div className="flex min-w-0 items-center gap-1">
-            <KindIcon size={11} className="shrink-0 text-muted-foreground" />
+            <ArtistBadge
+              staffId={appointment.staffId}
+              staffName={appointment.staffName}
+              avatarUrl={avatarUrl}
+              size={isCompact ? 13 : 15}
+            />
+            <KindIcon size={11} className="hidden shrink-0 text-muted-foreground @[104px]:inline-block" />
             <span className="truncate text-xs font-extrabold text-foreground">
               {appointment.leadName || 'לקוח ללא שם'}
             </span>
@@ -83,13 +93,20 @@ export const AppointmentGridCard: React.FC<AppointmentGridCardProps> = ({
             )}
           </div>
 
-          {/* `dir=ltr`: a bidi-neutral dash between two LTR clocks renders the range backwards
-              in an RTL page ("14:00 – 11:00" for an 11:00 appointment). */}
-          <span dir="ltr" className="shrink-0 truncate text-2xs font-semibold tabular-nums text-muted-foreground">
-            {isCompact
-              ? appointment.timeSlot
-              : formatAppointmentTimeRange(appointment.timeSlot, appointment.durationMinutes || 120)}
-          </span>
+          <div className="flex min-w-0 shrink-0 items-center gap-1">
+            {/* `dir=ltr`: a bidi-neutral dash between two LTR clocks renders the range backwards
+                in an RTL page ("14:00 – 11:00" for an 11:00 appointment). */}
+            <span dir="ltr" className="shrink-0 text-2xs font-semibold tabular-nums text-muted-foreground">
+              {isCompact
+                ? appointment.timeSlot
+                : formatAppointmentTimeRange(appointment.timeSlot, appointment.durationMinutes || 120)}
+            </span>
+            {!isCompact && appointment.staffName && (
+              <span className="hidden min-w-0 truncate text-2xs text-muted-foreground @[132px]:inline">
+                · {appointment.staffName}
+              </span>
+            )}
+          </div>
         </div>
 
         {isOverflowSlot && onOverflowClick && (

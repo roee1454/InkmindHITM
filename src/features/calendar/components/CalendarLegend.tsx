@@ -25,6 +25,15 @@ export const CalendarLegend: React.FC = () => {
         </div>
 
         <div className="flex items-start gap-2">
+          <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-artist-2/20 text-2xs font-extrabold leading-none ring-1 ring-artist-2/50">
+            דח
+          </span>
+          <span className="text-muted-foreground">
+            <span className="font-bold text-foreground">עיגול = מי המקעקע.</span> תמונת הפרופיל מגוגל, או ראשי תיבות בצבע שלו.
+          </span>
+        </div>
+
+        <div className="flex items-start gap-2">
           <span className="mt-0.5 flex shrink-0 gap-1 text-muted-foreground">
             <Needle size={13} />
             <PencilLine size={13} />

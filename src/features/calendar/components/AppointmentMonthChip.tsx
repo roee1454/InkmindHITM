@@ -4,18 +4,21 @@ import { cn } from '@/lib/utils'
 import { artistColor } from '../utils/artist-colors'
 import { appointmentVisual, MARKER_DOT, MARKER_LABELS } from '../utils/appointment-visual'
 import { buildAppointmentTooltip } from '../utils/appointment-status'
+import { ArtistBadge } from './ArtistBadge'
 import type { ApiAppointment } from '../types'
 
 interface AppointmentMonthChipProps {
   appointment: ApiAppointment
+  artistAvatars: Record<string, string>
   onSelect: () => void
 }
 
 /** One appointment in a month cell: time, name, and the same four visual channels as the grid. */
-export const AppointmentMonthChip: React.FC<AppointmentMonthChipProps> = ({ appointment, onSelect }) => {
+export const AppointmentMonthChip: React.FC<AppointmentMonthChipProps> = ({ appointment, artistAvatars, onSelect }) => {
   const visual = appointmentVisual(appointment, Date.now())
   const artist = artistColor(appointment.staffId)
   const KindIcon = appointment.type === 'sketch' ? PencilLine : Needle
+  const avatarUrl = appointment.staffId ? artistAvatars[appointment.staffId] : null
 
   return (
     <button
@@ -34,7 +37,8 @@ export const AppointmentMonthChip: React.FC<AppointmentMonthChipProps> = ({ appo
         visual.struck && 'line-through',
       )}
     >
-      <KindIcon size={10} className="hidden shrink-0 text-muted-foreground @[70px]:inline-block" />
+      <ArtistBadge staffId={appointment.staffId} staffName={appointment.staffName} avatarUrl={avatarUrl} size={12} />
+      <KindIcon size={10} className="hidden shrink-0 text-muted-foreground @[104px]:inline-block" />
       <span className="shrink-0 text-2xs font-bold tabular-nums text-foreground">{appointment.timeSlot}</span>
       <span className="truncate text-2xs font-semibold text-foreground">{appointment.leadName || 'ללא שם'}</span>
       {visual.marker && (

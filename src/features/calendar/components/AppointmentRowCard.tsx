@@ -3,6 +3,7 @@ import { PencilLine, Needle, FileCheck, TriangleAlert } from '@/components/ui/ic
 import type { ApiAppointment } from '../types'
 import { artistColor } from '../utils/artist-colors'
 import { appointmentVisual, MARKER_LABELS } from '../utils/appointment-visual'
+import { ArtistBadge } from './ArtistBadge'
 import {
   formatAppointmentDurationLabel,
   formatAppointmentPrice,
@@ -104,22 +105,10 @@ export const AppointmentRowCard: React.FC<AppointmentRowCardProps> = ({
             {appointment.style || (isSketch ? 'פגישת סקיצה / ייעוץ' : 'קעקוע כללי')}
           </span>
 
-          {appointment.staffId && (
-            <div className="flex items-center gap-1.5 shrink-0 text-foreground">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt=""
-                  className="size-4 rounded-full object-cover border border-border"
-                />
-              ) : (
-                <span className={cn('size-2 rounded-full shrink-0', artist.dot)} />
-              )}
-              <span className="font-semibold text-micro">
-                {appointment.staffName || 'מקעקע'}
-              </span>
-            </div>
-          )}
+          <div className="flex shrink-0 items-center gap-1.5 text-foreground">
+            <ArtistBadge staffId={appointment.staffId} staffName={appointment.staffName} avatarUrl={avatarUrl} size={16} />
+            <span className="text-micro font-semibold">{appointment.staffName || 'ללא שיוך'}</span>
+          </div>
         </div>
 
         {/* Row 3: Price & Badges */}

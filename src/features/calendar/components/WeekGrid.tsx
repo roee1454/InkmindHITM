@@ -197,6 +197,7 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
                     column={column}
                     columnCount={columnCount}
                     widthPercent={100 / effectiveColumnCount}
+                    artistAvatars={artistAvatars}
                     onSelect={() => onSelectAppointment(appointment)}
                     isOverflowSlot={isOverflowSlot}
                     overflowCount={columnCount - 2}
