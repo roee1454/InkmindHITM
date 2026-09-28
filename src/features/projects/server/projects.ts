@@ -66,3 +66,20 @@ export const listOpenProjects = createServerFn({ method: 'GET' })
     const { handleListOpenProjects } = await import('./customer-projects.server')
     return handleListOpenProjects(data.customerId)
   })
+
+/** The conversation header's project chip: the customer's active piece, as the board shows it. */
+export const getConversationProject = createServerFn({ method: 'GET' })
+  .validator(z.object({ conversationId: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    const { requireAuth } = await import('@/features/settings/server/helpers.server')
+    const { getSuperuserClient } = await import('@/integrations/pocketbase/superuser.server')
+    const { loadCustomerOverview } = await import('@/features/customers/server/customer-overview.server')
+    const { pickActiveProject } = await import('../utils/active-project')
+    const { staff } = await requireAuth()
+    const su = await getSuperuserClient()
+    const conversation = await su.collection('conversations').getOne(data.conversationId, { fields: 'id,customer' })
+    const customerId = conversation.customer as string
+    if (!customerId) return null
+    const overview = await loadCustomerOverview(su, { id: staff.id, role: staff.role }, customerId, new Date())
+    return pickActiveProject(overview.projects)
+  })

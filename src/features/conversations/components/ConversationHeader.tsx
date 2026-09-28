@@ -27,6 +27,7 @@ import { formatPhoneForDisplay } from '@/lib/phone'
 import { cn } from '@/lib/utils'
 import { extractMedicalAlerts } from '@/features/health-declaration/utils/health-alerts'
 import { useResetBotConversation } from '../hooks/use-reset-bot-conversation'
+import { ConversationProjectChip } from './ConversationProjectChip'
 import { User } from '@phosphor-icons/react'
 
 interface ConversationHeaderProps {
@@ -257,6 +258,8 @@ export function ConversationHeader({
           </DropdownMenu>
         </div>
       </div>
+
+      <ConversationProjectChip conversationId={conversation.id} />
 
       {/* 24h Window countdown progress indicator */}
       <div
