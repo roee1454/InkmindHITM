@@ -11,7 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getStudioClosures, deleteStudioClosure } from '@/features/settings/server/settings'
 import type { StudioClosure } from '@/features/settings/server/settings'
 import { AddClosureDialog } from './AddClosureDialog'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Button } from '@/components/ui/button'
 import { sortClosureGroups } from '../utils/closureSorting'
 import type { ClosureGroup } from '../utils/closureSorting'
@@ -200,51 +200,28 @@ export function ClosuresSection() {
       />
 
       {/* Dialog 4: Confirm Delete */}
-      <ResponsiveDialog
+      <ConfirmDialog
         open={groupToDelete !== null}
         onOpenChange={(open) => !open && setGroupToDelete(null)}
         title={groupToDelete ? `הסרת "${groupToDelete.reason}"` : ''}
         description={
+          groupToDelete && groupToDelete.dates.length > 1
+            ? `הסטודיו יחזור להיות פתוח בכל ${groupToDelete.dates.length} הימים.`
+            : 'הסטודיו יחזור להיות פתוח ביום הזה.'
+        }
+        details={
           groupToDelete
             ? groupToDelete.dates.length > 1
-              ? `הפעולה תמחק את כל ${groupToDelete.dates.length} הרשומות (${sortedYears.join(', ')}) של הסגירה הזו.`
-              : `הסרת הסגירה בתאריך ${groupToDelete.dates[0]}.`
+              ? [{ label: 'שנים', value: sortedYears.join(', ') }]
+              : [{ label: 'תאריך', value: <span dir="ltr">{groupToDelete.dates[0]}</span> }]
             : undefined
         }
-      >
-        <div className="flex flex-col gap-3 py-1 font-assistant" dir="rtl">
-          {groupToDelete && groupToDelete.dates.length > 1 && (
-            <div className="max-h-40 space-y-1 overflow-y-auto rounded-xl border border-border p-2">
-              {[...groupToDelete.dates].sort().map((date) => (
-                <div
-                  key={date}
-                  className="rounded-lg px-2 py-1 text-xs text-muted-foreground font-medium text-left tabular-nums"
-                  dir="ltr"
-                >
-                  {date}
-                </div>
-              ))}
-            </div>
-          )}
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setGroupToDelete(null)}
-            >
-              ביטול
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={removeGroupMutation.isPending}
-              onClick={() => groupToDelete && removeGroupMutation.mutate(groupToDelete.ids)}
-            >
-              {removeGroupMutation.isPending ? 'מוחק…' : 'הסר'}
-            </Button>
-          </div>
-        </div>
-      </ResponsiveDialog>
+        tone="destructive"
+        confirmLabel="הסרה"
+        pendingLabel="מסיר…"
+        isPending={removeGroupMutation.isPending}
+        onConfirm={() => groupToDelete && removeGroupMutation.mutate(groupToDelete.ids)}
+      />
     </div>
   )
 }

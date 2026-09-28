@@ -30,9 +30,17 @@ import {
   deleteBackup,
 } from '@/features/settings/server/settings'
 import type { BackupSettings, BackupFile } from '@/features/settings/server/settings'
-import { DeleteBackupDialog } from './DeleteBackupDialog'
-import { RestoreBackupDialog } from './RestoreBackupDialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { UploadBackupDialog } from './UploadBackupDialog'
+
+/** What a backup confirmation shows about the file it acts on. */
+function backupDetails(backup: BackupFile) {
+  return [
+    { label: 'נוצר', value: new Date(backup.modifiedAt).toLocaleString('he-IL', { dateStyle: 'medium', timeStyle: 'short' }) },
+    { label: 'גודל', value: formatSize(backup.size) },
+    { label: 'קובץ', value: <span dir="ltr">{backup.key}</span> },
+  ]
+}
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
@@ -440,20 +448,30 @@ export const BackupSettingsTab: React.FC = () => {
         }}
       />
 
-      <DeleteBackupDialog
-        backup={backupToDelete}
+      <ConfirmDialog
         open={backupToDelete !== null}
         onOpenChange={(open) => !open && setBackupToDelete(null)}
-        onConfirm={(key) => deleteMutation.mutate(key)}
+        title="מחיקת קובץ הגיבוי"
+        description="אי אפשר יהיה לשחזר ממנו אחרי המחיקה."
+        details={backupToDelete ? backupDetails(backupToDelete) : undefined}
+        tone="destructive"
+        confirmLabel="מחיקה"
+        pendingLabel="מוחק…"
         isPending={deleteMutation.isPending}
+        onConfirm={() => backupToDelete && deleteMutation.mutate(backupToDelete.key)}
       />
 
-      <RestoreBackupDialog
-        backup={backupToRestore}
+      <ConfirmDialog
         open={backupToRestore !== null}
         onOpenChange={(open) => !open && setBackupToRestore(null)}
-        onConfirm={(key) => restoreMutation.mutate(key)}
+        title="שחזור מהגיבוי"
+        description="כל מה שנוצר אחרי הגיבוי — תורים, שיחות, לקוחות, הודעות — יימחק, והשרת יופעל מחדש. אי אפשר לבטל."
+        details={backupToRestore ? backupDetails(backupToRestore) : undefined}
+        tone="destructive"
+        confirmLabel="שחזור"
+        pendingLabel="משחזר…"
         isPending={restoreMutation.isPending}
+        onConfirm={() => backupToRestore && restoreMutation.mutate(backupToRestore.key)}
       />
     </div>
   )

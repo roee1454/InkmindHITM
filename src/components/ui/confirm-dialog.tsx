@@ -22,6 +22,10 @@ interface ConfirmDialogProps {
   /** Destructive only for what can't be taken back (delete, overwrite); otherwise the default fill. */
   tone?: "default" | "destructive"
   isPending?: boolean
+  /** Not yet decidable — say, while checking what a delete would take with it. */
+  confirmDisabled?: boolean
+  /** Nothing left to confirm (the record is already gone): only the close button remains. */
+  hideConfirm?: boolean
   error?: string | null
   onConfirm: () => void
   /** Anything the decision needs beyond the details — a checkbox, a warning. Rare. */
@@ -44,6 +48,8 @@ export function ConfirmDialog({
   pendingLabel,
   tone = "default",
   isPending = false,
+  confirmDisabled = false,
+  hideConfirm = false,
   error,
   onConfirm,
   children,
@@ -61,10 +67,18 @@ export function ConfirmDialog({
           <Button type="button" variant="ghost" disabled={isPending} onClick={() => onOpenChange(false)}>
             {cancelLabel}
           </Button>
-          <Button type="button" variant={tone === "destructive" ? "destructive" : "default"} disabled={isPending} onClick={onConfirm} className="min-w-28 gap-2">
-            {isPending && <Loader2 size={14} className="animate-spin" />}
-            {isPending ? (pendingLabel ?? confirmLabel) : confirmLabel}
-          </Button>
+          {!hideConfirm && (
+            <Button
+              type="button"
+              variant={tone === "destructive" ? "destructive" : "default"}
+              disabled={isPending || confirmDisabled}
+              onClick={onConfirm}
+              className="min-w-28 gap-2"
+            >
+              {isPending && <Loader2 size={14} className="animate-spin" />}
+              {isPending ? (pendingLabel ?? confirmLabel) : confirmLabel}
+            </Button>
+          )}
         </DialogActions>
       }
     >
