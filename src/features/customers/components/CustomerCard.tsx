@@ -8,10 +8,10 @@ import { isHealthDeclarationValid } from '@/features/health-declaration/utils/va
 
 interface CustomerCardProps {
   customer: Customer
-  onEdit: (customer: Customer) => void
+  onOpen: (customer: Customer) => void
 }
 
-export const CustomerCard = React.memo<CustomerCardProps>(({ customer: c, onEdit }) => {
+export const CustomerCard = React.memo<CustomerCardProps>(({ customer: c, onOpen }) => {
   const displayName = c.name || 'לקוח ללא שם'
   const isExpired = Boolean(
     c.healthDeclarationSigned &&
@@ -27,7 +27,7 @@ export const CustomerCard = React.memo<CustomerCardProps>(({ customer: c, onEdit
     : []
 
   return (
-    <div onClick={() => onEdit(c)} className="row-native cursor-pointer justify-between" dir="rtl">
+    <div onClick={() => onOpen(c)} className="row-native cursor-pointer justify-between" dir="rtl">
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-1.5">
           <h4 className="truncate text-base font-bold text-foreground">{displayName}</h4>

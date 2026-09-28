@@ -2,7 +2,7 @@ import type PocketBase from 'pocketbase'
 import type { RecordModel } from 'pocketbase'
 import { toLedgerAppointment, toLedgerPayment } from '@/features/payments/server/project-finance.server'
 import { buildPipeline } from '../utils/pipeline'
-import type { PipelineViewer } from '../utils/pipeline'
+import type { PipelineInput, PipelineViewer } from '../utils/pipeline'
 import type { PipelineData } from '../types'
 
 function text(value: unknown): string | null {
@@ -11,6 +11,31 @@ function text(value: unknown): string | null {
 
 function positive(value: unknown): number | null {
   return typeof value === 'number' && value > 0 ? value : null
+}
+
+export function toPipelineInputProject(p: RecordModel): PipelineInput['projects'][number] {
+  return {
+    id: p.id,
+    customer: p.customer as string,
+    title: (p.title as string) || '',
+    stage: (p.stage as string) || '',
+    stageChangedAt: text(p.stage_changed_at),
+    primaryStaff: text(p.primary_staff),
+    quoteMin: positive(p.quote_min),
+    quoteMax: positive(p.quote_max),
+    // An unset PocketBase number reads as 0, which here means "no estimate", not "zero sessions".
+    estimatedSessions: positive(p.estimated_sessions),
+    lostReason: text(p.lost_reason),
+    lostNote: text(p.lost_note),
+  }
+}
+
+export function toPipelineInputAppointment(a: RecordModel): PipelineInput['appointments'][number] {
+  return { ...toLedgerAppointment(a), project: a.project as string, staff: text(a.staff) }
+}
+
+export function toStaffNames(staff: RecordModel[]): Record<string, string> {
+  return Object.fromEntries(staff.map((s) => [s.id, (s.name as string) || '']))
 }
 
 /** Loads everything the leads board shows; the shaping and permissions live in buildPipeline. */
@@ -26,25 +51,12 @@ export async function loadPipeline(su: PocketBase, viewer: PipelineViewer, now: 
 
   return buildPipeline(
     {
-      projects: projects.map((p: RecordModel) => ({
-        id: p.id,
-        customer: p.customer as string,
-        title: (p.title as string) || '',
-        stage: (p.stage as string) || '',
-        stageChangedAt: text(p.stage_changed_at),
-        primaryStaff: text(p.primary_staff),
-        quoteMin: positive(p.quote_min),
-        quoteMax: positive(p.quote_max),
-        // An unset PocketBase number reads as 0, which here means "no estimate", not "zero sessions".
-        estimatedSessions: positive(p.estimated_sessions),
-        lostReason: text(p.lost_reason),
-        lostNote: text(p.lost_note),
-      })),
+      projects: projects.map(toPipelineInputProject),
       customers: customers.map((c) => ({ id: c.id, name: text(c.name), phone: (c.phone as string) || '', source: text(c.source), updatedAt: c.updated as string })),
       conversations: conversations.map((c) => ({ id: c.id, customer: c.customer as string, assignedStaff: text(c.assigned_staff) })),
-      appointments: appointments.map((a) => ({ ...toLedgerAppointment(a), project: a.project as string, staff: text(a.staff) })),
+      appointments: appointments.map(toPipelineInputAppointment),
       payments: payments.map((p) => ({ ...toLedgerPayment(p), project: p.project as string })),
-      staffNames: Object.fromEntries(staff.map((s) => [s.id, (s.name as string) || ''])),
+      staffNames: toStaffNames(staff),
     },
     viewer,
     now,

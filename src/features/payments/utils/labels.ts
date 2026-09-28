@@ -1,4 +1,4 @@
-import type { PaymentKind, PaymentMethod } from '../types'
+import type { PaymentKind, PaymentMethod, PaymentStatus } from '../types'
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   cash: 'מזומן',
@@ -17,4 +17,11 @@ export const PAYMENT_KIND_LABELS: Record<PaymentKind, string> = {
 
 export function formatIls(amount: number): string {
   return `₪${amount.toLocaleString('he-IL', { maximumFractionDigits: 2 })}`
+}
+
+export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  pending_verification: 'ממתין לאישור',
+  verified: 'אושר',
+  rejected: 'נדחה',
+  voided: 'בוטל',
 }

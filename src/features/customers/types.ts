@@ -1,4 +1,6 @@
 import type { CustomerLifecycle } from './utils/lifecycle'
+import type { LedgerPayment } from '@/features/payments/types'
+import type { PipelineProject } from '@/features/projects/types'
 
 export interface Customer {
   id: string
@@ -42,17 +44,6 @@ export const SOURCE_LABELS: Record<string, string> = {
   unknown: 'לא ידוע',
 }
 
-export const SOURCE_BADGE_STYLES: Record<string, string> = {
-  instagram: 'bg-fuchsia-500/15 text-fuchsia-400 border-fuchsia-500/30',
-  tiktok: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
-  facebook: 'bg-blue-600/15 text-blue-400 border-blue-600/30',
-  google: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-  website: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30',
-  referral: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-  'walk-in': 'bg-purple-500/15 text-purple-400 border-purple-500/30',
-  unknown: 'bg-muted/40 text-muted-foreground border-border/60',
-}
-
 /** Categorical, like the artist ramp — it distinguishes people, never state. Drawn from
  *  the theme's identity ramp so it stays legible on both grounds. */
 export const AVATAR_COLORS = [
@@ -75,4 +66,27 @@ export interface CustomerFormData {
   allergies?: string | null
   medicalNotes?: string | null
   healthDeclarationAnswers?: Record<string, string | number | boolean | null | string[]> | null
+}
+
+/** One payment as the customer card lists it: the ledger row plus which piece it paid for. */
+export interface CustomerPaymentRow extends LedgerPayment {
+  projectId: string
+  projectTitle: string
+  /** When it was recorded; the row's date when nobody entered `receivedAt`. */
+  createdAt: string
+}
+
+/** The customer card's projects and money tabs (track-b B8.1). */
+export interface CustomerOverview {
+  conversationId: string | null
+  projects: PipelineProject[]
+  payments: CustomerPaymentRow[]
+  totals: {
+    /** Verified deposits and payments, net of verified refunds. */
+    paid: number
+    due: number
+    credit: number
+    /** Receipts the customer sent that nobody checked yet. */
+    awaitingVerification: number
+  }
 }

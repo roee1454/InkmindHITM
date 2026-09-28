@@ -26,6 +26,8 @@ export function useProjectDetails(projectId: string | null) {
       queryClient.invalidateQueries({ queryKey: pipelineQueryKey }),
       queryClient.invalidateQueries({ queryKey: ['project-finance'] }),
       queryClient.invalidateQueries({ queryKey: queryKeys.appointments }),
+      // An open customer card lists this project too (customer-overview, keyed under customers).
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.customers, 'overview'] }),
     ])
 
   const update = useMutation({

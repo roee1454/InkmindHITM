@@ -2,11 +2,10 @@ import { CascadeDeleteDialog } from '@/features/database/components/CascadeDelet
 import React from 'react'
 import { AlertCircle } from '@/components/ui/icon'
 import { useLocation, useNavigate } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { SearchInput } from '@/components/ui/search-input'
 import { Pagination } from '@/components/ui/pagination'
-import type { Customer, CustomerFormData } from './types'
-import { createCustomer, updateCustomer } from './server/customers'
+import type { Customer } from './types'
 import { customersQueryOptions } from './utils/customers-query'
 import { CustomersHeader } from './components/CustomersHeader'
 import { CustomersSummary } from './components/CustomersSummary'
@@ -14,8 +13,10 @@ import type { LifecycleFilter } from './components/CustomersSummary'
 import { CustomerCard } from './components/CustomerCard'
 import { CustomersSkeleton } from './components/CustomersSkeleton'
 import { CustomerDialog } from './components/CustomerDialog'
+import { CustomerSheet } from './components/customer-sheet/CustomerSheet'
+import { useCustomerMutations } from './hooks/use-customer-mutations'
 import { useCustomersUiStore } from './store/customersUiStore'
-import { phoneMatchesQuery, toCanonicalE164Phone } from '@/lib/phone'
+import { phoneMatchesQuery } from '@/lib/phone'
 
 const ITEMS_PER_PAGE = 10
 
@@ -30,29 +31,32 @@ export const CustomersPage: React.FC = () => {
     searchQuery,
     currentPage,
     isCreating,
-    editingCustomer,
+    selectedCustomer,
     form,
     formError,
     setSearchQuery,
     setCurrentPage,
     setIsCreating,
-    setEditingCustomer,
+    setSelectedCustomer,
     updateFormField,
     setFormError,
-    resetForm,
     openCreate,
-    openEdit,
+    openCustomerCard,
   } = useCustomersUiStore()
+  const { create: createCustomerMutation, update: updateCustomerMutation } = useCustomerMutations()
 
   const { data: customers = [], isLoading, error } = useQuery(customersQueryOptions())
 
-  // The customer being edited was deleted elsewhere (another tab, a colleague, the realtime
-  // feed): close the form instead of letting a save or delete run against a dead id.
+  // The open customer was deleted elsewhere (another tab, a colleague, the realtime feed): close
+  // the card instead of letting a save or delete run against a dead id.
   React.useEffect(() => {
-    if (editingCustomer && !isLoading && !customers.some((c) => c.id === editingCustomer.id)) {
-      setEditingCustomer(null)
+    if (selectedCustomer && !isLoading && !customers.some((c) => c.id === selectedCustomer.id)) {
+      setSelectedCustomer(null)
     }
-  }, [customers, editingCustomer, isLoading, setEditingCustomer])
+  }, [customers, selectedCustomer, isLoading, setSelectedCustomer])
+
+  // The card's header reads the list's copy, so a saved name or VIP flag shows without reopening.
+  const cardCustomer = selectedCustomer ? (customers.find((c) => c.id === selectedCustomer.id) ?? selectedCustomer) : null
 
   // The mobile top bar's "+" action navigates here with `?new=1` since it lives outside this
   // component's tree — pick it up once, then clear it so back-navigation doesn't reopen it.
@@ -62,56 +66,6 @@ export const CustomersPage: React.FC = () => {
       navigate({ to: '/dashboard/customers', search: {}, replace: true })
     }
   }, [location.search])
-
-  const createCustomerMutation = useMutation({
-    mutationFn: (body: CustomerFormData) =>
-      createCustomer({
-        data: {
-          name: body.name || null,
-          phone: toCanonicalE164Phone(body.phone),
-          email: body.email || null,
-          source: body.source === 'unknown' ? null : body.source,
-          isVip: body.isVip,
-        },
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] })
-      queryClient.invalidateQueries({ queryKey: ['dashboardData'] })
-      setIsCreating(false)
-      resetForm()
-    },
-    onError: (err: unknown) => {
-      setFormError(err instanceof Error ? err.message : 'שגיאה ביצירת לקוח')
-    },
-  })
-
-  const updateCustomerMutation = useMutation({
-    mutationFn: ({ id, body }: { id: string; body: CustomerFormData }) =>
-      updateCustomer({
-        data: {
-          id,
-          name: body.name || null,
-          phone: toCanonicalE164Phone(body.phone),
-          email: body.email || null,
-          source: body.source === 'unknown' ? null : body.source,
-          isVip: body.isVip,
-          healthDeclarationSigned: body.healthDeclarationSigned,
-          healthDeclarationDate: body.healthDeclarationDate,
-          healthDeclarationUrl: body.healthDeclarationUrl,
-          allergies: body.allergies,
-          medicalNotes: body.medicalNotes,
-        },
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] })
-      queryClient.invalidateQueries({ queryKey: ['dashboardData'] })
-      setEditingCustomer(null)
-      resetForm()
-    },
-    onError: (err: unknown) => {
-      setFormError(err instanceof Error ? err.message : 'שגיאה בעדכון הלקוח')
-    },
-  })
 
   const submitCreate = (e: React.FormEvent) => {
     e.preventDefault()
@@ -124,12 +78,12 @@ export const CustomersPage: React.FC = () => {
 
   const submitEdit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!editingCustomer) return
+    if (!selectedCustomer) return
     if (!form.phone) {
       setFormError('נא להזין מספר טלפון')
       return
     }
-    updateCustomerMutation.mutate({ id: editingCustomer.id, body: form })
+    updateCustomerMutation.mutate({ id: selectedCustomer.id, body: form })
   }
 
   // Global search filtering across ALL pages first
@@ -192,7 +146,7 @@ export const CustomersPage: React.FC = () => {
         <div className="flex flex-col gap-4">
           <div className="card-native overflow-hidden">
             {paginatedCustomers.map((c) => (
-              <CustomerCard key={c.id} customer={c} onEdit={openEdit} />
+              <CustomerCard key={c.id} customer={c} onOpen={openCustomerCard} />
             ))}
           </div>
 
@@ -213,7 +167,6 @@ export const CustomersPage: React.FC = () => {
       )}
 
       <CustomerDialog
-        mode="create"
         open={isCreating}
         onOpenChange={setIsCreating}
         form={form}
@@ -223,24 +176,19 @@ export const CustomersPage: React.FC = () => {
         isSaving={createCustomerMutation.isPending}
       />
 
-      <CustomerDialog
-        mode="edit"
-        open={editingCustomer !== null}
-        onOpenChange={(open) => !open && setEditingCustomer(null)}
+      <CustomerSheet
+        customer={cardCustomer}
+        onClose={() => setSelectedCustomer(null)}
         form={form}
         onFormChange={updateFormField}
         formError={formError}
         onSubmit={submitEdit}
         isSaving={updateCustomerMutation.isPending}
-        onDelete={
-          editingCustomer
-            ? () => {
-                const target = editingCustomer
-                setEditingCustomer(null)
-                setCustomerToDelete(target)
-              }
-            : undefined
-        }
+        onDelete={() => {
+          const target = selectedCustomer
+          setSelectedCustomer(null)
+          setCustomerToDelete(target)
+        }}
       />
 
       <CascadeDeleteDialog
