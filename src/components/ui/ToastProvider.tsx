@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
-import { X, Info, AlertTriangle, AlertCircle, CheckCircle } from '@/components/ui/icon'
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { AlertCircle, AlertTriangle, CheckCircle, ChevronLeft, Info, X } from '@/components/ui/icon'
+import { cn } from '@/lib/utils'
 
 export type ToastType = 'info' | 'warning' | 'error' | 'success'
 
@@ -8,14 +9,12 @@ export interface ToastItem {
   title: string
   message: string
   type: ToastType
-  duration?: number
+  duration: number
   onClick?: () => void
 }
 
 interface ToastContextType {
   toast: (title: string, message: string, type?: ToastType, duration?: number, onClick?: () => void) => void
-  toasts: ToastItem[]
-  removeToast: (id: string) => void
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined)
@@ -26,70 +25,125 @@ export const useToast = () => {
   return context
 }
 
-export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [toasts, setToasts] = useState<ToastItem[]>([])
+/** More than this and they stop being read; the oldest goes first. */
+const MAX_VISIBLE = 3
+const EXIT_MS = 160
 
-  const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id))
-  }, [])
+const ICONS: Record<ToastType, typeof Info> = { info: Info, success: CheckCircle, warning: AlertTriangle, error: AlertCircle }
+const TONES: Record<ToastType, string> = {
+  info: 'text-muted-foreground',
+  success: 'text-status-done',
+  warning: 'text-warning',
+  error: 'text-destructive',
+}
 
-  const toast = useCallback((title: string, message: string, type: ToastType = 'info', duration = 4000, onClick?: () => void) => {
-    const id = Math.random().toString(36).substring(2, 9)
-    setToasts((prev) => [...prev, { id, title, message, type, duration, onClick }])
-    setTimeout(() => removeToast(id), duration)
-  }, [removeToast])
+function Toast({ item, leaving, onDismiss }: { item: ToastItem; leaving: boolean; onDismiss: (id: string) => void }) {
+  const Icon = ICONS[item.type]
+  const remaining = useRef(item.duration)
+  const startedAt = useRef(0)
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  // Pausable: a toast someone is reading (hovered or focused) doesn't disappear under them.
+  const resume = useCallback(() => {
+    startedAt.current = Date.now()
+    timer.current = setTimeout(() => onDismiss(item.id), remaining.current)
+  }, [item.id, onDismiss])
+  const pause = () => {
+    clearTimeout(timer.current)
+    remaining.current = Math.max(800, remaining.current - (Date.now() - startedAt.current))
+  }
+
+  useEffect(() => {
+    resume()
+    return () => clearTimeout(timer.current)
+  }, [resume])
+
+  const clickable = Boolean(item.onClick)
+  const open = () => {
+    item.onClick?.()
+    onDismiss(item.id)
+  }
 
   return (
-    <ToastContext.Provider value={{ toast, toasts, removeToast }}>
-      {children}
-      {/* Toast Portal/Container */}
-      {/* `start`, not `left` — the document is RTL. Below `sm` the stack spans the viewport
-          with a 1rem inset rather than `w-full` + a fixed edge offset, which used to overflow
-          by 16px on any screen narrower than 448px. */}
-      <div
-        className="pointer-events-none fixed inset-x-4 z-[9999] flex flex-col gap-3 sm:inset-x-auto sm:start-4 sm:w-full sm:max-w-md"
-        style={{ top: 'calc(1rem + env(safe-area-inset-top, 0px))' }}
-        dir="rtl"
+    <div
+      role={item.type === 'error' ? 'alert' : 'status'}
+      onMouseEnter={pause}
+      onMouseLeave={resume}
+      onFocus={pause}
+      onBlur={resume}
+      className={cn(
+        'pointer-events-auto relative flex w-full items-start gap-3 rounded-xl border border-border bg-card p-3.5 font-assistant shadow-lg',
+        'motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200',
+        leaving && 'motion-safe:animate-out motion-safe:fade-out motion-safe:zoom-out-95 motion-safe:duration-150',
+      )}
+    >
+      <Icon size={18} className={cn('mt-0.5 shrink-0', TONES[item.type])} />
+      {clickable ? (
+        <button type="button" onClick={open} className="-m-1 flex min-w-0 flex-1 cursor-pointer flex-col gap-0.5 rounded-md p-1 text-start transition-colors hover:bg-muted/50">
+          <span className="flex items-center gap-1 text-sm font-bold text-foreground">
+            <span className="min-w-0 truncate">{item.title}</span>
+            <ChevronLeft size={14} className="shrink-0 text-muted-foreground" />
+          </span>
+          {item.message && <span className="line-clamp-2 text-sm text-muted-foreground">{item.message}</span>}
+        </button>
+      ) : (
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="text-sm font-bold text-foreground">{item.title}</span>
+          {item.message && <span className="line-clamp-2 text-sm text-muted-foreground">{item.message}</span>}
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={() => onDismiss(item.id)}
+        aria-label="סגירת ההודעה"
+        className="-me-1 -mt-1 flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
-        {toasts.map((t) => {
-          let bgClass = 'bg-card border-border'
-          let icon = <Info className="text-primary shrink-0" size={22} />
-          if (t.type === 'success') {
-            bgClass = 'bg-success/10 border-success/20'
-            icon = <CheckCircle className="text-success shrink-0" size={22} />
-          } else if (t.type === 'error') {
-            bgClass = 'bg-destructive/10 border-destructive/20'
-            icon = <AlertCircle className="text-destructive shrink-0" size={22} />
-          } else if (t.type === 'warning') {
-            bgClass = 'bg-warning/10 border-warning/20'
-            icon = <AlertTriangle className="text-warning shrink-0" size={22} />
-          }
+        <X size={15} />
+      </button>
+    </div>
+  )
+}
 
-          return (
-            <div
-              key={t.id}
-              onClick={t.onClick}
-              className={`pointer-events-auto flex items-start gap-3 rounded-2xl border p-4 shadow-lg animate-in slide-in-from-top fade-in duration-300 ease-native backdrop-blur-md transition-all sm:gap-4 sm:p-5 ${t.onClick ? 'cursor-pointer active:scale-[0.99]' : ''} ${bgClass}`}
-            >
-              {icon}
-              <div className="flex-1 min-w-0 font-assistant">
-                <div className="text-base font-bold text-foreground">{t.title}</div>
-                <div className="text-sm text-muted-foreground mt-1 leading-relaxed">{t.message}</div>
-              </div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  removeToast(t.id)
-                }}
-                className="text-muted-foreground hover:text-foreground shrink-0 cursor-pointer outline-none"
-              >
-                <X size={18} />
-              </button>
-            </div>
-          )
-        })}
-      </div>
+/**
+ * Transient feedback: what just happened, in one line, out of the way. A solid surface with the
+ * overlay shadow and the status colour on the icon only — it used to be a tinted, blurred card
+ * that scaled with a hover and vanished mid-read.
+ */
+export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [toasts, setToasts] = useState<ToastItem[]>([])
+  const [leaving, setLeaving] = useState<ReadonlySet<string>>(new Set())
+
+  const dismiss = useCallback((id: string) => {
+    setLeaving((prev) => new Set(prev).add(id))
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id))
+      setLeaving((prev) => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
+    }, EXIT_MS)
+  }, [])
+
+  const toast = useCallback((title: string, message: string, type: ToastType = 'info', duration = 4500, onClick?: () => void) => {
+    const id = Math.random().toString(36).substring(2, 9)
+    setToasts((prev) => [...prev, { id, title, message, type, duration, onClick }].slice(-MAX_VISIBLE))
+  }, [])
+
+  return (
+    <ToastContext.Provider value={{ toast }}>
+      {children}
+      {/* Phone: at the top, under the notch, newest first. Desktop: the bottom corner at the end of
+          the reading direction (left, in RTL), newest nearest the corner. Above dialogs (z-50). */}
+      <section
+        aria-label="הודעות"
+        dir="rtl"
+        className="pointer-events-none fixed inset-x-3 top-[calc(0.75rem+env(safe-area-inset-top,0px))] z-[60] flex flex-col-reverse gap-2 sm:inset-x-auto sm:top-auto sm:bottom-6 sm:end-6 sm:w-96 sm:flex-col"
+      >
+        {toasts.map((t) => (
+          <Toast key={t.id} item={t} leaving={leaving.has(t.id)} onDismiss={dismiss} />
+        ))}
+      </section>
     </ToastContext.Provider>
   )
 }
