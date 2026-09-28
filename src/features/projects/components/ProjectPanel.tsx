@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useProjectFinance } from '@/features/payments/hooks/use-project-finance'
@@ -7,6 +7,9 @@ import { summarizeProject } from '../utils/panel'
 import { draftFrom, isDraftDirty, parseDraft } from '../utils/project-draft'
 import type { DraftField, ProjectDraft } from '../utils/project-draft'
 import { MarkProjectLostDialog } from './MarkProjectLostDialog'
+import { CreateAppointmentDialog } from '@/features/calendar/components/CreateAppointmentDialog'
+import { useStaffDirectory } from '@/features/calendar/hooks/use-staff-directory'
+import { projectBookingValues } from '../utils/booking'
 import { ProjectPanelHeader } from './project-panel/ProjectPanelHeader'
 import { ProjectFacts } from './project-panel/ProjectFacts'
 import { ProjectSessions } from './project-panel/ProjectSessions'
@@ -38,14 +41,19 @@ function PanelSkeleton() {
  * the footer becomes the save bar — so nothing moves while staff edit.
  */
 export function ProjectPanel({ projectId, onClose }: { projectId: string | null; onClose: () => void }) {
-  const { details, update, move } = useProjectDetails(projectId)
+  const { details, update, move, attach, book } = useProjectDetails(projectId)
+  const directory = useStaffDirectory()
   const finance = useProjectFinance(projectId)
   const [draft, setDraft] = useState<ProjectDraft | null>(null)
   const [invalid, setInvalid] = useState<{ field: DraftField; message: string } | null>(null)
   const [losing, setLosing] = useState(false)
+  const [booking, setBooking] = useState(false)
   const project = details.data
   const now = new Date()
   const summary = project ? summarizeProject(project, finance.data, now) : null
+  // Stable per project: the wizard resets its fields whenever `initialValues` changes identity, so a
+  // fresh object on every render (any refetch) would wipe what staff are typing.
+  const bookingValues = useMemo(() => (project ? projectBookingValues(project) : null), [project])
 
   const stopEditing = () => {
     setDraft(null)
@@ -115,10 +123,18 @@ export function ProjectPanel({ projectId, onClose }: { projectId: string | null;
                     project={project}
                     isMoving={move.isPending}
                     onMove={(appointmentId, target) => move.mutate({ appointmentId, target })}
+                    isAttaching={attach.isPending}
+                    onAttach={(appointmentId) => attach.mutate(appointmentId)}
+                    onBook={() => {
+                      book.reset()
+                      setBooking(true)
+                    }}
                   />
                   <ProjectPayments finance={finance.data} isLoading={finance.isLoading} error={errorText(finance.error)} appointments={summary.appointments} />
                 </div>
-                {move.error && <p className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">{errorText(move.error)}</p>}
+                {(move.error || attach.error) && (
+                  <p className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">{errorText(move.error ?? attach.error)}</p>
+                )}
               </div>
             </div>
 
@@ -133,8 +149,19 @@ export function ProjectPanel({ projectId, onClose }: { projectId: string | null;
               project.canManage && <ProjectLifecycleFooter project={project} onMarkLost={() => setLosing(true)} />
             )}
           </form>
-          {/* Outside the form: it portals out of the DOM, but its events would still bubble through the React tree into this form. */}
+          {/* Outside the form: these portal out of the DOM, but their events would still bubble through the React tree into this form. */}
           {losing && <MarkProjectLostDialog projectId={project.id} projectTitle={project.title} open onOpenChange={setLosing} />}
+          {/* The calendar's booking wizard, started inside this project: customer, artist and piece filled in. */}
+          <CreateAppointmentDialog
+            open={booking}
+            onOpenChange={setBooking}
+            staff={directory.staff.data ?? []}
+            googleConnections={directory.googleConnections.data ?? []}
+            initialValues={bookingValues}
+            onSave={(values) => book.mutate(values, { onSuccess: () => setBooking(false) })}
+            isSaving={book.isPending}
+            error={errorText(book.error)}
+          />
         </>
       )}
     </ResponsiveDialog>

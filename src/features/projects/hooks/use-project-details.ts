@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '@/components/ui/ToastProvider'
 import { queryKeys } from '@/lib/query-keys'
+import { createAppointment } from '@/features/calendar/server/appointments'
+import { toCreateAppointmentInput } from '@/features/calendar/utils/appointment-payload'
+import type { AppointmentFormValues } from '@/features/calendar/types'
 import { getProjectDetails, moveAppointmentToProject, updateProjectDetails } from '../server/projects'
 import { pipelineQueryKey } from './use-project-milestones'
 
@@ -8,7 +11,7 @@ export function projectDetailsQueryKey(projectId: string | null) {
   return ['project-details', projectId] as const
 }
 
-/** The project panel's data, and the edits it makes. */
+/** The project panel's data, and the edits it makes: details, moving, attaching and booking appointments. */
 export function useProjectDetails(projectId: string | null) {
   const queryClient = useQueryClient()
   const { toast } = useToast()
@@ -28,6 +31,9 @@ export function useProjectDetails(projectId: string | null) {
       queryClient.invalidateQueries({ queryKey: queryKeys.appointments }),
       // An open customer card lists this project too (customer-overview, keyed under customers).
       queryClient.invalidateQueries({ queryKey: [...queryKeys.customers, 'overview'] }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardData }),
+      // The booking wizard's project picker shows stages, which a booking or a move changes.
+      queryClient.invalidateQueries({ queryKey: ['open-projects'] }),
     ])
 
   const update = useMutation({
@@ -47,5 +53,22 @@ export function useProjectDetails(projectId: string | null) {
     },
   })
 
-  return { details, update, move }
+  // Filing one of the customer's appointments from another project under this one.
+  const attach = useMutation({
+    mutationFn: (appointmentId: string) => moveAppointmentToProject({ data: { appointmentId, target: projectId ?? '' } }),
+    onSuccess: () => {
+      toast('התור שויך לפרויקט', 'השלבים של שני הפרויקטים חושבו מחדש.', 'success')
+      return refresh()
+    },
+  })
+
+  const book = useMutation({
+    mutationFn: (values: AppointmentFormValues) => createAppointment({ data: toCreateAppointmentInput(values) }),
+    onSuccess: () => {
+      toast('התור נקבע', 'הוא מופיע ביומן ובפרויקט.', 'success')
+      return refresh()
+    },
+  })
+
+  return { details, update, move, attach, book }
 }

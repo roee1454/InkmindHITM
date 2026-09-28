@@ -68,6 +68,21 @@ describe('project panel', () => {
     expect(await pb.collection('projects').getOne(projectId)).toMatchObject({ customer: customer.id, stage: 'booked' })
   })
 
+  it('offers the customer’s appointments from other projects to attach, and attaches one', async () => {
+    const customer = await createCustomer(pb)
+    const piece = await booking(customer.id, 'consultation', 'completed', -48)
+    const elsewhere = await booking(customer.id, 'session', 'confirmed', 48)
+    await pb.collection('projects').update(elsewhere.project as string, { title: 'פרפר' })
+
+    const before = await handleGetProjectDetails(piece.project as string, { su: pb, actor: admin })
+    expect(before.attachable).toEqual([expect.objectContaining({ id: elsewhere.id, kind: 'session', projectTitle: 'פרפר' })])
+
+    await handleMoveAppointment({ appointmentId: elsewhere.id, target: piece.project as string }, { su: pb, actor: admin })
+    const after = await handleGetProjectDetails(piece.project as string, { su: pb, actor: admin })
+    expect(after.attachable).toEqual([])
+    expect(after.timeline.map((a) => a.id)).toContain(elsewhere.id)
+  })
+
   it('refuses moving an appointment into another customer’s project', async () => {
     const customer = await createCustomer(pb)
     const stranger = await createCustomer(pb)

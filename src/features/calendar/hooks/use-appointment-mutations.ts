@@ -9,6 +9,7 @@ import {
   updateAppointment,
 } from '../server/appointments'
 import { useCalendarUiStore } from '../store/calendarUiStore'
+import { toCreateAppointmentInput } from '../utils/appointment-payload'
 import type { AppointmentFormValues, AppointmentStatus } from '../types'
 import type { QuoteToSend } from '../components/BotQuoteBanner'
 
@@ -31,28 +32,7 @@ export function useAppointmentMutations() {
 
   const create = useMutation({
     mutationFn: (body: AppointmentFormValues) =>
-      createAppointment({
-        data: {
-          projectId: body.projectId ?? null,
-          customerId: body.customerId,
-          chatId: body.chatId,
-          leadName: body.leadName,
-          leadPhone: body.leadPhone ? toCanonicalE164Phone(body.leadPhone) : '',
-          date: body.date,
-          timeSlot: body.timeSlot,
-          staffId: body.staffId,
-          type: body.type,
-          durationMinutes: body.durationMinutes,
-          tattooDescription: body.tattooDescription,
-          priceMinIls: body.priceMinIls,
-          priceMaxIls: body.priceMaxIls,
-          depositAmount: body.depositAmount,
-          status: body.status,
-          depositPaid: body.depositPaid,
-          notes: body.notes,
-          allowException: body.allowException,
-        },
-      }),
+      createAppointment({ data: toCreateAppointmentInput(body) }),
     onSuccess: () => {
       refresh()
       closeCreate()

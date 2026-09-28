@@ -88,6 +88,10 @@ export interface ProjectDetails {
   }[]
   /** The customer's other projects, to move an appointment into. */
   otherProjects: { id: string; title: string; stage: ProjectStage }[]
+  /** The customer's appointments filed under another project, newest first — to attach one here. */
+  attachable: { id: string; kind: 'consultation' | 'session' | 'touch_up'; status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show'; date: string; timeSlot: string; projectTitle: string }[]
+  /** Who the piece is with; the booking form starts from this artist. */
+  primaryStaffId: string | null
   /** Appointments moved to another time, newest first (state_transitions, reason "rescheduled"). */
   reschedules: { appointmentId: string; fromStart: string; toStart: string; actor: string; at: string }[]
 }

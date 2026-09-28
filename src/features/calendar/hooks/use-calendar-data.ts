@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
-import { getCurrentStaffInfo, getStaffList } from '@/features/settings/server/staff'
-import type { CurrentStaffInfo, StaffMember } from '@/features/settings/server/staff'
+import { getCurrentStaffInfo } from '@/features/settings/server/staff'
+import type { CurrentStaffInfo } from '@/features/settings/server/staff'
 import { getWorkingHours } from '@/features/settings/server/profiles'
 import type { WorkingHoursWindow } from '@/lib/working-hours'
-import { getAppointments, getGoogleCalendarConnections } from '../server/appointments'
-import type { ApiAppointment, ApiGoogleConnection } from '../types'
+import { getAppointments } from '../server/appointments'
+import type { ApiAppointment } from '../types'
+import { useStaffDirectory } from './use-staff-directory'
 import { artistAvatarMap } from '../utils/artist-avatars'
 
 /**
@@ -23,17 +24,7 @@ export function useCalendarData(selectedArtist: string) {
     staleTime: 5 * 60 * 1000,
   })
 
-  const staff = useQuery<StaffMember[]>({
-    queryKey: ['staff-list'],
-    queryFn: () => getStaffList(),
-    staleTime: 10 * 60 * 1000,
-  })
-
-  const googleConnections = useQuery<ApiGoogleConnection[]>({
-    queryKey: ['google-calendar-connections'],
-    queryFn: () => getGoogleCalendarConnections(),
-    staleTime: 5 * 60 * 1000,
-  })
+  const { staff, googleConnections } = useStaffDirectory()
 
   const workingHours = useQuery<WorkingHoursWindow[]>({
     queryKey: ['working-hours', selectedArtist],

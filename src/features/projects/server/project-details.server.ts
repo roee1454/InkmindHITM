@@ -44,10 +44,12 @@ export async function handleGetProjectDetails(projectId: string, deps: ProjectDe
   const { actor, su } = await resolveDeps(deps)
   const project = await loadProject(su, projectId)
   const customerId = project.customer as string
-  const [appointments, siblings] = await Promise.all([
+  const [appointments, siblings, elsewhere] = await Promise.all([
     su.collection('appointments').getFullList({ filter: su.filter('project = {:p}', { p: projectId }), sort: 'start_time' }),
     su.collection('projects').getFullList({ filter: su.filter('customer = {:c} && id != {:p}', { c: customerId, p: projectId }), sort: '-created' }),
+    su.collection('appointments').getFullList({ filter: su.filter('customer = {:c} && project != {:p}', { c: customerId, p: projectId }), sort: '-start_time' }),
   ])
+  const siblingTitles = new Map(siblings.map((p) => [p.id, (p.title as string) || 'ללא כותרת']))
 
   const reschedules = await loadReschedules(su, appointments.map((a) => a.id))
   const ledger = appointments.map(toLedgerAppointment)
@@ -78,7 +80,20 @@ export async function handleGetProjectDetails(projectId: string, deps: ProjectDe
         projectPosition: positions.get(a.id) ?? null,
       }
     }),
-    otherProjects: siblings.map((p) => ({ id: p.id, title: (p.title as string) || 'ללא כותרת', stage: projectStageOf(p.stage) })),
+    otherProjects: siblings.map((p) => ({ id: p.id, title: siblingTitles.get(p.id)!, stage: projectStageOf(p.stage) })),
+    attachable: elsewhere.map((record) => {
+      const a = toLedgerAppointment(record)
+      const start = new Date(a.startTime)
+      return {
+        id: a.id,
+        kind: a.kind,
+        status: a.status,
+        date: toYmd(start),
+        timeSlot: minutesToTime(start.getHours() * 60 + start.getMinutes()),
+        projectTitle: siblingTitles.get(record.project as string) ?? 'ללא פרויקט',
+      }
+    }),
+    primaryStaffId: text(project.primary_staff),
     reschedules,
   }
 }
@@ -130,7 +145,8 @@ export async function handleUpdateProjectDetails(input: ProjectDetailsUpdate, de
 }
 
 /**
- * Fixes a misfiled appointment: into another project of the same customer, or into a new one.
+ * Files an appointment under another project of the same customer, or a new one — both fixing a
+ * misfiled appointment and attaching one to the project whose panel is open.
  * PocketBase re-derives both projects' stages and refuses a project of another customer.
  */
 export async function handleMoveAppointment(
@@ -142,7 +158,8 @@ export async function handleMoveAppointment(
     if (err instanceof ClientResponseError && err.status === 404) throw new Error('התור כבר לא קיים. רעננו את הדף.')
     throw err
   })
-  await requireManaged(su, actor, appointment.project as string)
+  // An appointment with no project yet (created before projects existed) has nothing to guard.
+  if (appointment.project) await requireManaged(su, actor, appointment.project as string)
 
   let target = input.target
   if (target === 'new') {

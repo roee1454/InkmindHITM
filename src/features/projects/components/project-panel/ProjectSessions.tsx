@@ -1,20 +1,13 @@
-import { EllipsisVertical } from '@/components/ui/icon'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { CalendarPlus } from '@/components/ui/icon'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { appointmentKindLabel } from '@/features/calendar/utils/project-position'
 import { getAppointmentStatusVisual } from '@/features/calendar/utils/appointment-status'
 import { formatIls } from '@/features/payments/utils/labels'
-import { PROJECT_STAGE_LABELS } from '../../utils/labels'
 import { formatShortSlot } from '../../utils/format'
 import type { PanelAppointment } from '../../utils/panel'
 import type { ProjectDetails } from '../../types'
+import { AttachMenu, MoveMenu } from './AppointmentMenus'
 
 const ACTOR_LABELS: Record<string, string> = { customer: 'הלקוח', bot: 'הבוט', staff: 'הצוות', system: 'המערכת' }
 
@@ -30,44 +23,14 @@ function chargeText(appointment: PanelAppointment): string | null {
   return appointment.finalPrice !== null ? formatIls(appointment.finalPrice) : null
 }
 
-interface MoveMenuProps {
-  appointment: PanelAppointment
-  otherProjects: ProjectDetails['otherProjects']
-  disabled: boolean
-  onMove: (target: string) => void
-}
-
-/** Fixing an appointment filed under the wrong piece lives on the appointment itself, not in a form of its own. */
-function MoveMenu({ appointment, otherProjects, disabled, onMove }: MoveMenuProps) {
-  return (
-    <DropdownMenu dir="rtl">
-      <DropdownMenuTrigger
-        disabled={disabled}
-        aria-label={`פעולות ל${appointmentKindLabel(appointment.kind, appointment.projectPosition)}`}
-        className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground disabled:opacity-40"
-      >
-        <EllipsisVertical size={16} />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-52 font-assistant">
-        <DropdownMenuLabel className="text-xs text-muted-foreground">העברה לפרויקט אחר</DropdownMenuLabel>
-        <DropdownMenuItem onSelect={() => onMove('new')}>פרויקט חדש</DropdownMenuItem>
-        {otherProjects.length > 0 && <DropdownMenuSeparator />}
-        {otherProjects.map((project) => (
-          <DropdownMenuItem key={project.id} onSelect={() => onMove(project.id)}>
-            <span className="truncate">{project.title}</span>
-            <span className="ms-auto text-2xs text-muted-foreground">{PROJECT_STAGE_LABELS[project.stage]}</span>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
 interface ProjectSessionsProps {
   appointments: PanelAppointment[]
   project: ProjectDetails
   isMoving: boolean
   onMove: (appointmentId: string, target: string) => void
+  isAttaching: boolean
+  onAttach: (appointmentId: string) => void
+  onBook: () => void
 }
 
 /**
@@ -75,15 +38,29 @@ interface ProjectSessionsProps {
  * a consultation, then numbered sessions. Price, the next-up marker and any reschedule sit on the
  * appointment they belong to.
  */
-export function ProjectSessions({ appointments, project, isMoving, onMove }: ProjectSessionsProps) {
+export function ProjectSessions({ appointments, project, isMoving, onMove, isAttaching, onAttach, onBook }: ProjectSessionsProps) {
   return (
     <section aria-labelledby="project-sessions" className="flex flex-col gap-3">
-      <h3 id="project-sessions" className="text-sm font-extrabold text-foreground">
-        תורים <span className="font-semibold text-muted-foreground">· {appointments.length}</span>
-      </h3>
+      <div className="flex min-h-9 items-center justify-between gap-2">
+        <h3 id="project-sessions" className="text-sm font-extrabold text-foreground">
+          תורים <span className="font-semibold text-muted-foreground">· {appointments.length}</span>
+        </h3>
+        {project.canManage && (
+          <div className="flex items-center gap-1">
+            {project.attachable.length > 0 && <AttachMenu appointments={project.attachable} disabled={isAttaching} onAttach={onAttach} />}
+            <Button type="button" variant="outline" size="sm" onClick={onBook} className="h-8 gap-1.5 px-2.5">
+              <CalendarPlus size={15} />
+              קביעת תור
+            </Button>
+          </div>
+        )}
+      </div>
 
       {appointments.length === 0 ? (
-        <p className="text-sm text-muted-foreground">עדיין אין תורים בפרויקט הזה. תור שנקבע ללקוח ומשויך לפרויקט יופיע כאן.</p>
+        <p className="text-sm text-muted-foreground">
+          עדיין אין תורים בפרויקט הזה.
+          {project.canManage && (project.attachable.length > 0 ? ' קבעו תור חדש, או שייכו לכאן תור קיים של הלקוח.' : ' קבעו את התור הראשון.')}
+        </p>
       ) : (
         <ol className="flex flex-col">
           {appointments.map((appointment, index) => {

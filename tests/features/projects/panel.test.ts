@@ -8,7 +8,7 @@ const now = new Date('2026-09-28T12:00:00')
 function details(overrides: Partial<ProjectDetails> = {}): ProjectDetails {
   return {
     id: 'p1', title: 'שרוול', stage: 'in_progress', stageChangedAt: null, lostReason: null, lostNote: null, quoteMin: null, quoteMax: null,
-    estimatedSessions: 3, customer: { id: 'c1', name: 'דנה', phone: '' }, canManage: true, otherProjects: [], reschedules: [],
+    estimatedSessions: 3, customer: { id: 'c1', name: 'דנה', phone: '' }, canManage: true, otherProjects: [], reschedules: [], attachable: [], primaryStaffId: null,
     timeline: [
       { id: 's2', kind: 'session', status: 'confirmed', date: '2026-10-05', timeSlot: '11:00', projectPosition: null },
       { id: 's1', kind: 'session', status: 'completed', date: '2026-09-10', timeSlot: '11:00', projectPosition: null },
