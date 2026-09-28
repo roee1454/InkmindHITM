@@ -6,7 +6,7 @@ import { Switch } from '@/components/ui/switch'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import type { ApiGoogleConnection, AppointmentFormValues } from '../../types'
 import { formatDuration } from '@/features/conversations/utils/format'
-import { NoCalendarWarningDialog } from './NoCalendarWarningDialog'
+import { NoCalendarWarningDialog } from '../NoCalendarWarningDialog'
 
 const NO_ARTIST = 'none'
 

@@ -218,9 +218,6 @@ export const CalendarPage: React.FC = () => {
           openCreate({ initialValues: nextSessionValues(session) })
         }}
         currentStaff={currentStaff}
-        projectAppointments={
-          editingAppointment?.projectId ? appointments.filter((a) => a.projectId === editingAppointment.projectId) : []
-        }
       />
     </div>
   )
