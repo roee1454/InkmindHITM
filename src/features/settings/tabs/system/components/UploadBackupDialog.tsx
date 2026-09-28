@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { AlertTriangle, Upload, FileText, X, RotateCcw } from '@/components/ui/icon'
@@ -106,21 +106,27 @@ export const UploadBackupDialog: React.FC<UploadBackupDialogProps> = ({
     <ResponsiveDialog
       open={open}
       onOpenChange={handleDialogChange}
-      title={
-        <div className="flex items-center gap-2 text-foreground font-bold text-base" dir="rtl">
-          <Upload size={18} className="text-primary" />
-          <span>העלאת קובץ גיבוי ZIP</span>
-        </div>
+      title="העלאת גיבוי"
+      description="קובץ ZIP של גיבוי שנשמר אצלך. הוא נשמר ברשימת הגיבויים, ואפשר גם לשחזר ממנו מיד."
+      footer={
+        <DialogActions error={error}>
+          <Button type="button" variant="ghost" onClick={() => handleDialogChange(false)} disabled={isProcessing}>
+            ביטול
+          </Button>
+          <Button
+            type="button"
+            variant={shouldRestore ? 'destructive' : 'default'}
+            disabled={!selectedFile || isProcessing}
+            onClick={handleUpload}
+            className="min-w-28 gap-1.5"
+          >
+            {shouldRestore ? <RotateCcw size={15} /> : <Upload size={15} />}
+            {isProcessing ? (shouldRestore ? 'מעלה ומשחזר…' : 'מעלה…') : shouldRestore ? 'העלאה ושחזור' : 'העלאה'}
+          </Button>
+        </DialogActions>
       }
-      description="העלאת קובץ גיבוי שנשמר במחשבך לאחסון המערכת ושחזור אפשרי."
     >
-      <div className="flex flex-col gap-4 py-2 font-assistant" dir="rtl">
-        {error && (
-          <div className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs font-semibold text-destructive">
-            <AlertTriangle size={15} className="shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
+      <div className="form-stack">
 
         {/* Hidden File Input */}
         <input
@@ -141,13 +147,13 @@ export const UploadBackupDialog: React.FC<UploadBackupDialogProps> = ({
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-6 text-center cursor-pointer transition-colors ${
+            className={`flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-6 text-center cursor-pointer transition-colors ${
               isDragging
                 ? 'border-primary bg-primary/10'
                 : 'border-border/80 bg-muted/20 hover:border-primary/50 hover:bg-muted/30'
             }`}
           >
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground shadow-2xs">
+            <div className="flex size-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
               <Upload size={22} className="text-primary" />
             </div>
             <div className="flex flex-col gap-1">
@@ -159,9 +165,9 @@ export const UploadBackupDialog: React.FC<UploadBackupDialogProps> = ({
             </span>
           </div>
         ) : (
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5 shadow-2xs">
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                 <FileText size={20} />
               </div>
               <div className="flex flex-col min-w-0">
@@ -188,64 +194,20 @@ export const UploadBackupDialog: React.FC<UploadBackupDialogProps> = ({
           </div>
         )}
 
-        {/* Immediate Restore Toggle */}
-        <div className="flex flex-col gap-2 rounded-xl border border-border/80 bg-muted/20 p-3.5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-xs font-bold text-foreground">שחזר נתונים מיד לאחר ההעלאה</span>
-              <span className="text-2xs text-muted-foreground">
-                אם כבוי, הקובץ יישמר באחסון ויופיע ברשימת הגיבויים בלבד.
-              </span>
-            </div>
-            <Switch
-              checked={shouldRestore}
-              onCheckedChange={setShouldRestore}
-              disabled={isProcessing}
-              aria-label="שחזר נתונים מיד"
-            />
-          </div>
-
-          {shouldRestore && (
-            <div className="mt-2 flex items-start gap-2.5 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-2xs text-destructive leading-relaxed">
-              <AlertTriangle size={15} className="shrink-0 mt-0.5" />
-              <span>
-                <strong>אזהרה:</strong> שחזור מידי יחליף לחלוטין את כל נתוני מסד הנתונים והקבצים
-                הקיימים בנתוני הגיבוי שהעלית. השרת יופעל מחדש מיד בסיום התהליך.
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-2.5 pt-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => handleDialogChange(false)}
-            disabled={isProcessing}
-            className="rounded-xl font-bold cursor-pointer"
-          >
-            ביטול
-          </Button>
-
-          <Button
-            type="button"
-            variant={shouldRestore ? 'destructive' : 'default'}
-            disabled={!selectedFile || isProcessing}
-            onClick={handleUpload}
-            className="gap-2 rounded-xl font-bold cursor-pointer"
-          >
-            {shouldRestore ? <RotateCcw size={15} /> : <Upload size={15} />}
-            <span>
-              {isProcessing
-                ? shouldRestore
-                  ? 'מעלה ומשחזר נתונים…'
-                  : 'מעלה קובץ גיבוי…'
-                : shouldRestore
-                  ? 'העלה ושחזר עכשיו'
-                  : 'העלה לאחסון הגיבויים'}
+        <div className="flex flex-col gap-2">
+          <label className="flex cursor-pointer items-center justify-between gap-3">
+            <span className="flex flex-col">
+              <span className="text-sm font-bold text-foreground">לשחזר מיד אחרי ההעלאה</span>
+              <span className="text-xs text-muted-foreground">אחרת הקובץ רק נשמר ברשימת הגיבויים.</span>
             </span>
-          </Button>
+            <Switch checked={shouldRestore} onCheckedChange={setShouldRestore} disabled={isProcessing} aria-label="לשחזר מיד" />
+          </label>
+          {shouldRestore && (
+            <p className="flex items-start gap-2 text-xs font-bold text-destructive">
+              <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+              השחזור מחליף את כל הנתונים והקבצים בנתוני הגיבוי, והשרת מופעל מחדש. אי אפשר לבטל.
+            </p>
+          )}
         </div>
       </div>
     </ResponsiveDialog>

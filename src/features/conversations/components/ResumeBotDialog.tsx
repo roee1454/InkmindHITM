@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Bot, Send, Sparkles, AlertCircle, Clock } from '@/components/ui/icon'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { Bot, Send, AlertCircle, Clock } from '@/components/ui/icon'
+import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -70,113 +70,73 @@ export function ResumeBotDialog({
     },
   })
 
+  const customer = conversation.customerName || formatPhoneForDisplay(conversation.customerPhone)
+
   return (
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={
-        <div className="flex items-center gap-2">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Bot className="size-5" />
-          </div>
-          <div>
-            <span className="text-lg font-bold">החזרת שליטה לבוט AI</span>
-          </div>
-        </div>
-      }
-      description={`המשך שיחה מול הלקוח ${conversation.customerName || formatPhoneForDisplay(conversation.customerPhone)}`}
-      contentClassName="max-w-md"
+      title="החזרת השיחה לבוט"
+      description={`הבוט ימשיך את השיחה עם ${customer}.`}
       footer={
-        <div className="flex w-full items-center justify-end gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-            disabled={resumeMutation.isPending}
-          >
+        <DialogActions>
+          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={resumeMutation.isPending}>
             ביטול
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            disabled={resumeMutation.isPending}
-            onClick={() => resumeMutation.mutate()}
-            className="gap-1.5"
-          >
+          <Button type="button" disabled={resumeMutation.isPending} onClick={() => resumeMutation.mutate()} className="min-w-28 gap-1.5">
             {resumeMutation.isPending ? (
-              'מפעיל...'
+              'מפעיל…'
             ) : triggerTurn && !windowExpired ? (
               <>
                 <Send className="size-3.5" />
-                <span>הפעל והמשך שיחה</span>
+                החזרה ומענה עכשיו
               </>
             ) : (
               <>
                 <Bot className="size-3.5" />
-                <span>הפעל בוט</span>
+                החזרה לבוט
               </>
             )}
           </Button>
-        </div>
+        </DialogActions>
       }
     >
-      <div className="flex flex-col gap-4 py-2 font-assistant" dir="rtl">
+      <div className="form-stack">
         {reasonLabel && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-accent-ink/10 border border-accent-ink/20 text-xs text-accent-ink">
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <AlertCircle className="size-4 shrink-0" />
-            <span>
-              סיבת ההסלמה הנוכחית: <strong>{reasonLabel}</strong>
-            </span>
-          </div>
+            השיחה עברה לצוות כי: <strong className="text-foreground">{reasonLabel}</strong>
+          </p>
         )}
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="bot-instruction" className="text-sm font-semibold flex items-center gap-1.5">
-              <Sparkles className="size-3.5 text-primary" />
-              הנחיה מנחה לבוט (אופציונלי)
-            </Label>
-            <span className="text-2xs text-muted-foreground">הוראת מפעיל פנימית</span>
-          </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="bot-instruction" className="form-label">
+            הנחיה לבוט <span className="font-medium text-muted-foreground">(לא חובה)</span>
+          </Label>
           <Textarea
             id="bot-instruction"
             value={instruction}
             onChange={(e) => setInstruction(e.target.value)}
-            placeholder="למשל: אישרתי את הסקיצה, המחיר הוא 600 ש״ח, תציע לו תור ליום שלישי או חמישי הקרוב..."
-            className="h-24 resize-none text-sm"
+            placeholder="למשל: אישרתי את הסקיצה, המחיר 600 ₪, להציע תור לשלישי או חמישי."
+            className="h-24 resize-none"
             disabled={resumeMutation.isPending}
           />
-          <p className="text-micro text-muted-foreground">
-            ההנחיה לא נשלחת כלשונה ללקוח, אלא מנחה את ה-AI בגיבוש המענה והפעלת כלי היומן.
-          </p>
+          <p className="text-xs text-muted-foreground">הלקוח לא רואה את ההנחיה. הבוט משתמש בה כדי לנסח את התשובה ולקבוע תורים.</p>
         </div>
 
         {windowExpired ? (
-          <div className="flex items-start gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-xs text-destructive">
-            <Clock className="size-4 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold">חלון 24 השעות של וואטסאפ פג</p>
-              <p className="mt-0.5 opacity-90">
-                לא ניתן לשלוח מענה יזום ללקוח עד שישלח הודעה נוספת. הבוט יופעל וימתין להודעה הבאה.
-              </p>
-            </div>
-          </div>
+          <p className="flex items-start gap-2 text-sm text-warning">
+            <Clock className="mt-0.5 size-4 shrink-0" />
+            חלון 24 השעות של וואטסאפ נסגר, אז הבוט לא יכול לכתוב ראשון. הוא יענה כשהלקוח יכתוב.
+          </p>
         ) : (
-          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-muted/40 border border-border">
-            <Checkbox
-              id="trigger-turn"
-              checked={triggerTurn}
-              onCheckedChange={(checked) => setTriggerTurn(Boolean(checked))}
-              disabled={resumeMutation.isPending}
-            />
-            <Label
-              htmlFor="trigger-turn"
-              className="text-xs font-medium cursor-pointer leading-tight select-none"
-            >
-              הפעל מענה מיידי של הבוט בוואטסאפ (מומלץ)
-            </Label>
-          </div>
+          <label htmlFor="trigger-turn" className="flex cursor-pointer items-start gap-2.5">
+            <Checkbox id="trigger-turn" checked={triggerTurn} onCheckedChange={(checked) => setTriggerTurn(Boolean(checked))} disabled={resumeMutation.isPending} className="mt-0.5" />
+            <span className="flex flex-col">
+              <span className="text-sm font-bold text-foreground">שהבוט יענה עכשיו</span>
+              <span className="text-xs text-muted-foreground">אחרת הוא ימתין להודעה הבאה של הלקוח.</span>
+            </span>
+          </label>
         )}
       </div>
     </ResponsiveDialog>

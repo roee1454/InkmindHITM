@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CalendarHeart } from '@/components/ui/icon'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getHebcalHolidays, addStudioClosure } from '@/features/settings/server/closures'
 import type { HebcalHoliday } from '@/integrations/hebcal/hebcal.server'
 
@@ -28,6 +28,7 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
   const [customDate, setCustomDate] = useState('')
   const [customReason, setCustomReason] = useState('')
   const [customRecurring, setCustomRecurring] = useState(false)
+  const [tab, setTab] = useState<'holidays' | 'custom'>('holidays')
 
   const holidaysQuery = useQuery<HebcalHoliday[]>({
     queryKey: ['hebcal-holidays', includeMinor],
@@ -97,127 +98,104 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
     },
   })
 
+  const addingHolidays = tab === 'holidays'
+  const isPending = addHolidaysMutation.isPending || addCustomMutation.isPending
+  const mutationError = (addingHolidays ? addHolidaysMutation.error : addCustomMutation.error)
+
   return (
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="הוספת ימי סגירה"
-      description="בחרו חגים מהלוח היהודי לסגירה קבועה מדי שנה, או הוסיפו תאריך מותאם אישית."
-      contentClassName="sm:max-w-lg max-h-[85vh] overflow-y-auto"
+      title="ימי סגירה"
+      description="בימים האלה הבוט לא מציע תורים."
+      footer={
+        <DialogActions error={mutationError?.message ?? null}>
+          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            סגירה
+          </Button>
+          {addingHolidays ? (
+            <Button type="button" onClick={() => addHolidaysMutation.mutate()} disabled={selectedTitles.size === 0 || isPending} className="min-w-28">
+              {addHolidaysMutation.isPending ? 'מוסיף…' : selectedTitles.size > 0 ? `הוספת ${selectedTitles.size} חגים` : 'הוספת חגים'}
+            </Button>
+          ) : (
+            <Button type="button" onClick={() => addCustomMutation.mutate()} disabled={!customDate || isPending} className="min-w-28">
+              {addCustomMutation.isPending ? 'מוסיף…' : 'הוספת התאריך'}
+            </Button>
+          )}
+        </DialogActions>
+      }
     >
-      {/* Hebcal holiday picker */}
-      <div className="space-y-3 border-b border-border pb-5 font-assistant" dir="rtl">
-        <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-          <CalendarHeart size={15} className="text-primary" />
-          חגים ומועדים יהודיים
-        </div>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as 'holidays' | 'custom')} dir="rtl" className="gap-4">
+        <TabsList className="grid grid-cols-2">
+          <TabsTrigger value="holidays">חגים</TabsTrigger>
+          <TabsTrigger value="custom">תאריך מסוים</TabsTrigger>
+        </TabsList>
 
-        <label className="flex cursor-pointer items-center justify-between rounded-xl border border-border bg-card px-3 py-2.5">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-bold text-foreground">כלול גם מועדים קטנים וצומות</span>
-            <span className="text-micro text-muted-foreground">כבוי = חגים מרכזיים בלבד</span>
-          </div>
-          <Switch checked={includeMinor} onCheckedChange={setIncludeMinor} />
-        </label>
-
-        {holidaysQuery.isLoading ? (
-          <p className="text-xs text-muted-foreground">טוען חגים…</p>
-        ) : holidaysQuery.isError ? (
-          <p className="text-xs font-semibold text-destructive">שגיאה בטעינת החגים מ-Hebcal.com</p>
-        ) : (
-          <>
-            <label className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-bold text-foreground">
-              <Checkbox checked={allSelected} onCheckedChange={(checked) => toggleSelectAll(Boolean(checked))} />
-              בחר הכל
-            </label>
-            <div className="max-h-52 space-y-1 overflow-y-auto rounded-xl border border-border p-2">
-              {groupedHolidays.map((holiday) => (
-                <label
-                  key={holiday.title}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-xs hover:bg-muted/60"
-                >
-                  <Checkbox
-                    checked={selectedTitles.has(holiday.title)}
-                    onCheckedChange={() => toggleHoliday(holiday.title)}
-                  />
-                  <span className="flex-1 font-semibold text-foreground">{holiday.hebrew}</span>
-                  <span className="text-micro text-muted-foreground">כל שנה</span>
-                </label>
-              ))}
-            </div>
-          </>
-        )}
-
-        <p className="text-micro text-muted-foreground">
-          נתוני חגים מסופקים על ידי{' '}
-          <a href="https://www.hebcal.com" target="_blank" rel="noreferrer" className="underline">
-            Hebcal.com
-          </a>
-          . חגים שנבחרו יתווספו כסגירה קבועה בכל שנה, לפי התאריך היהודי המדויק בעשור הקרוב.
-        </p>
-
-        <Button
-          type="button"
-          onClick={() => addHolidaysMutation.mutate()}
-          disabled={selectedTitles.size === 0 || addHolidaysMutation.isPending}
-          className="w-full rounded-xl font-bold cursor-pointer"
-        >
-          {addHolidaysMutation.isPending
-            ? 'מוסיף…'
-            : `הוסף ${selectedTitles.size > 0 ? selectedTitles.size : ''} חגים נבחרים לצמיתות`}
-        </Button>
-      </div>
-
-      {/* Custom date */}
-      <div className="space-y-3 pt-4 font-assistant" dir="rtl">
-        <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-          <CalendarHeart size={14} className="text-primary" />
-          תאריך מותאם אישית
-        </div>
-
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="space-y-1">
-            <label className="text-mini font-bold text-muted-foreground">תאריך</label>
-            <Input
-              type="date"
-              value={customDate}
-              onChange={(e) => setCustomDate(e.target.value)}
-              className="w-40"
-            />
-          </div>
-          <div className="min-w-[140px] flex-1 space-y-1">
-            <label className="text-mini font-bold text-muted-foreground">סיבה (אופציונלי)</label>
-            <Input
-              value={customReason}
-              onChange={(e) => setCustomReason(e.target.value)}
-              placeholder="יום נישואין"
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between rounded-xl border border-border bg-card px-3 py-2.5">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-bold text-foreground">סגור כל שנה</span>
-            <span className="text-micro text-muted-foreground">
-              כבוי = סגירה חד-פעמית בתאריך זה בלבד
+        <TabsContent value="holidays" className="flex flex-col gap-3">
+          <label className="flex cursor-pointer items-center justify-between gap-3">
+            <span className="flex flex-col">
+              <span className="text-sm font-bold text-foreground">גם מועדים קטנים וצומות</span>
+              <span className="text-xs text-muted-foreground">אחרת רק החגים המרכזיים</span>
             </span>
-          </div>
-          <Switch checked={customRecurring} onCheckedChange={setCustomRecurring} />
-        </div>
+            <Switch checked={includeMinor} onCheckedChange={setIncludeMinor} />
+          </label>
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => addCustomMutation.mutate()}
-          disabled={!customDate || addCustomMutation.isPending}
-          className="w-full rounded-xl font-bold cursor-pointer"
-        >
-          {addCustomMutation.isPending ? 'מוסיף…' : 'הוסף תאריך'}
-        </Button>
-      </div>
+          {holidaysQuery.isLoading ? (
+            <p className="text-sm text-muted-foreground">טוען חגים…</p>
+          ) : holidaysQuery.isError ? (
+            <p className="text-sm font-bold text-destructive">לא הצלחנו לטעון חגים מ-Hebcal.</p>
+          ) : (
+            <div className="flex flex-col overflow-hidden rounded-lg border border-border">
+              <label className="flex cursor-pointer items-center gap-2.5 border-b border-border bg-muted/40 px-3 py-2 text-sm font-bold text-foreground">
+                <Checkbox checked={allSelected} onCheckedChange={(checked) => toggleSelectAll(Boolean(checked))} />
+                הכל
+              </label>
+              <div className="max-h-60 overflow-y-auto">
+                {groupedHolidays.map((holiday) => (
+                  <label key={holiday.title} className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/50">
+                    <Checkbox checked={selectedTitles.has(holiday.title)} onCheckedChange={() => toggleHoliday(holiday.title)} />
+                    <span className="flex-1 font-medium text-foreground">{holiday.hebrew}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <p className="text-xs text-muted-foreground">
+            חג שנבחר נסגר בכל שנה בעשור הקרוב, לפי התאריך העברי. נתוני החגים מ-
+            <a href="https://www.hebcal.com" target="_blank" rel="noreferrer" className="underline">
+              Hebcal
+            </a>
+            .
+          </p>
+        </TabsContent>
+
+        <TabsContent value="custom" className="form-stack">
+          <div className="grid grid-cols-[auto_1fr] gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="closure-custom-date" className="form-label">
+                תאריך
+              </label>
+              <Input id="closure-custom-date" type="date" value={customDate} onChange={(e) => setCustomDate(e.target.value)} className="w-40" dir="ltr" />
+            </div>
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <label htmlFor="closure-custom-reason" className="form-label">
+                סיבה <span className="font-medium text-muted-foreground">(לא חובה)</span>
+              </label>
+              <Input id="closure-custom-reason" value={customReason} onChange={(e) => setCustomReason(e.target.value)} placeholder="למשל: שיפוצים" />
+            </div>
+          </div>
+          <label className="flex cursor-pointer items-center justify-between gap-3">
+            <span className="flex flex-col">
+              <span className="text-sm font-bold text-foreground">לסגור כל שנה</span>
+              <span className="text-xs text-muted-foreground">אחרת רק בתאריך הזה</span>
+            </span>
+            <Switch checked={customRecurring} onCheckedChange={setCustomRecurring} />
+          </label>
+        </TabsContent>
+      </Tabs>
     </ResponsiveDialog>
   )
 }
 
 export default AddClosureDialog
-

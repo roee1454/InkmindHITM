@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -77,18 +77,29 @@ export function CloseSessionDialog({
       open={open}
       onOpenChange={(next) => !close.isPending && onOpenChange(next)}
       title={`סגירת ${appointmentKindLabel(appointment.kind, appointment.projectPosition)} — ${appointment.leadName ?? 'לקוח'}`}
-      description="המחיר הסופי והתשלום שהתקבל נשמרים יחד. מקדמות קודמות כבר רשומות ומקוזזות אוטומטית."
+      description="המחיר הסופי והתשלום שהתקבל נשמרים יחד. מקדמות קודמות כבר רשומות ומקוזזות."
+      footer={
+        <DialogActions>
+          <Button type="button" variant="ghost" disabled={close.isPending} onClick={() => onOpenChange(false)}>
+            ביטול
+          </Button>
+          <Button type="submit" form="close-session-form" disabled={!canSubmit} className="min-w-28 gap-2">
+            {close.isPending && <Loader2 size={14} className="animate-spin" />}
+            סגירת הסשן
+          </Button>
+        </DialogActions>
+      }
     >
       <form
-        className="flex flex-col gap-4 font-assistant"
-        dir="rtl"
+        id="close-session-form"
+        className="form-stack"
         onSubmit={(event) => {
           event.preventDefault()
           submit()
         }}
       >
         <div className="flex flex-col gap-2">
-          <label htmlFor="final-price" className="text-xs font-bold text-foreground">מחיר סופי לסשן</label>
+          <label htmlFor="final-price" className="form-label">מחיר סופי</label>
           <Input
             id="final-price"
             type="number"
@@ -106,13 +117,13 @@ export function CloseSessionDialog({
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-xs font-bold text-foreground">תשלומים שהתקבלו עכשיו</span>
+          <span className="form-label">מה התקבל עכשיו</span>
           <PaymentRowsEditor rows={rows} onChange={setRows} disabled={close.isPending} />
         </div>
 
         {finance.isLoading && <Skeleton className="h-24 w-full" />}
         {finance.isError && (
-          <p className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+          <p className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
             {formatDatabaseError(finance.error, 'לא הצלחנו לטעון את מצב התשלומים של הפרויקט.')}
           </p>
         )}
@@ -144,20 +155,11 @@ export function CloseSessionDialog({
         )}
 
         {close.isError && (
-          <p className="whitespace-pre-line rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+          <p className="whitespace-pre-line rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
             {formatDatabaseError(close.error, 'סגירת הסשן נכשלה.')}
           </p>
         )}
 
-        <div className="flex items-center justify-end gap-2">
-          <Button type="button" variant="outline" size="sm" disabled={close.isPending} onClick={() => onOpenChange(false)}>
-            ביטול
-          </Button>
-          <Button type="submit" size="sm" disabled={!canSubmit} className="min-w-28 gap-2">
-            {close.isPending && <Loader2 size={14} className="animate-spin" />}
-            סגירת סשן
-          </Button>
-        </div>
       </form>
     </ResponsiveDialog>
   )

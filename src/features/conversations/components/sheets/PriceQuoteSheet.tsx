@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { BotOff, SendHorizontal, Sparkles } from '@/components/ui/icon'
+import { BotOff, SendHorizontal } from '@/components/ui/icon'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { sendPriceQuoteToCustomer } from '@/features/calendar/server/appointments'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui/ToastProvider'
@@ -119,13 +119,27 @@ export function PriceQuoteSheet({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={isSketch ? 'אישור ושריון פגישת סקיצה / ייעוץ' : 'הצעת טווח מחיר ומקדמה'}
-      description={
-        isSketch
-          ? 'הגדר משך פגישה ומקדמה לשריון התור (מחיר הקעקוע ייקבע בפגישה)'
-          : 'הגדר טווח מחירים משוער ומקדמה לשריון התור'
+      title={isSketch ? 'אישור פגישת סקיצה' : 'הצעת מחיר'}
+      description={isSketch ? 'משך הפגישה ומקדמה לשריון. את מחיר הקעקוע קובעים בפגישה.' : 'טווח מחיר, הערכת סשנים ומקדמה — נשלחים ללקוח בוואטסאפ.'}
+      bodyClassName="flex flex-col gap-5"
+      footer={
+        <DialogActions
+          start={
+            <Button type="button" variant="ghost" disabled={isTakingOver} onClick={onTakeover} className="gap-1.5">
+              <BotOff size={15} />
+              לקחת שליטה
+            </Button>
+          }
+        >
+          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={quoteMutation.isPending}>
+            ביטול
+          </Button>
+          <Button type="button" className="min-w-28 gap-1.5" disabled={quoteMutation.isPending || !isTattooPriceValid} onClick={() => quoteMutation.mutate()}>
+            <SendHorizontal size={15} />
+            {quoteMutation.isPending ? 'שולח…' : isSketch ? 'שליחת אישור' : 'שליחת ההצעה'}
+          </Button>
+        </DialogActions>
       }
-      contentClassName="max-w-lg space-y-5"
     >
       <QuoteChoiceChips
         label={isSketch ? 'משך פגישת הסקיצה' : 'משך עבודה משוער'}
@@ -136,15 +150,7 @@ export function PriceQuoteSheet({
 
       {/* Price Range Inputs or Sketch Notice */}
       {isSketch ? (
-        <div className="rounded-2xl border border-accent-ink/20 bg-accent-ink/5 p-3.5 space-y-1 text-right" dir="rtl">
-          <div className="flex items-center gap-1.5 text-accent-ink">
-            <Sparkles size={14} className="shrink-0" />
-            <span className="text-xs font-bold">מחיר הקעקוע ייקבע בפגישה בסטודיו</span>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            בפגישת סקיצה וייעוץ לא נדרש טווח מחיר מראש. המקדמה (אם תיגבה) תשמש לשריון מועד הפגישה ותקוזז מעלות הקעקוע הסופית.
-          </p>
-        </div>
+        <p className="text-sm text-muted-foreground">בפגישת סקיצה לא שולחים מחיר. מקדמה, אם נגבית, משריינת את המועד ומקוזזת מהקעקוע.</p>
       ) : (
         <QuotePriceRange min={priceMin} max={priceMax} onMinChange={setPriceMin} onMaxChange={setPriceMax} />
       )}
@@ -163,7 +169,7 @@ export function PriceQuoteSheet({
       {/* Deposit Field + Quick Chips */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label className="text-xs font-extrabold text-foreground">
+          <Label className="form-label">
             {isSketch ? 'מקדמה לשריון הפגישה' : 'סכום מקדמה'}
           </Label>
           <div className="flex gap-1.5">
@@ -189,7 +195,7 @@ export function PriceQuoteSheet({
             type="text"
             value={deposit}
             onChange={(e) => setDeposit(e.target.value)}
-            className="h-12 rounded-2xl text-base font-bold tabular-nums pl-8"
+            className="text-base font-bold tabular-nums pl-8"
           />
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
             ₪
@@ -197,30 +203,6 @@ export function PriceQuoteSheet({
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-2 pt-2">
-        <Button
-          type="button"
-          className="flex-1 h-13 rounded-2xl text-base font-extrabold gap-2"
-          disabled={quoteMutation.isPending || !isTattooPriceValid}
-          onClick={() => quoteMutation.mutate()}
-        >
-          <SendHorizontal size={17} />
-          <span>
-            {quoteMutation.isPending ? 'שולח...' : isSketch ? 'שלח אישור פגישה בוואטסאפ' : 'שלח הצעה ללקוח בוואטסאפ'}
-          </span>
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-13 px-4 rounded-2xl text-sm font-bold gap-1.5"
-          disabled={isTakingOver}
-          onClick={onTakeover}
-        >
-          <BotOff size={15} />
-          <span>קח שליטה</span>
-        </Button>
-      </div>
     </ResponsiveDialog>
   )
 }

@@ -38,7 +38,7 @@ export function ClosingPreview({ finance, appointmentId, finalPrice, chargeWaive
   const keepsCredit = finance.depositApplication === 'last_session' && !isLastSession && finance.balance.credit > 0
 
   return (
-    <section className="flex flex-col gap-1.5 rounded-xl border border-border bg-muted/30 p-3" aria-label="מצב הפרויקט אחרי הסגירה">
+    <section className="flex flex-col gap-1.5 rounded-lg border border-border bg-muted/30 p-3" aria-label="מצב הפרויקט אחרי הסגירה">
       <div className="flex items-center justify-between gap-2 border-b border-border pb-2">
         <div className="flex flex-col">
           <span className="text-xs font-bold text-foreground">לגבייה עכשיו: {formatIls(suggested)}</span>

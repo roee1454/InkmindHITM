@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Button } from '@/components/ui/button'
 import { SearchInput } from '@/components/ui/search-input'
 import {
@@ -44,37 +44,35 @@ export const AllClosuresDialog: React.FC<AllClosuresDialogProps> = ({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={`כל המועדים וימי הסגירה (${groups.length})`}
-      description="צפייה, חיפוש, עריכה ומחיקה של ימי חופשה וסגירת הסטודיו."
-    >
-      <div className="flex flex-col gap-3.5 py-1 font-assistant" dir="rtl">
-        {/* Search & Add Bar */}
-        <div className="flex items-center gap-2">
-          <SearchInput
-            size="sm"
-            variant="card"
-            containerClassName="flex-1"
-            className="h-9 text-xs"
-            placeholder="חיפוש מועד או תאריך (למשל: פסח, 2026-10)..."
-            value={search}
-            onChange={setSearch}
-          />
+      size="lg"
+      title="ימי סגירה"
+      description={`${groups.length} מועדים שבהם הבוט לא מציע תורים.`}
+      footer={
+        <DialogActions
+          start={
+            <span className="text-xs text-muted-foreground">
+              {filteredGroups.length === groups.length ? `${groups.length} מועדים` : `${filteredGroups.length} מתוך ${groups.length}`}
+            </span>
+          }
+        >
           <Button
             type="button"
-            size="sm"
             onClick={() => {
               onOpenChange(false)
               onAddNew()
             }}
-            className="gap-1 font-bold shrink-0 h-9"
+            className="gap-1.5"
           >
             <Plus size={14} />
-            <span>הוספה</span>
+            הוספה
           </Button>
-        </div>
+        </DialogActions>
+      }
+    >
+      <div className="flex flex-col gap-3">
+        <SearchInput size="sm" variant="card" placeholder="חיפוש לפי שם או תאריך (פסח, 2026-10)…" value={search} onChange={setSearch} />
 
-        {/* Closures Scrollable List */}
-        <div className="max-h-[55vh] overflow-y-auto rounded-xl border border-border bg-card divide-y divide-border">
+        <div className="overflow-hidden rounded-lg border border-border divide-y divide-border">
           {filteredGroups.length === 0 ? (
             <div className="flex h-24 items-center justify-center text-xs text-muted-foreground">
               {search.trim() ? 'לא נמצאו מועדים התואמים לחיפוש' : 'אין ימי סגירה שמורים'}
@@ -142,20 +140,6 @@ export const AllClosuresDialog: React.FC<AllClosuresDialogProps> = ({
           )}
         </div>
 
-        <div className="flex justify-between items-center px-1 text-2xs text-muted-foreground">
-          <span>
-            מציג {filteredGroups.length} מתוך {groups.length} מועדים
-          </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-            className="text-xs h-7"
-          >
-            סגור
-          </Button>
-        </div>
       </div>
     </ResponsiveDialog>
   )

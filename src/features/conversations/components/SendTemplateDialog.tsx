@@ -1,12 +1,12 @@
 import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Button } from '@/components/ui/button'
 import {
   listApprovedTemplates,
   sendConversationTemplate,
 } from '@/features/conversations/server/messages'
-import { Send, FileText, AlertCircle, Loader2 } from '@/components/ui/icon'
+import { Send, Loader2 } from '@/components/ui/icon'
 import type { UIConversation, UIMessage } from '@/features/conversations/types'
 import type { UIMetaTemplate } from '@/integrations/whatsapp-cloud-api/types'
 import { shouldExcludeTemplate } from '../utils/templates'
@@ -116,60 +116,34 @@ export function SendTemplateDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={
-        <div className="flex items-center gap-2 font-assistant text-base font-bold">
-          <FileText className="size-5 text-primary" />
-          <span>שליחת תבנית וואטסאפ מאושרת</span>
-        </div>
-      }
-      description="חלון 24 השעות נסגר. ה-CRM מושך תבניות מאושרות (APPROVED) ישירות מ-Meta WhatsApp API."
-      contentClassName="sm:max-w-lg"
-    >
-      <div className="flex flex-col gap-4 py-2 font-assistant" dir="rtl">
-        <TemplateComposer
-          templates={templates}
-          isLoading={isLoading}
-          selectedTemplateId={selectedTemplateId}
-          onSelectTemplateId={setSelectedTemplateId}
-          paramValues={paramValues}
-          onParamChange={handleParamChange}
-          previewText={previewText}
-          recipientPhone={conversation.customerPhone}
-          recipientDisplayName={conversation.customerName}
-        />
-
-        {error && (
-          <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-2.5 text-xs text-destructive">
-            <AlertCircle className="size-4 shrink-0" />
-            <span className="font-medium">{error}</span>
-          </div>
-        )}
-
-        {templates.length > 0 && !isLoading && (
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => onOpenChange(false)}
-              disabled={isSending}
-              className="cursor-pointer"
-            >
+      size="lg"
+      title="שליחת תבנית מאושרת"
+      description="חלון 24 השעות נסגר, אז אפשר לפנות ללקוח רק בתבנית ש-Meta אישרה."
+      footer={
+        templates.length > 0 && !isLoading ? (
+          <DialogActions error={error}>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={isSending}>
               ביטול
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleSend}
-              disabled={isSending || !currentTemplate}
-              className="flex items-center gap-1.5 cursor-pointer font-bold bg-primary hover:bg-primary/90"
-            >
+            <Button type="button" onClick={handleSend} disabled={isSending || !currentTemplate} className="min-w-28 gap-1.5">
               {isSending ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
-              <span>{isSending ? 'שולח תבנית…' : 'שלח תבנית מאושרת'}</span>
+              {isSending ? 'שולח…' : 'שליחה'}
             </Button>
-          </div>
-        )}
-      </div>
+          </DialogActions>
+        ) : undefined
+      }
+    >
+      <TemplateComposer
+        templates={templates}
+        isLoading={isLoading}
+        selectedTemplateId={selectedTemplateId}
+        onSelectTemplateId={setSelectedTemplateId}
+        paramValues={paramValues}
+        onParamChange={handleParamChange}
+        previewText={previewText}
+        recipientPhone={conversation.customerPhone}
+        recipientDisplayName={conversation.customerName}
+      />
     </ResponsiveDialog>
   )
 }

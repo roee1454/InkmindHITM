@@ -25,7 +25,7 @@ export function SessionCloseOutSection({
   if (appointment.status === 'completed') {
     const balance = appointment.projectBalance
     return (
-      <div className="flex items-center gap-2.5 rounded-2xl border border-border bg-muted/30 p-3 text-xs">
+      <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/30 p-3 text-xs">
         <Wallet size={16} className="shrink-0 text-muted-foreground" />
         <span className="text-foreground">
           {appointment.chargeWaived ? 'נסגר ללא חיוב' : `מחיר סופי ${formatIls(appointment.finalPrice ?? 0)}`}
@@ -42,7 +42,7 @@ export function SessionCloseOutSection({
 
   return (
     <>
-      <div className="flex items-center justify-between gap-2 rounded-2xl border border-warning/30 bg-warning/10 p-3">
+      <div className="flex items-center justify-between gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3">
         <div className="flex items-center gap-2">
           <Receipt size={16} className="shrink-0 text-warning" />
           <div className="flex flex-col text-start">

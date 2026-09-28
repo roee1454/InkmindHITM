@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Send } from '@/components/ui/icon'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/ToastProvider'
 import { customersQueryOptions } from '@/features/customers/utils/customers-query'
@@ -165,83 +165,63 @@ export function NewConversationDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-bold">שיחה חדשה</span>
-        </div>
-      }
-      description={
-        step === 'recipient'
-          ? 'בחרו לקוח/ה מהמערכת או הקלידו מספר טלפון חדש.'
-          : 'ההודעה תיפתח כשיחה חדשה ברשימה.'
-      }
-      contentClassName="max-w-lg"
+      size="lg"
+      title="שיחה חדשה"
+      description={step === 'recipient' ? 'עם מי? לקוח קיים או מספר חדש.' : 'השיחה נפתחת בתבנית מאושרת, כי ללקוח שלא כתב לאחרונה אי אפשר לכתוב חופשי.'}
       footer={
-        step === 'template' && templates.length > 0 ? (
-          <div className="flex w-full items-center justify-end gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setStep('recipient')}
-              disabled={sendMutation.isPending}
-            >
-              חזרה
+        step === 'template' ? (
+          <DialogActions
+            start={
+              <Button type="button" variant="ghost" onClick={() => setStep('recipient')} disabled={sendMutation.isPending}>
+                חזרה
+              </Button>
+            }
+          >
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={sendMutation.isPending}>
+              ביטול
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              disabled={sendMutation.isPending}
-              onClick={() => sendMutation.mutate()}
-              className="gap-1.5"
-            >
-              {sendMutation.isPending ? (
-                'שולח...'
-              ) : (
-                <>
-                  <Send className="size-3.5 rotate-180" />
-                  <span>שליחה ופתיחת שיחה</span>
-                </>
-              )}
-            </Button>
-          </div>
-        ) : step === 'template' ? (
-          <div className="flex w-full items-center justify-end">
-            <Button type="button" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-              סגירה
-            </Button>
-          </div>
+            {templates.length > 0 && (
+              <Button type="button" disabled={sendMutation.isPending} onClick={() => sendMutation.mutate()} className="min-w-28 gap-1.5">
+                {sendMutation.isPending ? (
+                  'שולח…'
+                ) : (
+                  <>
+                    <Send className="size-3.5 rotate-180" />
+                    שליחה ופתיחת שיחה
+                  </>
+                )}
+              </Button>
+            )}
+          </DialogActions>
         ) : undefined
       }
     >
-      <div className="flex flex-col gap-4 py-2 font-assistant" dir="rtl">
-        {step === 'recipient' ? (
-          <NewConversationRecipientStep
-            query={recipientQuery}
-            onQueryChange={setRecipientQuery}
-            filteredCustomers={filteredCustomers}
-            isLoading={isLoadingCustomers}
-            onSelectCustomer={handleSelectCustomer}
-            onSelectNewContact={handleSelectNewContact}
+      {step === 'recipient' ? (
+        <NewConversationRecipientStep
+          query={recipientQuery}
+          onQueryChange={setRecipientQuery}
+          filteredCustomers={filteredCustomers}
+          isLoading={isLoadingCustomers}
+          onSelectCustomer={handleSelectCustomer}
+          onSelectNewContact={handleSelectNewContact}
+        />
+      ) : (
+        selectedRecipient && (
+          <NewConversationTemplateStep
+            selectedRecipient={selectedRecipient}
+            onBackToRecipient={() => setStep('recipient')}
+            templates={templates}
+            isLoadingTemplates={isLoadingTemplates}
+            selectedTemplateId={selectedTemplateId}
+            onSelectTemplateId={setSelectedTemplateId}
+            paramValues={paramValues}
+            onParamChange={(idx, val) => setParamValues((p) => p.map((v, i) => (i === idx ? val : v)))}
+            previewText={previewText}
+            botContinuation={botContinuation}
+            onBotContinuationChange={setBotContinuation}
           />
-        ) : (
-          selectedRecipient && (
-            <NewConversationTemplateStep
-              selectedRecipient={selectedRecipient}
-              onBackToRecipient={() => setStep('recipient')}
-              templates={templates}
-              isLoadingTemplates={isLoadingTemplates}
-              selectedTemplateId={selectedTemplateId}
-              onSelectTemplateId={setSelectedTemplateId}
-              paramValues={paramValues}
-              onParamChange={(idx, val) => setParamValues((p) => p.map((v, i) => (i === idx ? val : v)))}
-              previewText={previewText}
-              botContinuation={botContinuation}
-              onBotContinuationChange={setBotContinuation}
-            />
-          )
-        )}
-      </div>
+        )
+      )}
     </ResponsiveDialog>
   )
 }
