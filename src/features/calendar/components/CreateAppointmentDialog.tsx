@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { ChevronRight } from '@/components/ui/icon'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Button } from '@/components/ui/button'
 import { StepCustomerDateTime } from './create-appointment-wizard/StepCustomerDateTime'
 import { StepStaffDuration } from './create-appointment-wizard/StepStaffDuration'
@@ -121,6 +121,9 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    // The new-customer dialog renders inside this form's React tree (it portals out of the DOM, not
+    // out of React), so its submit bubbles here too — it must not advance or save the booking.
+    if (e.target !== e.currentTarget) return
     if (!isLastStep) {
       goNext()
       return
@@ -134,35 +137,40 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
+      size="lg"
       title="תור חדש"
-      description="הזן את פרטי הלקוח והתור. ניתן לקבוע תור גם ללקוח מזדמן, ללא שיחת ווטסאפ."
-      contentClassName="sm:max-w-lg max-h-[90vh] overflow-y-auto"
+      description={`שלב ${currentStep + 1} מתוך ${WIZARD_STEPS.length} · ${WIZARD_STEPS[currentStep]?.title ?? ''}`}
+      footer={
+        <DialogActions
+          start={
+            currentStep > 0 && (
+              <Button type="button" variant="ghost" onClick={goBack} className="gap-1">
+                <ChevronRight size={16} />
+                חזרה
+              </Button>
+            )
+          }
+        >
+          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            ביטול
+          </Button>
+          <Button type="submit" form="create-appointment-form" disabled={isSaving} className="min-w-28">
+            {isLastStep ? (isSaving ? 'שומר…' : 'קביעת התור') : 'המשך'}
+          </Button>
+        </DialogActions>
+      }
     >
-      <div className="step-progress rounded-full overflow-hidden">
+      <div className="step-progress mb-4 overflow-hidden rounded-full" aria-hidden>
         <div className="step-progress-fill" style={{ width: `${progressPercent(currentStep)}%` }} />
       </div>
-      <div className="flex items-center justify-between px-0.5 pt-2 pb-1">
-        {currentStep > 0 ? (
-          <button
-            type="button"
-            onClick={goBack}
-            className="size-6 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
-            aria-label="חזור"
-          >
-            <ChevronRight size={16} />
-          </button>
-        ) : (
-          <div className="size-6" />
-        )}
-        <span className="text-xs font-bold text-muted-foreground">
-          {currentStep + 1} מתוך {WIZARD_STEPS.length} · {WIZARD_STEPS[currentStep]?.title}
-        </span>
-        <div className="size-6" />
-      </div>
 
-      {displayError && <p className="text-sm font-bold text-destructive">{displayError}</p>}
+      {displayError && (
+        <p role="alert" className="mb-3 text-sm font-bold text-destructive">
+          {displayError}
+        </p>
+      )}
 
-      <form onSubmit={handleSubmit} className="mt-2 space-y-4">
+      <form id="create-appointment-form" onSubmit={handleSubmit} className="space-y-4">
         {currentStep === 0 && <StepCustomerDateTime values={values} onChange={handleChange} />}
         {currentStep === 1 && (
           <StepStaffDuration
@@ -177,15 +185,6 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
         )}
         {currentStep === 2 && <StepPricingDeposit values={values} onChange={handleChange} />}
         {currentStep === 3 && <StepStatusNotes values={values} onChange={handleChange} />}
-
-        <div className="grid grid-cols-2 gap-3 pt-2" dir="rtl">
-          <Button type="submit" disabled={isSaving} className="font-bold">
-            {isLastStep ? (isSaving ? 'שומר…' : 'שמור') : 'המשך'}
-          </Button>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            ביטול
-          </Button>
-        </div>
       </form>
     </ResponsiveDialog>
   )

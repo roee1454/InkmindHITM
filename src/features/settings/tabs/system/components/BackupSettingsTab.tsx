@@ -37,7 +37,7 @@ import { UploadBackupDialog } from './UploadBackupDialog'
 function backupDetails(backup: BackupFile) {
   return [
     { label: 'נוצר', value: new Date(backup.modifiedAt).toLocaleString('he-IL', { dateStyle: 'medium', timeStyle: 'short' }) },
-    { label: 'גודל', value: formatSize(backup.size) },
+    { label: 'גודל', value: <span dir="ltr">{formatSize(backup.size)}</span> },
     { label: 'קובץ', value: <span dir="ltr">{backup.key}</span> },
   ]
 }

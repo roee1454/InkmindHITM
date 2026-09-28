@@ -1,6 +1,7 @@
 import React from 'react'
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { HealthDeclarationViewer, type HealthDeclarationViewerProps } from './HealthDeclarationViewer'
+import { HealthDeclarationViewer } from './HealthDeclarationViewer'
+import type { HealthDeclarationViewerProps } from './HealthDeclarationViewer'
 
 export interface HealthDeclarationDialogProps extends HealthDeclarationViewerProps {
   open: boolean
@@ -13,24 +14,15 @@ export const HealthDeclarationDialog: React.FC<HealthDeclarationDialogProps> = (
   customerName,
   ...viewerProps
 }) => {
-  const title = customerName
-    ? `הצהרת בריאות — ${customerName}`
-    : 'טופס הצהרת בריאות דיגיטלי'
-
   return (
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={title}
-      description="פרטי הצהרת הבריאות, התראות רפואיות ותשובות השאלון הדיגיטלי"
-      contentClassName="sm:max-w-xl max-h-[75vh] flex flex-col p-5 gap-3 overflow-hidden"
+      size="lg"
+      title={customerName ? `הצהרת בריאות — ${customerName}` : 'הצהרת בריאות'}
+      description="התראות רפואיות ותשובות השאלון."
     >
-      <div className="overflow-y-auto max-h-[calc(75vh-5.5rem)] pe-1 -me-1">
-        <HealthDeclarationViewer
-          customerName={customerName}
-          {...viewerProps}
-        />
-      </div>
+      <HealthDeclarationViewer customerName={customerName} {...viewerProps} />
     </ResponsiveDialog>
   )
 }

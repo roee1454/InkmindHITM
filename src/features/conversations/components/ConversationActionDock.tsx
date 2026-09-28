@@ -8,13 +8,12 @@ import {
   CalendarCheck,
   CalendarX,
   ShieldCheck,
-  AlertTriangle,
   Bot,
   UserCheck,
   CalendarClock,
 } from '@/components/ui/icon'
 import { Button } from '@/components/ui/button'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { confirmSlot } from '@/features/calendar/server/appointments'
 import {
   confirmDepositReceived,
@@ -257,42 +256,18 @@ export function ConversationActionDock({
           )}
         </div>
 
-        <ResponsiveDialog
+        <ConfirmDialog
           open={warnReceiptOpen}
           onOpenChange={setWarnReceiptOpen}
-          title="אישור מקדמה ללא אסמכתה"
-          description="לא זוהתה תמונת אסמכתה שנשלחה מהלקוח בשיחה זו."
-        >
-          <div className="space-y-4 pt-2" dir="rtl">
-            <div className="flex items-start gap-3 p-3 rounded-xl bg-accent-ink/10 border border-accent-ink/20 text-accent-ink text-xs">
-              <AlertTriangle className="size-5 shrink-0 mt-0.5" />
-              <span className="leading-relaxed">
-                אישור ללא אסמכתה יסמן את המקדמה כשולמה וישלח ללקוח אישור סופי עם מועד התור. האם אתה בטוח שברצונך לאשר ידנית?
-              </span>
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setWarnReceiptOpen(false)}
-                className="flex-1 rounded-xl h-10 font-bold cursor-pointer"
-              >
-                ביטול
-              </Button>
-              <Button
-                type="button"
-                disabled={isPending}
-                onClick={() => {
-                  setWarnReceiptOpen(false)
-                  confirmDepositMutation.mutate()
-                }}
-                className="flex-1 rounded-xl h-10 font-bold bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer"
-              >
-                אישור בכל זאת
-              </Button>
-            </div>
-          </div>
-        </ResponsiveDialog>
+          title="לאשר מקדמה בלי אסמכתה?"
+          description="לא נמצאה בשיחה תמונה של אסמכתה. האישור מסמן את המקדמה כשולמה ושולח ללקוח אישור סופי עם מועד התור."
+          confirmLabel="אישור בכל זאת"
+          isPending={isPending}
+          onConfirm={() => {
+            setWarnReceiptOpen(false)
+            confirmDepositMutation.mutate()
+          }}
+        />
       </div>
     )
   }
