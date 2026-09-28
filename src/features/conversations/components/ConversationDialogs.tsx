@@ -2,69 +2,49 @@ import { useQueryClient } from '@tanstack/react-query'
 import { PriceQuoteSheet } from './sheets/PriceQuoteSheet'
 import { ReceiptVerificationSheet } from './sheets/ReceiptVerificationSheet'
 import { InspirationGalleryDialog } from './InspirationGalleryDialog'
-import type { ReceiptEntry } from './InspirationGalleryDialog'
 import { ImageGalleryDialog } from '@/features/calendar/components/ImageGalleryDialog'
 import { SendTemplateDialog } from './SendTemplateDialog'
 import { ResumeBotDialog } from './ResumeBotDialog'
-import type { UIAppointmentSummary, UIConversation } from '../types'
+import { HealthDeclarationDialog } from '@/features/health-declaration/components/HealthDeclarationDialog'
 import { CascadeDeleteDialog } from '@/features/database/components/CascadeDeleteDialog'
+import type { ThreadMedia } from '../utils/thread-media'
+import type { UIAppointmentSummary, UIConversation } from '../types'
+
+/** One dialog at a time over a thread; the image viewer is separate, it opens on top of the receipt sheet. */
+export type ThreadDialog = 'quote' | 'receipt' | 'gallery' | 'template' | 'resume-bot' | 'health' | 'delete'
 
 interface ConversationDialogsProps {
   conversation: UIConversation
   appointment: UIAppointmentSummary | null
+  media: ThreadMedia
   windowExpired: boolean
-  priceQuoteOpen: boolean
-  onPriceQuoteOpenChange: (open: boolean) => void
-  receiptOpen: boolean
-  onReceiptOpenChange: (open: boolean) => void
-  receiptImageUrl?: string
-  inspirationImages: string[]
-  receipts: ReceiptEntry[]
-  galleryOpen: boolean
-  onGalleryOpenChange: (open: boolean) => void
-  sendTemplateOpen: boolean
-  onSendTemplateOpenChange: (open: boolean) => void
-  resumeBotOpen: boolean
-  onResumeBotOpenChange: (open: boolean) => void
+  open: ThreadDialog | null
+  onOpenChange: (dialog: ThreadDialog | null) => void
   imageViewerUrl: string | null
-  onOpenImageViewer: (url: string) => void
-  onCloseImageViewer: () => void
+  onImageViewerChange: (url: string | null) => void
   onTakeover: () => void
-  isTakingOver?: boolean
-  deleteOpen: boolean
-  onDeleteOpenChange: (open: boolean) => void
+  isTakingOver: boolean
   onDeleted?: () => void
 }
 
 export function ConversationDialogs({
   conversation,
   appointment,
+  media,
   windowExpired,
-  priceQuoteOpen,
-  onPriceQuoteOpenChange,
-  receiptOpen,
-  onReceiptOpenChange,
-  receiptImageUrl,
-  inspirationImages,
-  receipts,
-  galleryOpen,
-  onGalleryOpenChange,
-  sendTemplateOpen,
-  onSendTemplateOpenChange,
-  resumeBotOpen,
-  onResumeBotOpenChange,
+  open,
+  onOpenChange,
   imageViewerUrl,
-  onOpenImageViewer,
-  onCloseImageViewer,
+  onImageViewerChange,
   onTakeover,
-  isTakingOver = false,
-  deleteOpen,
-  onDeleteOpenChange,
+  isTakingOver,
   onDeleted,
 }: ConversationDialogsProps) {
   const queryClient = useQueryClient()
+  const toggle = (dialog: ThreadDialog) => (isOpen: boolean) => onOpenChange(isOpen ? dialog : null)
 
   const handleSuccess = () => {
+    onOpenChange(null)
     queryClient.invalidateQueries({ queryKey: ['conversations'] })
     queryClient.invalidateQueries({ queryKey: ['active-appointment', conversation.id] })
     queryClient.invalidateQueries({ queryKey: ['messages', conversation.id] })
@@ -73,22 +53,18 @@ export function ConversationDialogs({
 
   return (
     <>
-      {/* PriceQuoteSheet must render when open=true even if appointment is still null,
-          so clicking the button before the appointment query resolves doesn't silently fail. */}
-      {(priceQuoteOpen || appointment) && (
+      {/* Rendered when open even before the appointment loads, so an early click doesn't silently fail. */}
+      {(open === 'quote' || appointment) && (
         <PriceQuoteSheet
-          open={priceQuoteOpen}
-          onOpenChange={onPriceQuoteOpenChange}
+          open={open === 'quote'}
+          onOpenChange={toggle('quote')}
           appointmentId={appointment?.id ?? ''}
           appointmentType={appointment?.type}
           initialPriceMin={appointment?.priceMinIls ? String(appointment.priceMinIls) : ''}
           initialPriceMax={appointment?.priceMaxIls ? String(appointment.priceMaxIls) : ''}
           initialDeposit={appointment?.depositAmount ? String(appointment.depositAmount) : undefined}
           initialDurationMinutes={appointment?.durationMinutes}
-          onSuccess={() => {
-            onPriceQuoteOpenChange(false)
-            handleSuccess()
-          }}
+          onSuccess={handleSuccess}
           onTakeover={onTakeover}
           isTakingOver={isTakingOver}
         />
@@ -96,53 +72,53 @@ export function ConversationDialogs({
 
       {appointment && (
         <ReceiptVerificationSheet
-          open={receiptOpen}
-          onOpenChange={onReceiptOpenChange}
+          open={open === 'receipt'}
+          onOpenChange={toggle('receipt')}
           conversationId={conversation.id}
-          initialAmount={appointment?.depositAmount ? String(appointment.depositAmount) : ''}
-          receiptImageUrl={receiptImageUrl}
-          onZoomImage={onOpenImageViewer}
-          onSuccess={() => {
-            onReceiptOpenChange(false)
-            handleSuccess()
-          }}
+          initialAmount={appointment.depositAmount ? String(appointment.depositAmount) : ''}
+          receiptImageUrl={media.latestReceiptUrl}
+          onZoomImage={onImageViewerChange}
+          onSuccess={handleSuccess}
           onTakeover={onTakeover}
           isTakingOver={isTakingOver}
         />
       )}
 
       <InspirationGalleryDialog
-        open={galleryOpen}
-        onOpenChange={onGalleryOpenChange}
-        inspirationImages={inspirationImages}
-        receipts={receipts}
+        open={open === 'gallery'}
+        onOpenChange={toggle('gallery')}
+        inspirationImages={media.inspirationImages}
+        receipts={media.receipts}
       />
 
-      <SendTemplateDialog
-        open={sendTemplateOpen}
-        onOpenChange={onSendTemplateOpenChange}
-        conversation={conversation}
-      />
+      <SendTemplateDialog open={open === 'template'} onOpenChange={toggle('template')} conversation={conversation} />
 
-      <ResumeBotDialog
-        open={resumeBotOpen}
-        onOpenChange={onResumeBotOpenChange}
-        conversation={conversation}
-        windowExpired={windowExpired}
+      <ResumeBotDialog open={open === 'resume-bot'} onOpenChange={toggle('resume-bot')} conversation={conversation} windowExpired={windowExpired} />
+
+      <HealthDeclarationDialog
+        open={open === 'health'}
+        onOpenChange={toggle('health')}
+        customerName={conversation.customerName}
+        signed={appointment?.healthDeclarationSigned}
+        date={appointment?.healthDeclarationDate}
+        url={appointment?.healthDeclarationFileUrl}
+        medicalNotes={appointment?.medicalNotes}
+        answers={appointment?.healthDeclarationAnswers}
+        allergies={appointment?.allergies}
       />
 
       <ImageGalleryDialog
         images={imageViewerUrl ? [imageViewerUrl] : []}
         initialIndex={0}
         open={Boolean(imageViewerUrl)}
-        onOpenChange={(open) => {
-          if (!open) onCloseImageViewer()
+        onOpenChange={(isOpen) => {
+          if (!isOpen) onImageViewerChange(null)
         }}
       />
 
       <CascadeDeleteDialog
-        open={deleteOpen}
-        onOpenChange={onDeleteOpenChange}
+        open={open === 'delete'}
+        onOpenChange={toggle('delete')}
         collection="conversations"
         id={conversation.id}
         entityName={`שיחה עם ${conversation.customerName || conversation.customerPhone}`}

@@ -656,7 +656,7 @@
 
 - רשימת מסמכים עם PDF, שליחה חוזרת וזיכוי.
 
-- **אימות מקדמה** (`confirmDepositReceived` ב-[messages.ts:320](../../src/features/conversations/server/messages.ts#L320), מה-`BookingActionCard`): אחרי האישור מופיע "הפקת מסמך על המקדמה". כש-`deposit_document_type` ריק, הכפתור מושבת עם tooltip: "סוג המסמך למקדמה טרם נקבע (רואה חשבון)".
+- **אימות מקדמה** (`confirmDepositReceived` ב-[messages.ts:320](../../src/features/conversations/server/messages.ts#L320), מ-`ThreadActionPanel`): אחרי האישור מופיע "הפקת מסמך על המקדמה". כש-`deposit_document_type` ריק, הכפתור מושבת עם tooltip: "סוג המסמך למקדמה טרם נקבע (רואה חשבון)".
 
 - **מה זה משפר:** המסמך מופק ברגע שהכסף מתקבל, וזו הדרישה החוקית.
 

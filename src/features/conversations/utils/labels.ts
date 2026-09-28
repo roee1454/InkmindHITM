@@ -1,16 +1,7 @@
 /**
- * Canonical Hebrew labels for conversation statuses and staff call reasons.
- * Single source of truth across list items, thread headers, action docks, and dialogs.
+ * Canonical Hebrew labels for the bot's dialogue states and staff call reasons, and who has to act.
  */
 import type { ConversationState } from '@/integrations/ai/prompts'
-
-export const STATUS_LABEL: Record<string, string> = {
-  all: 'הכל',
-  bot_active: 'בוט',
-  escalated: 'ממתין למענה',
-  staff_handling: 'בטיפול צוות',
-  closed: 'סגור',
-}
 
 /** The bot's dialogue state (conversations.state), as staff read it. */
 export const CONVERSATION_STATE_LABELS: Record<ConversationState, string> = {
@@ -49,29 +40,35 @@ export const STAFF_REASON_LABELS: Record<string, string> = {
   system_model_error: 'תקלת מודל AI',
 }
 
-/**
- * Determines whether the conversation currently renders staff action buttons in the UI.
- * When true, a human staff member must intervene, and the bot must be disabled.
- */
-export function hasStaffActionButtons(conversation: {
+type AttentionFields = {
   state?: string | null
   status?: string | null
   staffCallReason?: string | null
-}): boolean {
-  if (conversation.state === 'AWAIT_PRICE_OFFER') return true
-  if (conversation.state === 'AWAIT_PAYMENT') return true
-  if (conversation.staffCallReason === 'cancel_request') return true
-  if (conversation.staffCallReason === 'slot_conflict') return true
-  if (conversation.status === 'escalated' || Boolean(conversation.staffCallReason)) return true
-  return false
 }
 
 /**
- * Determines whether the conversation is in a waiting stage where we await customer response.
- * In these stages, no action buttons are shown, and the composer is disabled.
+ * Why a person has to step in, in a few words ("מקדמה לאישור"), or null when nobody has to. The
+ * inbox row shows it in place of the last message; the thread's action panel says the same at length.
  */
-export function isAwaitingCustomerAction(state?: string | null): boolean {
-  return state === 'AWAIT_HEALTH_NOTICE' || state === 'AWAIT_FINAL_CONFIRMATION'
+export function attentionLabel(conversation: AttentionFields): string | null {
+  if (conversation.state === 'AWAIT_PRICE_OFFER') return 'מחכה להצעת מחיר'
+  if (conversation.state === 'AWAIT_PAYMENT') return 'מקדמה לאישור'
+  if (conversation.staffCallReason) return STAFF_REASON_LABELS[conversation.staffCallReason] ?? 'ממתין למענה'
+  if (conversation.status === 'escalated') return 'ממתין למענה'
+  return null
 }
 
+/** A person has to step in: the thread shows an action, the bot stays quiet, the inbox counts it as waiting. */
+export function hasStaffActionButtons(conversation: AttentionFields): boolean {
+  return attentionLabel(conversation) !== null
+}
 
+export type InboxBucket = 'escalated' | 'staff_handling' | 'bot_active' | 'closed'
+
+/** Which inbox filter a conversation falls under; "waiting" wins over whoever is nominally answering. */
+export function inboxBucket(conversation: AttentionFields): InboxBucket {
+  if (hasStaffActionButtons(conversation)) return 'escalated'
+  if (conversation.status === 'bot_active') return 'bot_active'
+  if (conversation.status === 'closed') return 'closed'
+  return 'staff_handling'
+}

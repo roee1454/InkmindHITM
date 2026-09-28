@@ -1,37 +1,24 @@
-import { Bot } from '@/components/ui/icon'
-import { cn } from '@/lib/utils'
+import type { UIConversation } from '../types'
 
-export type BotTurnPhase = 'cooldown' | 'typing'
+type BotTurnPhase = Exclude<UIConversation['botTurnPhase'], ''>
 
-interface BotTypingIndicatorProps {
-  phase: BotTurnPhase
-}
-
-export function BotTypingIndicator({ phase }: BotTypingIndicatorProps) {
-  const isTyping = phase === 'typing'
-
+/**
+ * The bot's turn, on the studio's side of the thread: shaped like the bot's own bubble. `cooldown`
+ * waits a few seconds for the customer's next message; `typing` means it is writing the reply.
+ */
+export function BotTypingIndicator({ phase }: { phase: BotTurnPhase }) {
+  const typing = phase === 'typing'
   return (
-    <div
-      className="group relative flex justify-start items-center gap-2 font-assistant my-1"
-      dir="rtl"
-      data-testid="bot-typing-indicator"
-      data-phase={phase}
-    >
-      <div className="rounded-2xl rounded-ss-xs border border-primary/20 bg-card/90 px-3.5 py-2 shadow-2xs flex items-center gap-2.5">
-        <div className="flex items-center gap-1 text-2xs font-extrabold text-primary">
-          <Bot className={cn('size-3.5 text-primary', isTyping && 'animate-pulse')} />
-          <span>Inkmind</span>
-        </div>
-        {isTyping && (
-          <div className="flex items-center gap-1">
-            <span className="size-1.5 rounded-full bg-primary/70 animate-bounce [animation-delay:-0.3s]" />
-            <span className="size-1.5 rounded-full bg-primary/70 animate-bounce [animation-delay:-0.15s]" />
-            <span className="size-1.5 rounded-full bg-primary/70 animate-bounce" />
-          </div>
+    <div className="flex justify-start" data-testid="bot-typing-indicator" data-phase={phase} role="status">
+      <div className="flex items-center gap-2 rounded-xl rounded-ss-sm bg-muted px-3 py-2 text-sm text-muted-foreground">
+        {typing && (
+          <span className="flex items-center gap-1" aria-hidden>
+            {[0, 150, 300].map((delay) => (
+              <span key={delay} className="size-1.5 rounded-full bg-muted-foreground motion-safe:animate-pulse" style={{ animationDelay: `${delay}ms` }} />
+            ))}
+          </span>
         )}
-        <span className="text-2xs text-muted-foreground font-medium select-none">
-          {isTyping ? 'בוט מקליד...' : 'ממתין להודעות נוספות'}
-        </span>
+        <span>{typing ? 'הבוט כותב…' : 'הבוט ממתין להודעות נוספות'}</span>
       </div>
     </div>
   )

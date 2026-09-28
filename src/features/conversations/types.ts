@@ -13,6 +13,9 @@ export interface UIConversation {
   state: string
   staffCallReason: string | null
   lastMessageAt: string | null
+  /** The inbox line: the last message sent to or from the customer (pb_hooks/conversation-preview.pb.js). */
+  lastMessagePreview: string
+  lastMessageSender: 'customer' | 'ai_bot' | 'staff' | null
   windowExpiresAt: string | null
   unreadCount: number
   /** '' = idle, 'cooldown' = 10s inbound-message debounce open, 'typing' = the conversation-turn

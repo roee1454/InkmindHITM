@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  STATUS_LABEL,
   STAFF_REASON_LABELS,
   hasStaffActionButtons,
-  isAwaitingCustomerAction,
 } from '@/features/conversations/utils/labels'
 import { formatPhoneForDisplay, phoneMatchesQuery, toCanonicalE164Phone } from '@/lib/phone'
 import { formatWindowRemaining, formatMessageDateSeparator, getDateKey } from '@/features/conversations/utils/format'
@@ -11,13 +9,6 @@ import { shouldExcludeTemplate } from '@/features/conversations/utils/templates'
 
 describe('Conversations Redesign & Labels Consolidation', () => {
   describe('Canonical Labels (Bug 2 Fix)', () => {
-    it('provides unified Hebrew labels for conversation statuses', () => {
-      expect(STATUS_LABEL.escalated).toBe('ממתין למענה')
-      expect(STATUS_LABEL.staff_handling).toBe('בטיפול צוות')
-      expect(STATUS_LABEL.bot_active).toBe('בוט')
-      expect(STATUS_LABEL.closed).toBe('סגור')
-    })
-
     it('provides unified Hebrew labels for staff intervention reasons', () => {
       expect(STAFF_REASON_LABELS.price_offering).toBe('הצעת מחיר')
       expect(STAFF_REASON_LABELS.receipt_verification).toBe('אימות תשלום')
@@ -249,16 +240,6 @@ describe('Conversations Redesign & Labels Consolidation', () => {
       expect(hasStaffActionButtons({ state: 'AWAITING_APPOINTMENT' })).toBe(false)
     })
 
-    it('accurately identifies waiting states where customer action is awaited', () => {
-      expect(isAwaitingCustomerAction('AWAIT_HEALTH_NOTICE')).toBe(true)
-      expect(isAwaitingCustomerAction('AWAIT_FINAL_CONFIRMATION')).toBe(true)
-
-      expect(isAwaitingCustomerAction('AWAIT_PRICE_OFFER')).toBe(false)
-      expect(isAwaitingCustomerAction('AWAIT_PAYMENT')).toBe(false)
-      expect(isAwaitingCustomerAction('COLLECTING_INFO')).toBe(false)
-      expect(isAwaitingCustomerAction('AWAITING_APPOINTMENT')).toBe(false)
-    })
-
     it('ensures bot is disabled whenever action buttons are shown in UI', () => {
       function computeIsBotActive(conv: { state?: string; status?: string; staffCallReason?: string | null }) {
         const hasActions = hasStaffActionButtons(conv)
@@ -274,18 +255,6 @@ describe('Conversations Redesign & Labels Consolidation', () => {
       expect(computeIsBotActive({ state: 'COLLECTING_INFO', status: 'bot_active' })).toBe(true)
       expect(computeIsBotActive({ state: 'AWAIT_HEALTH_NOTICE', status: 'bot_active' })).toBe(true)
       expect(computeIsBotActive({ state: 'AWAIT_FINAL_CONFIRMATION', status: 'bot_active' })).toBe(true)
-    })
-
-    it('ensures composer typing is disabled during waiting states', () => {
-      function isComposerDisabled(convState: string, windowExpired: boolean, isSending: boolean) {
-        const isAwaitingCustomer = isAwaitingCustomerAction(convState)
-        return windowExpired || isSending || isAwaitingCustomer
-      }
-
-      expect(isComposerDisabled('AWAIT_HEALTH_NOTICE', false, false)).toBe(true)
-      expect(isComposerDisabled('AWAIT_FINAL_CONFIRMATION', false, false)).toBe(true)
-      expect(isComposerDisabled('COLLECTING_INFO', false, false)).toBe(false)
-      expect(isComposerDisabled('AWAIT_PRICE_OFFER', false, false)).toBe(false)
     })
   })
 })

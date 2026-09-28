@@ -1,15 +1,24 @@
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Plus } from '@/components/ui/icon'
 import { Button } from '@/components/ui/button'
 import { SearchInput } from '@/components/ui/search-input'
-import { listConversations } from '../server/messages'
-import { STATUS_LABEL } from '../utils/labels'
-import { useConversationsUiStore } from '../store/conversationsUiStore'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { phoneMatchesQuery } from '@/lib/phone'
+import { listConversations } from '../server/messages'
+import { inboxBucket } from '../utils/labels'
+import type { InboxBucket } from '../utils/labels'
+import { useConversationsUiStore } from '../store/conversationsUiStore'
 import { NewConversationDialog } from './NewConversationDialog'
 import { ConversationRow } from './ConversationRow'
+
+const FILTERS: { id: 'all' | Exclude<InboxBucket, 'closed'>; label: string; empty: string }[] = [
+  { id: 'all', label: 'הכל', empty: 'עדיין אין שיחות. כשלקוח יכתוב לסטודיו בוואטסאפ, השיחה תופיע כאן.' },
+  { id: 'escalated', label: 'ממתין', empty: 'אין שיחות שמחכות לצוות.' },
+  { id: 'staff_handling', label: 'צוות', empty: 'אין שיחות בטיפול צוות.' },
+  { id: 'bot_active', label: 'בוט', empty: 'אין שיחות שהבוט מנהל עכשיו.' },
+]
 
 interface ConversationListProps {
   selectedId: string | null
@@ -26,153 +35,75 @@ export function ConversationList({ selectedId, onSelect }: ConversationListProps
     refetchInterval: 30000,
   })
 
-  const counts = useMemo(() => {
-    let escalated = 0
-    let staff_handling = 0
-    let bot_active = 0
-
-    for (const c of conversations) {
-      if (c.status === 'escalated') escalated++
-      else if (c.status === 'staff_handling') staff_handling++
-      else if (c.status === 'bot_active') bot_active++
-    }
-
-    return { all: conversations.length, escalated, staff_handling, bot_active }
-  }, [conversations])
+  const buckets = useMemo(() => new Map(conversations.map((c) => [c.id, inboxBucket(c)])), [conversations])
+  const waiting = useMemo(() => [...buckets.values()].filter((b) => b === 'escalated').length, [buckets])
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
     return conversations.filter((c) => {
-      if (q && !c.customerName.toLowerCase().includes(q) && !phoneMatchesQuery(c.customerPhone, q)) {
-        return false
-      }
-      if (statusFilter !== 'all' && c.status !== statusFilter) {
-        return false
-      }
-      return true
+      if (q && !c.customerName.toLowerCase().includes(q) && !phoneMatchesQuery(c.customerPhone, q)) return false
+      return statusFilter === 'all' || buckets.get(c.id) === statusFilter
     })
-  }, [conversations, searchQuery, statusFilter])
+  }, [conversations, buckets, searchQuery, statusFilter])
 
-  const filterSegments = [
-    { id: 'all', label: 'הכל', count: counts.all },
-    { id: 'escalated', label: 'ממתין', count: counts.escalated, badge: counts.escalated > 0 },
-    { id: 'staff_handling', label: 'צוות', count: counts.staff_handling },
-    { id: 'bot_active', label: 'בוט', count: counts.bot_active },
-  ]
+  const activeFilter = FILTERS.find((f) => f.id === statusFilter) ?? FILTERS[0]!
 
   return (
-    <div className="flex h-full w-full shrink-0 flex-col bg-card lg:w-80 lg:border-e lg:border-border font-assistant" dir="rtl">
-      {/* Top Header & Filters */}
-      <div className="flex flex-col gap-2.5 border-b border-border p-3.5 pb-3">
-        {/* Title and New Chat Button */}
+    <div className="flex h-full w-full shrink-0 flex-col bg-card font-assistant lg:w-80 lg:border-e lg:border-border" dir="rtl">
+      <div className="flex flex-col gap-3 border-b border-border px-4 pt-4 pb-3">
         <div className="flex items-center justify-between gap-2">
-          <h1 className="text-xl font-extrabold text-foreground tracking-tight">שיחות</h1>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => setIsNewChatOpen(true)}
-            className="size-8.5 rounded-xl border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
-            title="שיחה חדשה"
-          >
-            <Plus className="size-4.5" />
+          <h1 className="text-xl font-extrabold tracking-tight text-foreground">שיחות</h1>
+          <Button variant="ghost" size="icon" onClick={() => setIsNewChatOpen(true)} aria-label="שיחה חדשה" className="size-9 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
+            <Plus className="size-5" />
           </Button>
         </div>
 
-        {/* Search Bar */}
-        <SearchInput
-          size="sm"
-          variant="muted"
-          placeholder="חיפוש לפי שם או טלפון"
-          value={searchQuery}
-          onChange={setSearchQuery}
-        />
+        <SearchInput size="sm" variant="muted" placeholder="חיפוש לפי שם או טלפון" value={searchQuery} onChange={setSearchQuery} />
 
-        {/* Single Responsive Segmented Filter Bar */}
-        <div role="group" aria-label="סינון לפי סטטוס" className="flex gap-1 rounded-xl border border-border bg-muted/30 p-1">
-          {filterSegments.map((seg) => {
-            const active = statusFilter === seg.id
+        <div role="group" aria-label="סינון שיחות" className="flex gap-1 rounded-xl bg-muted p-1">
+          {FILTERS.map((filter) => {
+            const active = statusFilter === filter.id
             return (
               <button
-                key={seg.id}
+                key={filter.id}
                 type="button"
                 aria-pressed={active}
-                onClick={() => setStatusFilter(seg.id)}
+                onClick={() => setStatusFilter(filter.id)}
                 className={cn(
-                  'flex h-7.5 flex-1 items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all select-none cursor-pointer',
-                  active
-                    ? 'bg-primary text-primary-foreground shadow-xs font-extrabold'
-                    : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                  'flex h-8 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg text-sm font-semibold transition-colors duration-150 select-none',
+                  active ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground',
                 )}
               >
-                <span>{seg.label}</span>
-                {seg.badge && (
-                  <span
-                    className={cn(
-                      'inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-2xs font-extrabold tabular-nums leading-none',
-                      active
-                        ? 'bg-primary-foreground/20 text-primary-foreground'
-                        : 'bg-status-wait-soft text-status-wait',
-                    )}
-                  >
-                    {seg.count}
-                  </span>
-                )}
+                {filter.label}
+                {filter.id === 'escalated' && waiting > 0 && <span className="text-xs font-bold tabular-nums">{waiting}</span>}
               </button>
             )
           })}
         </div>
       </div>
 
-      {/* Conversation List Rows */}
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
-          <div className="p-3 space-y-2">
+          <div className="flex flex-col gap-4 p-4" aria-hidden>
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card/50 animate-pulse">
-                <div className="size-10 rounded-full bg-muted shrink-0" />
-                <div className="flex flex-1 flex-col gap-2 min-w-0">
-                  <div className="flex justify-between items-center">
-                    <div className="h-3.5 w-24 rounded bg-muted" />
-                    <div className="h-3 w-10 rounded bg-muted/60" />
-                  </div>
-                  <div className="h-3 w-36 rounded bg-muted/60" />
-                </div>
+              <div key={i} className="flex flex-col gap-2">
+                <Skeleton className="h-4 w-2/5" />
+                <Skeleton className="h-3.5 w-4/5" />
               </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-8 text-center text-xs text-muted-foreground leading-relaxed">
-            {searchQuery
-              ? 'לא נמצאו שיחות תואמות לחיפוש.'
-              : statusFilter === 'escalated'
-                ? 'אין שיחות הממתינות למענה של צוות.'
-                : statusFilter !== 'all'
-                  ? `אין שיחות בסטטוס ${STATUS_LABEL[statusFilter] || statusFilter}.`
-                  : 'עדיין אין שיחות במערכת.'}
-          </div>
+          <p className="px-6 py-10 text-center text-sm text-muted-foreground">{searchQuery ? 'אין שיחות שמתאימות לחיפוש.' : activeFilter.empty}</p>
         ) : (
           <ul className="divide-y divide-border/60">
             {filtered.map((c) => (
-              <ConversationRow
-                key={c.id}
-                conversation={c}
-                selected={c.id === selectedId}
-                onSelect={() => onSelect(c.id)}
-              />
+              <ConversationRow key={c.id} conversation={c} selected={c.id === selectedId} onSelect={() => onSelect(c.id)} />
             ))}
           </ul>
         )}
       </div>
 
-      {/* New Conversation Dialog */}
-      <NewConversationDialog
-        open={isNewChatOpen}
-        onOpenChange={setIsNewChatOpen}
-        onSelectConversation={(newId) => {
-          onSelect(newId)
-        }}
-      />
+      <NewConversationDialog open={isNewChatOpen} onOpenChange={setIsNewChatOpen} onSelectConversation={onSelect} />
     </div>
   )
 }

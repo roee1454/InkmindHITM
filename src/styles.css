@@ -511,19 +511,6 @@
   .page-head p {
     @apply text-sm font-medium text-muted-foreground;
   }
-
-  /* ---- Conversation HITL action row (quote / slot / receipt / final) ---- */
-  .hitl-row {
-    @apply flex select-none items-center gap-2 rounded-xl border border-primary bg-card px-2.5 py-2;
-  }
-  .hitl-row-success {
-    @apply flex select-none items-center gap-2 rounded-xl border border-success bg-card px-2.5 py-2;
-  }
-  .hitl-action {
-    @apply flex h-8 shrink-0 cursor-pointer select-none items-center justify-center rounded-lg
-           bg-primary px-3 text-xs font-extrabold text-primary-foreground
-           transition-transform duration-150 ease-native active:scale-[0.97];
-  }
 }
 
 /* ============================================================================

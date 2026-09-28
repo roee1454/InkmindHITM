@@ -214,7 +214,7 @@ Only two roles exist; Tailwind's `sm` through `2xl` shadow scale all collapse on
 - **Typography, states:** same label scale as elsewhere; active state is the only visual differentiator (no underline, no separate icon style).
 
 ### Signature component: the HITL action row
-A bordered row (`.hitl-row` / `.hitl-row-success`) that sits inside a conversation thread to surface a bot decision awaiting staff confirmation (a quote, a slot, a receipt, a final booking) — accent border by default, success-colored border once approved. This is the one place in the system a border alone carries a full semantic state, and it exists because it's the crux of the product: a human approving what the AI proposed.
+A bordered row (`ThreadActionPanel`) that sits at the foot of a conversation thread, right above the composer, to surface the one decision the conversation is waiting on (a quote, a deposit, a slot, a cancellation): what it is in one sentence, the appointment it concerns in one line, one primary action. The accent border is the state; while the customer is the one who has to act, it collapses to a quiet line with no border. This is the one place in the system a border alone carries a full semantic state, and it exists because it's the crux of the product: a human approving what the AI proposed.
 
 ## 6. Do's and Don'ts
 

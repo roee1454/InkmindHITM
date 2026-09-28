@@ -178,6 +178,8 @@ export function useDashboardRealtime({ sessionToken, sessionStaff }: DashboardRe
                   state: (record.state as string) || conv.state,
                   staffCallReason: (record.staff_call_reason as string) || null,
                   lastMessageAt: (record.last_message_at as string) || conv.lastMessageAt,
+                  lastMessagePreview: (record.last_message_preview as string) || conv.lastMessagePreview,
+                  lastMessageSender: (record.last_message_sender as UIConversation['lastMessageSender']) || conv.lastMessageSender,
                   windowExpiresAt: (record.whatsapp_window_expires_at as string) || conv.windowExpiresAt,
                   // Nullish (not ||) — the server legitimately clears this back to '' when a
                   // queued turn finishes, and '' must not fall back to the previous phase.
@@ -193,8 +195,7 @@ export function useDashboardRealtime({ sessionToken, sessionStaff }: DashboardRe
               : conv,
           )
         })
-        queryClient.invalidateQueries({ queryKey: ['appointment-summary', record.id] })
-        // Invalidate active-appointment so ConversationThread picks up new appointments in real-time
+        // So an open thread's action panel picks up the appointment's new state.
         queryClient.invalidateQueries({ queryKey: ['active-appointment', record.id] })
       },
       { expand: 'customer' },
@@ -206,7 +207,6 @@ export function useDashboardRealtime({ sessionToken, sessionStaff }: DashboardRe
       const convId = data.record.conversation as string | undefined
       if (convId) {
         queryClient.invalidateQueries({ queryKey: ['active-appointment', convId] })
-        queryClient.invalidateQueries({ queryKey: ['appointment-summary', convId] })
       }
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
     })

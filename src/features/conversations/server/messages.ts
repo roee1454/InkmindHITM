@@ -54,6 +54,8 @@ function toUIConversation(record: RecordModel): UIConversation {
     state: (record.state as string) || 'NEW',
     staffCallReason: (record.staff_call_reason as string) || null,
     lastMessageAt: (record.last_message_at as string) || null,
+    lastMessagePreview: (record.last_message_preview as string) || '',
+    lastMessageSender: (record.last_message_sender as UIConversation['lastMessageSender']) || null,
     windowExpiresAt: (record.whatsapp_window_expires_at as string) || null,
     unreadCount: 0,
     botTurnPhase: (record.bot_turn_phase as UIConversation['botTurnPhase']) || '',
