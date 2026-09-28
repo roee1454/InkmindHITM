@@ -17,9 +17,8 @@ import type { ApiGoogleConnection } from '@/features/calendar/types'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
 import { ArtistProfileEditor } from './ArtistProfileEditor'
 import { GoogleCalendarConnection } from './GoogleCalendarConnection'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { EditStaffInfoForm } from './EditStaffInfoForm'
-import { SetPasswordForm } from './SetPasswordForm'
+import { EditStaffInfoDialog } from './EditStaffInfoDialog'
+import { SetPasswordDialog } from './SetPasswordDialog'
 import { summarizeWorkingHours } from '../utils/summarizeWorkingHours'
 import { Button } from '@/components/ui/button'
 import { CascadeDeleteDialog } from '@/features/database/components/CascadeDeleteDialog'
@@ -223,12 +222,18 @@ export const MemberDetail: React.FC<MemberDetailProps> = ({
 
               {currentStaff?.isAdmin && (
                 <div className="rounded-xl border border-border bg-card overflow-hidden divide-y divide-border">
-                  <ResponsiveDialog
+                  <EditStaffInfoDialog
                     open={editOpen}
                     onOpenChange={setEditOpen}
-                    title={`עריכת פרטי ${member.name}`}
-                    description="עדכון שם, אימייל ותפקיד במערכת."
-                    contentClassName="sm:max-w-md"
+                    staffId={member.id}
+                    name={member.name}
+                    email={member.email}
+                    phone={member.phone}
+                    role={member.role as 'owner' | 'admin' | 'staff'}
+                    onSaved={() => {
+                      queryClient.invalidateQueries({ queryKey: ['staff-list'] })
+                      setEditOpen(false)
+                    }}
                     trigger={
                       <button
                         type="button"
@@ -241,26 +246,18 @@ export const MemberDetail: React.FC<MemberDetailProps> = ({
                         <ChevronLeft size={18} className="text-muted-foreground" />
                       </button>
                     }
-                  >
-                    <EditStaffInfoForm
-                      staffId={member.id}
-                      initialName={member.name}
-                      initialEmail={member.email}
-                      initialPhone={member.phone}
-                      role={member.role as 'owner' | 'admin' | 'staff'}
-                      onDone={() => {
-                        queryClient.invalidateQueries({ queryKey: ['staff-list'] })
-                        setEditOpen(false)
-                      }}
-                    />
-                  </ResponsiveDialog>
+                  />
 
-                  <ResponsiveDialog
+                  <SetPasswordDialog
                     open={pwOpen}
                     onOpenChange={setPwOpen}
-                    title={`${member.hasPassword ? 'איפוס סיסמה' : 'קביעת סיסמה'} עבור ${member.name}`}
-                    description="הזן סיסמה חדשה. המשתמש יוכל להשתמש בה כדי להתחבר למערכת."
-                    contentClassName="sm:max-w-md"
+                    staffId={member.id}
+                    name={member.name}
+                    hasPassword={member.hasPassword}
+                    onSaved={() => {
+                      queryClient.invalidateQueries({ queryKey: ['staff-list'] })
+                      setPwOpen(false)
+                    }}
                     trigger={
                       <button
                         type="button"
@@ -273,15 +270,7 @@ export const MemberDetail: React.FC<MemberDetailProps> = ({
                         <ChevronLeft size={18} className="text-muted-foreground" />
                       </button>
                     }
-                  >
-                    <SetPasswordForm
-                      staffId={member.id}
-                      onDone={() => {
-                        queryClient.invalidateQueries({ queryKey: ['staff-list'] })
-                        setPwOpen(false)
-                      }}
-                    />
-                  </ResponsiveDialog>
+                  />
                 </div>
               )}
 

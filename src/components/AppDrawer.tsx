@@ -62,7 +62,7 @@ export function AppDrawer({ open, onOpenChange, staff }: AppDrawerProps) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="gap-0 rounded-e-3xl p-0 shadow-lg">
+      <SheetContent side="right" className="gap-0 p-0 shadow-lg">
         <SheetHeader className="flex-row items-center gap-3 border-border">
           <BrandMark size="sm" />
           <div className="flex min-w-0 flex-col items-start">

@@ -3,57 +3,30 @@ import { Plus, Trash2, Edit3, HelpCircle } from '@/components/ui/icon'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getFaqList, createFaq, updateFaq, deleteFaq } from '@/features/settings/server/settings'
 import type { ApiFaqEntry } from '@/features/settings/server/settings'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { SettingsErrorBanner } from '@/features/settings/components/SettingsErrorBanner'
 import { useConfirm } from '#/hooks/useConfirm'
+import { FaqDialog } from './FaqDialog'
 
 export const AiKnowledgeBaseCard: React.FC = () => {
   const queryClient = useQueryClient()
   const confirm = useConfirm()
-  const [addOpen, setAddOpen] = useState(false)
-  const [editItem, setEditItem] = useState<ApiFaqEntry | null>(null)
+  const [faqTarget, setFaqTarget] = useState<ApiFaqEntry | 'new' | null>(null)
   const [error, setError] = useState<string | null>(null)
-
-  // New FAQ form state
-  const [newQuestion, setNewQuestion] = useState('')
-  const [newAnswer, setNewAnswer] = useState('')
-
-  // Edit FAQ form state
-  const [editQuestion, setEditQuestion] = useState('')
-  const [editAnswer, setEditAnswer] = useState('')
 
   const { data: entries = [], isLoading } = useQuery<ApiFaqEntry[]>({
     queryKey: ['faq-list'],
     queryFn: () => getFaqList(),
   })
 
-  const addFaqMutation = useMutation({
-    mutationFn: (body: { question: string; answer: string }) => createFaq({ data: body }),
+  const saveFaqMutation = useMutation({
+    mutationFn: async (body: { question: string; answer: string }) => {
+      if (faqTarget && faqTarget !== 'new') await updateFaq({ data: { id: faqTarget.id, ...body } })
+      else await createFaq({ data: body })
+    },
     onSuccess: () => {
-      setNewQuestion('')
-      setNewAnswer('')
-      setError(null)
-      setAddOpen(false)
+      setFaqTarget(null)
       queryClient.invalidateQueries({ queryKey: ['faq-list'] })
-    },
-    onError: (err: unknown) => {
-      setError(err instanceof Error ? err.message : 'שגיאה בהוספת שאלה')
-    },
-  })
-
-  const editFaqMutation = useMutation({
-    mutationFn: ({ id, question, answer }: { id: string; question: string; answer: string }) =>
-      updateFaq({ data: { id, question, answer } }),
-    onSuccess: () => {
-      setEditItem(null)
-      setError(null)
-      queryClient.invalidateQueries({ queryKey: ['faq-list'] })
-    },
-    onError: (err: unknown) => {
-      setError(err instanceof Error ? err.message : 'שגיאה בעריכת שאלה')
     },
   })
 
@@ -66,12 +39,6 @@ export const AiKnowledgeBaseCard: React.FC = () => {
       setError(err instanceof Error ? err.message : 'שגיאה במחיקת שאלה')
     },
   })
-
-  const handleStartEdit = (entry: ApiFaqEntry) => {
-    setEditItem(entry)
-    setEditQuestion(entry.question)
-    setEditAnswer(entry.answer)
-  }
 
   const handleDelete = async (entry: ApiFaqEntry) => {
     const ok = await confirm({
@@ -97,7 +64,10 @@ export const AiKnowledgeBaseCard: React.FC = () => {
         </div>
         <Button
           type="button"
-          onClick={() => setAddOpen(true)}
+          onClick={() => {
+            saveFaqMutation.reset()
+            setFaqTarget('new')
+          }}
           className="shrink-0 gap-1.5 text-xs font-bold"
         >
           <Plus size={14} />
@@ -132,7 +102,10 @@ export const AiKnowledgeBaseCard: React.FC = () => {
               <div className="flex items-center gap-1 shrink-0 pt-0.5">
                 <button
                   type="button"
-                  onClick={() => handleStartEdit(entry)}
+                  onClick={() => {
+                    saveFaqMutation.reset()
+                    setFaqTarget(entry)
+                  }}
                   className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
                   title="ערוך שאלה"
                 >
@@ -152,90 +125,13 @@ export const AiKnowledgeBaseCard: React.FC = () => {
         )}
       </div>
 
-      {/* Add Dialog */}
-      <ResponsiveDialog
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        title="הוספת שאלה נפוצה למאגר"
-      >
-        <div className="flex flex-col gap-4 font-assistant pt-2" dir="rtl">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">שאלה</label>
-            <Input
-              value={newQuestion}
-              onChange={(e) => setNewQuestion(e.target.value)}
-              placeholder="למשל: האם כואב לעשות קעקוע?"
-              dir="rtl"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">תשובה שהסוכן ימסור</label>
-            <Textarea
-              value={newAnswer}
-              onChange={(e) => setNewAnswer(e.target.value)}
-              placeholder="הסבר קצר, ברור ובגובה העיניים שהסוכן ישתמש בו בתשובותיו…"
-              className="min-h-28"
-              dir="rtl"
-            />
-          </div>
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => setAddOpen(false)}>
-              ביטול
-            </Button>
-            <Button
-              onClick={() => addFaqMutation.mutate({ question: newQuestion, answer: newAnswer })}
-              disabled={!newQuestion.trim() || !newAnswer.trim() || addFaqMutation.isPending}
-            >
-              {addFaqMutation.isPending ? 'מוסיף…' : 'הוסף שאלה'}
-            </Button>
-          </div>
-        </div>
-      </ResponsiveDialog>
-
-      {/* Edit Dialog */}
-      <ResponsiveDialog
-        open={Boolean(editItem)}
-        onOpenChange={(open) => !open && setEditItem(null)}
-        title="עריכת שאלה נפוצה"
-      >
-        <div className="flex flex-col gap-4 font-assistant pt-2" dir="rtl">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">שאלה</label>
-            <Input
-              value={editQuestion}
-              onChange={(e) => setEditQuestion(e.target.value)}
-              dir="rtl"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">תשובה</label>
-            <Textarea
-              value={editAnswer}
-              onChange={(e) => setEditAnswer(e.target.value)}
-              className="min-h-28"
-              dir="rtl"
-            />
-          </div>
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => setEditItem(null)}>
-              ביטול
-            </Button>
-            <Button
-              onClick={() =>
-                editItem &&
-                editFaqMutation.mutate({
-                  id: editItem.id,
-                  question: editQuestion,
-                  answer: editAnswer,
-                })
-              }
-              disabled={!editQuestion.trim() || !editAnswer.trim() || editFaqMutation.isPending}
-            >
-              {editFaqMutation.isPending ? 'שומר…' : 'שמור שינויים'}
-            </Button>
-          </div>
-        </div>
-      </ResponsiveDialog>
+      <FaqDialog
+        target={faqTarget}
+        onClose={() => setFaqTarget(null)}
+        onSave={(values) => saveFaqMutation.mutate(values)}
+        isSaving={saveFaqMutation.isPending}
+        error={saveFaqMutation.error instanceof Error ? saveFaqMutation.error.message : null}
+      />
     </div>
   )
 }

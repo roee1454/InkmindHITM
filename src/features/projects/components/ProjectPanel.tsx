@@ -82,8 +82,8 @@ export function ProjectPanel({ projectId, onClose }: { projectId: string | null;
       }}
       title={project ? project.title || 'פרויקט' : 'פרויקט'}
       description={project ? project.customer.name || 'לקוח ללא שם' : undefined}
-      hideHeader
-      contentClassName="gap-0 overflow-hidden p-0 max-lg:pt-3 lg:max-h-[min(54rem,calc(100dvh-2rem))] lg:max-w-3xl"
+      size="xl"
+      bare
     >
       {details.isLoading && <PanelSkeleton />}
       {details.isError && !project && (

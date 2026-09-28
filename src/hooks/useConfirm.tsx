@@ -52,7 +52,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     <ConfirmContext.Provider value={confirm}>
       {children}
       <AlertDialog open={pending !== null} onOpenChange={(open) => !open && settle(false)}>
-        <AlertDialogContent dir="rtl" className="font-assistant text-right rounded-2xl">
+        <AlertDialogContent dir="rtl" className="font-assistant text-right">
           <AlertDialogHeader>
             <AlertDialogTitle>{pending?.options.title}</AlertDialogTitle>
             {pending?.options.description && (

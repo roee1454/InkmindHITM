@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -63,56 +63,42 @@ export const EditClosureDialog: React.FC<EditClosureDialogProps> = ({
     <ResponsiveDialog
       open={Boolean(group)}
       onOpenChange={onOpenChange}
-      title="עריכת מועד סגירה"
+      title="עריכת ימי סגירה"
+      description={isSingleDate ? undefined : `${group?.dates.length} ימים. השם החדש יחול על כולם.`}
+      footer={
+        <DialogActions>
+          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            ביטול
+          </Button>
+          <Button type="submit" form="edit-closure-form" disabled={!reason.trim() || updateMutation.isPending} className="min-w-28">
+            {updateMutation.isPending ? 'שומר…' : 'שמירה'}
+          </Button>
+        </DialogActions>
+      }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 font-assistant pt-2" dir="rtl">
+      <form id="edit-closure-form" onSubmit={handleSubmit} className="form-stack" dir="rtl">
         {error && (
-          <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+          <p role="alert" className="text-sm font-bold text-destructive">
             {error}
-          </div>
+          </p>
         )}
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-muted-foreground">סיבת הסגירה / תיאור</label>
-          <Input
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="למשל: יום שיפוצים, אירוע פרטי"
-            required
-            dir="rtl"
-          />
+          <label htmlFor="closure-reason" className="form-label">
+            סיבה
+          </label>
+          <Input id="closure-reason" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="למשל: שיפוצים" required />
         </div>
 
         {isSingleDate && (
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">תאריך</label>
-            <Input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-              dir="ltr"
-              className="text-start"
-            />
+            <label htmlFor="closure-date" className="form-label">
+              תאריך
+            </label>
+            <Input id="closure-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required dir="ltr" className="text-start" />
           </div>
         )}
-
-        {!isSingleDate && (
-          <p className="text-xs text-muted-foreground">
-            מועד זה כולל {group?.dates.length} ימים רציפים. עריכת השם תחול על כל הימים בקבוצה.
-          </p>
-        )}
-
-        <div className="flex items-center justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            ביטול
-          </Button>
-          <Button type="submit" disabled={!reason.trim() || updateMutation.isPending}>
-            {updateMutation.isPending ? 'שומר…' : 'שמור שינויים'}
-          </Button>
-        </div>
       </form>
     </ResponsiveDialog>
   )
 }
-

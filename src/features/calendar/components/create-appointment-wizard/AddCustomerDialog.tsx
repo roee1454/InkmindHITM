@@ -1,12 +1,10 @@
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
-import { Button } from '@/components/ui/button'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { createCustomer } from '@/features/customers/server/customers'
-import { SOURCE_LABELS } from '@/features/customers/types'
+import { CustomerDialog } from '@/features/customers/components/CustomerDialog'
+import type { CustomerFormData } from '@/features/customers/types'
+import { queryKeys } from '@/lib/query-keys'
 import { toCanonicalE164Phone } from '@/lib/phone'
 
 interface CreatedCustomer {
@@ -21,26 +19,23 @@ interface AddCustomerDialogProps {
   onCreated: (customer: CreatedCustomer) => void
 }
 
-export const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ open, onOpenChange, onCreated }) => {
+// A walk-in booked from the calendar most likely came in through the door.
+const EMPTY: CustomerFormData = { name: '', phone: '', email: '', source: 'walk-in', isVip: false }
+
+/** The booking wizard's "new customer": the customers page's dialog, with its own state and save. */
+export function AddCustomerDialog({ open, onOpenChange, onCreated }: AddCustomerDialogProps) {
   const queryClient = useQueryClient()
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
-  const [source, setSource] = useState('walk-in')
-  const [isVip, setIsVip] = useState(false)
+  const [form, setForm] = useState<CustomerFormData>(EMPTY)
   const [error, setError] = useState<string | null>(null)
 
-  const resetForm = () => {
-    setName('')
-    setPhone('')
-    setEmail('')
-    setSource('walk-in')
-    setIsVip(false)
+  const close = () => {
+    setForm(EMPTY)
     setError(null)
+    onOpenChange(false)
   }
 
-  const createCustMutation = useMutation({
-    mutationFn: (body: { name: string; phone: string; email: string; source: string; isVip: boolean }) =>
+  const create = useMutation({
+    mutationFn: (body: CustomerFormData) =>
       createCustomer({
         data: {
           name: body.name || null,
@@ -50,106 +45,30 @@ export const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ open, onOp
           isVip: body.isVip,
         },
       }),
-    onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] })
-      onCreated({ id: res.id, name: name || 'לקוח', phone: toCanonicalE164Phone(phone) })
-      resetForm()
-      onOpenChange(false)
+    onSuccess: (res, body) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers })
+      onCreated({ id: res.id, name: body.name || 'לקוח', phone: toCanonicalE164Phone(body.phone) })
+      close()
     },
-    onError: (err: unknown) => {
-      setError(err instanceof Error ? err.message : 'שגיאה ביצירת הלקוח')
-    },
+    onError: (err: unknown) => setError(err instanceof Error ? err.message : 'שגיאה ביצירת הלקוח'),
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!phone) {
-      setError('מספר טלפון הוא שדה חובה')
-      return
-    }
+    if (!form.phone) return setError('מספר טלפון הוא שדה חובה')
     setError(null)
-    createCustMutation.mutate({ name: name || 'לקוח', phone, email, source, isVip })
+    create.mutate(form)
   }
 
   return (
-    <ResponsiveDialog
+    <CustomerDialog
       open={open}
-      onOpenChange={(next) => {
-        if (!next) resetForm()
-        onOpenChange(next)
-      }}
-      title="הוספת לקוח חדש"
-      description="הזן את פרטי הלקוח החדש במאגר."
-    >
-      {error && <p className="text-xs font-semibold text-destructive">{error}</p>}
-
-      <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-foreground">שם מלא</label>
-          <Input
-            type="text"
-            placeholder="למשל: דניאל חיים"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-foreground">מספר טלפון (חובה)</label>
-          <Input
-            type="text"
-            placeholder="למשל: 0547654321"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            dir="ltr"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-foreground">אימייל</label>
-          <Input
-            type="email"
-            placeholder="client@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            dir="ltr"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5" dir="rtl">
-          <label className="text-xs font-semibold text-foreground">מקור הגעה</label>
-          <Select value={source} onValueChange={setSource}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent align="end">
-              {Object.entries(SOURCE_LABELS).map(([k, v]) => (
-                <SelectItem key={k} value={k}>
-                  {v}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center justify-between border-t border-border pt-4">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-bold text-foreground">לקוח VIP</span>
-            <span className="text-micro text-muted-foreground">סמן לקוח זה כ-VIP</span>
-          </div>
-          <Switch checked={isVip} onCheckedChange={setIsVip} />
-        </div>
-
-        <Button
-          type="submit"
-          disabled={createCustMutation.isPending}
-          className="w-full rounded-xl mt-2 font-bold cursor-pointer"
-        >
-          {createCustMutation.isPending ? 'יוצר לקוח…' : 'הוסף לקוח'}
-        </Button>
-      </form>
-    </ResponsiveDialog>
+      onOpenChange={(next) => (next ? onOpenChange(true) : close())}
+      form={form}
+      onFormChange={(field, value) => setForm((f) => ({ ...f, [field]: value }))}
+      formError={error}
+      onSubmit={submit}
+      isSaving={create.isPending}
+    />
   )
 }
-
-export default AddCustomerDialog

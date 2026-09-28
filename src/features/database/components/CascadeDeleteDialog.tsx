@@ -67,7 +67,7 @@ export function CascadeDeleteDialog({ open, onOpenChange, collection, id, entity
 
   return (
     <AlertDialog open={open} onOpenChange={(next) => !remove.isPending && onOpenChange(next)}>
-      <AlertDialogContent dir="rtl" className="rounded-2xl border-border bg-card p-6 text-start font-assistant sm:max-w-lg">
+      <AlertDialogContent dir="rtl" className="border-border bg-card p-6 text-start font-assistant sm:max-w-lg">
         <AlertDialogHeader className="flex flex-col gap-2 text-start">
           <div className="flex items-center gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-destructive/15 text-destructive">
