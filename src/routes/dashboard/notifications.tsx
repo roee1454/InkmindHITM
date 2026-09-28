@@ -1,9 +1,11 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
 import { NotificationsPage } from '@/features/notifications/NotificationsPage'
+import type { NotificationsTab } from '@/features/notifications/NotificationsPage'
 
 const notificationsSearchSchema = z.object({
   highlightId: z.string().optional(),
+  tab: z.enum(['system', 'whatsapp']).optional(),
 })
 
 export const Route = createFileRoute('/dashboard/notifications')({
@@ -12,6 +14,7 @@ export const Route = createFileRoute('/dashboard/notifications')({
 })
 
 function NotificationsRouteComponent() {
-  const { highlightId } = Route.useSearch()
-  return <NotificationsPage highlightId={highlightId} />
+  const { highlightId, tab } = Route.useSearch()
+  const navigate = useNavigate({ from: Route.fullPath })
+  return <NotificationsPage highlightId={highlightId} tab={tab} onTabChange={(next: NotificationsTab) => navigate({ search: { tab: next }, replace: true })} />
 }

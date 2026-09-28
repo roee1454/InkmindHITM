@@ -2,9 +2,9 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import type { WhatsAppInboundEvent } from '@/integrations/whatsapp-cloud-api/types'
 
 // Mock dependencies
-const mockAddSystemNotification = vi.fn().mockResolvedValue({ id: 'notif_1' })
+const mockAddWhatsAppMessageNotification = vi.fn().mockResolvedValue({ id: 'notif_1' })
 vi.mock('@/features/notifications/server/notifications', () => ({
-  addSystemNotification: (...args: any[]) => mockAddSystemNotification(...args),
+  addWhatsAppMessageNotification: (...args: any[]) => mockAddWhatsAppMessageNotification(...args),
 }))
 
 vi.mock('@/integrations/whatsapp-cloud-api/settings.server', () => ({
@@ -111,7 +111,7 @@ describe('Webhook Inbound Message Notifications', () => {
     vi.clearAllMocks()
   })
 
-  it('dispatches addSystemNotification when a customer sends an inbound message', async () => {
+  it('files a WhatsApp message notification (sender, preview, conversation) when a customer writes in', async () => {
     const { processInboundEvent } = await import('@/features/conversations/server/webhook')
 
     const inboundEvent: WhatsAppInboundEvent = {
@@ -131,12 +131,11 @@ describe('Webhook Inbound Message Notifications', () => {
 
     await processInboundEvent(inboundEvent)
 
-    expect(mockAddSystemNotification).toHaveBeenCalledTimes(1)
-    expect(mockAddSystemNotification).toHaveBeenCalledWith({
-      title: expect.stringContaining('ישראל ישראלי'),
-      message: 'שלום, כמה עולה קעקוע קטן?',
-      type: 'info',
-      link: '/dashboard/conversations?chatId=conv_123',
+    expect(mockAddWhatsAppMessageNotification).toHaveBeenCalledTimes(1)
+    expect(mockAddWhatsAppMessageNotification).toHaveBeenCalledWith({
+      sender: 'ישראל ישראלי',
+      preview: 'שלום, כמה עולה קעקוע קטן?',
+      conversationId: 'conv_123',
     })
   })
 })

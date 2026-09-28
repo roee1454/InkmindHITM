@@ -22,7 +22,7 @@ import type PocketBase from 'pocketbase'
 import type { RecordModel } from 'pocketbase'
 import { getActiveAppointmentForBot } from '@/features/calendar/server/bot-appointments.server'
 import { routeInboundMessage } from './inbound-routing.server'
-import { addSystemNotification } from '@/features/notifications/server/notifications'
+import { addWhatsAppMessageNotification } from '@/features/notifications/server/notifications'
 import { hasStaffActionButtons } from '../utils/labels'
 
 export { getWhatsAppSettings } from '@/integrations/whatsapp-cloud-api/settings.server'
@@ -216,12 +216,9 @@ async function ingestInboundMessage(
           ? '📄 מסמך'
           : 'קובץ מדיה')
 
-  await addSystemNotification({
-    title: `הודעה חדשה מ-${senderDisplayName}`,
-    message: bodyPreview,
-    type: 'info',
-    link: `/dashboard/conversations?chatId=${conversation.id}`,
-  }).catch((err) => console.warn('[webhook] notification creation failed:', err))
+  await addWhatsAppMessageNotification({ sender: senderDisplayName, preview: bodyPreview, conversationId: conversation.id }).catch((err) =>
+    console.warn('[webhook] notification creation failed:', err),
+  )
 
   // Check if conversation requires staff intervention (has action buttons in UI)
   const hasStaffActions = hasStaffActionButtons({

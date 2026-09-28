@@ -580,12 +580,18 @@ export const markConversationAsSeen = createServerFn({ method: 'POST' })
       fields: 'id',
     })
 
-    await Promise.all(
-      unseenMessages.map((msg) =>
-        su.collection('messages').update(msg.id, { seen: true })
-      )
-    )
-    return { ok: true }
+    // The conversation's message notifications are read too: the WhatsApp tab of the notifications
+    // screen would otherwise keep listing messages staff have already answered.
+    const unreadNotifications = await su
+      .collection('notifications')
+      .getFullList({ filter: su.filter("kind = 'whatsapp_message' && read != true && link = {:link}", { link: `/dashboard/conversations?chatId=${data.conversationId}` }), fields: 'id' })
+      .catch(() => [])
+
+    await Promise.all([
+      ...unseenMessages.map((msg) => su.collection('messages').update(msg.id, { seen: true })),
+      ...unreadNotifications.map((n) => su.collection('notifications').update(n.id, { read: true })),
+    ])
+    return { ok: true, readNotifications: unreadNotifications.length }
   })
 
 export const getUnseenMessagesCount = createServerFn({ method: 'GET' }).handler(

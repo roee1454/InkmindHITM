@@ -7,6 +7,7 @@ import { sendPwaNotification } from '@/features/notifications/utils/pwa-notifica
 import type { MessageStatus, MessageType } from '@/integrations/whatsapp-cloud-api/types'
 import type { UIConversation, UIMessage } from '@/features/conversations/types'
 import type { ApiNotification } from '@/features/notifications/server/notifications'
+import { toNotificationKind } from '@/features/notifications/utils/notification-helpers'
 import type { RecordModel } from 'pocketbase'
 
 interface DashboardRealtimeProps {
@@ -222,6 +223,7 @@ export function useDashboardRealtime({ sessionToken, sessionStaff }: DashboardRe
           title: (data.record.title as string) || '',
           message: (data.record.message as string) || '',
           type: (data.record.type as ApiNotification['type']) || 'info',
+          kind: toNotificationKind(data.record.kind),
           read: Boolean(data.record.read),
           link: notifLink || undefined,
           created: data.record.created,
@@ -238,7 +240,10 @@ export function useDashboardRealtime({ sessionToken, sessionStaff }: DashboardRe
           return old + (newNotification.read ? 0 : 1)
         })
 
-        if (!notifLink?.includes('chatId=')) {
+        // A customer's message already toasts from the messages subscription above. Every system
+        // notification toasts — including escalations, which link to a conversation and used to
+        // be skipped by a `chatId=` check meant only for message notifications.
+        if (newNotification.kind === 'system') {
           toastRef.current(
             notifTitle,
             notifMessage,
