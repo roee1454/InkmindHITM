@@ -1,18 +1,17 @@
 import { useState } from 'react'
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useProjectFinance } from '@/features/payments/hooks/use-project-finance'
 import { useProjectDetails } from '../hooks/use-project-details'
-import { useProjectMilestones } from '../hooks/use-project-milestones'
 import { summarizeProject } from '../utils/panel'
-import type { ProjectDetails } from '../types'
-import { ProjectDetailsForm } from './ProjectDetailsForm'
+import { draftFrom, isDraftDirty, parseDraft } from '../utils/project-draft'
+import type { DraftField, ProjectDraft } from '../utils/project-draft'
 import { MarkProjectLostDialog } from './MarkProjectLostDialog'
 import { ProjectPanelHeader } from './project-panel/ProjectPanelHeader'
 import { ProjectFacts } from './project-panel/ProjectFacts'
 import { ProjectSessions } from './project-panel/ProjectSessions'
 import { ProjectPayments } from './project-panel/ProjectPayments'
+import { ProjectEditFooter, ProjectLifecycleFooter } from './project-panel/ProjectPanelFooter'
 
 function errorText(error: unknown): string | null {
   return error instanceof Error ? error.message : null
@@ -32,49 +31,45 @@ function PanelSkeleton() {
   )
 }
 
-function ProjectFooter({ project, onMarkLost }: { project: ProjectDetails; onMarkLost: () => void }) {
-  const { reopen, complete } = useProjectMilestones()
-  const closed = project.stage === 'lost' || project.stage === 'completed'
-  return (
-    <footer className="flex shrink-0 items-center justify-between gap-2 border-t border-border px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] lg:px-6 lg:pb-3">
-      {closed ? (
-        <Button type="button" variant="outline" size="sm" className="ms-auto" disabled={reopen.isPending} onClick={() => reopen.mutate(project.id)}>
-          פתיחה מחדש
-        </Button>
-      ) : (
-        <>
-          <Button type="button" variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={onMarkLost}>
-            סימון כאבוד
-          </Button>
-          <Button type="button" variant="outline" size="sm" disabled={complete.isPending} onClick={() => complete.mutate(project.id)}>
-            סיום פרויקט
-          </Button>
-        </>
-      )}
-    </footer>
-  )
-}
-
 /**
  * One tattoo piece, whole: where it stands, what it's worth and what's owed, every appointment in
  * it and every payment against it. Opened from the projects board, the calendar and the customer
- * card. Editing the name, quote and estimate is a mode of the header, not the first thing on screen.
+ * card. Editing the name, quote and estimate happens in place — the title and the facts become fields,
+ * the footer becomes the save bar — so nothing moves while staff edit.
  */
 export function ProjectPanel({ projectId, onClose }: { projectId: string | null; onClose: () => void }) {
   const { details, update, move } = useProjectDetails(projectId)
   const finance = useProjectFinance(projectId)
-  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState<ProjectDraft | null>(null)
+  const [invalid, setInvalid] = useState<{ field: DraftField; message: string } | null>(null)
   const [losing, setLosing] = useState(false)
   const project = details.data
   const now = new Date()
   const summary = project ? summarizeProject(project, finance.data, now) : null
+
+  const stopEditing = () => {
+    setDraft(null)
+    setInvalid(null)
+    update.reset()
+  }
+  const changeDraft = (field: DraftField, value: string) => {
+    setDraft((current) => current && { ...current, [field]: value })
+    if (invalid?.field === field) setInvalid(null)
+  }
+  const save = () => {
+    if (!draft) return
+    const result = parseDraft(draft)
+    if (!result.ok) return setInvalid({ field: result.field, message: result.message })
+    update.mutate(result.values, { onSuccess: stopEditing })
+  }
+  const edit = draft ? { draft, invalidField: invalid?.field ?? null, onDraftChange: changeDraft } : null
 
   return (
     <ResponsiveDialog
       open={Boolean(projectId)}
       onOpenChange={(open) => {
         if (open) return
-        setEditing(false)
+        stopEditing()
         onClose()
       }}
       title={project ? project.title || 'פרויקט' : 'פרויקט'}
@@ -88,37 +83,57 @@ export function ProjectPanel({ projectId, onClose }: { projectId: string | null;
       )}
       {project && summary && (
         <>
-          {editing ? (
-            <div className="px-5 pt-5 pb-4 pe-12 lg:px-6 lg:pt-6 lg:pe-14">
-              <ProjectDetailsForm
-                project={project}
-                isSaving={update.isPending}
-                error={errorText(update.error)}
-                onSave={(values) => update.mutate(values, { onSuccess: () => setEditing(false) })}
-                onCancel={() => setEditing(false)}
-              />
-            </div>
-          ) : (
-            <ProjectPanelHeader project={project} now={now} onEdit={() => setEditing(true)} />
-          )}
+          <form
+            aria-label={draft ? 'עריכת פרטי הפרויקט' : undefined}
+            className="flex min-h-0 flex-1 flex-col"
+            onSubmit={(event) => {
+              event.preventDefault()
+              save()
+            }}
+            onKeyDown={(event) => {
+              // Esc while editing cancels the edit; it shouldn't also close the whole panel.
+              if (event.key !== 'Escape' || !draft) return
+              event.stopPropagation()
+              stopEditing()
+            }}
+          >
+            <ProjectPanelHeader
+              project={project}
+              now={now}
+              draft={draft}
+              invalidField={invalid?.field ?? null}
+              onDraftChange={changeDraft}
+              onEdit={() => setDraft(draftFrom(project))}
+            />
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <div className="flex flex-col gap-6 px-5 pb-6 lg:px-6">
-              <ProjectFacts project={project} summary={summary} finance={finance.data} />
-              <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,19rem)] lg:gap-8">
-                <ProjectSessions
-                  appointments={summary.appointments}
-                  project={project}
-                  isMoving={move.isPending}
-                  onMove={(appointmentId, target) => move.mutate({ appointmentId, target })}
-                />
-                <ProjectPayments finance={finance.data} isLoading={finance.isLoading} error={errorText(finance.error)} appointments={summary.appointments} />
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <div className="flex flex-col gap-6 px-5 pb-6 lg:px-6">
+                <ProjectFacts project={project} summary={summary} finance={finance.data} edit={edit} />
+                <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,19rem)] lg:gap-8">
+                  <ProjectSessions
+                    appointments={summary.appointments}
+                    project={project}
+                    isMoving={move.isPending}
+                    onMove={(appointmentId, target) => move.mutate({ appointmentId, target })}
+                  />
+                  <ProjectPayments finance={finance.data} isLoading={finance.isLoading} error={errorText(finance.error)} appointments={summary.appointments} />
+                </div>
+                {move.error && <p className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">{errorText(move.error)}</p>}
               </div>
-              {move.error && <p className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">{errorText(move.error)}</p>}
             </div>
-          </div>
 
-          {project.canManage && <ProjectFooter project={project} onMarkLost={() => setLosing(true)} />}
+            {draft ? (
+              <ProjectEditFooter
+                error={invalid?.message ?? errorText(update.error)}
+                canSave={isDraftDirty(draft, project)}
+                isSaving={update.isPending}
+                onCancel={stopEditing}
+              />
+            ) : (
+              project.canManage && <ProjectLifecycleFooter project={project} onMarkLost={() => setLosing(true)} />
+            )}
+          </form>
+          {/* Outside the form: it portals out of the DOM, but its events would still bubble through the React tree into this form. */}
           {losing && <MarkProjectLostDialog projectId={project.id} projectTitle={project.title} open onOpenChange={setLosing} />}
         </>
       )}

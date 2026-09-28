@@ -2,8 +2,10 @@ import { PencilSimple } from '@/components/ui/icon'
 import { formatPhoneForDisplay } from '@/lib/phone'
 import { LOST_REASON_LABELS } from '../../utils/labels'
 import { daysInStage } from '../../utils/pipeline'
+import type { ProjectDraft, DraftField } from '../../utils/project-draft'
 import type { ProjectDetails } from '../../types'
 import { ProjectStageBadge } from '../ProjectStageBadge'
+import { PanelInput } from './PanelInput'
 
 function stageAge(days: number | null): string | null {
   if (days === null) return null
@@ -12,8 +14,18 @@ function stageAge(days: number | null): string | null {
   return `${days} ימים בשלב`
 }
 
+interface ProjectPanelHeaderProps {
+  project: ProjectDetails
+  now: Date
+  /** Set while editing: the title becomes a field in the same place and size. */
+  draft: ProjectDraft | null
+  invalidField: DraftField | null
+  onDraftChange: (field: DraftField, value: string) => void
+  onEdit: () => void
+}
+
 /** Where the piece stands and whose it is: stage, title, customer — and the way into editing it. */
-export function ProjectPanelHeader({ project, now, onEdit }: { project: ProjectDetails; now: Date; onEdit: () => void }) {
+export function ProjectPanelHeader({ project, now, draft, invalidField, onDraftChange, onEdit }: ProjectPanelHeaderProps) {
   const lost = project.stage === 'lost' && project.lostReason
   const age = stageAge(daysInStage(project.stageChangedAt, now))
 
@@ -32,8 +44,20 @@ export function ProjectPanelHeader({ project, now, onEdit }: { project: ProjectD
       </div>
 
       <div className="flex items-start justify-between gap-3">
-        <h2 className="min-w-0 text-xl font-extrabold tracking-tight text-balance text-foreground lg:text-2xl">{project.title || 'פרויקט ללא שם'}</h2>
-        {project.canManage && (
+        {draft ? (
+          <PanelInput
+            autoFocus
+            aria-label="שם הפרויקט"
+            aria-invalid={invalidField === 'title' || undefined}
+            maxLength={200}
+            value={draft.title}
+            onChange={(e) => onDraftChange('title', e.target.value)}
+            className="-mx-2.5 h-auto py-1 text-xl font-extrabold tracking-tight md:h-auto md:text-xl lg:text-2xl"
+          />
+        ) : (
+          <h2 className="min-w-0 text-xl font-extrabold tracking-tight text-balance text-foreground lg:text-2xl">{project.title || 'פרויקט ללא שם'}</h2>
+        )}
+        {project.canManage && !draft && (
           <button
             type="button"
             onClick={onEdit}
