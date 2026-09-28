@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { CalendarDays, AlertTriangle } from '@/components/ui/icon'
+import { AlertTriangle } from '@/components/ui/icon'
+import { Button } from '@/components/ui/button'
+import { SettingsRow } from '@/features/settings/components/settings-layout'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getCurrentStaffInfo } from '@/features/settings/server/staff'
 import type { CurrentStaffInfo } from '@/features/settings/server/staff'
@@ -14,8 +16,8 @@ export interface GoogleCalendarConnectionProps {
   staffId: string
 }
 
-/** One quiet row — icon chip, label, account email, status dot, connect/disconnect. No Google
- *  logo, no gradient, no large card (deliberate — nothing to license or maintain visually). */
+/** One settings row: the connected account (or why it failed) and connect/disconnect. No Google
+ *  logo (deliberate — nothing to license or maintain visually). */
 export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> = ({ staffId }) => {
   const queryClient = useQueryClient()
   const confirm = useConfirm()
@@ -96,64 +98,44 @@ export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> =
     setImgError(false)
   }, [googlePicture])
 
+  const hint = connectError ? (
+    <span className="font-bold text-destructive">{connectError}</span>
+  ) : isError ? (
+    <span className="inline-flex items-center gap-1 text-destructive">
+      <AlertTriangle size={12} className="shrink-0" />
+      {connection.lastError || 'שגיאת סנכרון'}
+    </span>
+  ) : isConnected && connection.googleAccountEmail ? (
+    <span dir="ltr">{connection.googleAccountEmail}</span>
+  ) : (
+    'תורים שנקבעים למקעקע נכנסים גם ליומן שלו.'
+  )
+
   return (
-    <div className="flex flex-col gap-1.5 font-assistant">
-      <div className="flex items-center gap-3 rounded-2xl bg-background px-3.5 py-2.5">
-        {isConnected && googlePicture && !imgError ? (
-          <img
-            src={googlePicture}
-            alt="Google Account"
-            referrerPolicy="no-referrer"
-            onError={() => setImgError(true)}
-            className="size-9 shrink-0 rounded-full object-cover border border-border"
-          />
-        ) : isConnected && connection?.googleAccountEmail ? (
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs uppercase border border-border">
-            {connection.googleAccountEmail.charAt(0)}
-          </div>
-        ) : (
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-            <CalendarDays size={18} />
-          </div>
+    <SettingsRow label="יומן Google" hint={hint}>
+      <div className="flex items-center justify-end gap-3">
+        {isConnected && googlePicture && !imgError && (
+          <img src={googlePicture} alt="" referrerPolicy="no-referrer" onError={() => setImgError(true)} className="size-7 shrink-0 rounded-full border border-border object-cover" />
         )}
-        <div className="min-w-0 flex-1">
-          <div className="text-sm font-extrabold text-foreground">Google Calendar</div>
-          {isConnected && connection.googleAccountEmail && (
-            <div dir="ltr" className="truncate text-end text-xs text-muted-foreground">
-              {connection.googleAccountEmail}
-            </div>
-          )}
-          {isError && (
-            <div className="flex items-center gap-1 text-xs text-destructive">
-              <AlertTriangle size={12} className="shrink-0" />
-              {connection.lastError || 'שגיאת סנכרון'}
-            </div>
-          )}
-        </div>
         {isConnected ? (
-          <div className="flex shrink-0 items-center gap-2">
-            <span className="flex items-center gap-1.5 text-sm font-bold text-emerald-500">
-              <span className="size-2 rounded-full bg-emerald-500" />
-              מחובר
-            </span>
+          <>
+            <span className="text-sm font-bold text-status-done">מחובר</span>
             {canManage && (
-              <button type="button" onClick={handleDisconnect} disabled={disconnectMutation.isPending} className="cursor-pointer text-sm font-bold text-muted-foreground">
-                {disconnectMutation.isPending ? 'מנתק…' : 'נתק'}
-              </button>
+              <Button type="button" variant="ghost" size="sm" onClick={handleDisconnect} disabled={disconnectMutation.isPending}>
+                {disconnectMutation.isPending ? 'מנתק…' : 'ניתוק'}
+              </Button>
             )}
-          </div>
+          </>
         ) : (
           canManage && (
-            <button type="button" onClick={handleConnect} disabled={connecting} className="shrink-0 cursor-pointer text-sm font-extrabold text-primary">
-              {connecting ? 'מתחבר…' : isError ? 'התחבר מחדש' : 'חבר יומן'}
-            </button>
+            <Button type="button" variant="outline" size="sm" onClick={handleConnect} disabled={connecting}>
+              {connecting ? 'מתחבר…' : isError ? 'חיבור מחדש' : 'חיבור'}
+            </Button>
           )
         )}
       </div>
-      {connectError && <p className="px-1 text-xs font-bold text-destructive">{connectError}</p>}
-    </div>
+    </SettingsRow>
   )
 }
 
 export default GoogleCalendarConnection
-

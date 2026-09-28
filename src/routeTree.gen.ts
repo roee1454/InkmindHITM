@@ -41,6 +41,7 @@ import { Route as ApiInternalAppointmentSyncRouteImport } from './routes/api/int
 import { Route as ApiInternalLifecycleTickRouteImport } from './routes/api/internal.lifecycle-tick'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardSettingsAiRouteImport } from './routes/dashboard/settings/ai'
+import { Route as DashboardSettingsClosuresRouteImport } from './routes/dashboard/settings/closures'
 import { Route as DashboardSettingsGeneralRouteImport } from './routes/dashboard/settings/general'
 import { Route as DashboardSettingsPolicyRouteImport } from './routes/dashboard/settings/policy'
 import { Route as DashboardSettingsSystemRouteImport } from './routes/dashboard/settings/system'
@@ -214,6 +215,12 @@ const DashboardSettingsAiRoute = DashboardSettingsAiRouteImport.update({
   path: '/ai',
   getParentRoute: () => DashboardSettingsRouteRoute,
 } as any)
+const DashboardSettingsClosuresRoute =
+  DashboardSettingsClosuresRouteImport.update({
+    id: '/closures',
+    path: '/closures',
+    getParentRoute: () => DashboardSettingsRouteRoute,
+  } as any)
 const DashboardSettingsGeneralRoute =
   DashboardSettingsGeneralRouteImport.update({
     id: '/general',
@@ -292,6 +299,7 @@ export interface FileRoutesByFullPath {
   '/api/internal/appointment-sync': typeof ApiInternalAppointmentSyncRoute
   '/api/internal/lifecycle-tick': typeof ApiInternalLifecycleTickRoute
   '/dashboard/settings/ai': typeof DashboardSettingsAiRoute
+  '/dashboard/settings/closures': typeof DashboardSettingsClosuresRoute
   '/dashboard/settings/general': typeof DashboardSettingsGeneralRoute
   '/dashboard/settings/policy': typeof DashboardSettingsPolicyRoute
   '/dashboard/settings/system': typeof DashboardSettingsSystemRoute
@@ -331,6 +339,7 @@ export interface FileRoutesByTo {
   '/api/internal/appointment-sync': typeof ApiInternalAppointmentSyncRoute
   '/api/internal/lifecycle-tick': typeof ApiInternalLifecycleTickRoute
   '/dashboard/settings/ai': typeof DashboardSettingsAiRoute
+  '/dashboard/settings/closures': typeof DashboardSettingsClosuresRoute
   '/dashboard/settings/general': typeof DashboardSettingsGeneralRoute
   '/dashboard/settings/policy': typeof DashboardSettingsPolicyRoute
   '/dashboard/settings/system': typeof DashboardSettingsSystemRoute
@@ -374,6 +383,7 @@ export interface FileRoutesById {
   '/api/internal/appointment-sync': typeof ApiInternalAppointmentSyncRoute
   '/api/internal/lifecycle-tick': typeof ApiInternalLifecycleTickRoute
   '/dashboard/settings/ai': typeof DashboardSettingsAiRoute
+  '/dashboard/settings/closures': typeof DashboardSettingsClosuresRoute
   '/dashboard/settings/general': typeof DashboardSettingsGeneralRoute
   '/dashboard/settings/policy': typeof DashboardSettingsPolicyRoute
   '/dashboard/settings/system': typeof DashboardSettingsSystemRoute
@@ -418,6 +428,7 @@ export interface FileRouteTypes {
     | '/api/internal/appointment-sync'
     | '/api/internal/lifecycle-tick'
     | '/dashboard/settings/ai'
+    | '/dashboard/settings/closures'
     | '/dashboard/settings/general'
     | '/dashboard/settings/policy'
     | '/dashboard/settings/system'
@@ -457,6 +468,7 @@ export interface FileRouteTypes {
     | '/api/internal/appointment-sync'
     | '/api/internal/lifecycle-tick'
     | '/dashboard/settings/ai'
+    | '/dashboard/settings/closures'
     | '/dashboard/settings/general'
     | '/dashboard/settings/policy'
     | '/dashboard/settings/system'
@@ -499,6 +511,7 @@ export interface FileRouteTypes {
     | '/api/internal/appointment-sync'
     | '/api/internal/lifecycle-tick'
     | '/dashboard/settings/ai'
+    | '/dashboard/settings/closures'
     | '/dashboard/settings/general'
     | '/dashboard/settings/policy'
     | '/dashboard/settings/system'
@@ -754,6 +767,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsAiRouteImport
       parentRoute: typeof DashboardSettingsRouteRoute
     }
+    '/dashboard/settings/closures': {
+      id: '/dashboard/settings/closures'
+      path: '/closures'
+      fullPath: '/dashboard/settings/closures'
+      preLoaderRoute: typeof DashboardSettingsClosuresRouteImport
+      parentRoute: typeof DashboardSettingsRouteRoute
+    }
     '/dashboard/settings/general': {
       id: '/dashboard/settings/general'
       path: '/general'
@@ -833,6 +853,7 @@ const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
 
 interface DashboardSettingsRouteRouteChildren {
   DashboardSettingsAiRoute: typeof DashboardSettingsAiRoute
+  DashboardSettingsClosuresRoute: typeof DashboardSettingsClosuresRoute
   DashboardSettingsGeneralRoute: typeof DashboardSettingsGeneralRoute
   DashboardSettingsPolicyRoute: typeof DashboardSettingsPolicyRoute
   DashboardSettingsSystemRoute: typeof DashboardSettingsSystemRoute
@@ -843,6 +864,7 @@ interface DashboardSettingsRouteRouteChildren {
 const DashboardSettingsRouteRouteChildren: DashboardSettingsRouteRouteChildren =
   {
     DashboardSettingsAiRoute: DashboardSettingsAiRoute,
+    DashboardSettingsClosuresRoute: DashboardSettingsClosuresRoute,
     DashboardSettingsGeneralRoute: DashboardSettingsGeneralRoute,
     DashboardSettingsPolicyRoute: DashboardSettingsPolicyRoute,
     DashboardSettingsSystemRoute: DashboardSettingsSystemRoute,

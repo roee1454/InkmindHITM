@@ -1,306 +1,159 @@
-import React, { useState } from 'react'
-import {
-  User,
-  Clock,
-  KeyRound,
-  ChevronLeft,
-  Mail,
-  Check,
-  Copy,
-  UserCog,
-  Trash2,
-} from '@/components/ui/icon'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { StaffMember, ApiArtistProfile, CurrentStaffInfo } from '@/features/settings/server/settings'
-import { getWorkingHours, resendStaffInvite } from '@/features/settings/server/settings'
-import type { ApiGoogleConnection } from '@/features/calendar/types'
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
-import { ArtistProfileEditor } from './ArtistProfileEditor'
+import { useState } from 'react'
+import { Check, ChevronLeft, Copy } from '@/components/ui/icon'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import type { StaffMember, CurrentStaffInfo } from '@/features/settings/server/settings'
+import { resendStaffInvite } from '@/features/settings/server/settings'
+import { Button } from '@/components/ui/button'
+import { CascadeDeleteDialog } from '@/features/database/components/CascadeDeleteDialog'
+import { SettingsRow, SettingsSection } from '@/features/settings/components/settings-layout'
 import { GoogleCalendarConnection } from './GoogleCalendarConnection'
 import { EditStaffInfoDialog } from './EditStaffInfoDialog'
 import { SetPasswordDialog } from './SetPasswordDialog'
-import { summarizeWorkingHours } from '../utils/summarizeWorkingHours'
-import { Button } from '@/components/ui/button'
-import { CascadeDeleteDialog } from '@/features/database/components/CascadeDeleteDialog'
+import { MemberProfileSection } from './MemberProfileSection'
+import { MemberHoursSection } from './MemberHoursSection'
+
+const ROLE_LABELS: Record<string, string> = { owner: 'בעלים', admin: 'מנהל/ת', staff: 'צוות' }
 
 export interface MemberDetailProps {
   member: StaffMember
   currentStaff: CurrentStaffInfo | undefined
-  googleConnections: ApiGoogleConnection[]
   onDeleted?: () => void
 }
 
-export const MemberDetail: React.FC<MemberDetailProps> = ({
-  member,
-  currentStaff,
-  googleConnections,
-  onDeleted,
-}) => {
-  const queryClient = useQueryClient()
+/** A row that opens a dialog: the label, and a chevron where the control would be. */
+function DialogRowTrigger({ label, hint }: { label: string; hint?: string }) {
+  return (
+    <button type="button" className="w-full cursor-pointer border-t border-border/70 text-start transition-colors first:border-t-0 hover:bg-muted/40 [&>div]:border-t-0">
+      <SettingsRow label={label} hint={hint}>
+        <div className="flex justify-end">
+          <ChevronLeft size={18} className="text-muted-foreground" />
+        </div>
+      </SettingsRow>
+    </button>
+  )
+}
 
+/**
+ * One team member: who they are, their profile and hours (saved with the page's bar), their
+ * calendar and access, and — set apart — removing them. It used to be an accordion of three cards
+ * inside a card.
+ */
+export function MemberDetail({ member, currentStaff, onDeleted }: MemberDetailProps) {
+  const queryClient = useQueryClient()
   const [editOpen, setEditOpen] = useState(false)
   const [pwOpen, setPwOpen] = useState(false)
   const [copiedInvite, setCopiedInvite] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
-  const { data: memberHours } = useQuery({
-    queryKey: ['working-hours', member.id],
-    queryFn: () => getWorkingHours({ data: { staffId: member.id } }),
-  })
+  const isSelf = currentStaff?.id === member.id
+  const isAdmin = Boolean(currentStaff?.isAdmin)
+  const canEdit = isAdmin || isSelf
+  const refreshStaff = () => queryClient.invalidateQueries({ queryKey: ['staff-list'] })
 
-  const resendMutation = useMutation({
+  const copyInvite = (link: string) => {
+    void navigator.clipboard.writeText(link)
+    setCopiedInvite(true)
+    setTimeout(() => setCopiedInvite(false), 2500)
+  }
+
+  const resend = useMutation({
     mutationFn: (staffId: string) => resendStaffInvite({ data: { staffId } }),
     onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: ['staff-list'] })
-      if (res?.inviteLink) {
-        navigator.clipboard.writeText(`${window.location.origin}${res.inviteLink}`)
-        setCopiedInvite(true)
-        setTimeout(() => setCopiedInvite(false), 2500)
-      }
+      refreshStaff()
+      if (res?.inviteLink) copyInvite(`${window.location.origin}${res.inviteLink}`)
     },
   })
 
-  const handleDelete = () => {
-    setIsDeleteDialogOpen(true)
-  }
-
-  const isSelf = currentStaff?.id === member.id
-  const canEdit = Boolean(currentStaff?.isAdmin || isSelf)
-  const profile: ApiArtistProfile = {
-    id: member.id,
-    staffId: member.id,
-    portfolioUrl: member.portfolioUrl,
-    bio: member.bio,
-    artistName: member.name,
-  }
-
-  const googleConnection = googleConnections.find(
-    (c) => c.staffId === member.id && c.status === 'connected',
-  )
-  const isConnected = Boolean(googleConnection)
-  const googlePicture = googleConnection?.googleAccountPicture
-  const hoursSummary = summarizeWorkingHours(memberHours)
-
   return (
-    <div className="flex flex-col gap-5 font-assistant" dir="rtl">
-      {/* Member Header */}
-      <div className="flex flex-col gap-0.5 border-b border-border pb-4">
-        <h2 className="text-xl font-black text-foreground">{member.name}</h2>
-        <span dir="ltr" className="text-xs text-muted-foreground font-medium text-end">
-          {member.email}
-        </span>
-      </div>
+    <div className="flex flex-col gap-8">
+      <header className="flex flex-col gap-1 px-1">
+        <h2 className="text-xl font-extrabold tracking-tight text-foreground">{member.name}</h2>
+        <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+          <span>{member.invitePending ? 'ממתין להרשמה' : `${ROLE_LABELS[member.role] ?? member.role}${isSelf ? ' · החשבון שלך' : ''}`}</span>
+          <span aria-hidden>·</span>
+          <span dir="ltr">{member.email}</span>
+        </p>
+      </header>
 
-      {/* Pending Invite Notice */}
       {member.invitePending && (
-        <div className="rounded-2xl border border-dashed border-border bg-card/60 p-4 flex flex-col gap-2.5 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
-              <Mail size={16} className="text-muted-foreground" />
-              <span>הזמנה ממתינה לקליטה ע״י העובד</span>
+        <SettingsSection title="ההזמנה" description="העובד עוד לא הפעיל את החשבון. הקישור תקף 7 ימים.">
+          <SettingsRow label="קישור ההזמנה" hint="שולחים לעובד בוואטסאפ או במייל.">
+            <div className="flex flex-wrap justify-end gap-2">
+              {member.inviteToken && (
+                <Button type="button" variant="outline" size="sm" onClick={() => copyInvite(`${window.location.origin}/invite?token=${member.inviteToken}`)} className="gap-1.5">
+                  {copiedInvite ? <Check size={14} /> : <Copy size={14} />}
+                  {copiedInvite ? 'הועתק' : 'העתקה'}
+                </Button>
+              )}
+              {isAdmin && (
+                <Button type="button" variant="ghost" size="sm" disabled={resend.isPending} onClick={() => resend.mutate(member.id)}>
+                  {resend.isPending ? 'מחדש…' : 'קישור חדש'}
+                </Button>
+              )}
             </div>
-            <span className="inline-flex items-center gap-1 rounded-md border border-dashed border-border bg-muted/50 px-2 py-0.5 text-2xs font-medium text-muted-foreground">
-              ממתין להרשמה
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            העובד טרם הפעיל את החשבון וטרם קבע סיסמה. קישור ההזמנה תקף ל-7 ימים.
-          </p>
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            {member.inviteToken && (
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  navigator.clipboard.writeText(
-                    `${window.location.origin}/invite?token=${member.inviteToken}`,
-                  )
-                  setCopiedInvite(true)
-                  setTimeout(() => setCopiedInvite(false), 2500)
-                }}
-                className="gap-1.5 font-bold cursor-pointer"
-              >
-                {copiedInvite ? <Check size={14} /> : <Copy size={14} />}
-                <span>{copiedInvite ? 'הקישור הועתק!' : 'העתקת קישור הזמנה'}</span>
-              </Button>
-            )}
-            {currentStaff?.isAdmin && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={resendMutation.isPending}
-                onClick={() => resendMutation.mutate(member.id)}
-                className="font-bold cursor-pointer"
-              >
-                {resendMutation.isPending ? 'מחדש…' : 'חידוש והעתקה חוזרת'}
-              </Button>
-            )}
-          </div>
-        </div>
+          </SettingsRow>
+        </SettingsSection>
       )}
 
-      {/* 3 Collapsible Sections using Radix Accordion */}
-      <Accordion key={member.id} type="multiple" defaultValue={['profile']} className="flex flex-col gap-3">
-        {/* Section 1: Profile */}
-        <AccordionItem value="profile">
-          <AccordionTrigger className="p-4 hover:bg-muted/30">
-            <div className="flex items-center gap-2.5">
-              <User size={18} className="text-muted-foreground" />
-              <span className="font-bold text-sm text-foreground">פרופיל</span>
-            </div>
-            <span className="text-xs text-muted-foreground me-2">portfolio + bio</span>
-          </AccordionTrigger>
-          <AccordionContent className="border-t border-border p-4 bg-background/50">
-            <ArtistProfileEditor
+      <MemberProfileSection member={member} readOnly={!canEdit} />
+      <MemberHoursSection staffId={member.id} readOnly={!canEdit} />
+
+      <SettingsSection title="יומן וגישה">
+        <GoogleCalendarConnection staffId={member.id} />
+        {isAdmin && (
+          <>
+            <EditStaffInfoDialog
+              open={editOpen}
+              onOpenChange={setEditOpen}
               staffId={member.id}
-              profile={profile}
+              name={member.name}
+              email={member.email}
+              phone={member.phone}
+              role={member.role as 'owner' | 'admin' | 'staff'}
               onSaved={() => {
-                queryClient.invalidateQueries({ queryKey: ['staff-list'] })
+                refreshStaff()
+                setEditOpen(false)
               }}
-              readOnly={!canEdit}
-              activeTab="profile"
-              hideTabSelector
-              bare
+              trigger={<DialogRowTrigger label="שם, אימייל ותפקיד" />}
             />
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* Section 2: Working Hours */}
-        <AccordionItem value="hours">
-          <AccordionTrigger className="p-4 hover:bg-muted/30">
-            <div className="flex items-center gap-2.5">
-              <Clock size={18} className="text-muted-foreground" />
-              <span className="font-bold text-sm text-foreground">שעות עבודה</span>
-            </div>
-            <span className="text-xs text-muted-foreground me-2">{hoursSummary}</span>
-          </AccordionTrigger>
-          <AccordionContent className="border-t border-border p-4 bg-background/50">
-            <ArtistProfileEditor
+            <SetPasswordDialog
+              open={pwOpen}
+              onOpenChange={setPwOpen}
               staffId={member.id}
-              profile={profile}
+              name={member.name}
+              hasPassword={member.hasPassword}
               onSaved={() => {
-                queryClient.invalidateQueries({ queryKey: ['staff-list'] })
+                refreshStaff()
+                setPwOpen(false)
               }}
-              readOnly={!canEdit}
-              activeTab="hours"
-              hideTabSelector
-              bare
+              trigger={<DialogRowTrigger label={member.hasPassword ? 'איפוס סיסמה' : 'קביעת סיסמה'} hint={member.hasPassword ? undefined : 'עוד אין סיסמה.'} />}
             />
-          </AccordionContent>
-        </AccordionItem>
+          </>
+        )}
+      </SettingsSection>
 
-        {/* Section 3: Access */}
-        <AccordionItem value="access">
-          <AccordionTrigger className="p-4 hover:bg-muted/30">
-            <div className="flex items-center gap-2.5">
-              <KeyRound size={18} className="text-muted-foreground" />
-              <span className="font-bold text-sm text-foreground">גישה</span>
+      {isAdmin && !isSelf && (
+        <SettingsSection title="הסרה מהצוות" tone="danger">
+          <SettingsRow label={`הסרת ${member.name}`} hint="לפני ההסרה יוצג בדיוק מה משויך אליו/ה ומה יקרה לזה.">
+            <div className="flex justify-end">
+              <Button type="button" variant="outline" size="sm" onClick={() => setDeleteOpen(true)} className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive">
+                הסרה
+              </Button>
             </div>
-            <div className="flex items-center gap-1.5 me-2">
-              {isConnected && googlePicture && (
-                <img
-                  src={googlePicture}
-                  alt=""
-                  referrerPolicy="no-referrer"
-                  className="size-4.5 rounded-full object-cover border border-border"
-                />
-              )}
-              <span
-                className={`text-xs font-semibold ${
-                  isConnected
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-muted-foreground'
-                }`}
-              >
-                {isConnected ? 'יומן מחובר' : 'אין יומן מחובר'}
-              </span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="border-t border-border p-4 bg-background/50 flex flex-col gap-4">
-            <GoogleCalendarConnection staffId={member.id} />
-
-              {currentStaff?.isAdmin && (
-                <div className="rounded-xl border border-border bg-card overflow-hidden divide-y divide-border">
-                  <EditStaffInfoDialog
-                    open={editOpen}
-                    onOpenChange={setEditOpen}
-                    staffId={member.id}
-                    name={member.name}
-                    email={member.email}
-                    phone={member.phone}
-                    role={member.role as 'owner' | 'admin' | 'staff'}
-                    onSaved={() => {
-                      queryClient.invalidateQueries({ queryKey: ['staff-list'] })
-                      setEditOpen(false)
-                    }}
-                    trigger={
-                      <button
-                        type="button"
-                        className="w-full flex items-center justify-between p-3.5 hover:bg-muted/40 transition-colors cursor-pointer text-right"
-                      >
-                        <span className="flex items-center gap-2.5 text-sm font-bold text-foreground">
-                          <UserCog size={17} className="text-muted-foreground" />
-                          עריכת פרטים
-                        </span>
-                        <ChevronLeft size={18} className="text-muted-foreground" />
-                      </button>
-                    }
-                  />
-
-                  <SetPasswordDialog
-                    open={pwOpen}
-                    onOpenChange={setPwOpen}
-                    staffId={member.id}
-                    name={member.name}
-                    hasPassword={member.hasPassword}
-                    onSaved={() => {
-                      queryClient.invalidateQueries({ queryKey: ['staff-list'] })
-                      setPwOpen(false)
-                    }}
-                    trigger={
-                      <button
-                        type="button"
-                        className="w-full flex items-center justify-between p-3.5 hover:bg-muted/40 transition-colors cursor-pointer text-right"
-                      >
-                        <span className="flex items-center gap-2.5 text-sm font-bold text-foreground">
-                          <KeyRound size={17} className="text-muted-foreground" />
-                          {member.hasPassword ? 'איפוס סיסמה' : 'קביעת סיסמה'}
-                        </span>
-                        <ChevronLeft size={18} className="text-muted-foreground" />
-                      </button>
-                    }
-                  />
-                </div>
-              )}
-
-              {currentStaff?.isAdmin && !isSelf && (
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={handleDelete}
-                    className="flex items-center justify-center gap-1.5 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-2.5 text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-                  >
-                    <Trash2 size={15} />
-                    <span>מחיקת חבר צוות</span>
-                  </button>
-
-                  <CascadeDeleteDialog
-                    open={isDeleteDialogOpen}
-                    onOpenChange={setIsDeleteDialogOpen}
-                    collection="staff"
-                    id={member.id}
-                    entityName={member.name}
-                    onDeleted={() => {
-                      queryClient.invalidateQueries({ queryKey: ['staff-list'] })
-                      onDeleted?.()
-                    }}
-                  />
-                </div>
-              )}
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+          </SettingsRow>
+          <CascadeDeleteDialog
+            open={deleteOpen}
+            onOpenChange={setDeleteOpen}
+            collection="staff"
+            id={member.id}
+            entityName={member.name}
+            onDeleted={() => {
+              refreshStaff()
+              onDeleted?.()
+            }}
+          />
+        </SettingsSection>
+      )}
     </div>
   )
 }

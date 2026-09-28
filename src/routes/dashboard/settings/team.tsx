@@ -12,13 +12,5 @@ export const Route = createFileRoute('/dashboard/settings/team')({
 function TeamPage() {
   const navigate = useNavigate({ from: Route.fullPath })
   const { staff: staffId } = Route.useSearch()
-
-  return (
-    <div className="flex flex-col gap-[18px] px-4 pt-5 pb-8 font-assistant lg:px-8 lg:pt-8" dir="rtl">
-      <TeamTab
-        selectedStaffId={staffId}
-        onSelectStaff={(id: string | null) => navigate({ search: id ? { staff: id } : {} })}
-      />
-    </div>
-  )
+  return <TeamTab selectedStaffId={staffId} onSelectStaff={(id: string | null) => navigate({ search: id ? { staff: id } : {} })} />
 }
