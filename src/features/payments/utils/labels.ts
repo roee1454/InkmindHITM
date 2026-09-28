@@ -25,3 +25,9 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   rejected: 'נדחה',
   voided: 'בוטל',
 }
+
+/** A payment's day as "10.9.26"; empty when the date is unreadable. */
+export function formatPaymentDay(iso: string): string {
+  const date = new Date(iso)
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: '2-digit' })
+}

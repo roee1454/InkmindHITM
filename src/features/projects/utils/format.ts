@@ -13,6 +13,11 @@ export function formatShortSlot(iso: string): string {
 const LTR_ISOLATE = '⁦'
 const POP_ISOLATE = '⁩'
 
+/** "~4", isolated left-to-right: the tilde is bidi-neutral, so bare in Hebrew text it lands after the number ("4~"). */
+export function formatApprox(n: number): string {
+  return `${LTR_ISOLATE}~${n}${POP_ISOLATE}`
+}
+
 export function formatQuote(min: number | null, max: number | null): string | null {
   if (min === null && max === null) return null
   if (min === null || max === null || min === max) return formatIls((min ?? max) as number)

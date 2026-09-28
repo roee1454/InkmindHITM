@@ -86,7 +86,7 @@ describe('sortForColumn', () => {
 
 describe('projectCardFact', () => {
   it('shows session progress against the artist estimate on work in progress', () => {
-    expect(projectCardFact(project('in_progress', { sessionsDone: 2, estimatedSessions: 3 }), now)).toBe('2 מתוך ~3 סשנים')
+    expect(projectCardFact(project('in_progress', { sessionsDone: 2, estimatedSessions: 3 }), now)).toBe('2 מתוך \u2066~3\u2069 סשנים')
     expect(projectCardFact(project('in_progress', { sessionsDone: 1 }), now)).toBe('סשן אחד עד עכשיו')
   })
 

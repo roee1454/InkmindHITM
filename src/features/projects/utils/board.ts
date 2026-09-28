@@ -1,5 +1,5 @@
 import type { PipelineProject, ProjectStage } from '../types'
-import { formatQuote, formatShortSlot } from './format'
+import { formatApprox, formatQuote, formatShortSlot } from './format'
 import { LOST_REASON_LABELS } from './labels'
 import { daysInStage } from './pipeline'
 
@@ -125,7 +125,7 @@ export function projectCardFact(project: PipelineProject, now: Date): string {
       return next ? `סשן ${next}` : 'סשן שעבר ולא נסגר'
     case 'in_progress': {
       const progress = project.estimatedSessions
-        ? `${project.sessionsDone} מתוך ~${project.estimatedSessions} סשנים`
+        ? `${project.sessionsDone} מתוך ${formatApprox(project.estimatedSessions)} סשנים`
         : `${sessionsLabel(project.sessionsDone)} עד עכשיו`
       return next ? `${progress} · הבא ${next}` : progress
     }

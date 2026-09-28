@@ -5,6 +5,8 @@ export interface Stat {
   value: string | number
   /** One short line of what the number counts; omit when the label already says it. */
   hint?: string
+  /** A status tone for the number (e.g. `text-warning` for money owed); plain foreground by default. */
+  valueClassName?: string
 }
 
 interface StatStripProps {
@@ -33,7 +35,7 @@ export function StatStrip({ stats, className }: StatStripProps) {
       {stats.map((stat) => (
         <div key={stat.label} className="flex flex-col gap-1 bg-card px-4 py-3.5 sm:px-5 sm:py-4">
           <span className="text-xs font-bold text-muted-foreground">{stat.label}</span>
-          <span className="text-2xl font-extrabold tracking-tight text-foreground tabular-nums sm:text-3xl">{stat.value}</span>
+          <span className={cn('text-2xl font-extrabold tracking-tight text-foreground tabular-nums sm:text-3xl', stat.valueClassName)}>{stat.value}</span>
           {stat.hint && <span className="text-2xs font-medium text-muted-foreground">{stat.hint}</span>}
         </div>
       ))}
