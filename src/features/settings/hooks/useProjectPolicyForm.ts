@@ -42,7 +42,7 @@ function fromDraft(draft: ProjectPolicyDraft): ProjectPolicySettings {
   }
 }
 
-export function useProjectPolicyForm(onSaved: () => void) {
+export function useProjectPolicyForm() {
   const queryClient = useQueryClient()
   const query = useQuery({ queryKey: QUERY_KEY, queryFn: () => getProjectPolicySettings() })
   const [draft, setDraft] = useState<ProjectPolicyDraft | null>(null)
@@ -53,10 +53,7 @@ export function useProjectPolicyForm(onSaved: () => void) {
 
   const save = useMutation({
     mutationFn: (values: ProjectPolicyDraft) => saveProjectPolicySettings({ data: fromDraft(values) }),
-    onSuccess: () => {
-      onSaved()
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY })
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
   })
 
   const initial = query.data ? toDraft(query.data) : null
@@ -66,5 +63,9 @@ export function useProjectPolicyForm(onSaved: () => void) {
     setDraft((current) => (current ? { ...current, [key]: value } : current))
   }
 
-  return { query, draft, setField, isDirty, save }
+  function reset() {
+    if (query.data) setDraft(toDraft(query.data))
+  }
+
+  return { query, draft, setField, isDirty, save, reset }
 }

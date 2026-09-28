@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { sortClosureGroups } from '@/features/settings/tabs/ai/utils/closureSorting'
-import type { ClosureGroup } from '@/features/settings/tabs/ai/utils/closureSorting'
+import { sortClosureGroups } from '@/features/settings/tabs/closures/utils/closureSorting'
+import type { ClosureGroup } from '@/features/settings/tabs/closures/utils/closureSorting'
 
 describe('AI Tab — Closures & Schedule Sorting', () => {
   const today = '2026-09-21'

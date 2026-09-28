@@ -56,7 +56,7 @@ export function useSetupChecklist() {
       label: 'אמצעי תשלום למקדמה',
       why: 'כדי שהסוכן ידע להנחות לקוחות בתשלום',
       done: Boolean(settingsQuery.data?.payment_instructions),
-      link: '/dashboard/settings/ai?sub=policy',
+      link: '/dashboard/settings/policy',
     },
     {
       id: 'team',
@@ -72,7 +72,7 @@ export function useSetupChecklist() {
       why: 'ימי חג וסגירה שהסוכן לא יציע',
       label: 'ימי סגירה',
       done: (closuresQuery.data?.length ?? 0) > 0,
-      link: '/dashboard/settings/ai?sub=closures',
+      link: '/dashboard/settings/closures',
     },
     {
       id: 'links_bio',

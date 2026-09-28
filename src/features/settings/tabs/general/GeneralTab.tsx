@@ -5,9 +5,8 @@ import { getSettings, updateStudioSettings, uploadStudioLogo } from '@/features/
 import { Input } from '@/components/ui/input'
 import { ThemeModeControl } from '@/components/ThemeModeControl'
 import { SettingsTabSkeleton } from '@/features/settings/components/SettingsTabSkeleton'
-import { SectionSaveButton } from '@/features/settings/components/SectionSaveButton'
-import { SettingsErrorBanner } from '@/features/settings/components/SettingsErrorBanner'
-import { useSavedFlash } from '@/features/settings/hooks/useSavedFlash'
+import { SettingsPage, SettingsRow, SettingsSection } from '@/features/settings/components/settings-layout'
+import { useSettingsSave } from '@/features/settings/components/settings-save'
 
 function logoUrl(recordId: string, filename: string): string {
   const base = import.meta.env.VITE_POCKETBASE_URL ?? 'http://127.0.0.1:8090'
@@ -21,15 +20,13 @@ interface StagedLogo {
   previewUrl: string
 }
 
-export const GeneralTab: React.FC = () => {
+function GeneralSettings() {
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { data, isLoading } = useQuery({ queryKey: ['settings'], queryFn: () => getSettings() })
-  const { saved, triggerSaved } = useSavedFlash()
 
   const [studioName, setStudioName] = useState('')
   const [stagedLogo, setStagedLogo] = useState<StagedLogo | null>(null)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (data?.studio_name) {
@@ -39,7 +36,6 @@ export const GeneralTab: React.FC = () => {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      setError(null)
       const tasks: Promise<unknown>[] = []
 
       // 1. Update studio name if changed or present
@@ -67,10 +63,6 @@ export const GeneralTab: React.FC = () => {
     onSuccess: async () => {
       setStagedLogo(null)
       await queryClient.invalidateQueries({ queryKey: ['settings'] })
-      triggerSaved()
-    },
-    onError: (err: unknown) => {
-      setError(err instanceof Error ? err.message : 'שגיאה בשמירת פרטי הסטודיו')
     },
   })
 
@@ -91,9 +83,15 @@ export const GeneralTab: React.FC = () => {
     e.target.value = ''
   }
 
-  if (isLoading) {
-    return <SettingsTabSkeleton />
-  }
+  const isDirty = studioName.trim() !== (data?.studio_name || '') || stagedLogo !== null
+  useSettingsSave('general-studio', {
+    dirty: isDirty && Boolean(studioName.trim()),
+    save: () => saveMutation.mutateAsync(),
+    reset: () => {
+      setStudioName((data?.studio_name as string) || '')
+      setStagedLogo(null)
+    },
+  })
 
   const currentLogoUrl = stagedLogo?.previewUrl
     ? stagedLogo.previewUrl
@@ -101,89 +99,50 @@ export const GeneralTab: React.FC = () => {
       ? logoUrl(data.id, data.logo as string)
       : null
 
-  const isDirty = (studioName.trim() !== (data?.studio_name || '')) || stagedLogo !== null
-
   return (
-    <div className="flex flex-col gap-6 font-assistant max-w-xl pb-12" dir="rtl">
-      <div className="page-head hidden lg:flex">
-        <h1>כללי</h1>
-        <p>פרטי הסטודיו, מיתוג ומצב תצוגה</p>
-      </div>
-
-      <SettingsErrorBanner error={error} onDismiss={() => setError(null)} />
-
-      {/* Card 1: Studio Details & Branding */}
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-xs flex flex-col gap-6">
-        <div className="flex items-center gap-4">
-          <input
-            type="file"
-            ref={fileInputRef}
-            accept="image/*"
-            className="hidden"
-            onChange={handleLogoSelect}
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="relative flex size-16 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-border bg-muted/30 text-muted-foreground transition-all hover:border-primary/50"
-            title="לחץ לבחירת לוגו"
-          >
-            {currentLogoUrl ? (
-              <img src={currentLogoUrl} alt="לוגו הסטודיו" className="size-full object-cover" />
-            ) : (
-              <ImageIcon size={24} />
-            )}
-          </button>
-          <div className="flex flex-col gap-1">
-            <span className="text-base font-bold text-foreground">לוגו הסטודיו</span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="cursor-pointer text-start text-xs font-bold text-primary hover:underline"
-              >
-                {currentLogoUrl ? 'החלפת תמונה' : 'העלאת לוגו'}
-              </button>
-              {stagedLogo && (
-                <span className="text-2xs font-semibold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">
-                  ממתין לשמירה
+    <>
+      {isLoading ? (
+        <SettingsTabSkeleton />
+      ) : (
+        <>
+          <SettingsSection title="הסטודיו" description="השם והלוגו מופיעים במערכת ובהודעות ללקוחות.">
+            <SettingsRow label="לוגו" hint={stagedLogo ? 'הלוגו החדש יישמר עם שאר השינויים.' : 'תמונה ריבועית נראית הכי טוב.'}>
+              <div className="flex items-center gap-3 sm:justify-end">
+                <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleLogoSelect} />
+                <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted text-muted-foreground">
+                  {currentLogoUrl ? <img src={currentLogoUrl} alt="לוגו הסטודיו" className="size-full object-cover" /> : <ImageIcon size={20} />}
                 </span>
-              )}
-            </div>
-          </div>
-        </div>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-9 cursor-pointer rounded-lg border border-border px-3 text-sm font-bold text-foreground transition-colors duration-150 hover:bg-muted"
+                >
+                  {currentLogoUrl ? 'החלפה' : 'העלאה'}
+                </button>
+              </div>
+            </SettingsRow>
+            <SettingsRow label="שם הסטודיו" htmlFor="studio-name">
+              <Input id="studio-name" value={studioName} onChange={(e) => setStudioName(e.target.value)} placeholder="שם הסטודיו" />
+            </SettingsRow>
+          </SettingsSection>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-muted-foreground">שם הסטודיו</label>
-          <Input
-            value={studioName}
-            onChange={(e) => setStudioName(e.target.value)}
-            placeholder="שם הסטודיו"
-            className="h-10"
-          />
-        </div>
+          <SettingsSection title="תצוגה">
+            <SettingsRow label="מצב תצוגה" hint="נשמר במכשיר הזה בלבד, כך שלכל אחד בצוות יכולה להיות העדפה משלו.">
+              <ThemeModeControl />
+            </SettingsRow>
+          </SettingsSection>
+        </>
+      )}
+    </>
+  )
+}
 
-        <div className="pt-2 flex justify-start">
-          <SectionSaveButton
-            onClick={() => saveMutation.mutate()}
-            isPending={saveMutation.isPending}
-            saved={saved}
-            disabled={!isDirty || !studioName.trim()}
-          />
-        </div>
-      </div>
-
-      {/* Card 2: Theme / Display Mode */}
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-xs flex flex-col gap-3">
-        <div className="flex flex-col gap-0.5">
-          <span className="text-base font-bold text-foreground">מצב תצוגה</span>
-          <span className="text-xs text-muted-foreground">
-            ההעדפה נשמרת במכשיר הזה בלבד — לכל אחד בצוות יכולה להיות העדפה משלו.
-          </span>
-        </div>
-        <ThemeModeControl />
-      </div>
-    </div>
+/** The general settings page: the studio's name and logo, and how the app looks on this device. */
+export function GeneralTab() {
+  return (
+    <SettingsPage title="כללי" description="פרטי הסטודיו ותצוגה">
+      <GeneralSettings />
+    </SettingsPage>
   )
 }
 

@@ -9,26 +9,24 @@ import {
   settingsBackTarget,
 } from '@/components/navigation'
 
-describe('Settings Navigation & 4-Tab IA', () => {
-  it('consolidates settings to 4 screens in the specified order', () => {
-    expect(SETTINGS_SUB_ITEMS.length).toBe(4)
-    expect(SETTINGS_SUB_ITEMS.map((item) => item.id)).toEqual([
-      'general',
-      'team',
-      'ai',
-      'system',
-    ])
+describe('Settings navigation (docs/settings-redesign.md)', () => {
+  it('gives studio policy and closure days their own pages, apart from the bot', () => {
+    expect(SETTINGS_SUB_ITEMS.map((item) => item.id)).toEqual(['general', 'team', 'policy', 'closures', 'ai', 'system'])
     expect(SETTINGS_SUB_ITEMS.map((item) => item.route)).toEqual([
       '/dashboard/settings/general',
       '/dashboard/settings/team',
+      '/dashboard/settings/policy',
+      '/dashboard/settings/closures',
       '/dashboard/settings/ai',
       '/dashboard/settings/system',
     ])
   })
 
-  it('provides correct routeTitle for all 4 screens and fallbacks', () => {
+  it('provides correct routeTitle for every settings page and fallbacks', () => {
     expect(routeTitle('/dashboard/settings/general')).toBe('כללי')
     expect(routeTitle('/dashboard/settings/team')).toBe('צוות')
+    expect(routeTitle('/dashboard/settings/policy')).toBe('מדיניות')
+    expect(routeTitle('/dashboard/settings/closures')).toBe('ימי סגירה')
     expect(routeTitle('/dashboard/settings/ai')).toBe('סוכן AI')
     expect(routeTitle('/dashboard/settings/system')).toBe('מערכת')
     expect(routeTitle('/dashboard/settings')).toBe('הגדרות')

@@ -1,14 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import {
-  LogOut,
-  ChevronLeft,
-  SlidersHorizontal,
-  Users,
-  Sparkles,
-  Database,
-} from '@/components/ui/icon'
+import { LogOut, ChevronLeft, SlidersHorizontal, Users, Sparkles, Database, FileText, CalendarOff } from '@/components/ui/icon'
 import { logout } from '@/features/auth/server/auth'
 import { getStaffList } from '@/features/settings/server/staff'
 import { clearSessionCache } from '@/features/auth/utils/session-cache'
@@ -18,8 +11,10 @@ import type { StaffRecord } from '@/integrations/pocketbase/types'
 
 const ICONS: Record<(typeof SETTINGS_SUB_ITEMS)[number]['id'], typeof SlidersHorizontal> = {
   general: SlidersHorizontal,
-  ai: Sparkles,
   team: Users,
+  policy: FileText,
+  closures: CalendarOff,
+  ai: Sparkles,
   system: Database,
 }
 
@@ -65,41 +60,39 @@ export function SettingsMenu({ staff }: SettingsMenuProps) {
       }))
 
   return (
-    <div className="flex flex-col gap-[18px] px-4 pt-5 pb-8 font-assistant" dir="rtl">
-      <div className="flex items-center gap-3">
-        <div className="avatar-native size-[52px] text-lg">{(staff?.name || '?').charAt(0)}</div>
+    <div className="flex flex-col gap-6 px-4 pt-5 pb-8 font-assistant" dir="rtl">
+      <div className="flex items-center gap-3 px-1">
+        <div className="avatar-native size-12 text-lg">{(staff?.name || '?').charAt(0)}</div>
         <div className="flex min-w-0 flex-col">
           <span className="truncate text-lg font-extrabold text-foreground">{staff?.name}</span>
-          <span dir="ltr" className="truncate text-end text-sm text-muted-foreground font-medium">
+          <span dir="ltr" className="truncate text-end text-sm font-medium text-muted-foreground">
             {staff?.email}
           </span>
         </div>
       </div>
 
-      <div className="card-native overflow-hidden">
+      <nav aria-label="הגדרות" className="card-native overflow-hidden">
         {visibleItems.map((item) => {
           const Icon = ICONS[item.id]
           const sub = subtitle(item.id)
           return (
-            <div key={item.id} onClick={() => navigate({ to: item.route })} className="row-native cursor-pointer">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-                <Icon size={18} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-base font-bold text-foreground">{item.label}</div>
-                {sub && <div className="truncate text-sm text-muted-foreground">{sub.text}</div>}
-              </div>
+            <button key={item.id} type="button" onClick={() => navigate({ to: item.route })} className="row-native w-full cursor-pointer text-start">
+              <Icon size={19} className="shrink-0 text-muted-foreground" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-base font-bold text-foreground">{item.label}</span>
+                {sub && <span className="block truncate text-sm text-muted-foreground">{sub.text}</span>}
+              </span>
               <ChevronLeft size={18} className="shrink-0 text-muted-foreground" />
-            </div>
+            </button>
           )
         })}
-      </div>
+      </nav>
 
       <button
         type="button"
         disabled={logoutMutation.isPending}
         onClick={() => logoutMutation.mutate()}
-        className="sticky bottom-0 z-10 flex h-13 w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-border bg-card text-base font-bold text-destructive shadow-xs"
+        className="card-native flex h-12 w-full cursor-pointer items-center justify-center gap-2 text-base font-bold text-destructive disabled:opacity-60"
       >
         <LogOut size={18} />
         {logoutMutation.isPending ? 'מתנתק…' : 'התנתקות'}

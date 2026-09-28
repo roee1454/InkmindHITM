@@ -1,35 +1,15 @@
-import React from 'react'
-import { Database, MessageSquare } from '@/components/ui/icon'
-import { BackupSettingsTab } from './components/BackupSettingsTab'
+import { SettingsPage } from '@/features/settings/components/settings-layout'
+import { BackupSections } from './components/BackupSections'
 import { WhatsAppDiagnostics } from './components/WhatsAppDiagnostics'
+import { DevToolsSection } from './components/DevToolsSection'
 
-export const SystemTab: React.FC = () => {
+/** Backups, the WhatsApp connection, and — in development — the tools for testing the bot. */
+export function SystemTab() {
   return (
-    <div className="flex flex-col gap-6 pb-16 font-assistant max-w-3xl" dir="rtl">
-      <div className="page-head hidden lg:flex">
-        <h1>מערכת</h1>
-        <p>גיבויי נתונים, שחזור ואבחון תקשורת WhatsApp Cloud API</p>
-      </div>
-
-      {/* Card 1: Backups & Restore */}
-      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-xs">
-        <div className="flex items-center gap-2 border-b border-border pb-3">
-          <Database size={18} className="text-primary" />
-          <h2 className="text-base font-bold text-foreground">גיבוי ושחזור נתונים</h2>
-        </div>
-        <BackupSettingsTab />
-      </section>
-
-      {/* Card 2: WhatsApp Cloud API Diagnostics */}
-      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-xs">
-        <div className="flex items-center gap-2 border-b border-border pb-3">
-          <MessageSquare size={18} className="text-primary" />
-          <h2 className="text-base font-bold text-foreground">אבחון חיבור WhatsApp Cloud API</h2>
-        </div>
-        <WhatsAppDiagnostics />
-      </section>
-    </div>
+    <SettingsPage title="מערכת" description="גיבויים, החיבור לוואטסאפ ואבחון.">
+      <BackupSections />
+      <WhatsAppDiagnostics />
+      <DevToolsSection />
+    </SettingsPage>
   )
 }
-
-export default SystemTab

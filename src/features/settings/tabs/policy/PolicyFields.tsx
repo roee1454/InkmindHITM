@@ -1,4 +1,3 @@
-import React from 'react'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
@@ -11,26 +10,6 @@ export function UndecidedBadge() {
     <span className="inline-flex shrink-0 items-center rounded-full bg-status-wait-soft px-2 py-0.5 text-2xs font-bold text-status-wait">
       ממתין להחלטה
     </span>
-  )
-}
-
-interface FieldShellProps {
-  label: string
-  hint: string
-  undecided?: boolean
-  children: React.ReactNode
-}
-
-export function PolicyField({ label, hint, undecided, children }: FieldShellProps) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex items-center justify-between gap-2">
-        <label className="text-xs font-semibold text-muted-foreground">{label}</label>
-        {undecided && <UndecidedBadge />}
-      </div>
-      {children}
-      <p className="text-2xs text-muted-foreground">{hint}</p>
-    </div>
   )
 }
 

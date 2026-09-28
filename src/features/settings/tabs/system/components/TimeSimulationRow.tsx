@@ -2,7 +2,8 @@ import React from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { CalendarClock, Loader2 } from '@/components/ui/icon'
+import { Loader2 } from '@/components/ui/icon'
+import { SettingsRow } from '@/features/settings/components/settings-layout'
 import { cn } from '@/lib/utils'
 import { formatDatabaseError } from '@/lib/pocketbase-error'
 import { simulateLifecycleTick } from '@/features/lifecycle/server/lifecycle-simulation'
@@ -42,7 +43,7 @@ function describeAction(action: LifecyclePlannedAction): string {
  * Dev tool: shows what the lifecycle engine would do at a simulated "now". Replaces changing the
  * machine's clock, which stamps future dates on everything written meanwhile.
  */
-export const AiDevTimeSimulationCard: React.FC = () => {
+export function TimeSimulationRow() {
   const [hoursAhead, setHoursAhead] = React.useState(24)
   const [realRun, setRealRun] = React.useState(false)
 
@@ -50,22 +51,15 @@ export const AiDevTimeSimulationCard: React.FC = () => {
     mutationFn: () => simulateLifecycleTick({ data: { hoursAhead, dryRun: !realRun } }),
   })
 
-  if (!import.meta.env.DEV) return null
-
   const plan = simulation.data?.plan ?? []
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 font-assistant shadow-xs" dir="rtl">
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2 text-foreground">
-          <CalendarClock size={18} className="text-primary" />
-          <h3 className="text-sm font-bold">כלי פיתוח — סימולציית זמן לתזכורות</h3>
-        </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          מריץ את מנוע התזכורות כאילו עכשיו זה מאוחר יותר, בלי לשנות את שעון המחשב (שינוי שעון משבש את המטמון ואת חותמות הזמן).
-        </p>
-      </div>
-
+    <SettingsRow
+      label="סימולציית זמן לתזכורות"
+      hint="מריץ את מנוע התזכורות כאילו עכשיו מאוחר יותר, בלי לשנות את שעון המחשב (שמשבש מטמון וחותמות זמן)."
+      stacked
+    >
+    <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-2">
         {PRESETS.map((preset) => (
           <Button
@@ -100,13 +94,13 @@ export const AiDevTimeSimulationCard: React.FC = () => {
       </Button>
 
       {simulation.isError && (
-        <p className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+        <p className="text-xs font-bold text-destructive">
           {formatDatabaseError(simulation.error, 'הסימולציה נכשלה.')}
         </p>
       )}
 
       {simulation.isSuccess && (
-        <div className="flex flex-col gap-2 rounded-xl border border-border bg-muted/30 p-3 text-xs">
+        <div className="flex flex-col gap-2 rounded-lg bg-muted/40 p-3 text-xs">
           <p className="font-bold text-foreground">
             {plan.length === 0 ? 'אין פעולות מתוזמנות לזמן הזה.' : `${plan.length} פעולות ${realRun ? 'בוצעו' : 'היו מתבצעות'}:`}
           </p>
@@ -121,5 +115,6 @@ export const AiDevTimeSimulationCard: React.FC = () => {
         </div>
       )}
     </div>
+    </SettingsRow>
   )
 }
