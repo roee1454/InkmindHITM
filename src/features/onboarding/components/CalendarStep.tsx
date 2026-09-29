@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Calendar, Check, Sparkle, AlertCircle } from '@/components/ui/icon'
 import { getCurrentSession } from '@/features/auth/server/auth'
-import { completeOnboarding } from '@/features/onboarding/server/onboarding'
+import { completeOnboarding, getOnboardingGaps } from '@/features/onboarding/server/onboarding'
 import { useGoogleCalendarOAuth } from '../hooks/useGoogleCalendarOAuth'
 import { useOnboardingUiStore } from '../store/onboardingUiStore'
 import type { CurrentSession } from '@/features/auth/server/auth'
@@ -16,7 +16,10 @@ export function CalendarStep({ session: initialSession }: CalendarStepProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [completeError, setCompleteError] = useState<string | null>(null)
-  const setCurrentStep = useOnboardingUiStore((s) => s.setCurrentStep)
+  const fixFromFinish = useOnboardingUiStore((s) => s.fixFromFinish)
+
+  // What is still missing, known before the last click rather than after it.
+  const { data: gaps = [] } = useQuery({ queryKey: ['onboarding-gaps'], queryFn: () => getOnboardingGaps(), staleTime: 0 })
 
   const { data: sessionData } = useQuery({
     queryKey: ['current-session'],
@@ -44,19 +47,6 @@ export function CalendarStep({ session: initialSession }: CalendarStepProps) {
       setCompleteError(err instanceof Error ? err.message : 'שגיאה בסיום תהליך ההגדרה')
     },
   })
-
-  const getFixStep = (error: string): { step: 1 | 2 | 3 | 4 | 5; label: string } | null => {
-    if (error.includes('סטודיו') || error.includes('שלב 1')) return { step: 1, label: 'חזרה להגדרת שם הסטודיו (שלב 1)' }
-    if (error.includes('טלפון') || error.includes('שלב 2')) return { step: 2, label: 'חזרה להזנת מספר טלפון (שלב 2)' }
-    if (error.includes('עבודות') || error.includes('אינסטגרם') || error.includes('שלב 3'))
-      return { step: 3, label: 'חזרה להזנת תיק עבודות (שלב 3)' }
-    if (error.includes('יום עבודה') || error.includes('שעות') || error.includes('שלב 4'))
-      return { step: 4, label: 'חזרה להגדרת שעות פעילות (שלב 4)' }
-    if (error.includes('מקדמה') || error.includes('שלב 5')) return { step: 5, label: 'חזרה להגדרת תשלומים ומקדמה (שלב 5)' }
-    return null
-  }
-
-  const fixStep = completeError ? getFixStep(completeError) : null
 
   return (
     <div className="step-body">
@@ -103,22 +93,28 @@ export function CalendarStep({ session: initialSession }: CalendarStepProps) {
         )}
       </div>
 
+      {gaps.length > 0 && (
+        <section aria-label="מה חסר לפני הסיום" className="flex flex-col gap-2 rounded-2xl border border-border p-4">
+          <h2 className="text-sm font-extrabold text-foreground">חסר עוד משהו לפני הסיום</h2>
+          <ul className="flex flex-col divide-y divide-border/70">
+            {gaps.map((gap) => (
+              <li key={gap.step} className="flex items-center justify-between gap-3 py-2 text-sm">
+                <span className="text-foreground">{gap.message}</span>
+                <button type="button" onClick={() => fixFromFinish(gap.step)} className="shrink-0 cursor-pointer text-sm font-bold text-foreground underline underline-offset-4">
+                  למלא עכשיו
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-muted-foreground">אחרי המילוי תחזרו ישר לכאן.</p>
+        </section>
+      )}
+
       {completeError && (
-        <div className="flex flex-col gap-2 rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm font-semibold text-destructive">
-          <div className="flex items-center gap-2">
-            <AlertCircle size={18} className="shrink-0" />
-            <span>{completeError}</span>
-          </div>
-          {fixStep && (
-            <button
-              type="button"
-              onClick={() => setCurrentStep(fixStep.step)}
-              className="mt-1 flex items-center justify-center gap-1.5 rounded-xl bg-destructive/15 px-3 py-2 text-xs font-bold text-destructive hover:bg-destructive/25 transition-colors cursor-pointer"
-            >
-              <span>{fixStep.label}</span>
-            </button>
-          )}
-        </div>
+        <p role="alert" className="flex items-center gap-2 text-sm font-semibold text-destructive">
+          <AlertCircle size={18} className="shrink-0" />
+          {completeError}
+        </p>
       )}
 
       <div className="flex-1" />
@@ -126,7 +122,7 @@ export function CalendarStep({ session: initialSession }: CalendarStepProps) {
       <div className="step-footer">
         <button
           type="button"
-          disabled={completeMutation.isPending}
+          disabled={completeMutation.isPending || gaps.length > 0}
           onClick={() => completeMutation.mutate()}
           className="btn-native cursor-pointer"
         >
@@ -137,7 +133,7 @@ export function CalendarStep({ session: initialSession }: CalendarStepProps) {
         {!isCalendarConnected && (
           <button
             type="button"
-            disabled={completeMutation.isPending}
+            disabled={completeMutation.isPending || gaps.length > 0}
             onClick={() => completeMutation.mutate()}
             className="cursor-pointer text-center text-xs font-bold text-muted-foreground hover:text-foreground"
           >

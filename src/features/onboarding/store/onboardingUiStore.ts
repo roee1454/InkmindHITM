@@ -38,7 +38,11 @@ interface OnboardingUiState {
   connectingCalendar: boolean
   calendarError: string | null
 
+  /** Set when someone is sent back from the last step to fill a gap: finishing that step returns straight to it. */
+  returnToFinish: boolean
+
   // Actions
+  fixFromFinish: (step: OnboardingStepNumber) => void
   setCurrentStep: (step: OnboardingStepNumber) => void
   nextStep: () => void
   prevStep: () => void
@@ -75,6 +79,7 @@ interface OnboardingUiState {
 
 const initialState = {
   currentStep: 1 as OnboardingStepNumber,
+  returnToFinish: false,
 
   studioName: '',
   hasEditedStudioName: false,
@@ -107,11 +112,14 @@ const initialState = {
 export const useOnboardingUiStore = create<OnboardingUiState>((set) => ({
   ...initialState,
 
-  setCurrentStep: (currentStep) => set({ currentStep }),
+  setCurrentStep: (currentStep) => set({ currentStep, returnToFinish: false }),
+  fixFromFinish: (currentStep) => set({ currentStep, returnToFinish: true }),
   nextStep: () =>
-    set((state) => ({
-      currentStep: Math.min(6, state.currentStep + 1) as OnboardingStepNumber,
-    })),
+    set((state) =>
+      state.returnToFinish
+        ? { currentStep: 6 as OnboardingStepNumber, returnToFinish: false }
+        : { currentStep: Math.min(6, state.currentStep + 1) as OnboardingStepNumber },
+    ),
   prevStep: () =>
     set((state) => ({
       currentStep: Math.max(1, state.currentStep - 1) as OnboardingStepNumber,

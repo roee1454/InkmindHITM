@@ -47,7 +47,7 @@ export function AdminStep() {
   const setAdminPasswordConfirm = useOnboardingUiStore((s) => s.setAdminPasswordConfirm)
   const setAdminErrors = useOnboardingUiStore((s) => s.setAdminErrors)
   const setAdminRootError = useOnboardingUiStore((s) => s.setAdminRootError)
-  const nextStep = useOnboardingUiStore((s) => s.nextStep)
+  const setCurrentStep = useOnboardingUiStore((s) => s.setCurrentStep)
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -64,7 +64,9 @@ export function AdminStep() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['current-session'] })
       await queryClient.invalidateQueries({ queryKey: ['settings'] })
-      nextStep()
+      // An absolute step, not "next": once the session exists the page's own effect already moves
+      // a logged-in user from step 2 to 3, and a relative step on top of that skips the portfolio.
+      setCurrentStep(3)
     },
     onError: (err: Error) => setAdminRootError(err.message),
   })

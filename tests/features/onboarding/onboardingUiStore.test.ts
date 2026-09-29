@@ -148,4 +148,28 @@ describe('Onboarding UI Store Unit Tests', () => {
     expect(state.studioName).toBe('')
     expect(state.depositRequired).toBe(false)
   })
+
+  it('sends someone back from the last step to fix a gap and returns them straight to it', () => {
+    const store = useOnboardingUiStore.getState()
+    store.setCurrentStep(6)
+    store.fixFromFinish(3)
+    expect(useOnboardingUiStore.getState().currentStep).toBe(3)
+
+    useOnboardingUiStore.getState().nextStep()
+    expect(useOnboardingUiStore.getState().currentStep).toBe(6)
+    expect(useOnboardingUiStore.getState().returnToFinish).toBe(false)
+
+    // Normal navigation is untouched afterwards.
+    useOnboardingUiStore.getState().setCurrentStep(2)
+    useOnboardingUiStore.getState().nextStep()
+    expect(useOnboardingUiStore.getState().currentStep).toBe(3)
+  })
+
+  it('leaving the fix path by an explicit step forgets the return trip', () => {
+    const store = useOnboardingUiStore.getState()
+    store.fixFromFinish(4)
+    useOnboardingUiStore.getState().setCurrentStep(1)
+    useOnboardingUiStore.getState().nextStep()
+    expect(useOnboardingUiStore.getState().currentStep).toBe(2)
+  })
 })

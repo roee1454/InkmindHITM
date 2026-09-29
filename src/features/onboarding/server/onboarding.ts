@@ -36,30 +36,42 @@ export const getSettings = createServerFn({ method: 'GET' }).handler(async () =>
   return existing.items[0] ?? null
 })
 
-/** The 3 required onboarding steps must actually be filled before onboarding can complete —
- *  previously this was a no-op that let a user hit any onboarding URL and click finish. */
+export interface OnboardingGap {
+  /** The wizard step that fixes it. */
+  step: 1 | 2 | 3 | 4
+  message: string
+}
+
+/** What must be filled before onboarding can complete; empty means it can. Read by both the last step's pre-flight and the completion itself. */
+async function findOnboardingGaps(staffId: string): Promise<OnboardingGap[]> {
+  const su = await getSuperuserClient()
+  const gaps: OnboardingGap[] = []
+
+  const settings = (await su.collection('settings').getList(1, 1)).items[0]
+  if (!settings) throw new Error('הגדרות המערכת חסרות — יש להתחיל מתחילת התהליך.')
+  const studioName = String(settings.studio_name ?? '').trim()
+  if (!studioName || studioName === 'My Studio') gaps.push({ step: 1, message: 'שם הסטודיו עוד לא הוגדר.' })
+
+  const staff = await su.collection('staff').getOne(staffId).catch(() => null)
+  if (!staff) throw new Error('רשומת מנהל הסטודיו לא נמצאה.')
+  if (!String(staff.phone ?? '').trim()) gaps.push({ step: 2, message: 'חסר מספר טלפון.' })
+  if (!String(staff.portfolio_url ?? '').trim()) gaps.push({ step: 3, message: 'חסר קישור לתיק עבודות או לאינסטגרם.' })
+  if ((await getWorkingHoursForStaff(su, staffId)).length === 0) gaps.push({ step: 4, message: 'לא הוגדר אף יום עבודה.' })
+  return gaps
+}
+
+export const getOnboardingGaps = createServerFn({ method: 'GET' }).handler(async (): Promise<OnboardingGap[]> => {
+  const session = await requireSession()
+  return findOnboardingGaps(session.staff.id)
+})
+
 export const completeOnboarding = createServerFn({ method: 'POST' }).handler(async () => {
   const session = await requireSession()
+  const [gap] = await findOnboardingGaps(session.staff.id)
+  if (gap) throw new Error(`לא ניתן לסיים עדיין: ${gap.message}`)
   const su = await getSuperuserClient()
-  const existing = await su.collection('settings').getList(1, 1)
-  const record = existing.items[0]
-  if (!record) throw new Error('הגדרות המערכת חסרות — יש להתחיל מתחילת התהליך.')
-  if (!record.studio_name || !String(record.studio_name).trim() || String(record.studio_name).trim() === 'My Studio') {
-    throw new Error('נא להזין שם סטודיו (שלב 1) לפני סיום ההגדרה.')
-  }
-  const staffRecord = await su.collection('staff').getOne(session.staff.id).catch(() => null)
-  if (!staffRecord) throw new Error('רשומת מנהל הסטודיו לא נמצאה.')
-  if (!staffRecord.phone || !String(staffRecord.phone).trim()) {
-    throw new Error('נא להזין מספר טלפון (שלב 2) לפני סיום ההגדרה.')
-  }
-  if (!staffRecord.portfolio_url || !String(staffRecord.portfolio_url).trim()) {
-    throw new Error('נא להזין קישור לתיק עבודות או אינסטגרם (שלב 3) לפני סיום ההגדרה.')
-  }
-  const hours = await getWorkingHoursForStaff(su, session.staff.id)
-  if (hours.length === 0) {
-    throw new Error('נא להגדיר לפחות יום עבודה אחד (שלב 4) לפני סיום ההגדרה.')
-  }
-  await su.collection('settings').update(record.id, { onboarding_completed: true })
+  const settings = (await su.collection('settings').getList(1, 1)).items[0]
+  if (settings) await su.collection('settings').update(settings.id, { onboarding_completed: true })
 })
 
 export const updateStudioSettings = createServerFn({ method: 'POST' })
