@@ -1,41 +1,32 @@
 import { CascadeDeleteDialog } from '@/features/database/components/CascadeDeleteDialog'
 import React from 'react'
-import { AlertCircle } from '@/components/ui/icon'
 import { useLocation, useNavigate } from '@tanstack/react-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { SearchInput } from '@/components/ui/search-input'
+import { useQueryClient } from '@tanstack/react-query'
+import { AlertCircle, Plus } from '@/components/ui/icon'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Pagination } from '@/components/ui/pagination'
 import type { Customer } from './types'
-import { customersQueryOptions } from './utils/customers-query'
-import { CustomersHeader } from './components/CustomersHeader'
-import { CustomersSummary } from './components/CustomersSummary'
-import type { LifecycleFilter } from './components/CustomersSummary'
-import { CustomerCard } from './components/CustomerCard'
-import { CustomersSkeleton } from './components/CustomersSkeleton'
+import { CustomersToolbar } from './components/CustomersToolbar'
+import { CustomerRow } from './components/CustomerRow'
 import { CustomerDialog } from './components/CustomerDialog'
 import { CustomerSheet } from './components/customer-sheet/CustomerSheet'
 import { useCustomerMutations } from './hooks/use-customer-mutations'
 import { useCustomersUiStore } from './store/customersUiStore'
-import { phoneMatchesQuery } from '@/lib/phone'
-
-const ITEMS_PER_PAGE = 10
+import { CUSTOMERS_PER_PAGE, useCustomerList } from './hooks/use-customer-list'
 
 export const CustomersPage: React.FC = () => {
   const queryClient = useQueryClient()
   const location = useLocation()
   const navigate = useNavigate()
-  const [lifecycleFilter, setLifecycleFilter] = React.useState<LifecycleFilter>('all')
   const [customerToDelete, setCustomerToDelete] = React.useState<Customer | null>(null)
 
   const {
-    searchQuery,
-    currentPage,
     isCreating,
     selectedCustomer,
     form,
     formError,
     setSearchQuery,
-    setCurrentPage,
     setIsCreating,
     setSelectedCustomer,
     updateFormField,
@@ -45,7 +36,8 @@ export const CustomersPage: React.FC = () => {
   } = useCustomersUiStore()
   const { create: createCustomerMutation, update: updateCustomerMutation } = useCustomerMutations()
 
-  const { data: customers = [], isLoading, error } = useQuery(customersQueryOptions())
+  const list = useCustomerList()
+  const { customers, isLoading, error } = list
 
   // The open customer was deleted elsewhere (another tab, a colleague, the realtime feed): close
   // the card instead of letting a save or delete run against a dead id.
@@ -86,83 +78,67 @@ export const CustomersPage: React.FC = () => {
     updateCustomerMutation.mutate({ id: selectedCustomer.id, body: form })
   }
 
-  // Global search filtering across ALL pages first
-  const filteredCustomers = customers.filter((c) => {
-    if (lifecycleFilter !== 'all' && c.lifecycle !== lifecycleFilter) return false
-    const term = searchQuery.toLowerCase().trim()
-    if (!term) return true
-    const nameMatch = c.name?.toLowerCase().includes(term)
-    const phoneMatch = phoneMatchesQuery(c.phone, term)
-    const emailMatch = c.email?.toLowerCase().includes(term)
-    return nameMatch || phoneMatch || emailMatch
-  })
-
-  // Pagination math
-  const totalPages = Math.ceil(filteredCustomers.length / ITEMS_PER_PAGE) || 1
-  const safePage = Math.min(currentPage, totalPages)
-  const paginatedCustomers = filteredCustomers.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE)
-
-  const totalCustomers = customers.length
-  const totalSpend = customers.reduce((sum, c) => sum + c.totalSpend, 0)
-
-  const handlePageChange = (page: number) => {
-    React.startTransition(() => {
-      setCurrentPage(page)
-    })
-  }
-
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-[18px] font-assistant lg:gap-6" dir="rtl">
-      <CustomersHeader totalCustomers={totalCustomers} totalSpend={totalSpend} onNewCustomer={openCreate} />
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 font-assistant lg:gap-5" dir="rtl">
+      <div className="hidden items-center justify-between gap-3 lg:flex">
+        <div className="page-head">
+          <h1>מאגר לקוחות</h1>
+          <p>כל מי שדיבר עם הסטודיו, ואיפה הוא עומד</p>
+        </div>
+        <Button onClick={openCreate} className="shrink-0 gap-1.5">
+          <Plus size={16} /> לקוח חדש
+        </Button>
+      </div>
 
       {error && (
-        <div className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">
+        <div role="alert" className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">
           <AlertCircle size={15} />
-          {(error).message}
+          {error.message}
         </div>
       )}
 
-      {/* Search field */}
-      <SearchInput
-        size="lg"
-        variant="card"
-        placeholder="חיפוש שם, טלפון או אימייל"
-        value={searchQuery}
-        onChange={setSearchQuery}
+      <CustomersToolbar
+        search={list.searchQuery}
+        onSearchChange={setSearchQuery}
+        filter={list.filter}
+        onFilterChange={list.setFilter}
+        counts={list.counts}
+        total={list.searchedTotal}
+        sort={list.sort}
+        onSortChange={list.setSort}
       />
 
-      <CustomersSummary
-        totalCustomers={filteredCustomers.length}
-        filter={lifecycleFilter}
-        onFilterChange={(next) => {
-          setLifecycleFilter(next)
-          setCurrentPage(1)
-        }}
-      />
-
-      {isLoading && !customers.length ? (
-        <CustomersSkeleton />
-      ) : paginatedCustomers.length > 0 ? (
+      {isLoading ? (
+        <div className="card-native flex flex-col gap-4 p-4" aria-hidden>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex flex-col gap-2">
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-3.5 w-1/2" />
+            </div>
+          ))}
+        </div>
+      ) : list.rows.length > 0 ? (
         <div className="flex flex-col gap-4">
-          <div className="card-native overflow-hidden">
-            {paginatedCustomers.map((c) => (
-              <CustomerCard key={c.id} customer={c} onOpen={openCustomerCard} />
+          <ul className="card-native overflow-hidden">
+            {list.rows.map(({ customer, work }) => (
+              <CustomerRow key={customer.id} customer={customer} work={work} onOpen={openCustomerCard} />
             ))}
-          </div>
-
-          {/* Pagination Controls */}
+          </ul>
           <Pagination
-            currentPage={safePage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-            totalItems={filteredCustomers.length}
-            itemsPerPage={ITEMS_PER_PAGE}
+            currentPage={list.page}
+            totalPages={list.totalPages}
+            onPageChange={(page) => React.startTransition(() => list.setPage(page))}
+            totalItems={list.matching}
+            itemsPerPage={CUSTOMERS_PER_PAGE}
             itemLabel="לקוחות"
           />
         </div>
       ) : (
-        <div className="flex h-44 items-center justify-center rounded-2xl border border-dashed border-border text-sm font-semibold text-muted-foreground">
-          לא נמצאו לקוחות במאגר
+        <div className="flex flex-col items-center gap-1 rounded-2xl border border-dashed border-border px-6 py-12 text-center">
+          <p className="text-sm font-bold text-foreground">{customers.length === 0 ? 'עדיין אין לקוחות' : 'אין לקוחות שמתאימים'}</p>
+          <p className="text-sm text-muted-foreground">
+            {customers.length === 0 ? 'לקוח נוצר כשהוא כותב לסטודיו בוואטסאפ, או כשמוסיפים אותו כאן.' : 'נסו חיפוש אחר או שלב אחר.'}
+          </p>
         </div>
       )}
 

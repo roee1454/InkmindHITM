@@ -13,46 +13,20 @@ export const getCustomers = createServerFn({ method: 'GET' }).handler(
     const su = await getSuperuserClient()
     const isAdmin = session.staff.role === 'owner' || session.staff.role === 'admin'
 
-    const [allCustomers, allAppointments, conversations, lifecycleOf] = await Promise.all([
-      su.collection('customers').getFullList({ sort: '-created' }),
-      su.collection('appointments').getFullList().catch(() => []),
-      !isAdmin
-        ? su.collection('conversations').getFullList({ fields: 'id,customer,assigned_staff' })
-        : Promise.resolve([]),
-      loadCustomerLifecycles(su),
-    ])
+    const [allCustomers, lifecycleOf] = await Promise.all([su.collection('customers').getFullList({ sort: '-updated' }), loadCustomerLifecycles(su)])
 
-    const appointmentRecords = isAdmin
-      ? allAppointments
-      : allAppointments.filter((a) => a.staff === session.staff.id)
-
+    // An artist sees the customers they talk to or have an appointment with.
     let customerRecords = allCustomers
     if (!isAdmin) {
-      const allowedCustomerIds = new Set<string>()
-      for (const conv of conversations) {
-        if (conv.assigned_staff === session.staff.id && conv.customer) {
-          allowedCustomerIds.add(conv.customer as string)
-        }
-      }
-      for (const appt of appointmentRecords) {
-        if (appt.customer) allowedCustomerIds.add(appt.customer as string)
-      }
-      customerRecords = allCustomers.filter((c) => allowedCustomerIds.has(c.id))
-    }
-
-    const statsMap: Record<string, { visits: number; totalSpend: number }> = {}
-    for (const appt of appointmentRecords) {
-      const custId = (appt.customer as string) || (appt.customer_id as string)
-      if (!custId) continue
-      if (!statsMap[custId]) statsMap[custId] = { visits: 0, totalSpend: 0 }
-      if (appt.status !== 'cancelled') {
-        statsMap[custId].visits += 1
-        statsMap[custId].totalSpend += Number(appt.price_max || appt.price_min || 0)
-      }
+      const [conversations, appointments] = await Promise.all([
+        su.collection('conversations').getFullList({ fields: 'customer', filter: `assigned_staff = "${session.staff.id}"` }),
+        su.collection('appointments').getFullList({ fields: 'customer', filter: `staff = "${session.staff.id}"` }),
+      ])
+      const allowed = new Set([...conversations, ...appointments].map((r) => r.customer as string).filter(Boolean))
+      customerRecords = allCustomers.filter((c) => allowed.has(c.id))
     }
 
     return customerRecords.map((item) => {
-      const stats = statsMap[item.id] || { visits: 0, totalSpend: 0 }
       return {
         id: item.id,
         name: (item.name as string) || null,
@@ -63,8 +37,6 @@ export const getCustomers = createServerFn({ method: 'GET' }).handler(
         chatId: (item.whatsapp_chat_id as string) || null,
         createdAt: item.created as string,
         updatedAt: item.updated as string,
-        visits: stats.visits,
-        totalSpend: stats.totalSpend,
         lifecycle: lifecycleOf(item.id),
         healthDeclarationSigned: Boolean(item.health_declaration_signed),
         healthDeclarationDate: (item.health_declaration_date as string) || null,

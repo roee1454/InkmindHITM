@@ -12,8 +12,6 @@ export interface Customer {
   chatId?: string | null
   createdAt: string
   updatedAt: string
-  visits: number
-  totalSpend: number
   lifecycle: CustomerLifecycle
   healthDeclarationSigned?: boolean
   healthDeclarationDate?: string | null
@@ -43,16 +41,6 @@ export const SOURCE_LABELS: Record<string, string> = {
   'walk-in': 'ווק-אין / סטודיו',
   unknown: 'לא ידוע',
 }
-
-/** Categorical, like the artist ramp — it distinguishes people, never state. Drawn from
- *  the theme's identity ramp so it stays legible on both grounds. */
-export const AVATAR_COLORS = [
-  'bg-artist-1/12 text-artist-1 border-artist-1/25',
-  'bg-artist-2/12 text-artist-2 border-artist-2/25',
-  'bg-artist-4/12 text-artist-4 border-artist-4/25',
-  'bg-artist-5/12 text-artist-5 border-artist-5/25',
-  'bg-artist-7/12 text-artist-7 border-artist-7/25',
-]
 
 export interface CustomerFormData {
   name: string
