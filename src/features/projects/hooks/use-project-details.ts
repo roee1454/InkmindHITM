@@ -31,7 +31,6 @@ export function useProjectDetails(projectId: string | null) {
       queryClient.invalidateQueries({ queryKey: queryKeys.appointments }),
       // An open customer card lists this project too (customer-overview, keyed under customers).
       queryClient.invalidateQueries({ queryKey: [...queryKeys.customers, 'overview'] }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardData }),
       // The booking wizard's project picker shows stages, which a booking or a move changes.
       queryClient.invalidateQueries({ queryKey: ['open-projects'] }),
     ])

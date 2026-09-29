@@ -29,7 +29,7 @@ export function useCustomerMutations() {
   const refresh = () =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: queryKeys.customers }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardData }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.pipeline }),
     ])
 
   const create = useMutation({

@@ -19,7 +19,7 @@ export function getContext() {
     // Global safety net: invalidate everything on every successful mutation, app-wide. Without
     // this, each of the ~80 mutation call sites across the app has to manually enumerate every
     // other screen's query keys it might affect (e.g. a leads mutation remembering to also
-    // invalidate `['dashboardData']`) — easy to miss as new screens/mutations are added. Broad
+    // invalidate `['pipeline']`) — easy to miss as new screens/mutations are added. Broad
     // invalidation only forces an immediate refetch for currently-mounted queries; inactive ones
     // are just marked stale and refetch next time they mount, so this doesn't cause a burst of
     // background traffic for screens the user isn't looking at.

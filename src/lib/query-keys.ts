@@ -8,7 +8,8 @@ export const queryKeys = {
   conversations: ['conversations'],
   appointments: ['appointments'],
   staffList: ['staff-list'],
-  dashboardData: ['dashboardData'],
+  /** The projects board and leads (listPipeline); the home screen reads it too. */
+  pipeline: ['pipeline'],
 } as const satisfies Record<string, QueryKey>
 
 /**
@@ -17,9 +18,9 @@ export const queryKeys = {
  * an id the client sent no longer exists (see src/lib/stale-reference.ts).
  */
 const LISTS_SHOWING: Record<EntityCollection, QueryKey[]> = {
-  customers: [queryKeys.customers, queryKeys.conversations, queryKeys.appointments, queryKeys.dashboardData],
-  conversations: [queryKeys.conversations, queryKeys.customers, queryKeys.dashboardData],
-  appointments: [queryKeys.appointments, queryKeys.customers, queryKeys.dashboardData],
+  customers: [queryKeys.customers, queryKeys.conversations, queryKeys.appointments, queryKeys.pipeline],
+  conversations: [queryKeys.conversations, queryKeys.customers, queryKeys.pipeline],
+  appointments: [queryKeys.appointments, queryKeys.customers, queryKeys.pipeline],
   staff: [queryKeys.staffList, queryKeys.appointments],
 }
 

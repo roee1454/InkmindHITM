@@ -209,6 +209,8 @@ export function useDashboardRealtime({ sessionToken, sessionStaff }: DashboardRe
         queryClient.invalidateQueries({ queryKey: ['active-appointment', convId] })
       }
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
+      // A booked, moved or closed appointment moves its project's stage (the board, the home screen).
+      queryClient.invalidateQueries({ queryKey: ['pipeline'] })
     })
 
     // 4. Notifications subscription: persistent system notifications

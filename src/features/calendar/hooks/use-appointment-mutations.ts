@@ -27,7 +27,6 @@ export function useAppointmentMutations() {
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ['appointments'] })
-    queryClient.invalidateQueries({ queryKey: ['dashboardData'] })
   }
 
   const create = useMutation({

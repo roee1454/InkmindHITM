@@ -4,7 +4,7 @@ import { queryKeys } from '@/lib/query-keys'
 import { completeProject, markProjectLost, reopenProject } from '../server/projects'
 import type { LostReason } from '../types'
 
-export const pipelineQueryKey = ['pipeline'] as const
+export const pipelineQueryKey = queryKeys.pipeline
 
 /** Lost / reopen / complete, refreshing every view that shows a project's stage. */
 export function useProjectMilestones() {
