@@ -53,5 +53,7 @@ describe('resetData', () => {
         expect(await exists(pb, 'staff', staff.id)).toBe(false)
     expect(await exists(pb, 'customers', customer.id)).toBe(false)
     expect(result.deleted.staff).toBeGreaterThanOrEqual(1)
+    expect(result.remaining.staff).toBeUndefined()
+    expect(result.remaining.customers).toBeUndefined()
   })
 })

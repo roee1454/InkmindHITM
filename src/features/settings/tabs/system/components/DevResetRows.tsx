@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { useConfirm } from '#/hooks/useConfirm'
 import { resetAppData } from '@/features/database/server/reset-data'
-import type { ResetScope } from '@/features/database/server/reset-data.server'
+import type { ResetDataResult, ResetScope } from '@/features/database/server/reset-data.server'
 import { SettingsRow } from '@/features/settings/components/settings-layout'
 
 interface ResetOption {
@@ -39,17 +39,18 @@ const OPTIONS: ResetOption[] = [
   {
     scope: 'everything',
     label: 'איפוס מלא של האפליקציה',
-    idleHint: 'מוחק הכול, כולל אנשי הצוות, ההגדרות והחשבון שלך. אחרי זה תצטרכו להגדיר את הסטודיו מחדש.',
+    idleHint: 'מרוקן את כל מסד הנתונים: כל הרשומות בכל הטבלאות, כולל אנשי הצוות, ההגדרות, חיבורי Google והחשבון שלך. המבנה של הטבלאות נשאר. אחרי זה תצטרכו להגדיר את הסטודיו מחדש.',
     buttonLabel: 'איפוס מלא',
     title: 'איפוס מלא של האפליקציה',
-    description: `כל הנתונים באפליקציה יימחקו לצמיתות, כולל אנשי הצוות, ההגדרות וחיבורי Google. ${GOOGLE_NOTE} אי אפשר לשחזר.`,
+    description: `כל הרשומות בכל הטבלאות של מסד הנתונים יימחקו לצמיתות, כולל אנשי הצוות, ההגדרות, חיבורי Google וקבצים שהועלו. ${GOOGLE_NOTE} מבנה הטבלאות (המיגרציות) נשאר, וכך גם משתמשי העל של PocketBase שהשרת מתחבר איתם. אי אפשר לשחזר.`,
     finalWarning: 'זה מוחק גם את החשבון שלך. תנותקו מיד, ותצטרכו להגדיר את הסטודיו מחדש מההתחלה. להמשיך?',
   },
 ]
 
-function resultHint(scope: ResetScope, total: number, failed: number, firstError: string | null): string {
-  const done = scope === 'work' ? 'הנתונים נוקו' : 'האיפוס הושלם'
-  return `${done}: נמחקו ${total} רשומות${failed > 0 ? `. ${failed} מחיקות נכשלו: ${firstError}` : '.'}`
+function resultHint({ total, failed, firstError, remaining }: ResetDataResult): string {
+  const left = Object.entries(remaining)
+  if (failed === 0 && left.length === 0) return `נמחקו ${total} רשומות. לא נשאר דבר.`
+  return `נמחקו ${total} רשומות. נשארו ${left.map(([name, count]) => `${count} ב-${name}`).join(', ')}. ${failed} מחיקות נכשלו: ${firstError}`
 }
 
 function DevResetRow({ option }: { option: ResetOption }) {
@@ -77,7 +78,7 @@ function DevResetRow({ option }: { option: ResetOption }) {
     reset.mutate()
   }
 
-  const hint = reset.isError ? reset.error.message : reset.data ? resultHint(option.scope, reset.data.total, reset.data.failed, reset.data.firstError) : option.idleHint
+  const hint = reset.isError ? reset.error.message : reset.data ? resultHint(reset.data) : option.idleHint
 
   return (
     <SettingsRow label={option.label} hint={hint}>

@@ -7,7 +7,7 @@ import { drainIntegrationOutbox } from './integration-outbox.server'
  * - work: customers, projects, appointments and everything that hangs off them
  * - business: all of the studio's activity (work, plus notifications, waitlist, logs, assistant history)
  *   while the studio itself stays set up: staff, settings, connections, hours, closures, FAQ
- * - everything: every record, staff and the caller's own account included; the app starts from first-run setup
+ * - everything: every record of every collection, PocketBase's own bookkeeping included (sessions, OAuth links, one-time codes) and staff with the caller's account, so the app starts from first-run setup. The schema stays (migrations own it), and so do the superusers: the server signs in as one.
  */
 export type ResetScope = 'work' | 'business' | 'everything'
 
@@ -16,6 +16,9 @@ const WORK_COLLECTIONS = ['conversations', 'payments', 'appointments', 'projects
 /** What a studio keeps through a `business` reset: the ones that took setup to build. */
 const STUDIO_SETUP_COLLECTIONS = ['studios', 'staff', 'settings', 'credentials', 'artist_profiles', 'studio_closures', 'faq']
 
+/** The superusers the server signs in as; deleting them would lock the app out of its own database. */
+const SUPERUSERS = '_superusers'
+
 /** Bookkeeping that outlives its records until the appointments' Google cleanup has run. */
 const OUTBOX = 'integration_outbox'
 
@@ -23,14 +26,17 @@ export interface ResetDataResult {
   deleted: Record<string, number>
   total: number
   failed: number
+  /** Records still in the collections it tried to empty, per collection: nothing here means the reset was complete. */
+  remaining: Record<string, number>
   /** The first failure's message, for the toast; the rest are in the server log. */
   firstError: string | null
 }
 
 async function collectionsFor(su: PocketBase, scope: ResetScope): Promise<string[]> {
   if (scope === 'work') return WORK_COLLECTIONS
-  const all = (await su.collections.getFullList()).filter((c) => !c.system).map((c) => c.name)
-  return scope === 'business' ? all.filter((name) => !STUDIO_SETUP_COLLECTIONS.includes(name)) : all
+  const all = await su.collections.getFullList()
+  if (scope === 'everything') return all.map((c) => c.name).filter((name) => name !== SUPERUSERS)
+  return all.filter((c) => !c.system && !STUDIO_SETUP_COLLECTIONS.includes(c.name)).map((c) => c.name)
 }
 
 /**
@@ -79,6 +85,11 @@ export async function resetData(su: PocketBase, scope: ResetScope, options: { dr
   if (options.drainOutbox) await drainIntegrationOutbox(su).catch((err: unknown) => console.error('[reset-data] outbox drain failed:', err))
 
   const rest = await sweep(su, collections.filter((c) => c !== 'appointments'), deleted)
+  const remaining: Record<string, number> = {}
+  for (const collection of collections) {
+    const { totalItems } = await su.collection(collection).getList(1, 1, { fields: 'id' })
+    if (totalItems > 0) remaining[collection] = totalItems
+  }
   const total = Object.values(deleted).reduce((sum, n) => sum + n, 0)
-  return { deleted, total, failed: first.failed + rest.failed, firstError: first.firstError ?? rest.firstError }
+  return { deleted, total, failed: first.failed + rest.failed, remaining, firstError: first.firstError ?? rest.firstError }
 }
