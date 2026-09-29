@@ -6,10 +6,8 @@ import { extractMedicalAlerts } from '@/features/health-declaration/utils/health
 import { isHealthDeclarationValid } from '@/features/health-declaration/utils/validity'
 import { SOURCE_LABELS } from '../types'
 import type { Customer } from '../types'
-import { CUSTOMER_LIFECYCLE_LABELS, CUSTOMER_LIFECYCLE_ROLE } from '../utils/lifecycle'
 import type { CustomerWork } from '../utils/customer-list'
 import { cn } from '@/lib/utils'
-import { StatusLabel } from '@/components/ui/status-label'
 
 /** What needs doing about the health declaration, if anything: a medical flag, or a signature past its validity. */
 function healthNotice(customer: Customer): string | null {
@@ -37,7 +35,7 @@ export function CustomerRow({ customer, work, onOpen }: { customer: Customer; wo
       <button
         type="button"
         onClick={() => onOpen(customer)}
-        className="grid w-full cursor-pointer grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 border-t border-border/70 px-4 py-3 text-start transition-colors duration-150 first:border-t-0 hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none sm:px-5 lg:grid-cols-[minmax(0,1fr)_6rem_15rem_8rem_auto]"
+        className="grid w-full cursor-pointer grid-cols-1 items-center gap-x-4 gap-y-1 border-t border-border/70 px-4 py-3 text-start transition-colors duration-150 first:border-t-0 hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none sm:px-5 lg:grid-cols-[minmax(0,1fr)_15rem_8rem_auto]"
       >
         <span className="flex min-w-0 flex-col gap-0.5">
           <span className="flex min-w-0 items-center gap-1.5">
@@ -49,10 +47,6 @@ export function CustomerRow({ customer, work, onOpen }: { customer: Customer; wo
             {detail}
           </span>
         </span>
-
-        <StatusLabel role={CUSTOMER_LIFECYCLE_ROLE[customer.lifecycle]} className="justify-self-end lg:justify-self-start">
-          {CUSTOMER_LIFECYCLE_LABELS[customer.lifecycle]}
-        </StatusLabel>
 
         <span className="col-span-2 flex items-center gap-2 text-sm text-muted-foreground lg:col-span-1 lg:contents">
           <span className="lg:truncate">{[sessions, when].filter(Boolean).join(' · ') || <span className="lg:hidden">עוד לא הייתה פגישה</span>}</span>
