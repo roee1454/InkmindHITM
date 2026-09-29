@@ -48,7 +48,7 @@ export function CustomerRow({ customer, work, onOpen }: { customer: Customer; wo
           </span>
         </span>
 
-        <span className="col-span-2 flex items-center gap-2 text-sm text-muted-foreground lg:col-span-1 lg:contents">
+        <span className="flex items-center gap-2 text-sm text-muted-foreground lg:contents">
           <span className="lg:truncate">{[sessions, when].filter(Boolean).join(' · ') || <span className="lg:hidden">עוד לא הייתה פגישה</span>}</span>
           <span className={cn('ms-auto shrink-0 font-bold tabular-nums lg:ms-0 lg:justify-self-end', work.due > 0 ? 'text-warning' : 'invisible')}>
             {work.due > 0 ? `יתרה ${formatIls(work.due)}` : ''}
