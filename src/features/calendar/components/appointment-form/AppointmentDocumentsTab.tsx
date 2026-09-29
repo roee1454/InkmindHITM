@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { HealthDeclarationViewer } from '@/features/health-declaration/components/HealthDeclarationViewer'
+import { HealthDeclarationSummary } from '@/features/health-declaration/components/HealthDeclarationSummary'
 import { HealthDeclarationDialog } from '@/features/health-declaration/components/HealthDeclarationDialog'
 import type { ApiAppointment, AppointmentFormValues } from '../../types'
 
@@ -63,15 +63,12 @@ export function AppointmentDocumentsTab({ values, appointment, onOpenGallery }: 
 
     <section aria-label="הצהרת בריאות" className="border-t border-border pt-4">
     {/* Card 3: Health Declaration with Medical Alerts & Full Q&A */}
-    <HealthDeclarationViewer
-      compact
+    <HealthDeclarationSummary
       signed={appointment?.healthDeclarationSigned || values.healthDeclarationSigned}
       date={appointment?.healthDeclarationDate || values.healthDeclarationDate}
-      url={appointment?.healthDeclarationFileUrl || values.healthDeclarationFileUrl}
       medicalNotes={appointment?.medicalNotes || values.medicalNotes}
       answers={appointment?.healthDeclarationAnswers || values.healthDeclarationAnswers}
       allergies={appointment?.allergies || values.allergies}
-      customerName={values.leadName}
       onOpenFull={() => setHealthDialogOpen(true)}
     />
 

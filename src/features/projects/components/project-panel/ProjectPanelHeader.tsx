@@ -4,7 +4,7 @@ import { LOST_REASON_LABELS } from '../../utils/labels'
 import { daysInStage } from '../../utils/pipeline'
 import type { ProjectDraft, DraftField } from '../../utils/project-draft'
 import type { ProjectDetails } from '../../types'
-import { ProjectStageBadge } from '../ProjectStageBadge'
+import { ProjectStageLabel } from '../ProjectStageLabel'
 import { PanelInput } from './PanelInput'
 
 function stageAge(days: number | null): string | null {
@@ -32,7 +32,7 @@ export function ProjectPanelHeader({ project, now, draft, invalidField, onDraftC
   return (
     <header className="flex flex-col gap-2 px-5 pt-5 pb-4 pe-12 lg:px-6 lg:pt-6 lg:pe-14">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <ProjectStageBadge stage={project.stage} />
+        <ProjectStageLabel stage={project.stage} />
         {lost ? (
           <span className="text-xs font-semibold text-muted-foreground">
             {LOST_REASON_LABELS[project.lostReason!]}

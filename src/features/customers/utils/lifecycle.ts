@@ -1,3 +1,4 @@
+import type { StatusRole } from '@/components/ui/status-label'
 import type { ProjectStage } from '@/features/projects/types'
 
 /**
@@ -53,10 +54,10 @@ export const CUSTOMER_LIFECYCLE_LABELS: Record<CustomerLifecycle, string> = {
   dormant: 'רדום',
 }
 
-export const CUSTOMER_LIFECYCLE_TONE: Record<CustomerLifecycle, string> = {
-  lead: 'border-status-new-border text-status-new',
-  prospect: 'border-accent-ink/25 bg-accent-soft text-accent-ink',
-  client: 'border-status-done/25 bg-status-done-soft text-status-done',
-  returning: 'border-status-done/25 bg-status-done-soft text-status-done',
-  dormant: 'border-border bg-muted text-muted-foreground',
+export const CUSTOMER_LIFECYCLE_ROLE: Record<CustomerLifecycle, StatusRole> = {
+  lead: 'new',
+  prospect: 'wait',
+  client: 'done',
+  returning: 'done',
+  dormant: 'dead',
 }

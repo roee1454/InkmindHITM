@@ -4,7 +4,7 @@ import { ChevronLeft, Tattoo } from '@/components/ui/icon'
 import { queryKeys } from '@/lib/query-keys'
 import { formatIls } from '@/features/payments/utils/labels'
 import { getConversationProject } from '@/features/projects/server/projects'
-import { ProjectStageBadge } from '@/features/projects/components/ProjectStageBadge'
+import { ProjectStageLabel } from '@/features/projects/components/ProjectStageLabel'
 import { ProjectPanel } from '@/features/projects/components/ProjectPanel'
 import { projectCardFact } from '@/features/projects/utils/board'
 
@@ -42,7 +42,7 @@ export function ConversationProjectChip({ conversationId }: { conversationId: st
       >
         <Tattoo size={14} className="shrink-0 text-muted-foreground" />
         <span className="max-w-[40%] shrink-0 truncate font-bold text-foreground">{project.title || 'פרויקט ללא שם'}</span>
-        <ProjectStageBadge stage={project.stage} className="px-2" />
+        <ProjectStageLabel stage={project.stage} />
         <span className="min-w-0 truncate text-muted-foreground">{projectCardFact(project, new Date())}</span>
         {project.due > 0 && <span className="shrink-0 font-bold text-warning">יתרה {formatIls(project.due)}</span>}
         {otherOpen > 0 && (

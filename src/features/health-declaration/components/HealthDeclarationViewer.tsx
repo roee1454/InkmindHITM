@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   ExternalLink,
   ShieldAlert,
-  ShieldCheck,
   Calendar,
   PenTool,
 } from '@/components/ui/icon'
@@ -25,9 +24,7 @@ export interface HealthDeclarationViewerProps {
   allergies?: string | null
   customerName?: string | null
   formResponseId?: string | null
-  compact?: boolean
   validityMonths?: number
-  onOpenFull?: () => void
 }
 
 function formatDate(dateStr?: string | null): string {
@@ -56,9 +53,7 @@ export const HealthDeclarationViewer: React.FC<HealthDeclarationViewerProps> = (
   allergies,
   customerName,
   formResponseId: propFormResponseId,
-  compact = false,
   validityMonths = 6,
-  onOpenFull,
 }) => {
   const alerts = extractMedicalAlerts({ answers, medicalNotes, allergies })
   const qaList = buildQuestionAnswerList({ answers, medicalNotes })
@@ -90,86 +85,6 @@ export const HealthDeclarationViewer: React.FC<HealthDeclarationViewerProps> = (
   }, [rawUrl, formResponseId])
 
   const formattedDate = formatDate(date)
-
-  if (compact) {
-    return (
-      <div className="rounded-2xl border border-border bg-card p-3.5 space-y-2.5 text-right font-assistant" dir="rtl">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShieldCheck size={16} className={signed ? (isExpired ? 'text-warning' : 'text-status-done') : 'text-muted-foreground'} />
-            <span className="text-xs font-semibold text-foreground">הצהרת בריאות</span>
-          </div>
-          {signed ? (
-            isExpired ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-warning/20 border border-warning/30 px-2.5 py-0.5 text-micro font-medium text-warning">
-                <AlertTriangle size={12} />
-                פג תוקף — נדרש חידוש
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-status-done/15 px-2.5 py-0.5 text-micro font-medium text-status-done">
-                <CheckCircle2 size={12} />
-                חתומה ומאושרת ✓
-              </span>
-            )
-          ) : (
-            <span className="inline-flex items-center gap-1 rounded-full bg-accent-ink/15 px-2.5 py-0.5 text-micro font-medium text-accent-ink">
-              טרם נחתמה
-            </span>
-          )}
-        </div>
-
-        {/* Alerts in compact mode */}
-        {alerts.length > 0 ? (
-          <div className="rounded-xl border border-destructive/25 bg-destructive/10 p-2.5 space-y-1.5 text-right">
-            <div className="flex items-center gap-1.5 text-micro font-semibold text-destructive">
-              <AlertTriangle size={13} />
-              <span>זוהו {alerts.length} התראות רפואיות:</span>
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {alerts.map((a) => (
-                <span
-                  key={a.id}
-                  className={cn(
-                    'inline-flex items-center rounded-md px-1.5 py-0.5 text-micro font-medium',
-                    a.severity === 'danger'
-                      ? 'bg-destructive/20 text-destructive border border-destructive/20'
-                      : 'bg-warning/20 text-warning border border-warning/20',
-                  )}
-                >
-                  {a.label}
-                  {a.detail ? `: ${a.detail}` : ''}
-                </span>
-              ))}
-            </div>
-          </div>
-        ) : signed && !isExpired ? (
-          <div className="rounded-xl border border-status-done/20 bg-status-done/5 p-2 text-micro font-medium text-status-done text-right flex items-center gap-1.5">
-            <CheckCircle2 size={13} />
-            <span>ללא התוויות נגד רפואיות שדווחו</span>
-          </div>
-        ) : null}
-
-        <div className="flex items-center justify-between text-micro text-muted-foreground pt-0.5">
-          {formattedDate && (
-            <span className="inline-flex items-center gap-1 tabular-nums">
-              <Calendar size={12} />
-              תאריך: {formattedDate}
-              {isExpired && <span className="text-warning font-semibold">(פג תוקף)</span>}
-            </span>
-          )}
-          {onOpenFull && (
-            <button
-              type="button"
-              onClick={onOpenFull}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline cursor-pointer ms-auto"
-            >
-              <span>צפה בכל התשובות ({qaList.length})</span>
-            </button>
-          )}
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-3.5 text-right font-assistant" dir="rtl">

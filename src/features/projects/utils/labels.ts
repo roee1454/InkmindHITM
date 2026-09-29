@@ -1,3 +1,4 @@
+import type { StatusRole } from '@/components/ui/status-label'
 import type { LostReason, ProjectStage } from '../types'
 
 export const PROJECT_STAGE_LABELS: Record<ProjectStage, string> = {
@@ -20,16 +21,16 @@ export const LOST_REASON_LABELS: Record<LostReason, string> = {
   other: 'אחר',
 }
 
-/** Design-system tokens per stage: open inquiries, the money part of the funnel, done, lost. */
-export const PROJECT_STAGE_TONE: Record<ProjectStage, string> = {
-  inquiry: 'border-status-new-border text-status-new',
-  consultation_scheduled: 'border-status-new-border text-status-new',
-  consultation_done: 'border-status-new-border text-status-new',
-  quoted: 'border-accent-ink/25 bg-accent-soft text-accent-ink',
-  booked: 'border-accent-ink/25 bg-accent-soft text-accent-ink',
-  in_progress: 'border-accent-ink/25 bg-accent-soft text-accent-ink',
-  completed: 'border-status-done/25 bg-status-done-soft text-status-done',
-  lost: 'border-status-dead/25 bg-status-dead-soft text-status-dead',
+/** Status role per stage (DESIGN.md): open inquiries, the money part of the funnel, done, lost. */
+export const PROJECT_STAGE_ROLE: Record<ProjectStage, StatusRole> = {
+  inquiry: 'new',
+  consultation_scheduled: 'new',
+  consultation_done: 'new',
+  quoted: 'wait',
+  booked: 'wait',
+  in_progress: 'wait',
+  completed: 'done',
+  lost: 'dead',
 }
 
 export function projectStageOf(value: unknown): ProjectStage {

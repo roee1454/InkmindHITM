@@ -2,7 +2,7 @@ import type React from 'react'
 import { useState } from 'react'
 import { Trash2 } from '@/components/ui/icon'
 import { Button } from '@/components/ui/button'
-import { HealthDeclarationViewer } from '@/features/health-declaration/components/HealthDeclarationViewer'
+import { HealthDeclarationSummary } from '@/features/health-declaration/components/HealthDeclarationSummary'
 import { HealthDeclarationDialog } from '@/features/health-declaration/components/HealthDeclarationDialog'
 import type { CustomerFormData } from '../../types'
 import { CustomerFormFields } from '../CustomerFormFields'
@@ -34,19 +34,21 @@ export function CustomerDetailsTab({ form, onFormChange, formError, onSubmit, is
       <form onSubmit={onSubmit} className="form-stack">
         {formError && <p className="text-sm font-bold text-destructive">{formError}</p>}
         <CustomerFormFields form={form} onFormChange={onFormChange} />
-        <HealthDeclarationViewer compact {...health} onOpenFull={() => setHealthDialogOpen(true)} />
+        <div className="border-t border-border pt-4">
+        <HealthDeclarationSummary {...health} onOpenFull={() => setHealthDialogOpen(true)} />
+        </div>
         <HealthDeclarationDialog open={healthDialogOpen} onOpenChange={setHealthDialogOpen} {...health} />
-        <button type="submit" disabled={isSaving} className="btn-native">
-          {isSaving ? 'שומר שינויים…' : 'שמירת שינויים'}
-        </button>
+        <Button type="submit" disabled={isSaving} className="w-full sm:w-auto sm:self-start">
+          {isSaving ? 'שומר…' : 'שמירה'}
+        </Button>
       </form>
 
-      <section aria-labelledby="customer-danger-zone" className="flex flex-col gap-2 border-t border-border pt-4">
-        <h3 id="customer-danger-zone" className="text-sm font-extrabold text-destructive">
-          אזור מסוכן
+      <section aria-labelledby="customer-danger-zone" className="flex flex-col gap-2 border-t border-border pt-5">
+        <h3 id="customer-danger-zone" className="text-sm font-bold text-foreground">
+          מחיקת הלקוח
         </h3>
-        <p className="text-xs text-muted-foreground">מחיקה של לקוח מוחקת איתו גם רשומות שקשורות אליו. לפני שמוחקים יוצג בדיוק מה יימחק.</p>
-        <Button type="button" variant="outline" onClick={onDelete} className="self-start gap-2 border-destructive/40 text-destructive hover:bg-destructive/10">
+        <p className="text-sm text-muted-foreground">מוחקת איתו גם את הפרויקטים, התורים והשיחות שלו. לפני המחיקה יוצג בדיוק מה יימחק.</p>
+        <Button type="button" variant="outline" onClick={onDelete} className="self-start gap-2 text-destructive">
           <Trash2 size={15} />
           מחיקת לקוח
         </Button>

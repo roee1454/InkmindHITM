@@ -5,12 +5,14 @@ import { MessageSquare, Star } from '@/components/ui/icon'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { StatusLabel } from '@/components/ui/status-label'
 import { useIsMobile } from '#/hooks/useMediaQuery'
 import { cn } from '@/lib/utils'
 import { formatPhoneForDisplay } from '@/lib/phone'
 import { formatIls } from '@/features/payments/utils/labels'
 import { ProjectPanel } from '@/features/projects/components/ProjectPanel'
-import { CUSTOMER_LIFECYCLE_LABELS, CUSTOMER_LIFECYCLE_TONE } from '../../utils/lifecycle'
+import { CUSTOMER_LIFECYCLE_LABELS, CUSTOMER_LIFECYCLE_ROLE } from '../../utils/lifecycle'
 import { useCustomerOverview } from '../../hooks/use-customer-overview'
 import type { Customer, CustomerFormData } from '../../types'
 import { CustomerProjectsTab } from './CustomerProjectsTab'
@@ -28,16 +30,11 @@ interface CustomerSheetProps {
   onDelete: () => void
 }
 
-function initials(name: string | null): string {
-  const words = (name ?? '').trim().split(/\s+/).filter(Boolean)
-  return words.length ? words.slice(0, 2).map((w) => w[0]).join('') : '?'
-}
-
 function TabSkeleton() {
   return (
     <div className="flex flex-col gap-2">
-      <Skeleton className="h-16 w-full rounded-xl" />
-      <Skeleton className="h-16 w-full rounded-xl" />
+      <Skeleton className="h-14 w-full rounded-lg" />
+      <Skeleton className="h-14 w-full rounded-lg" />
     </div>
   )
 }
@@ -68,6 +65,9 @@ export function CustomerSheet({ customer: selected, onClose, ...details }: Custo
     </p>
   ) : null
 
+  const triggerClass =
+    'h-10 flex-none rounded-none border-b-2 border-transparent px-0 font-bold shadow-none data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none'
+
   return (
     <Sheet open={selected !== null} onOpenChange={(open) => !open && onClose()}>
       <SheetContent
@@ -77,42 +77,56 @@ export function CustomerSheet({ customer: selected, onClose, ...details }: Custo
       >
         {customer && (
           <>
-            <header className="flex items-start gap-3 px-5 pt-4 pb-4 pe-12">
-              <span className="avatar-native">{initials(customer.name)}</span>
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-                  <SheetTitle className="truncate text-lg">{customer.name || 'לקוח ללא שם'}</SheetTitle>
-                  {customer.isVip && <Star size={14} className="shrink-0 fill-warning text-warning" aria-label="VIP" />}
-                  <span className={cn('shrink-0 rounded-full border px-2 py-0.5 text-2xs font-bold', CUSTOMER_LIFECYCLE_TONE[customer.lifecycle])}>
-                    {CUSTOMER_LIFECYCLE_LABELS[customer.lifecycle]}
-                  </span>
+            <header className="flex flex-col gap-3 px-5 pt-4 pb-4 pe-12">
+              <div className="flex min-w-0 flex-col gap-1">
+                <div className="flex min-w-0 items-center gap-2">
+                  <SheetTitle className="truncate text-xl">{customer.name || 'לקוח ללא שם'}</SheetTitle>
+                  {customer.isVip && <Star size={15} className="shrink-0 fill-warning text-warning" aria-label="VIP" />}
                 </div>
-                <SheetDescription dir="ltr" className="self-start text-sm tabular-nums">
-                  {formatPhoneForDisplay(customer.phone)}
+                <SheetDescription className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                  <StatusLabel role={CUSTOMER_LIFECYCLE_ROLE[customer.lifecycle]}>{CUSTOMER_LIFECYCLE_LABELS[customer.lifecycle]}</StatusLabel>
+                  <span aria-hidden>·</span>
+                  <span className="tabular-nums">{formatPhoneForDisplay(customer.phone)}</span>
                 </SheetDescription>
-                {due > 0 && <span className="text-xs font-bold text-warning">יתרה פתוחה {formatIls(due)}</span>}
               </div>
-              {data?.conversationId && (
-                <button
-                  type="button"
-                  onClick={() => navigate({ to: '/dashboard/conversations', search: { chatId: data.conversationId! } })}
-                  className="flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-bold text-foreground transition-colors duration-150 hover:bg-muted"
-                >
-                  <MessageSquare size={15} />
-                  לשיחה
-                </button>
-              )}
+
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                {data ? (
+                  <dl className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+                    <Fact label="שולם" value={formatIls(data.totals.paid)} />
+                    <Fact label="יתרה" value={formatIls(due)} tone={due > 0 ? 'text-warning' : undefined} />
+                    {data.totals.credit > 0 && <Fact label="זיכוי" value={formatIls(data.totals.credit)} />}
+                  </dl>
+                ) : (
+                  <Skeleton className="h-5 w-40" />
+                )}
+                {data?.conversationId && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate({ to: '/dashboard/conversations', search: { chatId: data.conversationId! } })}
+                    className="h-9 gap-1.5 px-3"
+                  >
+                    <MessageSquare size={15} />
+                    לשיחה
+                  </Button>
+                )}
+              </div>
             </header>
 
             <Tabs key={customer.id} defaultValue="projects" dir="rtl" className="min-h-0 flex-1 gap-0">
-              <div className="px-5 pb-3">
-                <TabsList>
-                  <TabsTrigger value="projects">פרויקטים{data ? ` · ${data.projects.length}` : ''}</TabsTrigger>
-                  <TabsTrigger value="payments">כספים</TabsTrigger>
-                  <TabsTrigger value="details">פרטים</TabsTrigger>
-                </TabsList>
-              </div>
-              <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-1 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]">
+              <TabsList className="h-auto justify-start gap-5 rounded-none border-b border-border bg-transparent p-0 px-5">
+                <TabsTrigger value="projects" className={triggerClass}>
+                  פרויקטים{data ? ` · ${data.projects.length}` : ''}
+                </TabsTrigger>
+                <TabsTrigger value="payments" className={triggerClass}>
+                  תשלומים
+                </TabsTrigger>
+                <TabsTrigger value="details" className={triggerClass}>
+                  פרטים
+                </TabsTrigger>
+              </TabsList>
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]">
                 <TabsContent value="projects">
                   {data ? <CustomerProjectsTab projects={data.projects} now={new Date()} onOpenProject={setOpenProjectId} /> : (loading ?? failed)}
                 </TabsContent>
@@ -128,5 +142,14 @@ export function CustomerSheet({ customer: selected, onClose, ...details }: Custo
         )}
       </SheetContent>
     </Sheet>
+  )
+}
+
+function Fact({ label, value, tone }: { label: string; value: string; tone?: string }) {
+  return (
+    <div className="flex items-baseline gap-1.5">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className={cn('font-bold tabular-nums text-foreground', tone)}>{value}</dd>
+    </div>
   )
 }

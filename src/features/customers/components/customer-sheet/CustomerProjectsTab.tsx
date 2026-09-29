@@ -1,6 +1,6 @@
 import { ChevronLeft } from '@/components/ui/icon'
 import { formatIls } from '@/features/payments/utils/labels'
-import { ProjectStageBadge } from '@/features/projects/components/ProjectStageBadge'
+import { ProjectStageLabel } from '@/features/projects/components/ProjectStageLabel'
 import { projectCardFact } from '@/features/projects/utils/board'
 import type { PipelineProject } from '@/features/projects/types'
 
@@ -17,32 +17,35 @@ interface CustomerProjectsTabProps {
  */
 export function CustomerProjectsTab({ projects, now, onOpenProject }: CustomerProjectsTabProps) {
   if (projects.length === 0) {
-    return <p className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">ללקוח הזה עדיין אין פרויקטים.</p>
+    return <div className="flex flex-col gap-1 py-6">
+        <p className="text-sm font-bold text-foreground">עדיין אין פרויקטים</p>
+        <p className="text-sm text-muted-foreground">פרויקט נפתח כשהלקוח מבקש לקבוע ייעוץ או תור.</p>
+      </div>
   }
 
   const closed = (p: PipelineProject) => p.stage === 'completed' || p.stage === 'lost'
   const ordered = [...projects.filter((p) => !closed(p)), ...projects.filter(closed)]
 
   return (
-    <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-xl border border-border">
+    <ul className="flex flex-col divide-y divide-border/70">
       {ordered.map((project) => (
         <li key={project.projectId}>
           <button
             type="button"
             onClick={() => onOpenProject(project.projectId)}
-            className="flex w-full cursor-pointer items-center gap-3 bg-card px-3.5 py-3 text-right transition-colors duration-150 hover:bg-muted/50"
+            className="-mx-2 flex w-[calc(100%+1rem)] cursor-pointer items-center gap-3 rounded-lg px-2 py-3 text-start transition-colors duration-150 hover:bg-muted/50"
           >
-            <span className="flex min-w-0 flex-1 flex-col gap-1">
-              <span className="flex min-w-0 items-center gap-2">
-                <span className="truncate text-sm font-extrabold text-foreground">{project.title || 'ללא כותרת'}</span>
-                <ProjectStageBadge stage={project.stage} />
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="flex min-w-0 items-center justify-between gap-3">
+                <span className="truncate text-sm font-bold text-foreground">{project.title || 'ללא כותרת'}</span>
+                <ProjectStageLabel stage={project.stage} />
               </span>
-              <span className="line-clamp-2 text-xs font-semibold text-foreground/75">{projectCardFact(project, now)}</span>
+              <span className="line-clamp-2 text-sm text-muted-foreground">{projectCardFact(project, now)}</span>
               {(project.staffName || project.due > 0 || project.credit > 0) && (
-                <span className="flex flex-wrap items-center gap-x-2 text-2xs font-bold">
+                <span className="flex flex-wrap items-center gap-x-3 text-xs">
                   {project.staffName && <span className="text-muted-foreground">{project.staffName}</span>}
-                  {project.due > 0 && <span className="text-warning">יתרה {formatIls(project.due)}</span>}
-                  {project.credit > 0 && <span className="text-status-done">זיכוי {formatIls(project.credit)}</span>}
+                  {project.due > 0 && <span className="font-bold text-warning">יתרה {formatIls(project.due)}</span>}
+                  {project.credit > 0 && <span className="font-bold text-foreground">זיכוי {formatIls(project.credit)}</span>}
                 </span>
               )}
             </span>
