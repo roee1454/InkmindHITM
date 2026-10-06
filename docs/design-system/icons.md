@@ -46,7 +46,7 @@ Types: `IMIconProps`, `IMIconName`, `IMIconSize`, `IMIconTone`.
 
 - **`inherit` is the default, and inside a holder it's the right choice.** In a button, badge, menu item or link, the icon takes that element's colour. Don't set a tone there. `inherit` adds no colour class, so a holder that colours its icons (a menu item's muted glyph) keeps doing so.
 - **Beside text, decoration is `muted`.** An icon that labels a row, a field or a meta line (`clock` next to a time, `phone` next to a number) is muted.
-- **An icon that *is* the content is `default`**: the lead of an empty state or a list row.
+- **An icon that *is* the content is `default`**: the lead of a list row. The exception is empty states: `IMEmptyState` renders its icon `xl` and `muted` inside a `surface-2` disc.
 - **`success` / `warning` / `destructive` only report a system outcome**: a payment failed, a sync succeeded, a delete is about to happen. Never as decoration. This is the monochrome doctrine in [design-system.md](../design-system.md).
 - **`artist-1…8` only name an artist**, such as the needle on an appointment of artist 3.
 - `accent` is monochrome emphasis (the accent ink), not a brand hue.

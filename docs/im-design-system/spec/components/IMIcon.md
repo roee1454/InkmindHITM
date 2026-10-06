@@ -16,7 +16,7 @@ A filled icon from the closed Inkmind registry: `<IMIcon name="calendar" size="s
 
 ## Colour
 - Default is `inherit`: inside a button, badge or menu item the icon takes that element's colour. Don't set a tone there.
-- Beside text, decoration is `muted`; an icon that *is* the content (empty state, row lead) is `default`.
+- Beside text, decoration is `muted`; an icon that *is* the content (a row lead) is `default`. Empty-state icons are `muted` inside a `surface-2` disc.
 - `success` / `warning` / `destructive` only when the icon reports a system outcome. `artist-N` only to name an artist.
 
 ## Sizes by context
