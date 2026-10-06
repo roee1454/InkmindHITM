@@ -1,12 +1,11 @@
 import type { ComponentType } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { MessageSquare, CalendarDays, Wallet, Users, CalendarOff, Link2, HelpCircle, ChevronLeft } from 'lucide-react'
+import { MessageSquare, CalendarDays, Wallet, Users, CalendarOff, Link2, HelpCircle, ChevronLeft } from '@/components/ui/icon'
 import { getSettings, getSetupChecklistState } from '../server/onboarding'
 import { getStaffList } from '@/features/settings/server/staff'
 import { getStudioClosures } from '@/features/settings/server/closures'
 import { getFaqList } from '@/features/settings/server/faq'
-import { getArtistProfiles } from '@/features/settings/server/profiles'
 import { getWhatsAppSettingsForm } from '@/features/settings/server/whatsapp'
 import { getGoogleCalendarConnections } from '@/features/calendar/server/appointments'
 
@@ -27,13 +26,12 @@ export function useSetupChecklist() {
   const staffQuery = useQuery({ queryKey: ['staff-list'], queryFn: () => getStaffList() })
   const closuresQuery = useQuery({ queryKey: ['studio-closures'], queryFn: () => getStudioClosures() })
   const faqQuery = useQuery({ queryKey: ['faq-list'], queryFn: () => getFaqList() })
-  const profilesQuery = useQuery({ queryKey: ['artist-profiles'], queryFn: () => getArtistProfiles() })
   const whatsappQuery = useQuery({ queryKey: ['whatsapp-settings-form'], queryFn: () => getWhatsAppSettingsForm() })
   const googleQuery = useQuery({ queryKey: ['google-calendar-connections'], queryFn: () => getGoogleCalendarConnections() })
   const checklistStateQuery = useQuery({ queryKey: ['setup-checklist-state'], queryFn: () => getSetupChecklistState() })
 
   const isLoading =
-    settingsQuery.isLoading || staffQuery.isLoading || closuresQuery.isLoading || faqQuery.isLoading || profilesQuery.isLoading
+    settingsQuery.isLoading || staffQuery.isLoading || closuresQuery.isLoading || faqQuery.isLoading
 
   const items: ChecklistItem[] = [
     {
@@ -42,7 +40,7 @@ export function useSetupChecklist() {
       label: 'חיבור WhatsApp',
       why: 'נבדק אוטומטית מול ה-Cloud API',
       done: Boolean(whatsappQuery.data?.hasAccessToken && whatsappQuery.data?.hasPhoneNumberId),
-      link: '/dashboard/settings/whatsapp',
+      link: '/dashboard/settings/system',
     },
     {
       id: 'google_calendar',
@@ -74,14 +72,14 @@ export function useSetupChecklist() {
       why: 'ימי חג וסגירה שהסוכן לא יציע',
       label: 'ימי סגירה',
       done: (closuresQuery.data?.length ?? 0) > 0,
-      link: '/dashboard/settings/policy',
+      link: '/dashboard/settings/closures',
     },
     {
       id: 'links_bio',
       icon: Link2,
       label: 'קישורים וביוגרפיה',
       why: 'כדי שהסוכן יפנה לקוחות לתיק העבודות שלך',
-      done: Boolean(profilesQuery.data?.some((p) => p.bio || p.instagramHandle || p.portfolioUrl)),
+      done: Boolean(staffQuery.data?.some((s) => s.bio || s.portfolioUrl)),
       link: '/dashboard/settings/team',
     },
     {
@@ -90,7 +88,7 @@ export function useSetupChecklist() {
       label: 'שאלות נפוצות',
       why: 'הסוכן עונה מהן ישירות ללקוחות',
       done: (faqQuery.data?.length ?? 0) > 0,
-      link: '/dashboard/settings/faq',
+      link: '/dashboard/settings/ai',
     },
   ]
 
@@ -111,8 +109,8 @@ export function SetupChecklist({ maxRows, showFooterLink = false }: { maxRows?: 
   return (
     <div className="card-native overflow-hidden">
       <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3">
-        <h3 className="text-[16.5px] font-extrabold text-foreground">להשלים את ההגדרה</h3>
-        <span className="text-[13px] font-bold text-muted-foreground">
+        <h3 className="text-lg font-extrabold text-foreground">להשלים את ההגדרה</h3>
+        <span className="text-sm font-bold text-muted-foreground">
           {doneCount} / {items.length}
         </span>
       </div>
@@ -130,8 +128,8 @@ export function SetupChecklist({ maxRows, showFooterLink = false }: { maxRows?: 
             <item.icon size={18} />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[15px] font-bold text-foreground">{item.label}</div>
-            <div className="truncate text-[13px] text-muted-foreground">{item.why}</div>
+            <div className="truncate text-base font-bold text-foreground">{item.label}</div>
+            <div className="truncate text-sm text-muted-foreground">{item.why}</div>
           </div>
           {item.done ? (
             <span className="pill bg-success/12 text-success shrink-0">בוצע</span>
@@ -144,7 +142,7 @@ export function SetupChecklist({ maxRows, showFooterLink = false }: { maxRows?: 
         <button
           type="button"
           onClick={() => navigate({ to: '/dashboard/setup' })}
-          className="w-full cursor-pointer border-t border-border/60 py-3 text-center text-[13.5px] font-bold text-primary"
+          className="w-full cursor-pointer border-t border-border py-3 text-center text-sm font-bold text-primary"
         >
           הצג הכל
         </button>

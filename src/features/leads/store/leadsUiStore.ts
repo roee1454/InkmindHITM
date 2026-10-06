@@ -1,29 +1,21 @@
 import { create } from 'zustand'
 
+/** The leads-without-project page (track-b B6.7) has nothing to filter by stage or artist —
+ *  there is no project yet — so this store only carries search and pagination. */
 interface LeadsUiState {
   searchQuery: string
-  selectedStage: string
-  selectedArtist: string
   currentPage: number
 
-  // Actions
   setSearchQuery: (query: string) => void
-  setSelectedStage: (stage: string) => void
-  setSelectedArtist: (artistId: string) => void
   setCurrentPage: (page: number) => void
   resetFilters: () => void
 }
 
 export const useLeadsUiStore = create<LeadsUiState>((set) => ({
   searchQuery: '',
-  selectedStage: 'all',
-  selectedArtist: 'all',
   currentPage: 1,
 
   setSearchQuery: (searchQuery) => set({ searchQuery, currentPage: 1 }),
-  setSelectedStage: (selectedStage) => set({ selectedStage, currentPage: 1 }),
-  setSelectedArtist: (selectedArtist) => set({ selectedArtist, currentPage: 1 }),
   setCurrentPage: (currentPage) => set({ currentPage }),
-  resetFilters: () => set({ searchQuery: '', selectedStage: 'all', selectedArtist: 'all', currentPage: 1 }),
+  resetFilters: () => set({ searchQuery: '', currentPage: 1 }),
 }))
-

@@ -40,7 +40,7 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "inline-flex h-10 flex-1 cursor-pointer select-none items-center justify-center gap-1.5 rounded-xl px-3 font-assistant text-[14.5px] font-bold whitespace-nowrap text-muted-foreground transition-all duration-150 ease-native outline-none focus-visible:ring-4 focus-visible:ring-primary/15 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-card data-[state=active]:font-extrabold data-[state=active]:text-foreground data-[state=active]:shadow-sm",
+        "inline-flex h-10 flex-1 cursor-pointer select-none items-center justify-center gap-1.5 rounded-xl px-3 font-assistant text-sm font-bold whitespace-nowrap text-muted-foreground transition-all duration-150 ease-native outline-none focus-visible:ring-4 focus-visible:ring-primary/15 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-card data-[state=active]:font-extrabold data-[state=active]:text-foreground data-[state=active]:shadow-sm",
         className
       )}
       {...props}
@@ -61,4 +61,13 @@ function TabsContent({
   )
 }
 
-export { Tabs, TabsList, TabsTrigger, TabsContent }
+export {
+  Tabs,
+  Tabs as IMTabs,
+  TabsList,
+  TabsList as IMTabsList,
+  TabsTrigger,
+  TabsTrigger as IMTabsTrigger,
+  TabsContent,
+  TabsContent as IMTabsContent,
+}

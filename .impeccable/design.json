@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-27T00:00:00.000Z",
+  "title": "Design System: Inkmind CRM",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "Near-Black Charcoal",
+        "canonical": "oklch(15% 0.002 270)",
+        "tonalRamp": ["#000000", "#0a0a0b", "#141415", "#1e1e20", "#3a3a3d", "#626266", "#9a9a9f", "#e4e4e6"]
+      },
+      "accent-fill": {
+        "role": "primary",
+        "displayName": "Near-White Fill",
+        "canonical": "oklch(97% 0 0)",
+        "tonalRamp": ["#18181b", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#e4e4e7", "#f4f4f5"]
+      },
+      "status-done": {
+        "role": "status",
+        "displayName": "Signal Green",
+        "canonical": "oklch(78% 0.14 155)",
+        "tonalRamp": ["#0d3a22", "#155c34", "#1f7d46", "#2e7d4f", "#3fae6c", "#5fcf8e", "#8fdfae", "#c3f0d4"]
+      },
+      "destructive": {
+        "role": "action",
+        "displayName": "Warm Coral Red",
+        "canonical": "oklch(68% 0.19 25)",
+        "tonalRamp": ["#4a130f", "#7a2018", "#b42318", "#d6382b", "#f97066", "#fb968f", "#fdbdb8", "#fee4e2"]
+      },
+      "warning": {
+        "role": "action",
+        "displayName": "Amber Warning",
+        "canonical": "oklch(75% 0.14 75)",
+        "tonalRamp": ["#4a2e05", "#7a4c09", "#b25e09", "#d3800f", "#e0a145", "#eabb74", "#f2d3a3", "#f9ecd6"]
+      },
+      "artist-1": { "role": "categorical", "displayName": "Terracotta", "canonical": "oklch(70% 0.12 35)" },
+      "artist-2": { "role": "categorical", "displayName": "Sage", "canonical": "oklch(75% 0.08 155)" },
+      "artist-3": { "role": "categorical", "displayName": "Ochre", "canonical": "oklch(78% 0.11 85)" },
+      "artist-4": { "role": "categorical", "displayName": "Dusty Violet", "canonical": "oklch(65% 0.09 320)" },
+      "artist-5": { "role": "categorical", "displayName": "Slate Blue", "canonical": "oklch(65% 0.07 235)" },
+      "artist-6": { "role": "categorical", "displayName": "Dusty Rose", "canonical": "oklch(72% 0.09 10)" },
+      "artist-7": { "role": "categorical", "displayName": "Olive", "canonical": "oklch(68% 0.09 130)" },
+      "artist-8": { "role": "categorical", "displayName": "Clay", "canonical": "oklch(65% 0.09 55)" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Onboarding step questions only — the single biggest text on any screen, used once per screen." },
+      "headline": { "displayName": "Page Title", "purpose": "One per screen, in `.page-head h1` — names what the screen shows." },
+      "title": { "displayName": "Section Title", "purpose": "Card and dialog headings, section titles." },
+      "body": { "displayName": "Body", "purpose": "Default UI text — dense app copy, not prose; no line-length constraint." },
+      "label": { "displayName": "Label", "purpose": "Stat labels, pill/badge text, table headers." }
+    },
+    "shadows": [
+      { "name": "raised", "value": "0 1px 3px 0 rgb(16 24 40 / 0.06), 0 1px 2px -1px rgb(16 24 40 / 0.04)", "purpose": "Default card/button separation from the page." },
+      { "name": "overlay", "value": "0 12px 32px -8px rgb(16 24 40 / 0.14)", "purpose": "Dialogs, sheets, dropdowns, toasts — anything detached from the page." }
+    ],
+    "motion": [
+      { "name": "ease-native", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "The only easing curve in the system — an ease-out-quint. No bounce, no spring." },
+      { "name": "duration-fast", "value": "120ms", "purpose": "Micro-interactions: tap-target color changes." },
+      { "name": "duration-base", "value": "180ms", "purpose": "Default transition duration — buttons, fields, most state changes." },
+      { "name": "duration-slow", "value": "280ms", "purpose": "Larger surface transitions (sheets, progress fills)." }
+    ],
+    "breakpoints": [
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one filled surface on most screens — full-width on mobile, auto-width on desktop.",
+      "html": "<button class=\"ds-btn-primary\">שמירה</button>",
+      "css": ".ds-btn-primary { display: inline-flex; height: 56px; width: 100%; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; background: #f4f4f5; padding: 0 24px; font-size: 17px; font-weight: 700; color: #18181b; border: none; cursor: pointer; transition: transform 180ms cubic-bezier(0.16,1,0.3,1), box-shadow 180ms cubic-bezier(0.16,1,0.3,1); } .ds-btn-primary:active { transform: scale(0.97); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(161,161,170,0.25); } @media (min-width: 1024px) { .ds-btn-primary { height: 48px; width: auto; font-size: 15px; } }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action — same shape and sizing as primary, muted fill.",
+      "html": "<button class=\"ds-btn-ghost\">ביטול</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; height: 56px; width: 100%; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; background: #1e1e20; padding: 0 24px; font-size: 17px; font-weight: 700; color: #ffffff; border: none; cursor: pointer; transition: transform 180ms cubic-bezier(0.16,1,0.3,1); } .ds-btn-ghost:active { transform: scale(0.97); } @media (min-width: 1024px) { .ds-btn-ghost { height: 48px; width: auto; font-size: 15px; } }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The one card treatment. Never nested inside another card.",
+      "html": "<div class=\"ds-card\">תוכן הכרטיס</div>",
+      "css": ".ds-card { border-radius: 12px; border: 1px solid #2a2a2d; background: #141415; box-shadow: 0 1px 3px 0 rgb(16 24 40 / 0.06), 0 1px 2px -1px rgb(16 24 40 / 0.04); padding: 16px; color: #ffffff; }"
+    },
+    {
+      "name": "Status Pill — Done",
+      "kind": "chip",
+      "refersTo": "pill",
+      "description": "One of four status roles. Background is the soft tint, text is the solid role color.",
+      "html": "<span class=\"ds-pill-done\">הושלם</span>",
+      "css": ".ds-pill-done { display: inline-flex; align-items: center; border-radius: 9999px; padding: 6px 12px; font-size: 12.5px; font-weight: 700; line-height: 1; white-space: nowrap; background: rgba(95,207,142,0.14); color: #5fcf8e; }"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Text input / select wrapper. 16px minimum font size on mobile to prevent iOS Safari zoom-on-focus.",
+      "html": "<div class=\"ds-field\"><input type=\"text\" placeholder=\"שם הלקוח\" style=\"all:unset;flex:1;color:#ffffff;font-size:16px;\" /></div>",
+      "css": ".ds-field { display: flex; height: 48px; width: 100%; align-items: center; border-radius: 10px; border: 1px solid #2a2a2d; background: #141415; padding: 0 16px; box-shadow: 0 1px 3px 0 rgb(16 24 40 / 0.06); transition: border-color 180ms cubic-bezier(0.16,1,0.3,1), box-shadow 180ms cubic-bezier(0.16,1,0.3,1); } .ds-field:focus-within { border-color: #a1a1aa; box-shadow: 0 0 0 4px rgba(161,161,170,0.15); } @media (min-width: 1024px) { .ds-field { height: 44px; font-size: 15px; } }"
+    },
+    {
+      "name": "HITL Action Row",
+      "kind": "custom",
+      "refersTo": "hitl-row",
+      "description": "Signature component: a bot decision awaiting staff confirmation inside a conversation thread (quote, slot, receipt, final booking). Accent border while pending, success border once approved.",
+      "html": "<div class=\"ds-hitl-row\"><span>הצעת מחיר ממתינה לאישור</span><button class=\"ds-hitl-action\">אישור</button></div>",
+      "css": ".ds-hitl-row { display: flex; align-items: center; gap: 8px; border-radius: 10px; border: 1px solid #a1a1aa; background: #141415; padding: 8px 10px; color: #ffffff; font-size: 13.5px; } .ds-hitl-row.success { border-color: #5fcf8e; } .ds-hitl-action { display: flex; height: 32px; align-items: center; justify-content: center; border-radius: 8px; background: #f4f4f5; color: #18181b; padding: 0 12px; font-size: 12px; font-weight: 800; border: none; cursor: pointer; transition: transform 150ms cubic-bezier(0.16,1,0.3,1); } .ds-hitl-action:active { transform: scale(0.97); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Workbench",
+    "overview": "Inkmind is a craftsperson's tool laid out at rest: near-black surfaces, one monochrome accent, and nothing on the bench that isn't there to be used. The palette collapses eleven ad-hoc hues down to four status roles and a single accent ramp on purpose — a studio running one tattoo shop doesn't need a color for every idea, it needs to trust that grey means \"waiting,\" green means \"done,\" and nothing else is trying to get its attention. Corners, shadows and motion follow the same discipline: three radius roles (not seven), two elevation roles (not a shadow scale), one easing curve. The system explicitly rejects the generic SaaS look, and just as explicitly the light, card-heavy competitor look (Pencild.co) and the glassmorphism-by-default open-source alternative (Poli-International/studio-crm): this is a dark, professional operator's console, not a consumer app.",
+    "keyCharacteristics": [
+      "Monochrome accent — near-white in dark mode, near-black in light — never a saturated brand hue.",
+      "Four status roles, not eleven ad-hoc colors: new (outline), wait (rides the accent), done (green), dead (filled grey).",
+      "Three radius roles and two elevation roles; nothing invents a fourth depth or an eighth corner.",
+      "One card treatment, used flat everywhere; no nested cards.",
+      "RTL Hebrew first: logical properties throughout, directional icons flipped, no hardcoded left/right."
+    ],
+    "rules": [
+      { "name": "The Monochrome Accent Rule", "body": "The brand accent is never a hue — it's a lightness relationship (near-white in dark mode, near-black in light). If a screen needs a second color to feel finished, reach for a status role, not a new accent.", "section": "colors" },
+      { "name": "The Four-Roles Rule", "body": "Every status in the product collapses onto new / wait / done / dead. A fifth ad-hoc status color is a sign the state doesn't belong in conversations.state or projects.stage at all — it belongs in one of the four.", "section": "colors" },
+      { "name": "The One Working Sans Rule", "body": "One sans family carries headings, labels, body and data. A second typeface is reserved for the display role only, and only for the one or two headings per screen that need it — never for body or buttons.", "section": "typography" },
+      { "name": "The Two-Elevation Rule", "body": "A surface is either flat (border only), raised, or an overlay. There is no fourth option — if something needs more separation than \"raised,\" it belongs in an overlay (dialog/sheet), not a bigger shadow.", "section": "elevation" },
+      { "name": "The One Card Rule", "body": "There is exactly one card treatment and it is never nested inside another card. A \"card inside a card\" is always a sign the inner content should be a plain row instead.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use exactly one accent (monochrome, near-white/near-black) and reserve saturated color for the four status roles and the destructive/success/warning trio.",
+      "Do keep every screen flat by default (border only) and reach for raised or overlay only when something is genuinely separated from the page.",
+      "Do answer one question per screen — if a page needs a sentence-and-a-half to describe what it shows, it's combining two screens.",
+      "Do use logical CSS properties (ms-/me-/ps-/pe-/text-start/text-end) everywhere; this is an RTL-Hebrew-first product."
+    ],
+    "donts": [
+      "Don't introduce a \"safe\" cream/sand background or any warm-neutral body color chosen by default rather than by brand.",
+      "Don't ship a recycled hero-metric KPI row or an identical card grid.",
+      "Don't nest a card inside a card. Ever.",
+      "Don't invent a fifth status color.",
+      "Don't copy Pencild.co's light, card-heavy register or the glassmorphism-by-default look of Poli-International/studio-crm.",
+      "Don't add a shadow deeper than overlay or a radius rounder than card (12px) anywhere in the product."
+    ]
+  }
+}

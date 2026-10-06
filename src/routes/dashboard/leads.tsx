@@ -1,5 +1,5 @@
 import { createFileRoute, getRouteApi } from '@tanstack/react-router'
-import { LeadsPage } from '@/features/leads/components/LeadsPage'
+import { LeadsPage } from '@/features/leads/LeadsPage'
 
 const dashboardRoute = getRouteApi('/dashboard')
 
@@ -11,5 +11,5 @@ function RouteComponent() {
   const session = dashboardRoute.useLoaderData()
   if (!session) return null
 
-  return <LeadsPage staff={session.staff} />
+  return <LeadsPage />
 }

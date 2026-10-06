@@ -1,24 +1,28 @@
 import { z } from 'zod'
 import type PocketBase from 'pocketbase'
 import type { ToolFactoryContext } from './types'
-import { suggestArtistsForBot, getWorkingHoursForStaff } from '@/features/settings/server/profiles'
+import { suggestArtistsForBot, getWorkingHoursForStaff } from '@/features/settings/server/staff'
+import { DETERMINISTIC_TEMPLATES, sendDeterministicMessage } from '../engine/deterministic-templates'
 
 const DAY_NAMES = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
 
-/** PERF-6: bundle each artist's working hours into the suggestion itself. The common
- *  flow used to burn a whole extra model round-trip on `get_artist_schedule` just to
- *  answer "which days does he work?" — with hours attached, that question resolves in
- *  the same step, and `get_artist_schedule` is only needed for actual booked slots. */
-async function withWorkingHours<T extends { staffId: string }>(su: PocketBase, artists: T[]) {
+/** Format working hours with Hebrew day names attached. */
+async function withWorkingHours<T extends { staffId: string; workingHours?: Array<{ dayOfWeek: number; startTime: string; endTime: string }> }>(
+  su: PocketBase,
+  artists: T[],
+) {
   return Promise.all(
-    artists.map(async (artist) => ({
-      ...artist,
-      workingHours: (await getWorkingHoursForStaff(su, artist.staffId)).map((w) => ({
-        day: DAY_NAMES[w.dayOfWeek] ?? String(w.dayOfWeek),
-        startTime: w.startTime,
-        endTime: w.endTime,
-      })),
-    })),
+    artists.map(async (artist) => {
+      const rawHours = artist.workingHours ?? (await getWorkingHoursForStaff(su, artist.staffId))
+      return {
+        ...artist,
+        workingHours: rawHours.map((w) => ({
+          day: DAY_NAMES[w.dayOfWeek] ?? String(w.dayOfWeek),
+          startTime: w.startTime,
+          endTime: w.endTime,
+        })),
+      }
+    }),
   )
 }
 
@@ -27,16 +31,22 @@ export function buildArtistTools(ctx: ToolFactoryContext) {
 
   return {
     suggest_artists: botTool(
-      'מחפש אמן ספציפי שהלקוח ציין בשם, או מחזיר את כל אמני הסטודיו עם הביוגרפיה שלהם כדי להתאים לסגנון קעקוע מבוקש. חובה לקרוא לכלי זה ברגע שיש רעיון לקעקוע, לפני בדיקת זמינות — התוצאה מספקת את staffId התקין. אין רשימת סגנונות קבועה — יש להתאים לפי הביוגרפיה (bio) החופשית של כל אמן.',
+      'מחזיר ושולח את כל אמני הסטודיו הפעילים עם תיקי העבודות שלהם. יש לקרוא לכלי זה אך ורק כשמציגים את אמני הסטודיו ללקוח שטרם בחר אמן. אין לקרוא לכלי כאשר הלקוח כבר ציין או בחר אמן (למשל: "אני רוצה עם דור", "בא לי את דור") — במקרה כזה המשך ישירות ובטבעיות בבירור מועדים מול שעות הפעילות שלו.',
       z.object({
-        artistName: z.string().optional().describe('שם אמן ספציפי שהלקוח ביקש'),
+        artistName: z.string().optional().describe('העבר רק אם הלקוח מבקש במפורש מידע או תיק עבודות של אמן ספציפי'),
       }),
       async ({ artistName }) => {
         if (!artistName) {
           const allArtists = await withWorkingHours(su, await suggestArtistsForBot(su, {}))
+          const templateText = DETERMINISTIC_TEMPLATES.artistsList({
+            artists: allArtists.map((a) => ({ name: a.name, portfolioUrl: a.portfolioUrl })),
+          })
+          const { sent } = await sendDeterministicMessage(ctx, templateText)
           return {
             status: 'success',
-            message: 'הצג ללקוח את כל אמני הסטודיו לפי הביוגרפיה (bio) של כל אחד, ובקש ממנו לבחור בהתאם לסגנון שהוא מחפש. הצע להראות תיק עבודות או אינסטגרם. שעות הפעילות (workingHours) מצורפות — ימים שלא מופיעים בהן סגורים, אז אפשר להציע ימים בלי get_artist_schedule; לבדיקת משבצת ספציפית עדיין חובה check_availability.',
+            message: sent
+              ? 'הודעת אמני הסטודיו נשלחה ללקוח בוואטסאפ. אל תחזור על שמותיהם או קישוריהם בטקסט חופשי.'
+              : 'הצג ללקוח את אמני הסטודיו בהודעה מרוכזת: לכל אמן הצג רק את שמו ואת הקישור לתיק העבודות.',
             data: allArtists,
           }
         }
@@ -47,16 +57,17 @@ export function buildArtistTools(ctx: ToolFactoryContext) {
         if (!isExactMatch) {
           return {
             status: 'fallback_all_artists',
-            message: 'לא נמצא אמן שתואם בדיוק את השם. הנה כל האמנים הפעילים — הצג אותם ללקוח לפי הביוגרפיה של כל אחד ובקש ממנו לבחור, והצע בנימוס תיק עבודות או אינסטגרם. שעות הפעילות של כל אמן מצורפות (workingHours).',
+            message: 'לא נמצא אמן בשם זה. הנה כל אמני הסטודיו ושעות הפעילות שלהם — ענה ללקוח בטבעיות.',
             data: matches,
           }
         }
+
         return {
           status: 'success',
-          message: 'הצג ללקוח את האמן בצורה טבעית לפי הביוגרפיה שלו והצע תיק עבודות. שעות הפעילות מצורפות (workingHours) — אפשר להציע ימים ישירות; לבדיקת משבצת ספציפית השתמש ב-check_availability.',
+          message: 'הנה פרטי האמן ושעות הפעילות שלו (workingHours). ענה ללקוח בחום ובטבעיות עם ימי ושעות הפעילות שלו (לעולם אל תשתמש בדיווח רובוטי כמו "האמן נבחר"), ושאל מתי נוח לו לתאם או בדוק זמינות ביומן.',
           data: matches,
         }
-      }
+      },
     ),
   }
 }

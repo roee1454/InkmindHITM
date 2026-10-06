@@ -27,6 +27,8 @@ RUN pnpm generate-routes && pnpm build
 
 FROM node:22-alpine AS runner
 WORKDIR /app
+RUN apk add --no-cache tzdata
+ENV TZ=Asia/Jerusalem
 ENV NODE_ENV=production
 ENV PORT=3101
 

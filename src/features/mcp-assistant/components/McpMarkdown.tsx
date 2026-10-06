@@ -38,7 +38,7 @@ export function McpMarkdown({ text }: McpMarkdownProps) {
           pre: ({ children, ...props }) => (
             <pre
               dir="ltr"
-              className="overflow-auto rounded-xl bg-muted p-2.5 text-right font-mono text-[11px] leading-relaxed"
+              className="overflow-auto rounded-xl bg-muted p-2.5 text-right font-mono text-2xs leading-relaxed"
               {...props}
             >
               {children}

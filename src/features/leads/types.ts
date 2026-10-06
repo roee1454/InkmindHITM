@@ -1,10 +1,16 @@
 export type LeadStage =
-  | 'new'
-  | 'intake'
-  | 'awaiting_price'
-  | 'awaiting_payment'
-  | 'booked'
-  | 'expired'
+  | 'NEW'
+  | 'WANTS_TO_BOOK'
+  | 'COLLECTING_INFO'
+  | 'WAITLIST'
+  | 'AWAIT_PRICE_OFFER'
+  | 'AWAIT_HEALTH_NOTICE'
+  | 'AWAIT_PAYMENT'
+  | 'AWAIT_FINAL_CONFIRMATION'
+  | 'AWAITING_APPOINTMENT'
+  | 'PROJECT_IN_PROGRESS'
+  | 'AWAIT_NPS_SCORE'
+  | 'COMPLETED'
 
 export interface StageDefinition {
   stage: LeadStage
@@ -16,52 +22,79 @@ export interface StageDefinition {
 }
 
 export const STAGE_CONFIG: Record<LeadStage, StageDefinition> = {
-  new: {
-    stage: 'new',
+  NEW: {
+    stage: 'NEW',
     label: 'ליד חדש',
-    badgeClass: 'bg-stone-500/15 text-stone-700 dark:text-stone-300 border-stone-500/30 hover:bg-stone-500/20',
-    dotClass: 'bg-stone-400',
+    badgeClass: 'border-status-new-border text-status-new hover:bg-muted',
+    dotClass: 'bg-status-new',
   },
-  intake: {
-    stage: 'intake',
+  WANTS_TO_BOOK: {
+    stage: 'WANTS_TO_BOOK',
+    label: 'בירור מסלול',
+    badgeClass: 'border-status-new-border text-status-new hover:bg-muted',
+    dotClass: 'bg-status-new',
+  },
+  COLLECTING_INFO: {
+    stage: 'COLLECTING_INFO',
     label: 'איסוף פרטים',
-    badgeClass: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30 hover:bg-blue-500/20',
-    dotClass: 'bg-blue-500',
+    badgeClass: 'border-status-new-border text-status-new hover:bg-muted',
+    dotClass: 'bg-status-new',
   },
-  awaiting_price: {
-    stage: 'awaiting_price',
-    label: 'ממתין להצעת מחיר',
-    badgeClass: 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/20',
-    dotClass: 'bg-indigo-500',
+  WAITLIST: {
+    stage: 'WAITLIST',
+    label: 'רשימת המתנה',
+    badgeClass: 'border-status-new-border text-status-new hover:bg-muted',
+    dotClass: 'bg-status-new',
   },
-  awaiting_payment: {
-    stage: 'awaiting_payment',
+  AWAIT_PRICE_OFFER: {
+    stage: 'AWAIT_PRICE_OFFER',
+    label: 'ממתין לתמחור',
+    badgeClass: 'bg-accent-soft text-accent-ink border-accent-ink/25 hover:bg-accent-soft',
+    dotClass: 'bg-accent-ink',
+  },
+  AWAIT_HEALTH_NOTICE: {
+    stage: 'AWAIT_HEALTH_NOTICE',
+    label: 'הצהרת בריאות',
+    badgeClass: 'bg-accent-soft text-accent-ink border-accent-ink/25 hover:bg-accent-soft',
+    dotClass: 'bg-accent-ink',
+  },
+  AWAIT_PAYMENT: {
+    stage: 'AWAIT_PAYMENT',
     label: 'ממתין למקדמה',
-    badgeClass: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/20',
-    dotClass: 'bg-amber-500',
+    badgeClass: 'bg-accent-soft text-accent-ink border-accent-ink/25 hover:bg-accent-soft',
+    dotClass: 'bg-accent-ink',
   },
-  booked: {
-    stage: 'booked',
+  AWAIT_FINAL_CONFIRMATION: {
+    stage: 'AWAIT_FINAL_CONFIRMATION',
+    label: 'אישור סופי',
+    badgeClass: 'bg-accent-soft text-accent-ink border-accent-ink/25 hover:bg-accent-soft',
+    dotClass: 'bg-accent-ink',
+  },
+  AWAITING_APPOINTMENT: {
+    stage: 'AWAITING_APPOINTMENT',
     label: 'נקבע תור',
-    badgeClass: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20',
-    dotClass: 'bg-emerald-500',
+    badgeClass: 'bg-status-done-soft text-status-done border-status-done/25 hover:bg-status-done-soft',
+    dotClass: 'bg-status-done',
   },
-  expired: {
-    stage: 'expired',
-    label: 'פג תוקף',
-    badgeClass: 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30 hover:bg-rose-500/20',
-    dotClass: 'bg-rose-500',
+  PROJECT_IN_PROGRESS: {
+    stage: 'PROJECT_IN_PROGRESS',
+    label: 'באמצע פרויקט',
+    badgeClass: 'bg-accent-soft text-accent-ink border-accent-ink/25 hover:bg-accent-soft',
+    dotClass: 'bg-accent-ink',
+  },
+  AWAIT_NPS_SCORE: {
+    stage: 'AWAIT_NPS_SCORE',
+    label: 'משוב ודירוג',
+    badgeClass: 'bg-status-done-soft text-status-done border-status-done/25 hover:bg-status-done-soft',
+    dotClass: 'bg-status-done',
+  },
+  COMPLETED: {
+    stage: 'COMPLETED',
+    label: 'סגור / הושלם',
+    badgeClass: 'bg-status-done-soft text-status-done border-status-done/25 hover:bg-status-done-soft',
+    dotClass: 'bg-status-done',
   },
 }
-
-export const STAGE_OPTIONS: StageDefinition[] = Object.values(STAGE_CONFIG)
-
-/** Kept for backward compatibility with any column-keyed references */
-export const COLUMNS: { stage: LeadStage; label: string; color: string }[] = STAGE_OPTIONS.map((s) => ({
-  stage: s.stage,
-  label: s.label,
-  color: s.badgeClass,
-}))
 
 /** WAHA's source-detection keywords, plus 'whatsapp' — the only source the webhook sets
  *  today (see conversations/server/webhook.ts). */

@@ -1,14 +1,13 @@
 import { z } from 'zod'
 import type { ToolFactoryContext } from './types'
-import { getCompletedAppointmentAwaitingNpsForBot } from '@/features/calendar/server/bot-appointments'
 import { getStudioPolicyForBot } from '@/features/settings/server/policy'
 import { CALL_STAFF_REASONS } from '../prompts'
+import { DETERMINISTIC_TEMPLATES, sendDeterministicMessage } from '../engine/deterministic-templates'
 
 export function buildSupportTools(ctx: ToolFactoryContext) {
   const {
     su,
     conversationId,
-    customerId,
     updateConversation,
     transitionState,
     notifyStaff,
@@ -17,9 +16,9 @@ export function buildSupportTools(ctx: ToolFactoryContext) {
 
   return {
     answer_faq: botTool(
-      'מחזיר רשימה ממוקדת של שאלות נפוצות (FAQ) מהסטודיו התואמות לנושא השאלה של הלקוח.',
+      'מחזיר רשימה ממוקדת של שאלות נפוצות (FAQ) מהסטודיו התואמות לנושא השאלה של הלקוח. אין לקרוא לכלי זה עבור מילים משובשות או שגיאות הקלדה (כגון "מה המבצ") שאינן שאלה ממשית.',
       z.object({
-        query: z.string().min(1).describe('שאילתת חיפוש ממוקדת לפי נושא שאלת הלקוח. העבירו מילת מפתח אחת או שתיים מרכזיות בלבד (למשל: "מחיר", "גיל", "אישור הורים", "טיפול") ולא משפטים ארוכים.'),
+        query: z.string().min(1).describe('שאילתת חיפוש ממוקדת לפי נושא שאלת הלקוח. העבירו מילת מפתח אחת או שתיים מרכזיות בלבד (למשל: "מחיר", "גיל", "אישור הורים", "טיפול") ולא משפטים ארוכים. איסור מוחלט לנחש מילות מפתח (כמו "מבצע") מתוך שגיאות הקלדה.'),
       }),
       async ({ query }) => {
         // su.filter() parametrizes the search words (FLOW-12) — they originate from
@@ -59,43 +58,38 @@ export function buildSupportTools(ctx: ToolFactoryContext) {
     ),
 
     record_nps_score: botTool(
-      'רושם את ציון ה-NPS (1-10) שהלקוח נתן לאחר סיום הטיפול, ומגיב בהתאם.',
+      'רושם את ציון ה-NPS (1-10) שהלקוח נתן בסוף הפרויקט, ומגיב בהתאם.',
       z.object({
         score: z.number().min(1).max(10),
       }),
       async ({ score }) => {
         const roundedScore = Math.round(score)
-        const appointment = await getCompletedAppointmentAwaitingNpsForBot(su, customerId)
-        if (appointment) {
-          await su.collection('appointments').update(appointment.id, { nps_score: roundedScore })
-        }
-
-        // Always save NPS score on the conversation record as a durability fallback
-        const conversation = await su.collection('conversations').getOne(conversationId).catch(() => null)
-        if (conversation) {
-          const tattooInfo = (conversation.tattoo_info as Record<string, any>) || {}
-          await updateConversation({
-            tattoo_info: {
-              ...tattooInfo,
-              last_nps_score: roundedScore,
-            }
-          }).catch(() => null)
+        // The question is about the project the conversation points at (set when feedback was asked),
+        // once per project.
+        const conversation = await su.collection('conversations').getOne(conversationId)
+        const projectId = (conversation.active_project as string) || ''
+        const project = projectId ? await su.collection('projects').getOne(projectId).catch(() => null) : null
+        // An unset number reads as 0 in PocketBase; a real score is 1–10.
+        if (project && !project.nps_score) {
+          await su.collection('projects').update(project.id, { nps_score: roundedScore })
+        } else if (!project) {
+          await notifyStaff('התקבל ציון משוב בלי פרויקט', `הלקוח נתן ${roundedScore}/10, אבל השיחה לא מקושרת לפרויקט, והציון לא נשמר.`, 'info')
         }
 
         if (roundedScore >= 9) {
           await transitionState('COMPLETED', { reason: 'record_nps_score:promoter' })
-          const policy = await getStudioPolicyForBot(su)
+          const reviewLink = ctx.runtimeConfig?.reviewLink ?? (await getStudioPolicyForBot(su)).reviewLink
           return {
             status: 'success',
             segment: 'promoter',
-            message: policy.reviewLink
-              ? `ציון גבוה נרשם. הודו ללקוח בחום והזמינו אותו להשאיר ביקורת בגוגל בקישור המדויק הזה, בדיוק כפי שהוא: ${policy.reviewLink}`
-              : 'ציון גבוה נרשם. הודו ללקוח בחום. אין קישור ביקורת מוגדר — אל תמציאו אחד, רק הביעו הערכה כנה.',
+            message: reviewLink
+              ? `ציון גבוה נרשם. הודה ללקוח בחום והזמן אותו להשאיר ביקורת בגוגל בקישור המדויק הזה, בדיוק כפי שהוא: ${reviewLink}`
+              : 'ציון גבוה נרשם. הודה ללקוח בחום. אין קישור ביקורת מוגדר — אל תמציא אחד, רק הבע הערכה כנה.',
           }
         }
         if (roundedScore >= 7) {
           await transitionState('COMPLETED', { reason: 'record_nps_score:passive' })
-          return { status: 'success', segment: 'passive', message: 'ציון בינוני נרשם. תודה ללקוח על המשוב בחום. אל תדחוף קישור ביקורת ואל תסלים לצוות.' }
+          return { status: 'success', segment: 'passive', message: 'ציון בינוני נרשם. הודה ללקוח על המשוב בחום. אל תציע קישור ביקורת ואל תפנה לצוות.' }
         }
 
         await transitionState('COMPLETED', {
@@ -124,9 +118,13 @@ export function buildSupportTools(ctx: ToolFactoryContext) {
           staff_call_reason: reason,
         })
         await notifyStaff('הבוט ביקש עזרה מהצוות', details)
+        const templateText = DETERMINISTIC_TEMPLATES.staffEscalated()
+        const { sent } = await sendDeterministicMessage(ctx, templateText)
         return {
           status: 'success',
-          message: 'השיחה הועברה לצוות. הודע/י ללקוח בקצרה שחבר/ת צוות יחזור אליו/ה בהקדם, ואל תמשיך/י לטפל בבקשה בעצמך.',
+          message: sent
+            ? 'השיחה הועברה לצוות והודעת עדכון נשלחה ללקוח בוואטסאפ. אל תוסיף שום טקסט נוסף.'
+            : 'השיחה הועברה לצוות. הודע/י ללקוח בקצרה שחבר/ת צוות יחזור אליו/ה בהקדם, ואל תמשיך/י לטפל בבקשה בעצמך.',
         }
       }
     ),

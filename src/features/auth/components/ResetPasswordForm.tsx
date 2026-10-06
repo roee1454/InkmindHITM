@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { confirmStaffPasswordReset } from '@/features/auth/server/auth'
-import { Lock, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { Lock, AlertCircle, Eye, EyeOff } from '@/components/ui/icon'
 
 const schema = z
   .object({
@@ -49,7 +49,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   if (!token) {
     return (
       <div
-        className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-[13px] font-semibold text-destructive"
+        className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm font-semibold text-destructive"
         dir="rtl"
       >
         <AlertCircle size={15} className="shrink-0" />
@@ -73,7 +73,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
               <FormItem>
                 <FormLabel className="form-label">סיסמה חדשה</FormLabel>
                 <FormControl>
-                  <div className="flex h-14 w-full items-center gap-2.5 rounded-[18px] border border-input/80 bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
+                  <div className="flex h-14 w-full items-center gap-2.5 rounded-2xl border border-input bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
                     <Lock className="size-[18px] shrink-0 text-muted-foreground" />
                     <Input
                       type={showPassword ? 'text' : 'password'}
@@ -103,7 +103,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
               <FormItem>
                 <FormLabel className="form-label">אימות סיסמה</FormLabel>
                 <FormControl>
-                  <div className="flex h-14 w-full items-center gap-2.5 rounded-[18px] border border-input/80 bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
+                  <div className="flex h-14 w-full items-center gap-2.5 rounded-2xl border border-input bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
                     <Lock className="size-[18px] shrink-0 text-muted-foreground" />
                     <Input
                       type={showPassword ? 'text' : 'password'}
@@ -121,7 +121,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         </div>
 
         {form.formState.errors.root && (
-          <div className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-[13px] font-semibold text-destructive">
+          <div className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm font-semibold text-destructive">
             <AlertCircle size={15} className="shrink-0" />
             <span>{form.formState.errors.root.message}</span>
           </div>

@@ -21,7 +21,7 @@ function LoginPage() {
       <div className="flex flex-col items-center gap-4">
         <BrandMark size="lg" />
         <div className="flex flex-col gap-1.5">
-          <h1 className="auth-title">INKMIND CRM</h1>
+          <h1 className="auth-title">INKMIND Admin</h1>
           <p className="auth-sub">מערכת ניהול סטודיו קעקועים</p>
         </div>
       </div>

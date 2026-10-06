@@ -27,6 +27,7 @@ export function clearSessionCookie(client: ReturnType<typeof createRequestClient
 
 export interface Session {
   staff: StaffRecord
+  token: string
 }
 
 /** Server-only: returns the current session, or null if unauthenticated/expired. */
@@ -36,8 +37,12 @@ export async function getSession(): Promise<Session | null> {
 
   try {
     await client.collection('staff').authRefresh()
+    persistSessionCookie(client)
   } catch {
     return null
   }
-  return { staff: client.authStore.record as unknown as StaffRecord }
+  return {
+    staff: client.authStore.record as unknown as StaffRecord,
+    token: client.authStore.token,
+  }
 }

@@ -1,21 +1,24 @@
 import { tool } from 'ai'
-import { z } from 'zod'
+import type { z } from 'zod'
 import type PocketBase from 'pocketbase'
 import { addSystemNotification } from '@/features/notifications/server/notifications'
 import { transition } from '@/features/conversations/server/state-machine'
 import type { ConversationState } from './prompts'
 import type { WhatsAppClient } from '@/integrations/whatsapp-cloud-api/client'
 import type { ToolFactoryContext } from './tools/types'
+import type { StudioAgentRuntimeConfig } from './studio-config.server'
 import { buildBaseTools } from './tools/base.server'
 import { buildArtistTools } from './tools/artist.server'
-import { buildBookingTools } from './tools/booking.server'
+import { buildBookingTools } from './tools/booking'
 import { buildSupportTools } from './tools/support.server'
-import { buildDateTools } from './tools/datetime.server'
+import { buildDateTools } from './tools/datetime/resolve-date.server'
+import { buildHealthDeclarationTools } from './tools/health-declaration.server'
 
 export interface BotToolsContext {
   su: PocketBase
   conversationId: string
   customerId: string
+  runtimeConfig?: StudioAgentRuntimeConfig
   /** Mutable during a turn — see ToolFactoryContext for the mid-turn re-gating contract. */
   conversationState: ConversationState
   conversationStatus?: string
@@ -39,7 +42,7 @@ export function buildBotTools(ctx: BotToolsContext) {
   // changes are mirrored into the shared ctx so prepareStep (agent.server.ts) re-gates
   // the tool set mid-turn (FLOW-8). Conversation *state* must never go through here —
   // that's transitionState's job (FLOW-5); the guard makes the contract unmissable.
-  const updateConversation = (fields: any) => {
+  const updateConversation = (fields: Record<string, unknown>) => {
     if (fields && 'state' in fields) {
       throw new Error('updateConversation must not change `state` — use transitionState (state-machine.ts)')
     }
@@ -75,14 +78,14 @@ export function buildBotTools(ctx: BotToolsContext) {
   const botTool = <T extends z.ZodTypeAny>(
     description: string,
     inputSchema: T,
-    execute: (input: z.infer<T>) => Promise<any>
+    execute: (input: z.infer<T>) => Promise<unknown>
   ) => {
     return tool({
       description,
       inputSchema,
       execute: async (input) => {
         try {
-          return await execute(input as z.Infer<T>)
+          return await execute(input as z.infer<T>)
         } catch (error) {
           console.error(`[AI Tool Error]`, error)
           return {
@@ -99,6 +102,7 @@ export function buildBotTools(ctx: BotToolsContext) {
     su,
     conversationId,
     customerId,
+    runtimeConfig: ctx.runtimeConfig,
     conversationState,
     waClient,
     customerPhone,
@@ -120,5 +124,6 @@ export function buildBotTools(ctx: BotToolsContext) {
     ...buildBookingTools(factoryCtx),
     ...buildSupportTools(factoryCtx),
     ...buildDateTools(factoryCtx),
+    ...buildHealthDeclarationTools(factoryCtx),
   }
 }

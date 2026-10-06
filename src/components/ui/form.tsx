@@ -129,7 +129,7 @@ function FormDescription({ className, ...props }: React.ComponentProps<"p">) {
     <p
       data-slot="form-description"
       id={formDescriptionId}
-      className={cn("text-[13px] font-medium text-muted-foreground", className)}
+      className={cn("text-sm font-medium text-muted-foreground", className)}
       {...props}
     />
   )
@@ -147,7 +147,7 @@ function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
     <p
       data-slot="form-message"
       id={formMessageId}
-      className={cn("text-[13px] font-bold text-destructive", className)}
+      className={cn("text-sm font-bold text-destructive", className)}
       {...props}
     >
       {body}
@@ -157,11 +157,19 @@ function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
 
 export {
   useFormField,
+  useFormField as useIMFormField,
   Form,
+  Form as IMForm,
   FormItem,
+  FormItem as IMFormItem,
   FormLabel,
+  FormLabel as IMFormLabel,
   FormControl,
+  FormControl as IMFormControl,
   FormDescription,
+  FormDescription as IMFormDescription,
   FormMessage,
+  FormMessage as IMFormMessage,
   FormField,
+  FormField as IMFormField,
 }

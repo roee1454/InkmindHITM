@@ -5,7 +5,7 @@ import { getSettings } from '@/features/onboarding/server/onboarding'
 export const Route = createFileRoute('/')({
   beforeLoad: async () => {
     if (await needsBootstrap()) {
-      throw redirect({ to: '/auth/setup' })
+      throw redirect({ to: '/onboarding' })
     }
     const session = await getCurrentSession()
     if (!session) {
@@ -13,7 +13,7 @@ export const Route = createFileRoute('/')({
     }
     const settings = await getSettings()
     if (!settings?.onboarding_completed) {
-      throw redirect({ to: '/onboarding/studio' })
+      throw redirect({ to: '/onboarding' })
     }
     throw redirect({ to: '/dashboard' })
   },

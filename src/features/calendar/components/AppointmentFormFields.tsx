@@ -1,525 +1,84 @@
-import React, { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { TriangleAlert } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { DatePicker } from '@/components/ui/date-picker'
-import { HourPicker } from '@/components/ui/hour-picker'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import type { ApiGoogleConnection, AppointmentFormValues, AppointmentStatus } from '../types'
-import { STATUS_LABELS } from '../types'
-import { useWorkingHoursCheck } from '../use-working-hours-check'
-import { getCustomers, createCustomer } from '@/features/customers/server/customers'
-import type { Customer } from '@/features/customers/types'
-import { SOURCE_LABELS } from '@/features/customers/types'
-import { formatDuration } from '@/features/conversations/lib/format'
-
-const NO_ARTIST = 'none'
-
-// 30-minute increments, 30 minutes to 8 hours.
-const DURATION_OPTIONS = Array.from({ length: 16 }, (_, i) => (i + 1) * 30)
-
-interface StaffItem {
-  id: string
-  name: string
-  avatar?: string
-}
+import { Calendar, Coins, Paperclip } from '@/components/ui/icon'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import type { ApiAppointment, ApiGoogleConnection, AppointmentFormValues } from '../types'
+import type { QuoteToSend } from './BotQuoteBanner'
+import { AppointmentDetailsTab } from './appointment-form/AppointmentDetailsTab'
+import { AppointmentPricingTab } from './appointment-form/AppointmentPricingTab'
+import { AppointmentDocumentsTab } from './appointment-form/AppointmentDocumentsTab'
 
 interface AppointmentFormFieldsProps {
   values: AppointmentFormValues
   onChange: (patch: Partial<AppointmentFormValues>) => void
-  staff: StaffItem[]
+  staff: { id: string; name: string; avatar?: string }[]
   googleConnections: ApiGoogleConnection[]
+  appointment?: ApiAppointment | null
+  onSendQuote?: (quote: QuoteToSend) => void
+  isSendingQuote?: boolean
+  onOpenGallery?: (images: string[], index: number) => void
   isEdit?: boolean
+  readOnly?: boolean
 }
 
-export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({
+/**
+ * The appointment dialog's body: three tabs, one per question — when and with whom, how much and
+ * where it stands, what the customer sent. Each tab is its own component (dialogs D4); this file is
+ * only the switch between them.
+ */
+export function AppointmentFormFields({
   values,
   onChange,
   staff,
   googleConnections,
+  appointment,
+  onSendQuote,
+  isSendingQuote = false,
+  onOpenGallery,
   isEdit = false,
-}) => {
-  const queryClient = useQueryClient()
-  const [searchTerm, setSearchTerm] = useState('')
-  const [isOpen, setIsOpen] = useState(false)
-  const [noCalendarArtistName, setNoCalendarArtistName] = useState<string | null>(null)
-
-  const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false)
-  const [newCustName, setNewCustName] = useState('')
-  const [newCustPhone, setNewCustPhone] = useState('')
-  const [newCustEmail, setNewCustEmail] = useState('')
-  const [newCustSource, setNewCustSource] = useState('walk-in')
-  const [newCustIsVip, setNewCustIsVip] = useState(false)
-  const [newCustError, setNewCustError] = useState<string | null>(null)
-
-  const { data: customers = [] } = useQuery<Customer[]>({
-    queryKey: ['customers'],
-    queryFn: () => getCustomers(),
-  })
-
-  React.useEffect(() => {
-    if (!values.customerId && values.chatId && customers.length > 0) {
-      const match = customers.find((c) => c.chatId === values.chatId)
-      if (match) {
-        onChange({
-          customerId: match.id,
-          leadName: match.name || '',
-          leadPhone: match.phone || '',
-        })
-      }
-    }
-  }, [values.chatId, values.customerId, customers, onChange])
-
-  const { fitsWorkingHours, isStudioClosed, closureReason } = useWorkingHoursCheck(
-    values.staffId,
-    values.date,
-    values.timeSlot,
-    values.durationMinutes / 60,
+  readOnly = false,
+}: AppointmentFormFieldsProps) {
+  const hasImages = (appointment?.referenceImages ?? values.referenceImages ?? []).length > 0
+  const hasReceipt = Boolean(appointment?.paymentReceiptUrl ?? values.paymentReceiptUrl)
+  const hasHealth = Boolean(
+    (appointment?.healthDeclarationSigned ?? values.healthDeclarationSigned) || (appointment?.healthDeclarationFileUrl ?? values.healthDeclarationFileUrl),
   )
-
-  const selectedCustomer = customers.find((c) => c.id === values.customerId)
-  const filteredCustomers = customers.filter(
-    (c) =>
-      c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.phone?.includes(searchTerm),
-  )
-
-  const createCustMutation = useMutation({
-    mutationFn: (body: { name: string; phone: string; email: string; source: string; isVip: boolean }) =>
-      createCustomer({
-        data: {
-          name: body.name || null,
-          phone: body.phone,
-          email: body.email || null,
-          source: body.source === 'unknown' ? null : body.source,
-          isVip: body.isVip,
-        },
-      }),
-    onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] })
-      onChange({
-        customerId: res.id,
-        leadName: newCustName || 'לקוח',
-        leadPhone: newCustPhone,
-      })
-      setIsAddCustomerOpen(false)
-    },
-    onError: (err: unknown) => {
-      setNewCustError(err instanceof Error ? err.message : 'שגיאה ביצירת הלקוח')
-    },
-  })
-
-  const handleAddCustomerSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newCustPhone) {
-      setNewCustError('מספר טלפון הוא שדה חובה')
-      return
-    }
-    setNewCustError(null)
-    createCustMutation.mutate({
-      name: newCustName || 'לקוח',
-      phone: newCustPhone,
-      email: newCustEmail,
-      source: newCustSource,
-      isVip: newCustIsVip,
-    })
-  }
+  const docCount = Number(hasImages) + Number(hasReceipt) + Number(hasHealth)
 
   return (
-    <div className="space-y-4 font-assistant" dir="rtl">
-      {/* 1. Customer Selection */}
-      {isEdit ? (
-        <div className="bg-card border border-border rounded-xl p-3 flex flex-col gap-1.5">
-          <span className="text-micro uppercase font-bold tracking-wider text-muted-foreground">
-            פרטי לקוח (לא ניתן לשינוי)
-          </span>
-          <div className="flex justify-between items-center text-xs">
-            <span className="font-bold text-foreground">{values.leadName || 'לקוח ללא שם'}</span>
-            <span className="text-muted-foreground dir-ltr font-mono">{values.leadPhone}</span>
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-1.5 relative">
-          <label className="text-xs font-semibold text-foreground">בחר לקוח מהמאגר *</label>
-          <div className="relative">
-            <Input
-              type="text"
-              placeholder="חפש לפי שם או טלפון…"
-              value={
-                isOpen
-                  ? searchTerm
-                  : selectedCustomer
-                  ? `${selectedCustomer.name || 'לקוח ללא שם'} (${selectedCustomer.phone || ''})`
-                  : ''
-              }
-              onFocus={() => {
-                setIsOpen(true)
-                setSearchTerm('')
-              }}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+    <Tabs defaultValue="details" dir="rtl" className="gap-4">
+      <TabsList className="grid grid-cols-3">
+        <TabsTrigger value="details" className="gap-1.5">
+          <Calendar size={14} className="shrink-0" />
+          פרטים
+        </TabsTrigger>
+        <TabsTrigger value="pricing" className="gap-1.5">
+          <Coins size={14} className="shrink-0" />
+          מחיר וסטטוס
+        </TabsTrigger>
+        <TabsTrigger value="documents" className="gap-1.5">
+          <Paperclip size={14} className="shrink-0" />
+          מסמכים
+          {docCount > 0 && <span className="text-xs font-bold text-muted-foreground tabular-nums">· {docCount}</span>}
+        </TabsTrigger>
+      </TabsList>
 
-          {isOpen && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-              <div className="absolute right-0 left-0 top-[52px] max-h-60 overflow-y-auto bg-card border border-border rounded-xl shadow-xl p-1 z-50">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsOpen(false)
-                    setNewCustName('')
-                    setNewCustPhone('')
-                    setNewCustEmail('')
-                    setNewCustSource('walk-in')
-                    setNewCustIsVip(false)
-                    setNewCustError(null)
-                    setIsAddCustomerOpen(true)
-                  }}
-                  className="w-full text-right px-3 py-2 text-xs font-bold text-primary hover:bg-primary/10 rounded-lg flex items-center gap-1.5 border-b border-border/40 pb-2 mb-1 cursor-pointer"
-                >
-                  + לקוח מזדמן חדש
-                </button>
-                {filteredCustomers.length === 0 ? (
-                  <div className="text-xs text-muted-foreground px-3 py-2">לא נמצאו לקוחות</div>
-                ) : (
-                  filteredCustomers.map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => {
-                        onChange({
-                          customerId: c.id,
-                          leadName: c.name || '',
-                          leadPhone: c.phone || '',
-                        })
-                        setIsOpen(false)
-                      }}
-                      className={`w-full text-right px-3 py-1.5 text-xs rounded-lg flex flex-col gap-0.5 hover:bg-primary/10 cursor-pointer ${
-                        values.customerId === c.id ? 'bg-primary/15' : ''
-                      }`}
-                    >
-                      <span className="font-semibold text-foreground">{c.name || 'לקוח ללא שם'}</span>
-                      <span className="text-micro text-muted-foreground dir-ltr font-mono">{c.phone}</span>
-                    </button>
-                  ))
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* 2. Schedule details */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-foreground">תאריך *</label>
-          <DatePicker
-            value={values.date}
-            onChange={(ymd) => onChange({ date: ymd })}
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-foreground">שעה *</label>
-          <HourPicker
-            value={values.timeSlot}
-            onChange={(time) => onChange({ timeSlot: time })}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1.5" dir="rtl">
-          <label className="text-xs font-semibold text-foreground">מקעקע</label>
-          <Select
-            value={values.staffId ?? NO_ARTIST}
-            onValueChange={(val) => {
-              const staffId = val === NO_ARTIST ? null : val
-              onChange({ staffId })
-              const connection = googleConnections.find((c) => c.staffId === staffId)
-              if (staffId && (!connection || connection.status === 'disconnected')) {
-                setNoCalendarArtistName(staff.find((s) => s.id === staffId)?.name ?? null)
-              }
-            }}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="ללא שיוך" />
-            </SelectTrigger>
-            <SelectContent align="end">
-              <SelectItem value={NO_ARTIST}>ללא שיוך</SelectItem>
-              {staff.map((artist) => {
-                const connection = googleConnections.find(
-                  (c) => c.staffId === artist.id && c.status === 'connected',
-                )
-                const picture = connection?.googleAccountPicture || artist.avatar
-
-                return (
-                  <SelectItem key={artist.id} value={artist.id}>
-                    <div className="flex items-center gap-2">
-                      <Avatar className="size-5">
-                        <AvatarImage src={picture ?? undefined} />
-                        <AvatarFallback className="text-micro bg-muted">
-                          {artist.name.slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>{artist.name}</span>
-                    </div>
-                  </SelectItem>
-                )
-              })}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex flex-col gap-1.5" dir="rtl">
-          <label className="text-xs font-semibold text-foreground">משך</label>
-          <Select
-            value={String(values.durationMinutes)}
-            onValueChange={(val) => onChange({ durationMinutes: Number(val) })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent align="end">
-              {DURATION_OPTIONS.map((minutes) => (
-                <SelectItem key={minutes} value={String(minutes)}>
-                  {formatDuration(minutes)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {isStudioClosed && (
-        <div className="flex flex-col gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
-            <TriangleAlert size={13} className="shrink-0" />
-            הסטודיו סגור בתאריך זה
-          </div>
-          <p className="text-mini text-muted-foreground">
-            {closureReason ? `סיבת הסגירה: ${closureReason}.` : 'התאריך שנבחר מוגדר כיום סגירה של הסטודיו.'}
-          </p>
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-xs font-semibold text-foreground">אני מודע/ת שהסטודיו סגור — שריין בכל זאת</span>
-            <Switch
-              id="appointment-allow-closure-exception"
-              checked={values.allowException}
-              onCheckedChange={(checked) => onChange({ allowException: checked })}
-            />
-          </div>
-        </div>
-      )}
-
-      {!fitsWorkingHours && (
-        <div className="flex flex-col gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
-            <TriangleAlert size={13} className="shrink-0" />
-            מחוץ לשעות העבודה
-          </div>
-          <p className="text-mini text-muted-foreground">
-            המועד שנבחר אינו בתוך שעות העבודה של האמן/ית שנבחר/ה.
-          </p>
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-xs font-semibold text-foreground">אני מודע/ת שזה מחוץ לשעות העבודה — שריין בכל זאת</span>
-            <Switch
-              id="appointment-allow-exception"
-              checked={values.allowException}
-              onCheckedChange={(checked) => onChange({ allowException: checked })}
-            />
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-semibold text-foreground">תיאור קעקוע</label>
-        <Input
-          type="text"
-          placeholder="פורטרט ריאליסטי"
-          value={values.tattooDescription}
-          onChange={(e) => onChange({ tattooDescription: e.target.value })}
+      <TabsContent value="details">
+        <AppointmentDetailsTab values={values} onChange={onChange} staff={staff} googleConnections={googleConnections} readOnly={readOnly} />
+      </TabsContent>
+      <TabsContent value="pricing">
+        <AppointmentPricingTab
+          values={values}
+          onChange={onChange}
+          appointment={appointment}
+          isEdit={isEdit}
+          readOnly={readOnly}
+          onSendQuote={onSendQuote}
+          isSendingQuote={isSendingQuote}
         />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-foreground">מחיר מינימלי (₪)</label>
-          <Input
-            type="number"
-            min="0"
-            value={values.priceMinIls ?? ''}
-            onChange={(e) => onChange({ priceMinIls: e.target.value === '' ? null : Number(e.target.value) })}
-            dir="rtl"
-            className="text-right"
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-foreground">מחיר מקסימלי (₪)</label>
-          <Input
-            type="number"
-            min="0"
-            value={values.priceMaxIls ?? ''}
-            onChange={(e) => onChange({ priceMaxIls: e.target.value === '' ? null : Number(e.target.value) })}
-            dir="rtl"
-            className="text-right"
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-semibold text-foreground">מקדמה (₪)</label>
-        <Input
-          type="number"
-          min="0"
-          value={values.depositAmount ?? ''}
-          onChange={(e) => onChange({ depositAmount: e.target.value === '' ? null : Number(e.target.value) })}
-          dir="rtl"
-          className="text-right"
-        />
-      </div>
-
-      <div className="flex flex-col gap-1.5" dir="rtl">
-        <label className="text-xs font-semibold text-foreground">סטטוס</label>
-        <Select
-          value={values.status}
-          onValueChange={(val) => onChange({ status: val as AppointmentStatus })}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent align="end">
-            {Object.entries(STATUS_LABELS).map(([key, label]) => (
-              <SelectItem key={key} value={key}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex items-center justify-between border-t border-border/60 pt-4">
-        <div className="flex flex-col gap-0.5">
-          <span className="text-xs font-bold text-foreground">מקדמה שולמה</span>
-          <span className="text-micro text-muted-foreground">סמן אם מקדמת התור שולמה</span>
-        </div>
-        <Switch
-          id="appointment-deposit-paid"
-          checked={values.depositPaid}
-          onCheckedChange={(checked) => onChange({ depositPaid: checked })}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-semibold text-foreground">הערות</label>
-        <Textarea
-          rows={3}
-          value={values.notes}
-          onChange={(e) => onChange({ notes: e.target.value })}
-          className="min-h-[72px]"
-        />
-      </div>
-
-      {/* Add Walk-In Customer Modal Prompt */}
-      <ResponsiveDialog
-        open={isAddCustomerOpen}
-        onOpenChange={setIsAddCustomerOpen}
-        title="הוספת לקוח חדש"
-        description="הזן את פרטי הלקוח החדש במאגר."
-      >
-          {newCustError && (
-            <p className="text-xs font-semibold text-rose-400">{newCustError}</p>
-          )}
-
-          <form onSubmit={handleAddCustomerSubmit} className="space-y-4 mt-2">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-foreground">שם מלא</label>
-              <Input
-                type="text"
-                placeholder="למשל: דניאל חיים"
-                value={newCustName}
-                onChange={(e) => setNewCustName(e.target.value)}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-foreground">
-                מספר טלפון (חובה)
-              </label>
-              <Input
-                type="text"
-                placeholder="למשל: 0547654321"
-                value={newCustPhone}
-                onChange={(e) => setNewCustPhone(e.target.value)}
-                dir="ltr"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-foreground">אימייל</label>
-              <Input
-                type="email"
-                placeholder="client@email.com"
-                value={newCustEmail}
-                onChange={(e) => setNewCustEmail(e.target.value)}
-                dir="ltr"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5" dir="rtl">
-              <label className="text-xs font-semibold text-foreground">מקור הגעה</label>
-              <Select value={newCustSource} onValueChange={setNewCustSource}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent align="end">
-                  {Object.entries(SOURCE_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>
-                      {v}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center justify-between border-t border-border/60 pt-4">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-xs font-bold text-foreground">לקוח VIP</span>
-                <span className="text-micro text-muted-foreground">סמן לקוח זה כ-VIP</span>
-              </div>
-              <Switch checked={newCustIsVip} onCheckedChange={setNewCustIsVip} />
-            </div>
-
-            <Button
-              type="submit"
-              disabled={createCustMutation.isPending}
-              className="w-full rounded-xl mt-2 font-bold cursor-pointer"
-            >
-              {createCustMutation.isPending ? 'יוצר לקוח…' : 'הוסף לקוח'}
-            </Button>
-          </form>
-      </ResponsiveDialog>
-
-      {/* OK-only warning dialog */}
-      <ResponsiveDialog
-        open={noCalendarArtistName !== null}
-        onOpenChange={(open) => !open && setNoCalendarArtistName(null)}
-        title="אין חיבור ליומן Google"
-        description={`ל${noCalendarArtistName} אין חשבון Google Calendar מחובר. התור לא יסונכרן ליומן שלו/שלה.`}
-      >
-          <Button
-            type="button"
-            onClick={() => setNoCalendarArtistName(null)}
-            className="w-full rounded-xl font-bold cursor-pointer"
-          >
-            הבנתי
-          </Button>
-      </ResponsiveDialog>
-    </div>
+      </TabsContent>
+      <TabsContent value="documents">
+        <AppointmentDocumentsTab values={values} appointment={appointment} onOpenGallery={onOpenGallery} />
+      </TabsContent>
+    </Tabs>
   )
 }
 

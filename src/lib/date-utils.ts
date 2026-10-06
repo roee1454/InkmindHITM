@@ -77,3 +77,33 @@ export function minutesToTime(minutes: number): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`
 }
+
+/** Formats duration in minutes into natural Hebrew for customers and appointments.
+ *  - 30 -> 'כ-30 דקות'
+ *  - 45 -> 'כ-45 דקות'
+ *  - 60 -> 'כשעה'
+ *  - 90 -> 'כשעה וחצי'
+ *  - 120 -> 'כשעתיים'
+ *  - 150 -> 'כשעתיים וחצי'
+ *  - 180 -> 'כ-3 שעות'
+ *  - 240 -> 'כ-4 שעות'
+ *  - etc. */
+export function formatDurationHebrew(minutes: number): string {
+  if (minutes <= 0) return 'כ-30 דקות'
+  if (minutes < 60) return `כ-${minutes} דקות`
+  if (minutes === 60) return 'כשעה'
+  if (minutes === 90) return 'כשעה וחצי'
+  if (minutes === 120) return 'כשעתיים'
+  if (minutes === 150) return 'כשעתיים וחצי'
+
+  const hours = minutes / 60
+  if (Number.isInteger(hours)) {
+    return `כ-${hours} שעות`
+  }
+  const wholeHours = Math.floor(hours)
+  const remainingMins = minutes % 60
+  if (remainingMins === 30) {
+    return `כ-${wholeHours} שעות וחצי`
+  }
+  return `כ-${wholeHours} שעות ו-${remainingMins} דקות`
+}

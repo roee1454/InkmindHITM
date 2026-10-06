@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import { MessageCircle, Plus, Search, Trash2 } from 'lucide-react'
-import { formatListTimestamp } from '@/features/conversations/lib/format'
-import { useConfirm } from '@/hooks/use-confirm'
+import { MessageCircle, Plus, Search, Trash2 } from '@/components/ui/icon'
+import { formatListTimestamp } from '@/features/conversations/utils/format'
+import { useConfirm } from '#/hooks/useConfirm'
 import { useDeleteMcpConversation, useMcpConversationsList } from '../hooks/useMcpConversation'
 import { useMcpUiStore } from '../store/mcpUiStore'
 
@@ -54,20 +54,20 @@ export function McpHistoryList({ onSelect, onCreate, creating }: McpHistoryListP
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex shrink-0 flex-col gap-2.5 border-b border-border p-3.5">
-        <div className="flex h-11 items-center gap-2 rounded-[15px] bg-muted px-3.5">
+        <div className="flex h-11 items-center gap-2 rounded-xl bg-muted px-3.5">
           <Search size={16} className="shrink-0 text-muted-foreground" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="חיפוש בשיחות"
-            className="h-full flex-1 bg-transparent text-[14px] font-medium text-foreground outline-none placeholder:text-muted-foreground"
+            className="h-full flex-1 bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground"
           />
         </div>
         <button
           type="button"
           disabled={creating}
           onClick={onCreate}
-          className="flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-[15px] bg-primary text-[14px] font-extrabold text-primary-foreground shadow-sm disabled:opacity-50"
+          className="flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-primary text-sm font-extrabold text-primary-foreground shadow-sm disabled:opacity-50"
         >
           <Plus size={17} />
           שיחה חדשה
@@ -75,19 +75,19 @@ export function McpHistoryList({ onSelect, onCreate, creating }: McpHistoryListP
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
-        {isLoading && <p className="px-2 py-3 text-center text-[13px] text-muted-foreground">טוען…</p>}
+        {isLoading && <p className="px-2 py-3 text-center text-sm text-muted-foreground">טוען…</p>}
         {!isLoading && grouped.length === 0 && (
-          <p className="px-2 py-6 text-center text-[13px] text-muted-foreground">אין עדיין שיחות עם העוזר.</p>
+          <p className="px-2 py-6 text-center text-sm text-muted-foreground">אין עדיין שיחות עם העוזר.</p>
         )}
         {grouped.map(([label, items]) => (
           <div key={label} className="flex flex-col gap-0.5">
-            <span className="px-2 pb-1 pt-2 text-[11.5px] font-extrabold tracking-wide text-muted-foreground">{label}</span>
+            <span className="px-2 pb-1 pt-2 text-xs font-extrabold tracking-wide text-muted-foreground">{label}</span>
             {items.map((c) => {
               const active = c.id === activeConversationId
               return (
                 <div
                   key={c.id}
-                  className={`flex items-center gap-2.5 rounded-[15px] px-2.5 py-2.5 ${active ? 'bg-primary/10' : ''}`}
+                  className={`flex items-center gap-2.5 rounded-xl px-2.5 py-2.5 ${active ? 'bg-primary/10' : ''}`}
                 >
                   <button
                     type="button"
@@ -95,23 +95,23 @@ export function McpHistoryList({ onSelect, onCreate, creating }: McpHistoryListP
                     className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 text-right"
                   >
                     <span
-                      className={`flex size-[34px] shrink-0 items-center justify-center rounded-[11px] ${
+                      className={`flex size-[34px] shrink-0 items-center justify-center rounded-lg ${
                         active ? 'bg-card text-primary' : 'bg-muted text-muted-foreground'
                       }`}
                     >
                       <MessageCircle size={16} />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className={`truncate text-[14.5px] font-extrabold ${active ? 'text-primary' : 'text-foreground'}`}>{c.title}</p>
+                      <p className={`truncate text-sm font-extrabold ${active ? 'text-primary' : 'text-foreground'}`}>{c.title}</p>
                     </div>
-                    <span className="shrink-0 text-[11.5px] font-bold text-muted-foreground">{formatListTimestamp(c.lastMessageAt || c.created)}</span>
+                    <span className="shrink-0 text-xs font-bold text-muted-foreground">{formatListTimestamp(c.lastMessageAt || c.created)}</span>
                   </button>
                   <button
                     type="button"
                     aria-label="מחיקת שיחה"
                     disabled={deleteConversation.isPending}
                     onClick={() => handleDelete(c.id, c.title)}
-                    className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-[10px] text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
+                    className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
                   >
                     <Trash2 size={15} />
                   </button>

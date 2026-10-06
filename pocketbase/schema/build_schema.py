@@ -47,7 +47,7 @@ def f(name, type_, **kwargs):
 
 
 # ---------------------------------------------------------------------------
-# 1. staff — auth collection
+# 1. staff — auth collection (unified with artist profile and working hours)
 # ---------------------------------------------------------------------------
 create({
     "name": "staff",
@@ -57,35 +57,20 @@ create({
         f("name", "text", required=True, max=200),
         f("phone", "text", max=32),
         f("avatar", "file", maxSelect=1, mimeTypes=["image/png", "image/jpeg", "image/webp"]),
-        f("active", "bool"),
-        f("calendar_feed_token", "text", autogeneratePattern="[a-z0-9]{24}"),
-    ],
-    "indexes": ["CREATE UNIQUE INDEX idx_staff_calendar_feed_token ON staff (calendar_feed_token)"],
-    "listRule": "@request.auth.id != ''", "viewRule": "@request.auth.id != ''",
-    "createRule": None, "updateRule": None, "deleteRule": None,
-})
-
-# ---------------------------------------------------------------------------
-# 2. artist_profiles — 1:1 with staff
-# ---------------------------------------------------------------------------
-create({
-    "name": "artist_profiles",
-    "type": "base",
-    "fields": [
-        {**f("staff", "relation"), **rel("staff")},
-        f("portfolio_website", "url"),
-        f("portfolio_instagram", "url"),
-        f("portfolio_facebook", "url"),
-        f("tattoo_styles", "select", values=[
-            "fine_line", "traditional", "neo_traditional", "realism", "blackwork",
-            "japanese", "geometric", "watercolor", "tribal", "lettering", "minimalist", "portrait",
-        ], maxSelect=12),
+        f("portfolio_url", "url"),
         f("bio", "text", max=2000),
         f("work_hours", "json", maxSize=8192),
-        f("created", "autodate", onCreate=True),
-        f("updated", "autodate", onCreate=True, onUpdate=True),
+        f("active", "bool"),
+        f("calendar_feed_token", "text", autogeneratePattern="[a-z0-9]{24}"),
+        f("invite_token", "text", max=128),
+        f("invite_token_expires_at", "date"),
+        f("invite_accepted_at", "date"),
     ],
-    "indexes": ["CREATE UNIQUE INDEX idx_artist_profiles_staff ON artist_profiles (staff)"],
+    "indexes": ["CREATE UNIQUE INDEX idx_staff_calendar_feed_token ON staff (calendar_feed_token)"],
+    "indexes": [
+        "CREATE UNIQUE INDEX idx_staff_calendar_feed_token ON staff (calendar_feed_token)",
+        "CREATE UNIQUE INDEX idx_staff_invite_token ON staff (invite_token)",
+    ],
     "listRule": "@request.auth.id != ''", "viewRule": "@request.auth.id != ''",
     "createRule": None, "updateRule": None, "deleteRule": None,
 })
@@ -97,7 +82,7 @@ create({
     "name": "credentials",
     "type": "base",
     "fields": [
-        {**f("staff", "relation"), **rel("staff")},
+        {**f("staff", "relation"), **rel("staff", cascade=True)},
         f("provider", "select", required=True, values=["google_calendar"], maxSelect=1),
         f("google_calendar_id", "text", max=200),
         f("access_token", "text", hidden=True, max=4096),
@@ -142,10 +127,11 @@ create({
     "name": "appointments",
     "type": "base",
     "fields": [
-        {**f("customer", "relation"), **rel("customers")},
+        {**f("customer", "relation"), **rel("customers", cascade=True)},
         {**f("staff", "relation"), **rel("staff", required=False)},
         f("start_time", "date", required=True),
         f("duration_hours", "number", min=0.5, max=24),
+        f("type", "select", values=["tattoo", "sketch"], maxSelect=1),
         f("status", "select", required=True, values=["pending", "confirmed", "cancelled", "completed"], maxSelect=1),
         f("tattoo_description", "text", max=2000),
         f("price_amount", "number", min=0),
@@ -173,7 +159,7 @@ create({
     "name": "conversations",
     "type": "base",
     "fields": [
-        {**f("customer", "relation"), **rel("customers")},
+        {**f("customer", "relation"), **rel("customers", cascade=True)},
         {**f("assigned_staff", "relation"), **rel("staff", required=False)},
         f("status", "select", required=True, values=["bot_active", "escalated", "staff_handling", "closed"], maxSelect=1),
         f("state", "text", max=100),
@@ -182,6 +168,9 @@ create({
         f("staff_call_reason", "text", max=500),
         f("last_message_at", "date"),
         f("whatsapp_window_expires_at", "date"),
+        # Ephemeral bot-turn signal for the CRM only (cleared back to '' once a queued turn
+        # finishes) — '' = idle, "cooldown" = debounce window open, "typing" = queue job running.
+        f("bot_turn_phase", "select", values=["cooldown", "typing"], maxSelect=1),
         f("created", "autodate", onCreate=True),
         f("updated", "autodate", onCreate=True, onUpdate=True),
     ],
@@ -197,7 +186,7 @@ create({
     "name": "messages",
     "type": "base",
     "fields": [
-        {**f("conversation", "relation"), **rel("conversations")},
+        {**f("conversation", "relation"), **rel("conversations", cascade=True)},
         f("whatsapp_message_id", "text", required=True, max=200),
         f("direction", "select", required=True, values=["inbound", "outbound"], maxSelect=1),
         f("sender_type", "select", required=True, values=["customer", "ai_bot", "staff"], maxSelect=1),

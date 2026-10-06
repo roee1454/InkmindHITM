@@ -1,10 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { XIcon } from "lucide-react"
+import { XIcon } from '@/components/ui/icon'
 import { Dialog as SheetPrimitive } from "radix-ui"
 
 import { cn } from "#/lib/utils.ts"
+import { useDragToDismiss } from "#/hooks/useDragToDismiss"
 
 /**
  * Slide-over panel, built on the same Radix Dialog primitive as `dialog.tsx`.
@@ -62,10 +63,16 @@ function SheetContent({
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
 }) {
+  const panelRef = React.useRef<HTMLDivElement>(null)
+  const overlayRef = React.useRef<HTMLDivElement>(null)
+  const dismissRef = React.useRef<HTMLButtonElement>(null)
+  const dragHandlers = useDragToDismiss({ panelRef, overlayRef, onDismiss: () => dismissRef.current?.click() })
+
   return (
     <SheetPortal>
-      <SheetOverlay />
+      <SheetOverlay ref={overlayRef} />
       <SheetPrimitive.Content
+        ref={panelRef}
         data-slot="sheet-content"
         tabIndex={-1}
         onOpenAutoFocus={(e) => {
@@ -85,19 +92,30 @@ function SheetContent({
           // ring drawn around the whole panel.
           "fixed z-50 flex flex-col gap-4 bg-card font-assistant shadow-lg outline-none fill-mode-both data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=open]:animate-in data-[state=open]:duration-300",
           side === "right" &&
-            "inset-y-0 right-0 h-svh w-[85vw] max-w-sm rounded-e-3xl border-e border-border/80 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+            "inset-y-0 right-0 h-svh w-[85vw] max-w-sm rounded-e-xl border-e border-border data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
           side === "left" &&
-            "inset-y-0 left-0 h-svh w-[85vw] max-w-sm rounded-s-3xl border-s border-border/80 data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
+            "inset-y-0 left-0 h-svh w-[85vw] max-w-sm rounded-s-xl border-s border-border data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
           side === "bottom" &&
-            "inset-x-0 bottom-0 max-h-[92svh] rounded-t-3xl border-t border-border/80 px-5 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+            "inset-x-0 bottom-0 max-h-[92svh] rounded-t-xl border-t border-border px-5 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
           side === "top" &&
-            "inset-x-0 top-0 h-auto rounded-b-3xl border-b border-border/80 data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+            "inset-x-0 top-0 h-auto rounded-b-xl border-b border-border data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
           className
         )}
         {...props}
       >
         {side === "bottom" && (
-          <div className="mx-auto h-1.5 w-10 shrink-0 rounded-full bg-foreground/15" />
+          <>
+            {/* The grabber follows the finger (useDragToDismiss). Its `::before` widens the touch
+                target to ~200×30px without moving the bar or the layout under it; `sticky` keeps it
+                reachable when the panel itself is the scroll container. */}
+            <div
+              aria-hidden
+              className="sticky top-0 z-10 mx-auto h-1.5 w-10 shrink-0 cursor-grab touch-none rounded-full bg-foreground/15 transition-colors duration-150 before:absolute before:-inset-x-20 before:-inset-y-3 before:content-[''] data-[dragging]:cursor-grabbing data-[dragging]:bg-foreground/30"
+              {...dragHandlers}
+            />
+            {/* Closing goes through Radix like any other close, so every caller's `onOpenChange` runs. */}
+            <SheetPrimitive.Close ref={dismissRef} tabIndex={-1} aria-hidden className="hidden" />
+          </>
         )}
         {children}
         {showCloseButton && (
@@ -118,7 +136,7 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-header"
-      className={cn("flex flex-col gap-1 border-b border-border/60 p-5 font-assistant", className)}
+      className={cn("flex flex-col gap-1 border-b border-border p-5 font-assistant text-right items-start pe-8", className)}
       {...props}
     />
   )
@@ -128,7 +146,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-footer"
-      className={cn("mt-auto flex flex-col gap-2 border-t border-border/60 p-5", className)}
+      className={cn("mt-auto flex flex-col gap-2 border-t border-border p-5", className)}
       {...props}
     />
   )
@@ -162,13 +180,23 @@ function SheetDescription({
 
 export {
   Sheet,
+  Sheet as IMSheet,
   SheetClose,
+  SheetClose as IMSheetClose,
   SheetContent,
+  SheetContent as IMSheetContent,
   SheetDescription,
+  SheetDescription as IMSheetDescription,
   SheetFooter,
+  SheetFooter as IMSheetFooter,
   SheetHeader,
+  SheetHeader as IMSheetHeader,
   SheetOverlay,
+  SheetOverlay as IMSheetOverlay,
   SheetPortal,
+  SheetPortal as IMSheetPortal,
   SheetTitle,
+  SheetTitle as IMSheetTitle,
   SheetTrigger,
+  SheetTrigger as IMSheetTrigger,
 }

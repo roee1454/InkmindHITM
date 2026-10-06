@@ -1,6 +1,6 @@
 /**
  * Minimal in-memory fake of the PocketBase client surface this codebase actually calls
- * (`collection(name).getOne/getFirstListItem/getFullList/getList/create/update`). Extends the
+ * (`collection(name).getOne/getFirstListItem/getFullList/getList/create/update/delete`). Extends the
  * one-off `fakeSu()` pattern already used in `state-machine.test.ts` into a shared helper, since
  * the MCP assistant's tests need the same shape across many files.
  *
@@ -145,7 +145,21 @@ export function createFakePocketBase(seed: Record<string, FakeRecord[]> = {}) {
           records[idx] = { ...records[idx]!, ...fields, id }
           return records[idx]
         },
+        async delete(id: string): Promise<boolean> {
+          const records = getStore(name)
+          const idx = records.findIndex((r) => r.id === id)
+          if (idx === -1) return false
+          records.splice(idx, 1)
+          return true
+        },
       }
+    },
+    filter(template: string, params: Record<string, unknown> = {}): string {
+      let result = template
+      for (const [k, v] of Object.entries(params)) {
+        result = result.replace(new RegExp(`{:${k}}`, 'g'), `"${String(v)}"`)
+      }
+      return result
     },
     /** Test-only escape hatch: seed or directly inspect a collection's in-memory records. */
     _seed: seedCollection,

@@ -32,7 +32,7 @@ function SetupChecklistPage() {
         type="button"
         disabled={dismissMutation.isPending}
         onClick={() => dismissMutation.mutate()}
-        className="cursor-pointer text-center text-[14.5px] font-bold text-muted-foreground"
+        className="cursor-pointer text-center text-sm font-bold text-muted-foreground"
       >
         אל תציג שוב
       </button>

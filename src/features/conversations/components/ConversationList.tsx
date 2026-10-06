@@ -1,18 +1,25 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Search } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { Plus, BotOff } from '@/components/ui/icon'
+import { Button } from '@/components/ui/button'
+import { SearchInput } from '@/components/ui/search-input'
+import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
+import { phoneMatchesQuery } from '@/lib/phone'
+import { getAiSettings } from '@/features/settings/server/ai'
 import { listConversations } from '../server/messages'
-import { formatListTimestamp, formatWindowRemaining } from '../lib/format'
-import type { UIConversation } from '../types'
+import { inboxBucket } from '../utils/labels'
+import type { InboxBucket } from '../utils/labels'
 import { useConversationsUiStore } from '../store/conversationsUiStore'
+import { NewConversationDialog } from './NewConversationDialog'
+import { ConversationRow } from './ConversationRow'
 
-const STATUS_LABEL: Record<string, string> = {
-  bot_active: 'בוט',
-  escalated: 'הוסלם',
-  staff_handling: 'צוות',
-  closed: 'סגור',
-}
+const FILTERS: { id: 'all' | Exclude<InboxBucket, 'closed'>; label: string; empty: string }[] = [
+  { id: 'all', label: 'הכל', empty: 'עדיין אין שיחות. כשלקוח יכתוב לסטודיו בוואטסאפ, השיחה תופיע כאן.' },
+  { id: 'escalated', label: 'ממתין', empty: 'אין שיחות שמחכות לצוות.' },
+  { id: 'staff_handling', label: 'צוות', empty: 'אין שיחות בטיפול צוות.' },
+  { id: 'bot_active', label: 'בוט', empty: 'אין שיחות שהבוט מנהל עכשיו.' },
+]
 
 interface ConversationListProps {
   selectedId: string | null
@@ -20,115 +27,103 @@ interface ConversationListProps {
 }
 
 export function ConversationList({ selectedId, onSelect }: ConversationListProps) {
-  const { searchQuery, setSearchQuery } = useConversationsUiStore()
+  const { searchQuery, setSearchQuery, statusFilter, setStatusFilter } = useConversationsUiStore()
+  const [isNewChatOpen, setIsNewChatOpen] = useState(false)
+
   const { data: conversations = [], isLoading } = useQuery({
     queryKey: ['conversations'],
     queryFn: () => listConversations(),
-    // Realtime is the primary path (dashboard route subscription); long-interval
-    // fallback only (HITL-10 — was 8s alongside realtime).
+    refetchInterval: 30000,
+  })
+
+  const { data: aiSettings } = useQuery({
+    queryKey: ['ai-settings'],
+    queryFn: () => getAiSettings(),
     refetchInterval: 60000,
   })
 
+  const buckets = useMemo(() => new Map(conversations.map((c) => [c.id, inboxBucket(c)])), [conversations])
+  const waiting = useMemo(() => [...buckets.values()].filter((b) => b === 'escalated').length, [buckets])
+
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
-    if (!q) return conversations
-    return conversations.filter(
-      (c) => c.customerName.toLowerCase().includes(q) || c.customerPhone.toLowerCase().includes(q),
-    )
-  }, [conversations, searchQuery])
+    return conversations.filter((c) => {
+      if (q && !c.customerName.toLowerCase().includes(q) && !phoneMatchesQuery(c.customerPhone, q)) return false
+      return statusFilter === 'all' || buckets.get(c.id) === statusFilter
+    })
+  }, [conversations, buckets, searchQuery, statusFilter])
+
+  const activeFilter = FILTERS.find((f) => f.id === statusFilter) ?? FILTERS[0]!
 
   return (
-    // Full width on mobile (it's the whole screen when no chat is selected); the fixed 288px
-    // rail with its divider only applies once the thread sits beside it at lg.
-    <div className="flex h-full w-full shrink-0 flex-col bg-card lg:w-72 lg:border-e lg:border-border">
-      <div className="border-b border-border p-3">
-        <div className="relative">
-          <Search className="absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="חיפוש לפי שם או טלפון"
-            className="pe-9"
-          />
+    <div className="flex h-full w-full shrink-0 flex-col bg-card font-assistant lg:w-80 lg:border-e lg:border-border" dir="rtl">
+      <div className="flex flex-col gap-3 border-b border-border px-4 pt-4 pb-3">
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-xl font-extrabold tracking-tight text-foreground">שיחות</h1>
+          <Button variant="ghost" size="icon" onClick={() => setIsNewChatOpen(true)} aria-label="שיחה חדשה" className="size-9 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
+            <Plus className="size-5" />
+          </Button>
         </div>
+
+        <SearchInput size="sm" variant="muted" placeholder="חיפוש לפי שם או טלפון" value={searchQuery} onChange={setSearchQuery} />
+
+        <div role="group" aria-label="סינון שיחות" className="flex gap-1 rounded-xl bg-muted p-1">
+          {FILTERS.map((filter) => {
+            const active = statusFilter === filter.id
+            return (
+              <button
+                key={filter.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setStatusFilter(filter.id)}
+                className={cn(
+                  'flex h-8 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg text-sm font-semibold transition-colors duration-150 select-none',
+                  active ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {filter.label}
+                {filter.id === 'escalated' && waiting > 0 && <span className="text-xs font-bold tabular-nums">{waiting}</span>}
+              </button>
+            )
+          })}
+        </div>
+
+        {aiSettings && !aiSettings.aiEnabled && (
+          <div className="flex items-center gap-2 rounded-xl border border-warning/25 bg-warning/10 px-3 py-2 text-xs text-warning">
+            <BotOff className="size-4 shrink-0 text-warning" />
+            <span className="font-bold">סוכן ה-AI מושבת בהגדרות – כל השיחות במענה ידני</span>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
-          <p className="p-4 text-center text-sm text-muted-foreground">טוען שיחות…</p>
+          <div className="flex flex-col gap-4 p-4" aria-hidden>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex flex-col gap-2">
+                <Skeleton className="h-4 w-2/5" />
+                <Skeleton className="h-3.5 w-4/5" />
+              </div>
+            ))}
+          </div>
         ) : filtered.length === 0 ? (
-          <p className="p-4 text-center text-sm text-muted-foreground">
-            {searchQuery ? 'לא נמצאו שיחות.' : 'עדיין אין שיחות.'}
+          <p className="px-6 py-10 text-center text-sm text-muted-foreground">
+            {searchQuery
+              ? 'אין שיחות שמתאימות לחיפוש.'
+              : statusFilter === 'bot_active' && aiSettings && !aiSettings.aiEnabled
+                ? 'סוכן ה-AI מושבת בהגדרות הסטודיו. כל עוד הבוט כבוי, שיחות נכנסות מנוהלות ישירות ע״י הצוות.'
+                : activeFilter.empty}
           </p>
         ) : (
-          <ul>
+          <ul className="divide-y divide-border/60">
             {filtered.map((c) => (
-              <ConversationRow
-                key={c.id}
-                conversation={c}
-                selected={c.id === selectedId}
-                onSelect={() => onSelect(c.id)}
-              />
+              <ConversationRow key={c.id} conversation={c} selected={c.id === selectedId} onSelect={() => onSelect(c.id)} />
             ))}
           </ul>
         )}
       </div>
-    </div>
-  )
-}
 
-function ConversationRow({
-  conversation,
-  selected,
-  onSelect,
-}: {
-  conversation: UIConversation
-  selected: boolean
-  onSelect: () => void
-}) {
-  const title = conversation.customerName || conversation.customerPhone || 'לא ידוע'
-  const windowInfo = formatWindowRemaining(conversation.windowExpiresAt)
-  const windowDotColor =
-    windowInfo.status === 'open'
-      ? 'bg-emerald-500'
-      : windowInfo.status === 'closing-soon'
-        ? 'bg-amber-500'
-        : 'bg-muted-foreground/30'
-  return (
-    <li>
-      <button
-        type="button"
-        onClick={onSelect}
-        className={`flex w-full flex-col items-start gap-0.5 border-b border-border px-4 py-3 text-start font-assistant transition-colors ${
-          selected ? 'bg-primary/10' : 'hover:bg-accent'
-        }`}
-      >
-        <div className="flex w-full items-center justify-between gap-2">
-          <span className="truncate text-sm font-bold text-foreground">{title}</span>
-          <span className="shrink-0 text-micro text-muted-foreground">
-            {formatListTimestamp(conversation.lastMessageAt)}
-          </span>
-        </div>
-        <div className="flex w-full items-center justify-between gap-2">
-          <span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground">
-            <span
-              className={`size-1.5 shrink-0 rounded-full ${windowDotColor}`}
-              title={`חלון 24 שעות: ${windowInfo.label}`}
-            />
-            {conversation.customerPhone}
-          </span>
-          <div className="flex items-center gap-1.5 shrink-0">
-            {conversation.unreadCount > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-micro font-extrabold text-white leading-none">
-                {conversation.unreadCount}
-              </span>
-            )}
-            <span className="rounded-full bg-muted px-2 py-0.5 text-micro text-muted-foreground">
-              {STATUS_LABEL[conversation.status] ?? conversation.status}
-            </span>
-          </div>
-        </div>
-      </button>
-    </li>
+      <NewConversationDialog open={isNewChatOpen} onOpenChange={setIsNewChatOpen} onSelectConversation={onSelect} />
+    </div>
   )
 }

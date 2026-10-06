@@ -9,18 +9,12 @@ export interface StaffRecord {
   avatar: string
   active: boolean
   calendar_feed_token: string
-  created: string
-  updated: string
-}
-
-export interface ArtistProfileRecord {
-  id: string
-  staff: string
-  portfolio_website: string
-  portfolio_instagram: string
-  website_url: string
-  bio: string
-  work_hours: WorkHoursWindow[]
+  portfolio_url?: string | null
+  bio?: string | null
+  work_hours?: WorkHoursWindow[] | null
+  invite_token?: string | null
+  invite_token_expires_at?: string | null
+  invite_accepted_at?: string | null
   created: string
   updated: string
 }

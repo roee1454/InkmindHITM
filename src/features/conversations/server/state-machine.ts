@@ -9,35 +9,49 @@
  * (bot_active / escalated / staff_handling / closed) is the who-is-driving axis and is
  * NOT governed here — escalations legitimately happen from any state.
  *
- * KEEP IN SYNC: pocketbase/pb_hooks/cron.pb.js performs the same
- * AWAIT_* → COLLECTING_INFO release inside PocketBase's own cron (it can't call this
- * module). If the table changes around those states, update the hook too.
+ * The 48h stale-pending release (lifecycle-service.ts processStalePendingAppointments) moves
+ * AWAIT_* → COLLECTING_INFO through transition() like every other caller.
  */
 import type PocketBase from 'pocketbase'
 import type { ConversationState } from '@/integrations/ai/prompts'
 import { addSystemNotification } from '@/features/notifications/server/notifications'
 
 export const TRANSITIONS: Record<ConversationState, ConversationState[]> = {
-  // Greeting → info collection; COMPLETED covers a conversation opened by mistake.
-  NEW: ['COLLECTING_INFO', 'COMPLETED'],
-  // Info collected → pending hold awaits pricing. COMPLETED: customer walks away.
-  COLLECTING_INFO: ['AWAIT_PRICE_OFFER', 'COMPLETED'],
-  // Staff priced it → customer pays. Back to COLLECTING_INFO: hold cancelled/expired.
-  AWAIT_PRICE_OFFER: ['AWAIT_PAYMENT', 'COLLECTING_INFO'],
-  // Deposit confirmed → final summary sent. Back: cancellation or expired hold.
-  AWAIT_PAYMENT: ['AWAIT_FINAL_CONFIRMATION', 'COLLECTING_INFO'],
-  // Customer confirmed → booked. Back: cancellation or expired hold.
-  AWAIT_FINAL_CONFIRMATION: ['AWAITING_APPOINTMENT', 'COLLECTING_INFO'],
-  // Appointment done → NPS ask; COMPLETED: closed without NPS; COLLECTING_INFO: cancelled → rebook.
-  AWAITING_APPOINTMENT: ['AWAIT_NPS_SCORE', 'COMPLETED', 'COLLECTING_INFO'],
-  AWAIT_NPS_SCORE: ['COMPLETED'],
-  // A returning customer restarts the funnel.
-  COMPLETED: ['COLLECTING_INFO'],
+  // Greeting / non-pushy advisor. Can go to WANTS_TO_BOOK (explicit intent), COLLECTING_INFO, or COMPLETED.
+  NEW: ['WANTS_TO_BOOK', 'COLLECTING_INFO', 'COMPLETED'],
+  // Inquiring appointment route (sketch consult vs tattoo). Can go to COLLECTING_INFO, AWAIT_PRICE_OFFER, WAITLIST, NEW, or COMPLETED.
+  WANTS_TO_BOOK: ['COLLECTING_INFO', 'AWAIT_PRICE_OFFER', 'WAITLIST', 'NEW', 'COMPLETED'],
+  // Info collected → pending hold awaits pricing, or waitlist if full.
+  COLLECTING_INFO: ['AWAIT_PRICE_OFFER', 'WAITLIST', 'NEW', 'COMPLETED'],
+  // WAITLIST: standby queue. Can go to WANTS_TO_BOOK, COLLECTING_INFO, AWAIT_PAYMENT (when slot offered),
+  // AWAIT_PRICE_OFFER (the customer books a slot straight from the waitlist), or COMPLETED.
+  WAITLIST: ['WANTS_TO_BOOK', 'COLLECTING_INFO', 'AWAIT_PRICE_OFFER', 'AWAIT_PAYMENT', 'COMPLETED'],
+  // Staff priced it → health notice, payment, manual confirm override (Bug 45), or cancelled back to COLLECTING_INFO.
+  AWAIT_PRICE_OFFER: ['AWAIT_HEALTH_NOTICE', 'AWAIT_PAYMENT', 'AWAITING_APPOINTMENT', 'COLLECTING_INFO'],
+  // Health declaration step before payment.
+  AWAIT_HEALTH_NOTICE: ['AWAIT_PAYMENT', 'AWAITING_APPOINTMENT', 'COLLECTING_INFO', 'COMPLETED'],
+  // Deposit confirmed → final summary sent, manual confirm override (Bug 45), or cancellation.
+  AWAIT_PAYMENT: ['AWAIT_FINAL_CONFIRMATION', 'AWAITING_APPOINTMENT', 'COLLECTING_INFO'],
+  // Customer confirmed → booked. Back: cancellation, expired hold, or staff re-opening payment/quote.
+  AWAIT_FINAL_CONFIRMATION: ['AWAITING_APPOINTMENT', 'AWAIT_PAYMENT', 'AWAIT_PRICE_OFFER', 'COLLECTING_INFO'],
+  // Appointment done → NPS ask; COMPLETED: closed; COLLECTING_INFO: cancelled; WANTS_TO_BOOK: sketch done -> tattoo booking;
+  // PROJECT_IN_PROGRESS: a session of a multi-session project is done and the project goes on;
+  // NEW: the customer writes again after the appointment (utils/inbound-routing.ts).
+  AWAITING_APPOINTMENT: ['AWAIT_NPS_SCORE', 'COMPLETED', 'COLLECTING_INFO', 'WANTS_TO_BOOK', 'PROJECT_IN_PROGRESS', 'NEW'],
+  // Between sessions of a multi-session project, with nothing booked: booking the next session
+  // (WANTS_TO_BOOK / COLLECTING_INFO, or AWAITING_APPOINTMENT when staff booked it in the calendar),
+  // feedback or COMPLETED once the project ends, NEW when the project closed while the customer was away.
+  PROJECT_IN_PROGRESS: ['WANTS_TO_BOOK', 'COLLECTING_INFO', 'AWAITING_APPOINTMENT', 'AWAIT_NPS_SCORE', 'COMPLETED', 'NEW'],
+  // NEW: no answer within the feedback window, and the customer writes about something else.
+  AWAIT_NPS_SCORE: ['COMPLETED', 'NEW'],
+  // A returning customer restarts the funnel; AWAIT_NPS_SCORE: the feedback question at the end of a project.
+  COMPLETED: ['NEW', 'WANTS_TO_BOOK', 'COLLECTING_INFO', 'AWAIT_NPS_SCORE'],
 }
 
 const VALID_STATES = new Set(Object.keys(TRANSITIONS) as ConversationState[])
 
-function toState(raw: unknown): ConversationState {
+/** A stored state, or NEW for anything unknown (matches the agent's fallback). */
+export function toConversationState(raw: unknown): ConversationState {
   return VALID_STATES.has(raw as ConversationState) ? (raw as ConversationState) : 'NEW'
 }
 
@@ -51,8 +65,38 @@ export class InvalidTransitionError extends Error {
   }
 }
 
+export type StateActor = 'bot' | 'staff' | 'system' | 'customer'
+
+/**
+ * Where staff may move a conversation from anywhere (logged in audit_log as an override): re-open
+ * pricing, the health notice, payment or scheduling — e.g. quoting an appointment booked by hand in
+ * the calendar — or reset the bot to NEW (bot-reset.server.ts).
+ */
+const STAFF_OVERRIDE_TARGETS: ConversationState[] = ['AWAIT_PRICE_OFFER', 'AWAIT_HEALTH_NOTICE', 'AWAIT_PAYMENT', 'AWAITING_APPOINTMENT', 'COLLECTING_INFO', 'NEW']
+
+function isStaffOverride(actor: StateActor, to: ConversationState): boolean {
+  return actor === 'staff' && STAFF_OVERRIDE_TARGETS.includes(to)
+}
+
+/**
+ * Whether transition() would accept this move. Callers that act on the outside world first (create
+ * a hold, cancel an appointment, send a message) check this before acting, so a move the state
+ * machine would refuse also stops the action instead of leaving it half done.
+ */
+export function canTransition(from: ConversationState, to: ConversationState, actor: StateActor): boolean {
+  return from === to || TRANSITIONS[from].includes(to) || isStaffOverride(actor, to)
+}
+
+/**
+ * Attribution for a write that sets `state` outside transition() — creating a conversation that
+ * doesn't start at NEW. pb_hooks/conversation-state.pb.js rejects a state change without it.
+ */
+export function stateAttribution(actor: StateActor, reason: string): { state_actor: StateActor; state_reason: string } {
+  return { state_actor: actor, state_reason: reason.slice(0, 200) }
+}
+
 export interface TransitionOptions {
-  actor: 'bot' | 'staff' | 'system'
+  actor: StateActor
   /** Short machine-ish cause, e.g. the tool or server-fn name that triggered it. */
   reason: string
   /** Extra conversation fields written atomically with the state (e.g. tattoo_info,
@@ -73,9 +117,11 @@ export async function transition(
   opts: TransitionOptions,
 ): Promise<{ from: ConversationState }> {
   const conversation = await su.collection('conversations').getOne(conversationId)
-  const from = toState(conversation.state)
+  const from = toConversationState(conversation.state)
 
-  // Best-effort audit write (HITL-11) — the trail must never break the transition itself.
+  // audit_log keeps what didn't go through normally: rejected moves and staff overrides (best
+  // effort — it must never break the transition). Every applied move is logged in
+  // state_transitions by pb_hooks/conversation-state.pb.js, inside the update's transaction.
   const audit = (reason: string) =>
     su
       .collection('audit_log')
@@ -83,24 +129,31 @@ export async function transition(
       .catch(() => null)
 
   if (from !== to && !TRANSITIONS[from].includes(to)) {
-    console.error(`[state-machine] REJECTED ${from} → ${to} (${opts.actor}: ${opts.reason}) conversation=${conversationId}`)
-    await audit(`REJECTED: ${opts.reason}`)
-    await addSystemNotification({
-      title: 'נחסם מעבר מצב שיחה לא חוקי',
-      message: `ניסיון מעבר ${from} → ${to} (גורם: ${opts.actor}, סיבה: ${opts.reason}). המצב לא שונה — ייתכן שנדרשת בדיקה ידנית של השיחה.`,
-      type: 'error',
-      link: `/dashboard/conversations?chatId=${conversationId}`,
-    }).catch(() => null)
-    throw new InvalidTransitionError(from, to)
+    if (isStaffOverride(opts.actor, to)) {
+      console.warn(`[state-machine] Staff override: allowing ${from} → ${to} (${opts.reason}) conversation=${conversationId}`)
+      await audit(`STAFF_OVERRIDE: ${opts.reason}`)
+    } else {
+      console.error(`[state-machine] REJECTED ${from} → ${to} (${opts.actor}: ${opts.reason}) conversation=${conversationId}`)
+      await audit(`REJECTED: ${opts.reason}`)
+      await addSystemNotification({
+        title: 'נחסם מעבר מצב שיחה לא חוקי',
+        message: `ניסיון מעבר ${from} → ${to} (גורם: ${opts.actor}, סיבה: ${opts.reason}). המצב לא שונה — ייתכן שנדרשת בדיקה ידנית של השיחה.`,
+        type: 'error',
+        link: `/dashboard/conversations?chatId=${conversationId}`,
+      }).catch(() => null)
+      throw new InvalidTransitionError(from, to)
+    }
   }
 
   await su.collection('conversations').update(conversationId, {
     state: to,
+    ...stateAttribution(opts.actor, opts.reason),
+    // A finished funnel ends the project the bot was booking for; the next inquiry starts a new one.
+    ...(to === 'COMPLETED' ? { active_project: '' } : {}),
     ...(opts.extraFields ?? {}),
   })
 
   if (from !== to) {
-    await audit(opts.reason)
     console.log(`[state-machine] ${from} → ${to} (${opts.actor}: ${opts.reason}) conversation=${conversationId}`)
   }
   return { from }

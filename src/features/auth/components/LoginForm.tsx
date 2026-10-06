@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { login } from '@/features/auth/server/auth'
-import { Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { Mail, Lock, AlertCircle, Eye, EyeOff } from '@/components/ui/icon'
 
 const schema = z.object({
   email: z.string().email('נא להזין אימייל תקין'),
@@ -51,7 +51,7 @@ export function LoginForm() {
               <FormItem>
                 <FormLabel className="form-label">כתובת אימייל</FormLabel>
                 <FormControl>
-                  <div className="flex h-14 w-full items-center gap-2.5 rounded-[18px] border border-input/80 bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
+                  <div className="flex h-14 w-full items-center gap-2.5 rounded-2xl border border-input bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
                     <Mail className="size-[18px] shrink-0 text-muted-foreground" />
                     <Input
                       type="email"
@@ -74,7 +74,7 @@ export function LoginForm() {
               <FormItem>
                 <FormLabel className="form-label">סיסמה</FormLabel>
                 <FormControl>
-                  <div className="flex h-14 w-full items-center gap-2.5 rounded-[18px] border border-input/80 bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
+                  <div className="flex h-14 w-full items-center gap-2.5 rounded-2xl border border-input bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
                     <Lock className="size-[18px] shrink-0 text-muted-foreground" />
                     <Input
                       type={showPassword ? 'text' : 'password'}
@@ -99,7 +99,7 @@ export function LoginForm() {
         </div>
 
         {form.formState.errors.root && (
-          <div className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-[13px] font-semibold text-destructive">
+          <div className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm font-semibold text-destructive">
             <AlertCircle size={15} className="shrink-0" />
             <span>{form.formState.errors.root.message}</span>
           </div>

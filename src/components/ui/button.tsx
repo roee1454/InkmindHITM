@@ -12,16 +12,16 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-md active:shadow-sm",
-        destructive: "bg-destructive text-destructive-foreground shadow-md active:shadow-sm",
-        outline: "border border-border/80 bg-card text-foreground shadow-xs",
+        default: "bg-primary text-primary-foreground shadow-lg active:shadow-sm",
+        destructive: "bg-destructive text-destructive-foreground shadow-lg active:shadow-sm",
+        outline: "border border-border bg-card text-foreground shadow-xs",
         secondary: "bg-muted text-foreground",
         ghost: "text-foreground active:bg-muted",
         link: "text-primary underline-offset-4 active:scale-100 hover:underline",
       },
       size: {
-        default: "h-12 px-5 text-base md:h-11 md:text-[15px]",
-        lg: "h-14 w-full px-6 text-[17px]",
+        default: "h-12 px-5 text-base md:h-11 md:text-base",
+        lg: "h-14 w-full px-6 text-lg",
         sm: "h-10 rounded-xl px-4 text-sm",
         icon: "size-11 rounded-2xl",
       },
@@ -56,4 +56,4 @@ function Button({
   )
 }
 
-export { Button, buttonVariants }
+export { Button, Button as IMButton, buttonVariants }

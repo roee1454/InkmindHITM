@@ -1,5 +1,5 @@
 import * as React from "react"
-import { ChevronDownIcon } from "lucide-react"
+import { ChevronDownIcon } from '@/components/ui/icon'
 import { cn } from "#/lib/utils.ts"
 
 function SelectInput({ className, children, dir = "rtl", ...props }: React.ComponentProps<"select">) {
@@ -9,7 +9,7 @@ function SelectInput({ className, children, dir = "rtl", ...props }: React.Compo
         data-slot="select-input"
         dir={dir}
         className={cn(
-          "flex h-12 w-full cursor-pointer appearance-none rounded-2xl border border-input/80 bg-card pe-10 ps-4 font-assistant text-base text-foreground shadow-xs transition-all duration-150 ease-native outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:h-11 md:text-[15px]",
+          "flex h-12 w-full cursor-pointer appearance-none rounded-2xl border border-input bg-card pe-10 ps-4 font-assistant text-base text-foreground shadow-xs transition-all duration-150 ease-native outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:h-11 md:text-base",
           "focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10",
           "aria-invalid:border-destructive aria-invalid:ring-4 aria-invalid:ring-destructive/10",
           className
@@ -23,4 +23,4 @@ function SelectInput({ className, children, dir = "rtl", ...props }: React.Compo
   )
 }
 
-export { SelectInput }
+export { SelectInput, SelectInput as IMSelectInput }

@@ -1,7 +1,9 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { requireAuth, requireAdmin, getSettingsRecord } from './helpers.server'
-import { generateAiReply } from '@/integrations/ai/client.server'
+import { generateAiReply } from '@/integrations/ai/model/generate-once.server'
+import { SYSTEM_AI_MODEL, SYSTEM_AI_MAX_TOKENS } from '@/integrations/ai/model/defaults'
+import { getStudioAgentRuntimeConfig } from '@/integrations/ai/studio-config.server'
 
 export interface AiSettings {
   aiEnabled: boolean
@@ -13,6 +15,71 @@ export interface AiSettings {
   systemInstructions: string
 }
 
+export interface ActiveAgentPoliciesSummary {
+  studioName: string
+  healthDeclaration: {
+    formUrl: string | null
+    validityMonths: number
+    validityText: string
+    isConfigured: boolean
+  }
+  cancellation: {
+    cutoffHours: number
+    summaryText: string
+  }
+  deposit: {
+    required: boolean
+    defaultAmount: number | null
+    hasInstructions: boolean
+    paymentInstructions: string | null
+  }
+  reviewLink: string | null
+  ironRules: {
+    count: number
+    customInstructions: string | null
+  }
+}
+
+export const getActiveAgentPolicies = createServerFn({ method: 'GET' }).handler(
+  async (): Promise<ActiveAgentPoliciesSummary> => {
+    await requireAuth()
+    const { su } = await getSettingsRecord()
+    const config = await getStudioAgentRuntimeConfig(su)
+
+    const rules = config.ironRules.customInstructions
+      ? config.ironRules.customInstructions
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean)
+      : []
+
+    return {
+      studioName: config.studio.name,
+      healthDeclaration: {
+        formUrl: config.healthDeclaration.formUrl,
+        validityMonths: config.healthDeclaration.validityMonths,
+        validityText: config.healthDeclaration.validitySummaryHebrew,
+        isConfigured: Boolean(config.healthDeclaration.formUrl),
+      },
+      cancellation: {
+        cutoffHours: config.cancellation.cutoffHours,
+        summaryText: config.cancellation.summaryHebrew,
+      },
+      deposit: {
+        required: config.deposit.required,
+        defaultAmount: config.deposit.defaultAmount,
+        hasInstructions: Boolean(config.deposit.paymentInstructions),
+        paymentInstructions: config.deposit.paymentInstructions,
+      },
+      reviewLink: config.reviewLink,
+      ironRules: {
+        count: rules.length,
+        customInstructions: config.ironRules.customInstructions,
+      },
+    }
+  },
+)
+
 export const getAiSettings = createServerFn({ method: 'GET' }).handler(
   async (): Promise<AiSettings> => {
     await requireAuth()
@@ -20,16 +87,16 @@ export const getAiSettings = createServerFn({ method: 'GET' }).handler(
     return {
       aiEnabled: Boolean(record?.ai_enabled),
       aiConfig: {
-        model: (record?.ai_model as string) || 'claude-sonnet-5',
+        model: SYSTEM_AI_MODEL,
         temperature: (record?.ai_temperature as number) ?? 0.4,
-        maxTokens: (record?.ai_max_tokens as number) ?? null,
+        maxTokens: SYSTEM_AI_MAX_TOKENS,
       },
       systemInstructions: (record?.ai_system_instructions as string) || '',
     }
   },
 )
 
-const toggleAiSchema = z.object({
+export const toggleAiSchema = z.object({
   enabled: z.boolean(),
 })
 
@@ -42,11 +109,24 @@ export const toggleAiEnabled = createServerFn({ method: 'POST' })
     await su.collection('settings').update(record.id, {
       ai_enabled: data.enabled,
     })
+    await su
+      .collection('notifications')
+      .create({
+        title: data.enabled ? 'סוכן ה-AI הופעל' : 'סוכן ה-AI הושבת',
+        message: data.enabled
+          ? 'הבוט חזר לפעילות ומשיב ללקוחות בוואטסאפ.'
+          : 'הבוט הושבת. כל השיחות מנוהלות כעת במענה ידני על ידי הצוות.',
+        type: data.enabled ? 'info' : 'warning',
+        kind: 'system',
+        read: false,
+        link: '/dashboard/settings/ai',
+      })
+      .catch(() => null)
     return { ok: true, enabled: data.enabled }
   })
 
-const saveAiConfigSchema = z.object({
-  model: z.string().trim().min(1),
+export const saveAiConfigSchema = z.object({
+  model: z.string().trim().optional(),
   temperature: z.number().min(0).max(2),
   maxTokens: z.number().nullable().optional(),
 })
@@ -58,14 +138,14 @@ export const saveAiConfig = createServerFn({ method: 'POST' })
     const { su, record } = await getSettingsRecord()
     if (!record) throw new Error('רשומת ההגדרות חסרה.')
     await su.collection('settings').update(record.id, {
-      ai_model: data.model,
+      ai_model: SYSTEM_AI_MODEL,
       ai_temperature: data.temperature,
       ai_max_tokens: data.maxTokens,
     })
     return { ok: true }
   })
 
-const saveAiInstructionsSchema = z.object({
+export const saveAiInstructionsSchema = z.object({
   instructions: z.string().trim(),
 })
 
@@ -86,29 +166,23 @@ export interface TestAiConnectionResult {
 }
 
 const testAiConnectionSchema = z.object({
-  model: z.string().trim().min(1),
+  model: z.string().trim().optional(),
   temperature: z.number().min(0).max(2),
   maxTokens: z.number().nullable().optional(),
 })
 
-/** Validates the OpenAI integration with a cheap live call. Uses the in-progress form values
- *  when present (so you can test before saving), else the stored ones — mirrors
- *  `testWhatsAppConnection`'s shape in `./whatsapp`. */
+/** Validates the AI integration with a cheap live call using the hardcoded system model. */
 export const testAiConnection = createServerFn({ method: 'POST' })
   .validator(testAiConnectionSchema)
   .handler(async ({ data }): Promise<TestAiConnectionResult> => {
     await requireAdmin()
-    const { record } = await getSettingsRecord()
-
-    const model = data.model || (record?.ai_model as string) || ''
-    if (!model) throw new Error('לא נבחר מודל.')
 
     try {
       const result = await generateAiReply({
-        model,
+        model: SYSTEM_AI_MODEL,
         systemInstructions: '',
         temperature: data.temperature,
-        maxTokens: data.maxTokens ?? null,
+        maxTokens: data.maxTokens ?? SYSTEM_AI_MAX_TOKENS,
         prompt: 'ענה במילה אחת בלבד: תקין',
       })
       return { sample: result.text.trim() }

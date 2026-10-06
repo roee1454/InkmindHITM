@@ -30,8 +30,12 @@ export function buildStaffTools() {
           data: filtered.map((r) => ({
             staffId: r.id,
             name: r.name,
+            phone: r.phone || null,
             role: r.role,
             roleLabel: ROLE_LABELS[r.role as string] || r.role,
+            portfolioUrl: r.portfolio_url || null,
+            bio: r.bio || null,
+            workHours: r.work_hours || [],
             active: r.active !== false,
           })),
         }

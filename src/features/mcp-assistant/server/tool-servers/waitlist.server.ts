@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
-import { getActiveAppointmentForBot } from '@/features/calendar/server/bot-appointments'
+import { getActiveAppointmentForBot } from '@/features/calendar/server/bot-appointments.server'
 import { createWhatsAppClient, WhatsAppApiError, ERROR_REENGAGEMENT_REQUIRED } from '@/integrations/whatsapp-cloud-api/client'
 import { getWhatsAppSettings } from '@/integrations/whatsapp-cloud-api/settings.server'
 import { toYmd, minutesToTime } from '@/lib/date-utils'

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Sparkles } from 'lucide-react'
-import { formatTime } from '@/features/conversations/lib/format'
+import { Sparkles } from '@/components/ui/icon'
+import { formatTime } from '@/features/conversations/utils/format'
 import { McpMarkdown } from './McpMarkdown'
 import type { McpMessage } from '../types'
 

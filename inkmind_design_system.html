@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inkmind CRM — Monochrome Design System</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@600;700;800&family=Open+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+    :root {
+      --font-assistant: 'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-sans: 'Open Sans', system-ui, sans-serif;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .font-assistant {
+      font-family: var(--font-assistant);
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .dark ::-webkit-scrollbar-track {
+      background: #09090b;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f4f4f5;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #d4d4d8;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 antialiased min-h-screen selection:bg-white selection:text-black dark:bg-zinc-950 dark:text-zinc-100 transition-colors">
+
+  <!-- Header & Brand Topbar -->
+  <header class="sticky top-0 z-50 bg-zinc-950/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800 px-4 sm:px-6 py-3.5 transition-colors">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <!-- Tattoo Needle / Ink Machine Mark (Solid White/Black) -->
+          <div class="w-10 h-10 rounded-xl bg-white text-zinc-950 flex items-center justify-center shadow-md font-assistant font-extrabold text-lg">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 256 256">
+              <path d="M240,96a8,8,0,0,1-2.34,5.66l-48,48a8,8,0,0,1-11.32-11.32L194.69,122,126.34,190.34a8,8,0,0,1-11.32-11.32L183.31,110.69,167.66,95A8,8,0,1,1,179,83.69L234.34,139a8,8,0,0,1,5.66-2.34Zm-96-32a8,8,0,0,0-11.31,0L26.34,169.34A8,8,0,0,0,24,175v49a8,8,0,0,0,8,8H81a8,8,0,0,0,5.66-2.34L192.34,124a8,8,0,0,0,0-11.31ZM40,216V178.34l96-96L173.66,120l-96,96Z"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="font-assistant text-xl font-extrabold tracking-tight text-white dark:text-white">Inkmind CRM</h1>
+              <span class="text-[11px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">Monochrome</span>
+            </div>
+            <p class="text-xs text-zinc-400">שפת עיצוב שחור-לבן (לבן-שחור במצב כהה) • Studio Minimalist</p>
+          </div>
+        </div>
+
+        <!-- Mode Toggle (Mobile) -->
+        <button onclick="toggleTheme()" class="md:hidden px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-900 text-xs font-semibold text-zinc-200">
+          החלף מצב ◐
+        </button>
+      </div>
+
+      <!-- Navigation Tabs & Mode Toggle -->
+      <div class="flex flex-wrap items-center gap-2">
+        <nav class="flex items-center gap-1 bg-zinc-900 p-1.5 rounded-xl border border-zinc-800 text-xs sm:text-sm overflow-x-auto">
+          <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn px-3 sm:px-4 py-1.5 rounded-lg font-medium transition-all bg-white text-zinc-950 font-bold shadow-sm">
+            סקירה
+          </button>
+          <button onclick="switchTab('components')" id="tab-components" class="tab-btn px-3 sm:px-4 py-1.5 rounded-lg font-medium transition-all text-zinc-400 hover:text-white">
+            רכיבי IM*
+          </button>
+          <button onclick="switchTab('typography')" id="tab-typography" class="tab-btn px-3 sm:px-4 py-1.5 rounded-lg font-medium transition-all text-zinc-400 hover:text-white">
+            טיפוגרפיה
+          </button>
+          <button onclick="switchTab('icons')" id="tab-icons" class="tab-btn px-3 sm:px-4 py-1.5 rounded-lg font-medium transition-all text-zinc-400 hover:text-white">
+            אייקונים מלאים
+          </button>
+          <button onclick="switchTab('mockup')" id="tab-mockup" class="tab-btn px-3 sm:px-4 py-1.5 rounded-lg font-medium transition-all text-zinc-400 hover:text-white">
+            מסך חי לדוגמה
+          </button>
+        </nav>
+
+        <!-- Mode Toggle (Desktop) -->
+        <button onclick="toggleTheme()" class="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl border border-zinc-800 bg-zinc-900 text-xs font-bold text-zinc-200 hover:bg-zinc-800 transition-colors">
+          <span id="theme-label">מצב כהה (Dark)</span>
+          <span class="text-sm">◐</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto p-4 sm:p-6 md:p-8 space-y-10">
+
+    <!-- ==================== TAB 1: OVERVIEW ==================== -->
+    <section id="content-overview" class="tab-content space-y-8">
+      <!-- Hero Banner -->
+      <div class="relative overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800 p-6 sm:p-10 shadow-2xl">
+        <div class="relative z-10 max-w-3xl space-y-4">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-xs text-zinc-200 font-semibold">
+            <span class="w-2 h-2 rounded-full bg-white"></span>
+            100% מונוכרומטי — שחור, לבן וגווני ביניים בלבד
+          </div>
+          <h2 class="font-assistant text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+            אסתטיקת סטודיו טהורה: דיו שחור על קנבס לבן (ולהיפך)
+          </h2>
+          <p class="text-zinc-300 text-base sm:text-lg leading-relaxed">
+            קעקועים הם אומנות של ניגודיות, קווים חדים ושחור אבסולוטי. הממשק של Inkmind CRM תוכנן במכוון ללא צבעי מבטא מלאכותיים (ללא כתום, ללא כחול). הניגודיות היא מקסימלית: <strong>לבן-על-שחור במצב כהה</strong>, ו<strong>שחור-על-לבן במצב בהיר</strong>.
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+            <div class="p-5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1">
+              <div class="text-white font-assistant font-extrabold text-2xl">שחור-לבן</div>
+              <div class="text-zinc-200 font-medium text-sm">פלטה מונוכרומטית</div>
+              <div class="text-xs text-zinc-500">ללא כתום / צהוב. קונטרסט מלא ויוקרתי</div>
+            </div>
+            <div class="p-5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1">
+              <div class="text-white font-assistant font-extrabold text-2xl">IM* Primitives</div>
+              <div class="text-zinc-200 font-medium text-sm">קומפוננטות מערכת אחידות</div>
+              <div class="text-xs text-zinc-500">IMButton, IMCard, IMBadge, IMInput</div>
+            </div>
+            <div class="p-5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1">
+              <div class="text-white font-assistant font-extrabold text-2xl">Always Filled</div>
+              <div class="text-zinc-200 font-medium text-sm">אייקונים מלאים מבפנים</div>
+              <div class="text-xs text-zinc-500">צלליות ברורות שאינן נבלעות ברקע</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Principles Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="p-6 rounded-xl bg-zinc-900 border border-zinc-800 space-y-3">
+          <div class="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 text-white flex items-center justify-center font-bold">
+            01
+          </div>
+          <h3 class="font-assistant font-bold text-lg text-white">ניגודיות שחור-לבן מוחלטת</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">
+            במצב כהה: הרקע כהה (#0a0a0b), המשטחים בגוון zinc (#141415), הטקסט לבן בוהק, והכפתורים הראשיים לבנים לחלוטין עם כיתוב שחור.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-xl bg-zinc-900 border border-zinc-800 space-y-3">
+          <div class="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 text-white flex items-center justify-center font-bold">
+            02
+          </div>
+          <h3 class="font-assistant font-bold text-lg text-white">טיפוגרפיה חדה בעברית (RTL)</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">
+            פונט <strong>Assistant</strong> במשקל 800 לכותרות עוצמתיות, ופונט <strong>Open Sans</strong> לכל שדות הקלט, הטפסים, המספרים וגוף הטקסט.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-xl bg-zinc-900 border border-zinc-800 space-y-3">
+          <div class="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 text-white flex items-center justify-center font-bold">
+            03
+          </div>
+          <h3 class="font-assistant font-bold text-lg text-white">אייקונים עם מילוי סולידי</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">
+            לעולם לא אייקונים קוויים ריקים (Outlined). כל האייקונים ממולאים מבפנים ומספקים זיהוי צורני מיידי במסכים של הסטודיו.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: COMPONENTS (IM*) ==================== -->
+    <section id="content-components" class="tab-content hidden space-y-10">
+      <div class="border-b border-zinc-800 pb-4">
+        <h2 class="font-assistant text-2xl font-extrabold text-white">רכיבי IM* Primitives (מונוכרום מלא)</h2>
+        <p class="text-sm text-zinc-400">כל הקומפוננטות עוצבו מחדש בשחור ולבן טהור, ללא כתום או צבעי הדגשה מיותרים</p>
+      </div>
+
+      <!-- 1. Buttons -->
+      <div class="space-y-4">
+        <h3 class="font-assistant font-bold text-lg text-zinc-200 flex items-center gap-2">
+          <span>IMButton</span>
+          <span class="text-xs font-normal text-zinc-500">כפתורים ראשיים ומשניים</span>
+        </h3>
+        <div class="p-6 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-wrap items-center gap-4">
+          <!-- Primary CTA (White solid in dark mode, Black solid in light mode) -->
+          <button class="px-5 py-2.5 rounded-lg bg-white text-zinc-950 font-bold text-sm hover:bg-zinc-200 transition-colors shadow-sm flex items-center gap-2">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"></path></svg>
+            <span>כפתור ראשי (IMButton Primary)</span>
+          </button>
+
+          <!-- Secondary -->
+          <button class="px-5 py-2.5 rounded-lg bg-zinc-800 text-white font-semibold text-sm hover:bg-zinc-700 transition-colors border border-zinc-700 flex items-center gap-2">
+            <span>כפתור משני (Secondary)</span>
+          </button>
+
+          <!-- Outline -->
+          <button class="px-5 py-2.5 rounded-lg bg-transparent text-zinc-200 font-semibold text-sm hover:bg-zinc-800 transition-colors border border-zinc-700">
+            <span>מסגרת (Outline)</span>
+          </button>
+
+          <!-- Ghost -->
+          <button class="px-4 py-2.5 rounded-lg bg-transparent text-zinc-400 hover:text-white hover:bg-zinc-800/80 font-medium text-sm transition-colors">
+            <span>רוח רפאים (Ghost)</span>
+          </button>
+
+          <!-- Destructive (Monochrome or alert) -->
+          <button class="px-4 py-2.5 rounded-lg bg-zinc-900 text-zinc-300 border border-zinc-700 hover:border-zinc-500 font-medium text-sm transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 256 256"><path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"></path></svg>
+            <span>ביטול תור</span>
+          </button>
+
+          <!-- Loading -->
+          <button class="px-5 py-2.5 rounded-lg bg-zinc-800 text-zinc-500 font-medium text-sm border border-zinc-700/60 flex items-center gap-2 cursor-not-allowed">
+            <svg class="w-4 h-4 animate-spin fill-current" viewBox="0 0 256 256"><path d="M232,128a104,104,0,0,1-208,0c0-41,23.81-76.51,58.66-93.58a8,8,0,0,1,7.28,14.28C57.48,63.79,40,94.06,40,128a88,88,0,0,0,176,0c0-33.94-17.48-64.21-49.94-79.3a8,8,0,1,1,7.28-14.28C208.19,51.49,232,87,232,128Z"></path></svg>
+            <span>מעבד...</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. Badges (IMBadge) -->
+      <div class="space-y-4">
+        <h3 class="font-assistant font-bold text-lg text-zinc-200 flex items-center gap-2">
+          <span>IMBadge & Status Labels</span>
+          <span class="text-xs font-normal text-zinc-500">תגיות מונוכרומטיות בעלות קונטרסט גבוה</span>
+        </h3>
+        <div class="p-6 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-wrap items-center gap-3">
+          <!-- Solid White Badge -->
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white text-zinc-950">
+            תור סגור (Confirmed)
+          </span>
+
+          <!-- Zinc Outline Badge -->
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-200 border border-zinc-700">
+            <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+            ממתין למקדמה (Pending)
+          </span>
+
+          <!-- Muted Grey Badge -->
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-zinc-950 text-zinc-400 border border-zinc-800">
+            לא פעיל (Inactive)
+          </span>
+
+          <!-- Bot Active Tag -->
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-white border border-zinc-600">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 256 256"><path d="M208,72H184V40a16,16,0,0,0-16-16H88A16,16,0,0,0,72,40V72H48A16,16,0,0,0,32,88V200a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V88A16,16,0,0,0,208,72ZM88,40h80V72H88ZM92,148a12,12,0,1,1,12-12A12,12,0,0,1,92,148Zm72,0a12,12,0,1,1,12-12A12,12,0,0,1,164,148Z"></path></svg>
+            בוט WhatsApp פעיל
+          </span>
+
+          <!-- Artist Badge -->
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-zinc-900 text-zinc-300 border border-zinc-700">
+            מקעקע: דור חיילי
+          </span>
+        </div>
+      </div>
+
+      <!-- 3. Form Controls -->
+      <div class="space-y-4">
+        <h3 class="font-assistant font-bold text-lg text-zinc-200 flex items-center gap-2">
+          <span>IMInput, IMTextarea, IMLabel & IMSwitch</span>
+          <span class="text-xs font-normal text-zinc-500">שדות קלט ללא צבעים חמים — פוקוס בלבן נקי</span>
+        </h3>
+        <div class="p-6 rounded-xl bg-zinc-900 border border-zinc-800 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-zinc-300 mb-1.5">שם מלא של הלקוח</label>
+              <input type="text" value="ישראל ישראלי" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-all">
+              <p class="text-[12px] text-zinc-500 mt-1">נלקח אוטומטית מהשיחה</p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-zinc-300 mb-1.5">חיפוש לקוח / פרויקט</label>
+              <div class="relative">
+                <input type="text" placeholder="הקלד שם או מספר טלפון..." class="w-full bg-zinc-950 border border-zinc-800 rounded-lg ps-10 pe-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-all">
+                <div class="absolute inset-y-0 start-0 ps-3 flex items-center pointer-events-none text-zinc-500">
+                  <svg class="w-4 h-4 fill-current" viewBox="0 0 256 256"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-zinc-300 mb-1.5">הערות לטיפול (IMTextarea)</label>
+              <textarea rows="2" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-white focus:ring-1 focus:ring-white transition-all">קעקוע ריאליסטי באמה שמאל, שחור-אפור (Black & Grey).</textarea>
+            </div>
+
+            <!-- Switch (Black/White only) -->
+            <div class="flex items-center justify-between p-3.5 rounded-lg bg-zinc-950 border border-zinc-800">
+              <div>
+                <span class="text-sm font-semibold text-zinc-200 block">סנכרון ל-Google Calendar</span>
+                <span class="text-xs text-zinc-500">עדכון מיידי ליומן האמן</span>
+              </div>
+              <button onclick="toggleSwitch(this)" class="w-11 h-6 rounded-full bg-white p-0.5 transition-colors relative focus:outline-none">
+                <div class="w-5 h-5 rounded-full bg-zinc-950 shadow-md transform transition-transform -translate-x-5"></div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Card & Skeleton -->
+      <div class="space-y-4">
+        <h3 class="font-assistant font-bold text-lg text-zinc-200 flex items-center gap-2">
+          <span>IMCard & IMSkeleton</span>
+          <span class="text-xs font-normal text-zinc-500">כרטיסים מוגבהים עם מסגרות כהות עדינות</span>
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-4 hover:border-zinc-700 transition-colors">
+            <div class="flex items-start justify-between">
+              <div>
+                <span class="text-xs font-semibold text-zinc-400">פרויקט #1042</span>
+                <h4 class="font-assistant font-bold text-xl text-white">שרוול יפני — דרקון וגלים</h4>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-white text-zinc-950">שולמה מקדמה</span>
+            </div>
+            <p class="text-sm text-zinc-400">לקוח: אלון כהן • מקעקע: דור חיילי • מועד: יום חמישי, 14:00</p>
+            <div class="pt-3 border-t border-zinc-800 flex items-center justify-between text-xs text-zinc-400">
+              <span>נוצר ע״י בוט ההודעות</span>
+              <button class="text-white hover:underline font-bold transition-all">צפה בפרטים ←</button>
+            </div>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/60 space-y-4">
+            <div class="flex items-start justify-between">
+              <div class="space-y-2">
+                <div class="h-3 w-20 bg-zinc-800 rounded animate-pulse"></div>
+                <div class="h-6 w-48 bg-zinc-800 rounded animate-pulse"></div>
+              </div>
+              <div class="h-6 w-24 bg-zinc-800 rounded-full animate-pulse"></div>
+            </div>
+            <div class="h-4 w-full bg-zinc-800/70 rounded animate-pulse"></div>
+            <div class="pt-3 border-t border-zinc-800/40 flex items-center justify-between">
+              <div class="h-3 w-28 bg-zinc-800/50 rounded animate-pulse"></div>
+              <div class="h-3 w-16 bg-zinc-800/50 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: TYPOGRAPHY ==================== -->
+    <section id="content-typography" class="tab-content hidden space-y-8">
+      <div class="border-b border-zinc-800 pb-4">
+        <h2 class="font-assistant text-2xl font-extrabold text-white">מערכת הטיפוגרפיה (Typography Hierarchy)</h2>
+        <p class="text-sm text-zinc-400">Assistant לכותרות מודגשות, Open Sans לממשק ושדות — בשחור ולבן מוחלט</p>
+      </div>
+
+      <div class="rounded-xl border border-zinc-800 overflow-hidden bg-zinc-900">
+        <div class="overflow-x-auto">
+          <table class="w-full text-start text-sm">
+            <thead class="bg-zinc-950 border-b border-zinc-800 text-xs font-bold text-zinc-400 uppercase tracking-wider">
+              <tr>
+                <th class="py-3 px-4 text-start">קומפוננטה</th>
+                <th class="py-3 px-4 text-start">גודל ומשקל</th>
+                <th class="py-3 px-4 text-start">פונט</th>
+                <th class="py-3 px-4 text-start">תצוגה חיה (Monochrome)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-800 font-sans">
+              <!-- IMDisplay -->
+              <tr class="hover:bg-zinc-800/50 transition-colors">
+                <td class="py-4 px-4 font-mono text-white text-xs font-bold">&lt;IMDisplay&gt;</td>
+                <td class="py-4 px-4 text-zinc-400">29px • ExtraBold (800)</td>
+                <td class="py-4 px-4 text-zinc-300">Assistant</td>
+                <td class="py-4 px-4 font-assistant text-[29px] font-extrabold text-white tracking-tight leading-none">
+                  ₪42,500 הכנסות החודש
+                </td>
+              </tr>
+
+              <!-- IMHeadline -->
+              <tr class="hover:bg-zinc-800/50 transition-colors">
+                <td class="py-4 px-4 font-mono text-white text-xs font-bold">&lt;IMHeadline&gt;</td>
+                <td class="py-4 px-4 text-zinc-400">23px • ExtraBold (800)</td>
+                <td class="py-4 px-4 text-zinc-300">Assistant</td>
+                <td class="py-4 px-4 font-assistant text-[23px] font-extrabold text-white tracking-tight leading-snug">
+                  לוח פגישות ויומן סטודיו
+                </td>
+              </tr>
+
+              <!-- IMTitle -->
+              <tr class="hover:bg-zinc-800/50 transition-colors">
+                <td class="py-4 px-4 font-mono text-white text-xs font-bold">&lt;IMTitle&gt;</td>
+                <td class="py-4 px-4 text-zinc-400">17px • Bold (700)</td>
+                <td class="py-4 px-4 text-zinc-300">Open Sans</td>
+                <td class="py-4 px-4 text-[17px] font-bold text-zinc-100">
+                  פרטי קשר והצהרת בריאות
+                </td>
+              </tr>
+
+              <!-- IMSubtitle -->
+              <tr class="hover:bg-zinc-800/50 transition-colors">
+                <td class="py-4 px-4 font-mono text-white text-xs font-bold">&lt;IMSubtitle&gt;</td>
+                <td class="py-4 px-4 text-zinc-400">15px • SemiBold (600)</td>
+                <td class="py-4 px-4 text-zinc-300">Open Sans</td>
+                <td class="py-4 px-4 text-[15px] font-semibold text-zinc-300">
+                  סקיצה נבחרת ואזורי גוף מיועדים
+                </td>
+              </tr>
+
+              <!-- IMText (Body) -->
+              <tr class="hover:bg-zinc-800/50 transition-colors">
+                <td class="py-4 px-4 font-mono text-white text-xs font-bold">&lt;IMText variant="body"&gt;</td>
+                <td class="py-4 px-4 text-zinc-400">15px • Medium (500)</td>
+                <td class="py-4 px-4 text-zinc-300">Open Sans</td>
+                <td class="py-4 px-4 text-[15px] font-medium text-zinc-300 leading-relaxed max-w-md">
+                  שלום רועי, שריינו עבורך פגישת ייעוץ וסקיצה ראשונה ביום שני ה-5.10.
+                </td>
+              </tr>
+
+              <!-- IMLabelText -->
+              <tr class="hover:bg-zinc-800/50 transition-colors">
+                <td class="py-4 px-4 font-mono text-white text-xs font-bold">&lt;IMLabelText&gt;</td>
+                <td class="py-4 px-4 text-zinc-400">12.5px • Bold (700)</td>
+                <td class="py-4 px-4 text-zinc-300">Open Sans</td>
+                <td class="py-4 px-4 text-[12.5px] font-bold text-zinc-200">
+                  סטטוס תשלום
+                </td>
+              </tr>
+
+              <!-- IMCaption -->
+              <tr class="hover:bg-zinc-800/50 transition-colors">
+                <td class="py-4 px-4 font-mono text-white text-xs font-bold">&lt;IMCaption&gt;</td>
+                <td class="py-4 px-4 text-zinc-400">12px • Medium (500)</td>
+                <td class="py-4 px-4 text-zinc-300">Open Sans</td>
+                <td class="py-4 px-4 text-[12px] font-medium text-zinc-500">
+                  עודכן לאחרונה: היום ב-14:32 ע״י דור
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: ICONS (ALWAYS FILLED) ==================== -->
+    <section id="content-icons" class="tab-content hidden space-y-8">
+      <div class="border-b border-zinc-800 pb-4">
+        <h2 class="font-assistant text-2xl font-extrabold text-white">אייקונים מלאים (Always-Filled)</h2>
+        <p class="text-sm text-zinc-400">אייקונים עם מילוי סולידי בלבד — ללא קווי מתאר ריקים, בגווני שחור, לבן ו-zinc</p>
+      </div>
+
+      <!-- Comparison Card -->
+      <div class="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div class="space-y-3">
+          <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-zinc-800 text-white border border-zinc-700">סטנדרט ויזואלי</span>
+          <h3 class="font-assistant font-extrabold text-xl text-white">מילוי סולידי (Solid Fill)</h3>
+          <p class="text-sm text-zinc-400 leading-relaxed">
+            במסכים כהים, צלליות מלאות בלבן או באפור בהיר מספקות קריאות מיידית. אייקונים קוויים ריקים גורמים לטשטוש עין ומאבדים מהעוצמה שלהם.
+          </p>
+        </div>
+
+        <div class="flex items-center justify-around p-4 rounded-xl bg-zinc-950 border border-zinc-800">
+          <!-- Outlined (WRONG) -->
+          <div class="text-center space-y-2 opacity-40">
+            <div class="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 mx-auto">
+              <svg class="w-6 h-6 stroke-current fill-none stroke-2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+            </div>
+            <div class="text-xs text-zinc-500 font-bold">❌ Outlined (אסור)</div>
+          </div>
+
+          <div class="h-14 w-px bg-zinc-800"></div>
+
+          <!-- Filled (CORRECT) -->
+          <div class="text-center space-y-2">
+            <div class="w-12 h-12 rounded-xl bg-white text-zinc-950 flex items-center justify-center mx-auto shadow-md">
+              <svg class="w-6 h-6 fill-current" viewBox="0 0 256 256"><path d="M240,104a56.06,56.06,0,0,0-56-56,55.45,55.45,0,0,0-40,17.15A55.45,55.45,0,0,0,104,48,56.06,56.06,0,0,0,48,104a55.49,55.49,0,0,0,10.36,32.42l64,88a8,8,0,0,0,13.28,0l64-88A55.49,55.49,0,0,0,240,104Z"></path></svg>
+            </div>
+            <div class="text-xs text-white font-bold">✓ Filled (תקני)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Icon Sizes Spec -->
+      <div class="space-y-4">
+        <h3 class="font-assistant font-bold text-lg text-zinc-200">סולם הגדלים הסטנדרטי (IMIcon Sizes)</h3>
+        <div class="p-6 rounded-xl bg-zinc-900 border border-zinc-800 grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
+          <div class="space-y-2 p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+            <div class="h-10 flex items-center justify-center text-white">
+              <svg class="w-3 h-3 fill-current" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"></path></svg>
+            </div>
+            <div class="text-xs font-bold text-white">xs (12px)</div>
+            <div class="text-[11px] text-zinc-500">תגיות מיקרו</div>
+          </div>
+
+          <div class="space-y-2 p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+            <div class="h-10 flex items-center justify-center text-white">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"></path></svg>
+            </div>
+            <div class="text-xs font-bold text-white">sm (16px)</div>
+            <div class="text-[11px] text-zinc-500">שדות קלט</div>
+          </div>
+
+          <div class="space-y-2 p-3 rounded-lg bg-zinc-950 border border-white/40 ring-1 ring-white/20">
+            <div class="h-10 flex items-center justify-center text-white">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"></path></svg>
+            </div>
+            <div class="text-xs font-bold text-white">md (20px) — ראשי</div>
+            <div class="text-[11px] text-zinc-400">כפתורים ותפריטים</div>
+          </div>
+
+          <div class="space-y-2 p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+            <div class="h-10 flex items-center justify-center text-white">
+              <svg class="w-6 h-6 fill-current" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"></path></svg>
+            </div>
+            <div class="text-xs font-bold text-white">lg (24px)</div>
+            <div class="text-[11px] text-zinc-500">כותרות ראשיות</div>
+          </div>
+
+          <div class="space-y-2 p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+            <div class="h-10 flex items-center justify-center text-white">
+              <svg class="w-8 h-8 fill-current" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"></path></svg>
+            </div>
+            <div class="text-xs font-bold text-white">xl (32px)</div>
+            <div class="text-[11px] text-zinc-500">Empty States</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Icon Catalog (Pure Monochrome) -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+        <div class="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col items-center gap-2 text-center">
+          <div class="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-white">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"></path></svg>
+          </div>
+          <span class="text-xs font-semibold text-zinc-200">Calendar</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col items-center gap-2 text-center">
+          <div class="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-white">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 256 256"><path d="M231.9,212a120.7,120.7,0,0,0-67.1-54.1,72,72,0,1,0-73.6,0A120.7,120.7,0,0,0,24.1,212a8,8,0,1,0,13.8,8A104.1,104.1,0,0,1,128,160a104.1,104.1,0,0,1,90.1,60,8,8,0,1,0,13.8-8ZM72,96a56,56,0,1,1,56,56A56.1,56.1,0,0,1,72,96Z"></path></svg>
+          </div>
+          <span class="text-xs font-semibold text-zinc-200">User</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col items-center gap-2 text-center">
+          <div class="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-white">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 256 256"><path d="M240,96a8,8,0,0,1-2.34,5.66l-48,48a8,8,0,0,1-11.32-11.32L194.69,122,126.34,190.34a8,8,0,0,1-11.32-11.32L183.31,110.69,167.66,95A8,8,0,1,1,179,83.69L234.34,139a8,8,0,0,1,5.66-2.34ZM40,216V178.34l96-96L173.66,120l-96,96Z"></path></svg>
+          </div>
+          <span class="text-xs font-semibold text-zinc-200">Needle</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col items-center gap-2 text-center">
+          <div class="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-white">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 256 256"><path d="M240,104a56.06,56.06,0,0,0-56-56,55.45,55.45,0,0,0-40,17.15A55.45,55.45,0,0,0,104,48,56.06,56.06,0,0,0,48,104a55.49,55.49,0,0,0,10.36,32.42l64,88a8,8,0,0,0,13.28,0l64-88A55.49,55.49,0,0,0,240,104Z"></path></svg>
+          </div>
+          <span class="text-xs font-semibold text-zinc-200">Heart</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col items-center gap-2 text-center">
+          <div class="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-white">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"></path></svg>
+          </div>
+          <span class="text-xs font-semibold text-zinc-200">CheckCircle</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col items-center gap-2 text-center">
+          <div class="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-white">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 256 256"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H180l44.69,22.34A8,8,0,0,0,236,231.25V56A16,16,0,0,0,216,40Z"></path></svg>
+          </div>
+          <span class="text-xs font-semibold text-zinc-200">Chat</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 5: LIVE MOCKUP ==================== -->
+    <section id="content-mockup" class="tab-content hidden space-y-8">
+      <div class="border-b border-zinc-800 pb-4">
+        <h2 class="font-assistant text-2xl font-extrabold text-white">תצוגת ממשק סטודיו חיה (Monochrome Studio Card)</h2>
+        <p class="text-sm text-zinc-400">כרטיס תור מלא בשחור-לבן יוקרתי, משלב את רכיבי IM*, הטיפוגרפיה והאייקונים המלאים</p>
+      </div>
+
+      <!-- Real Appointment Card -->
+      <div class="max-w-2xl mx-auto rounded-2xl bg-zinc-900 border border-zinc-800 p-6 sm:p-8 shadow-2xl space-y-6">
+        <!-- Header -->
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-white text-zinc-950 flex items-center justify-center font-assistant font-extrabold text-lg shadow-md">
+              דח
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="font-assistant text-xl font-extrabold text-white">אלון ברקוביץ'</h3>
+                <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-white text-zinc-950">
+                  סקיצה מאושרת
+                </span>
+              </div>
+              <p class="text-xs text-zinc-400 font-medium mt-0.5">052-874-9912 • קעקוע ראשון בסטודיו</p>
+            </div>
+          </div>
+
+          <div class="text-end">
+            <span class="text-xs text-zinc-500 block font-medium">מחיר סופי</span>
+            <span class="font-assistant text-2xl font-extrabold text-white">₪1,400</span>
+          </div>
+        </div>
+
+        <!-- Appointment Specs Box -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-xs">
+          <div>
+            <span class="text-zinc-500 block mb-1">מועד מפגש</span>
+            <div class="flex items-center gap-1.5 text-white font-semibold">
+              <svg class="w-4 h-4 fill-white" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"></path></svg>
+              <span>יום ב', 5.10</span>
+            </div>
+          </div>
+
+          <div>
+            <span class="text-zinc-500 block mb-1">שעה ומשך</span>
+            <div class="flex items-center gap-1.5 text-white font-semibold">
+              <svg class="w-4 h-4 fill-white" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"></path></svg>
+              <span>13:00 (1.5 שע')</span>
+            </div>
+          </div>
+
+          <div>
+            <span class="text-zinc-500 block mb-1">אמן אחראי</span>
+            <div class="flex items-center gap-1.5 text-white font-semibold">
+              <svg class="w-4 h-4 fill-white" viewBox="0 0 256 256"><path d="M231.9,212a120.7,120.7,0,0,0-67.1-54.1,72,72,0,1,0-73.6,0A120.7,120.7,0,0,0,24.1,212a8,8,0,1,0,13.8,8A104.1,104.1,0,0,1,128,160a104.1,104.1,0,0,1,90.1,60,8,8,0,1,0,13.8-8Z"></path></svg>
+              <span>דור חיילי</span>
+            </div>
+          </div>
+
+          <div>
+            <span class="text-zinc-500 block mb-1">מקדמה</span>
+            <div class="flex items-center gap-1.5 text-white font-bold">
+              <svg class="w-4 h-4 fill-white" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"></path></svg>
+              <span>שולם ₪300</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="space-y-1.5">
+          <span class="text-xs font-bold text-zinc-300">סקיצה ומיקום:</span>
+          <p class="text-sm text-zinc-300 leading-relaxed bg-zinc-950 p-3 rounded-lg border border-zinc-800">
+            עיצוב דמות אנימה (Gohan) בשילוב שחור סולידי והצללות עדינות (Black & Grey). שוק ימין, כ-14 ס״מ.
+          </p>
+        </div>
+
+        <!-- Actions Footer -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pt-4 border-t border-zinc-800 gap-3">
+          <div class="flex items-center gap-2">
+            <button class="px-3.5 py-2 rounded-lg bg-zinc-800 text-white border border-zinc-700 hover:bg-zinc-700 font-semibold text-xs transition-colors flex items-center gap-1.5">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 256 256"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H180l44.69,22.34A8,8,0,0,0,236,231.25V56A16,16,0,0,0,216,40ZM104,144a12,12,0,1,1,12-12A12,12,0,0,1,104,144Zm48,0a12,12,0,1,1,12-12A12,12,0,0,1,152,144Z"></path></svg>
+              <span>צ'אט WhatsApp</span>
+            </button>
+
+            <span class="px-3 py-2 rounded-lg bg-zinc-950 text-zinc-400 border border-zinc-800 text-xs font-medium flex items-center gap-1.5">
+              <svg class="w-4 h-4 fill-zinc-300" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"></path></svg>
+              <span>הצהרת בריאות חתומה</span>
+            </span>
+          </div>
+
+          <button class="px-5 py-2.5 rounded-lg bg-white text-zinc-950 font-bold text-xs hover:bg-zinc-200 transition-colors shadow-sm">
+            עריכת פגישה
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('bg-white', 'text-zinc-950', 'font-bold', 'shadow-sm');
+        el.classList.add('text-zinc-400');
+      });
+
+      const targetContent = document.getElementById('content-' + tabId);
+      const targetBtn = document.getElementById('tab-' + tabId);
+
+      if (targetContent) targetContent.classList.remove('hidden');
+      if (targetBtn) {
+        targetBtn.classList.add('bg-white', 'text-zinc-950', 'font-bold', 'shadow-sm');
+        targetBtn.classList.remove('text-zinc-400');
+      }
+    }
+
+    function toggleSwitch(btn) {
+      const knob = btn.querySelector('div');
+      const isChecked = btn.classList.contains('bg-white');
+
+      if (isChecked) {
+        btn.classList.remove('bg-white');
+        btn.classList.add('bg-zinc-800');
+        knob.classList.remove('-translate-x-5');
+        knob.classList.add('translate-x-0');
+      } else {
+        btn.classList.add('bg-white');
+        btn.classList.remove('bg-zinc-800');
+        knob.classList.add('-translate-x-5');
+        knob.classList.remove('translate-x-0');
+      }
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.classList.contains('dark');
+      const label = document.getElementById('theme-label');
+      if (isDark) {
+        html.classList.remove('dark');
+        if (label) label.innerText = 'מצב בהיר (Light)';
+      } else {
+        html.classList.add('dark');
+        if (label) label.innerText = 'מצב כהה (Dark)';
+      }
+    }
+  </script>
+</body>
+</html>

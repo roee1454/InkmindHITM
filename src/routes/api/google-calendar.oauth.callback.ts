@@ -1,10 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import {
-  unpackOAuthState,
-  exchangeCode,
-  saveGoogleCredentials,
-} from '@/integrations/google-calendar/server/google-auth'
-import { syncAllConfirmedAppointmentsForStaff } from '@/integrations/google-calendar/server/google-sync'
 
 function popupResultHtml(payload: { success: boolean; error?: string }, targetOrigin: string): string {
   return `<!DOCTYPE html><html><body><script>
@@ -16,6 +10,9 @@ function popupResultHtml(payload: { success: boolean; error?: string }, targetOr
 }
 
 export async function handleCallbackGet(request: Request): Promise<Response> {
+  const { unpackOAuthState, exchangeCode, saveGoogleCredentials } = await import('@/integrations/google-calendar/server/google-auth.server')
+  const { syncAllConfirmedAppointmentsForStaff } = await import('@/integrations/google-calendar/server/google-sync.server')
+
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
   const state = url.searchParams.get('state')

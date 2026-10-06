@@ -1,8 +1,8 @@
 import PocketBase from 'pocketbase'
 import dotenv from 'dotenv'
-import path from 'path'
+import path from 'node:path'
 
-import fs from 'fs'
+import fs from 'node:fs'
 import { ensureStudioTimezone } from '@/lib/timezone'
 
 // Load .env variables on the server in production/preview mode,
@@ -94,6 +94,16 @@ async function createSuperuserClient(): Promise<PocketBase> {
 let superuserClientPromise: Promise<PocketBase> | null = null
 
 export async function getSuperuserClient(): Promise<PocketBase> {
+  // Unit tests must mock this module. Only the integration suite (tests/integration) may reach a
+  // real PocketBase, and it points POCKETBASE_URL at a throwaway instance and sets
+  // PB_TEST_INSTANCE. Without this guard, a test that forgets the mock quietly reads — or
+  // deletes — records in the developer's own database (.env is loaded under Vitest too).
+  if (process.env.VITEST && process.env.PB_TEST_INSTANCE !== '1') {
+    throw new Error(
+      'getSuperuserClient() was called from a unit test without a mock. Mock @/integrations/pocketbase/superuser.server, or move the test to tests/integration.',
+    )
+  }
+
   // In development, always create a fresh authenticated client.
   // This prevents stale-token errors after DB resets, which change PocketBase's
   // signing key and invalidate all in-memory tokens regardless of their JWT expiry.

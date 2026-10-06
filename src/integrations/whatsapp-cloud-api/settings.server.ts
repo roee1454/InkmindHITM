@@ -11,6 +11,7 @@ export interface WhatsAppSettings {
   accessToken: string
   verifyToken: string
   appSecret: string
+  businessAccountId?: string
 }
 
 export async function getWhatsAppSettings(): Promise<WhatsAppSettings | null> {
@@ -18,6 +19,7 @@ export async function getWhatsAppSettings(): Promise<WhatsAppSettings | null> {
   const accessToken = process.env.WHATSAPP_ACCESS_TOKEN ?? ''
   const verifyToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN ?? ''
   const appSecret = process.env.WHATSAPP_APP_SECRET ?? ''
-  if (!phoneNumberId && !accessToken && !verifyToken && !appSecret) return null
-  return { phoneNumberId, accessToken, verifyToken, appSecret }
+  const businessAccountId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID ?? ''
+  if (!phoneNumberId && !accessToken && !verifyToken && !appSecret && !businessAccountId) return null
+  return { phoneNumberId, accessToken, verifyToken, appSecret, businessAccountId }
 }

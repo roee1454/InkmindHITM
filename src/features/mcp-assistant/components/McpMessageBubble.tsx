@@ -1,4 +1,4 @@
-import { formatTime } from '@/features/conversations/lib/format'
+import { formatTime } from '@/features/conversations/utils/format'
 import type { McpMessage } from '../types'
 
 interface McpMessageBubbleProps {

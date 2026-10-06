@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { XIcon } from "lucide-react"
+import { XIcon } from '@/components/ui/icon'
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "#/lib/utils.ts"
@@ -68,7 +68,7 @@ function DialogContent({
           data-slot="dialog-content"
           tabIndex={-1}
           className={cn(
-            "pointer-events-auto relative flex w-full max-w-lg flex-col gap-4 rounded-3xl border border-border/80 bg-card p-5 font-assistant shadow-lg outline-none fill-mode-both data-[state=open]:animate-in data-[state=open]:duration-300 data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            "pointer-events-auto relative flex w-full max-w-lg flex-col gap-4 rounded-xl border border-border bg-card p-5 font-assistant shadow-lg outline-none fill-mode-both data-[state=open]:animate-in data-[state=open]:duration-300 data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
             className
           )}
           onOpenAutoFocus={(e) => {
@@ -83,10 +83,10 @@ function DialogContent({
           {showCloseButton && (
             <DialogPrimitive.Close
               data-slot="dialog-close"
-              className="absolute end-4 top-4 cursor-pointer rounded-xs text-muted-foreground opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+              className="absolute end-4 top-4 cursor-pointer rounded-xs lg:end-5 lg:top-6 text-muted-foreground opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
             >
               <XIcon />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">סגירה</span>
             </DialogPrimitive.Close>
           )}
         </DialogPrimitive.Content>
@@ -99,7 +99,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-1.5 text-center font-assistant sm:text-right", className)}
+      className={cn("flex flex-col gap-1.5 text-right font-assistant items-start pe-8", className)}
       {...props}
     />
   )
@@ -125,7 +125,7 @@ function DialogFooter({
       {children}
       {showCloseButton && (
         <DialogPrimitive.Close asChild>
-          <Button variant="outline">Close</Button>
+          <Button variant="outline">סגירה</Button>
         </DialogPrimitive.Close>
       )}
     </div>
@@ -152,7 +152,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("font-assistant text-[13px] font-medium text-muted-foreground", className)}
+      className={cn("font-assistant text-sm font-medium text-muted-foreground", className)}
       {...props}
     />
   )
@@ -160,13 +160,23 @@ function DialogDescription({
 
 export {
   Dialog,
+  Dialog as IMDialog,
   DialogClose,
+  DialogClose as IMDialogClose,
   DialogContent,
+  DialogContent as IMDialogContent,
   DialogDescription,
+  DialogDescription as IMDialogDescription,
   DialogFooter,
+  DialogFooter as IMDialogFooter,
   DialogHeader,
+  DialogHeader as IMDialogHeader,
   DialogOverlay,
+  DialogOverlay as IMDialogOverlay,
   DialogPortal,
+  DialogPortal as IMDialogPortal,
   DialogTitle,
+  DialogTitle as IMDialogTitle,
   DialogTrigger,
+  DialogTrigger as IMDialogTrigger,
 }

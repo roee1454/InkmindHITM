@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { ChevronRight } from 'lucide-react'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { ChevronRight } from '@/components/ui/icon'
+import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { Button } from '@/components/ui/button'
 import { StepCustomerDateTime } from './create-appointment-wizard/StepCustomerDateTime'
 import { StepStaffDuration } from './create-appointment-wizard/StepStaffDuration'
@@ -8,7 +8,12 @@ import { StepPricingDeposit } from './create-appointment-wizard/StepPricingDepos
 import { StepStatusNotes } from './create-appointment-wizard/StepStatusNotes'
 import { WIZARD_STEPS, progressPercent } from './create-appointment-wizard/wizard-steps'
 import type { ApiGoogleConnection, AppointmentFormValues } from '../types'
-import { useWorkingHoursCheck } from '../use-working-hours-check'
+import { useWorkingHoursCheck } from '../hooks/useWorkingHoursCheck'
+import {
+  validateCustomerDateTimeStep,
+  validatePricingDepositStep,
+  validateStaffDurationStep,
+} from '../utils/appointment-validation'
 
 interface StaffItem {
   id: string
@@ -26,6 +31,8 @@ interface CreateAppointmentDialogProps {
   initialChatId?: string
   initialDate?: string
   initialTimeSlot?: string
+  initialValues?: Partial<AppointmentFormValues> | null
+  minDate?: string | null
 }
 
 function emptyValues(): AppointmentFormValues {
@@ -34,6 +41,7 @@ function emptyValues(): AppointmentFormValues {
     chatId: null,
     leadName: '',
     leadPhone: '',
+    type: 'tattoo',
     date: '',
     timeSlot: '',
     staffId: null,
@@ -46,6 +54,7 @@ function emptyValues(): AppointmentFormValues {
     depositPaid: false,
     notes: '',
     allowException: false,
+    minDate: null,
   }
 }
 
@@ -60,6 +69,8 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   initialChatId,
   initialDate,
   initialTimeSlot,
+  initialValues,
+  minDate,
 }) => {
   const [values, setValues] = useState<AppointmentFormValues>(emptyValues)
   const [currentStep, setCurrentStep] = useState(0)
@@ -69,13 +80,15 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     if (!open) return
     setValues({
       ...emptyValues(),
-      chatId: initialChatId ?? null,
-      date: initialDate ?? '',
-      timeSlot: initialTimeSlot ?? '',
+      ...(initialValues ?? {}),
+      chatId: initialChatId ?? initialValues?.chatId ?? null,
+      date: initialDate ?? initialValues?.date ?? '',
+      timeSlot: initialTimeSlot ?? initialValues?.timeSlot ?? '',
+      minDate: minDate ?? initialValues?.minDate ?? null,
     })
     setCurrentStep(0)
     setLocalError(null)
-  }, [open, initialChatId, initialDate, initialTimeSlot])
+  }, [open, initialChatId, initialDate, initialTimeSlot, initialValues, minDate])
 
   const handleChange = (patch: Partial<AppointmentFormValues>) =>
     setValues((prev) => ({ ...prev, ...patch }))
@@ -92,18 +105,23 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   const goNext = () => {
     setLocalError(null)
     if (currentStep === 0) {
-      if (!values.customerId || !values.date || !values.timeSlot) {
-        setLocalError('נא לבחור לקוח, תאריך ושעה')
+      const result = validateCustomerDateTimeStep(values)
+      if (!result.valid && result.error) {
+        setLocalError(result.error)
         return
       }
     }
     if (currentStep === 1) {
-      if (isStudioClosed && !values.allowException) {
-        setLocalError('יש לסמן שאתם מודעים שהסטודיו סגור בתאריך זה')
+      const result = validateStaffDurationStep(values, { isStudioClosed, fitsWorkingHours })
+      if (!result.valid && result.error) {
+        setLocalError(result.error)
         return
       }
-      if (!fitsWorkingHours && !values.allowException) {
-        setLocalError('יש לסמן שאתם מודעים שהתור מחוץ לשעות העבודה')
+    }
+    if (currentStep === 2) {
+      const result = validatePricingDepositStep(values)
+      if (!result.valid && result.error) {
+        setLocalError(result.error)
         return
       }
     }
@@ -117,8 +135,21 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    // The new-customer dialog renders inside this form's React tree (it portals out of the DOM, not
+    // out of React), so its submit bubbles here too — it must not advance or save the booking.
+    if (e.target !== e.currentTarget) return
     if (!isLastStep) {
       goNext()
+      return
+    }
+    const staffCheck = validateStaffDurationStep(values, { isStudioClosed, fitsWorkingHours })
+    if (!staffCheck.valid && staffCheck.error) {
+      setLocalError(staffCheck.error)
+      return
+    }
+    const pricingCheck = validatePricingDepositStep(values)
+    if (!pricingCheck.valid && pricingCheck.error) {
+      setLocalError(pricingCheck.error)
       return
     }
     onSave(values)
@@ -130,35 +161,40 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
+      size="lg"
       title="תור חדש"
-      description="הזן את פרטי הלקוח והתור. ניתן לקבוע תור גם ללקוח מזדמן, ללא שיחת ווטסאפ."
-      contentClassName="sm:max-w-lg max-h-[90vh] overflow-y-auto"
+      description={`שלב ${currentStep + 1} מתוך ${WIZARD_STEPS.length} · ${WIZARD_STEPS[currentStep]?.title ?? ''}`}
+      footer={
+        <DialogActions
+          start={
+            currentStep > 0 && (
+              <Button type="button" variant="ghost" onClick={goBack} className="gap-1">
+                <ChevronRight size={16} />
+                חזרה
+              </Button>
+            )
+          }
+        >
+          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            ביטול
+          </Button>
+          <Button type="submit" form="create-appointment-form" disabled={isSaving} className="min-w-28">
+            {isLastStep ? (isSaving ? 'שומר…' : 'קביעת התור') : 'המשך'}
+          </Button>
+        </DialogActions>
+      }
     >
-      <div className="step-progress rounded-full overflow-hidden">
+      <div className="step-progress mb-4 overflow-hidden rounded-full" aria-hidden>
         <div className="step-progress-fill" style={{ width: `${progressPercent(currentStep)}%` }} />
       </div>
-      <div className="flex items-center justify-between px-0.5 pt-2 pb-1">
-        {currentStep > 0 ? (
-          <button
-            type="button"
-            onClick={goBack}
-            className="size-6 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
-            aria-label="חזור"
-          >
-            <ChevronRight size={16} />
-          </button>
-        ) : (
-          <div className="size-6" />
-        )}
-        <span className="text-xs font-bold text-muted-foreground">
-          {currentStep + 1} מתוך {WIZARD_STEPS.length} · {WIZARD_STEPS[currentStep]?.title}
-        </span>
-        <div className="size-6" />
-      </div>
 
-      {displayError && <p className="text-[13px] font-bold text-destructive">{displayError}</p>}
+      {displayError && (
+        <p role="alert" className="mb-3 text-sm font-bold text-destructive">
+          {displayError}
+        </p>
+      )}
 
-      <form onSubmit={handleSubmit} className="mt-2 space-y-4">
+      <form id="create-appointment-form" onSubmit={handleSubmit} className="space-y-4">
         {currentStep === 0 && <StepCustomerDateTime values={values} onChange={handleChange} />}
         {currentStep === 1 && (
           <StepStaffDuration
@@ -173,15 +209,6 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
         )}
         {currentStep === 2 && <StepPricingDeposit values={values} onChange={handleChange} />}
         {currentStep === 3 && <StepStatusNotes values={values} onChange={handleChange} />}
-
-        <div className="grid grid-cols-2 gap-3 pt-2">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            ביטול
-          </Button>
-          <Button type="submit" disabled={isSaving}>
-            {isLastStep ? (isSaving ? 'שומר…' : 'שמור') : 'המשך'}
-          </Button>
-        </div>
       </form>
     </ResponsiveDialog>
   )

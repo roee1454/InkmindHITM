@@ -1,6 +1,7 @@
-import { Check, CheckCheck, Clock, Download, MapPin, Reply, TriangleAlert } from 'lucide-react'
-import { messageMediaUrl } from '../lib/media'
-import { formatTime } from '../lib/format'
+import { Check, CheckCheck, Clock, Download, MapPin, Reply, TriangleAlert } from '@/components/ui/icon'
+import { cn } from '@/lib/utils'
+import { messageMediaUrl } from '../utils/media'
+import { formatTime } from '../utils/format'
 import type { UIMessage } from '../types'
 
 const STATUS_ICON: Record<string, typeof Check> = {
@@ -10,149 +11,113 @@ const STATUS_ICON: Record<string, typeof Check> = {
   failed: TriangleAlert,
 }
 
+type Speaker = 'customer' | 'bot' | 'staff' | 'note'
+
+/** Who said it decides the bubble; the side only says which way it went. */
+const SPEAKER_STYLE: Record<Speaker, string> = {
+  customer: 'border border-border bg-card',
+  bot: 'bg-muted',
+  staff: 'bg-primary/15',
+  // Never reached the customer: an outline with no fill, so it can't be mistaken for a sent message.
+  note: 'border border-dashed border-border text-muted-foreground',
+}
+
+const SPEAKER_LABEL: Partial<Record<Speaker, string>> = {
+  bot: 'בוט',
+  staff: 'צוות',
+  note: 'הנחיה לבוט · לא נשלחה ללקוח',
+}
+
+function speakerOf(message: UIMessage): Speaker {
+  if (message.senderType === 'staff' && message.whatsappMessageId?.startsWith('internal_staff_')) return 'note'
+  if (message.senderType === 'ai_bot') return 'bot'
+  if (message.senderType === 'staff') return 'staff'
+  return 'customer'
+}
+
 interface MessageBubbleProps {
   message: UIMessage
   onReply?: (message: UIMessage) => void
-  onImageClick?: (url: string, category: 'inspiration' | 'verification' | null) => void
-  onCategoryToggle?: (messageId: string, currentCategory: 'inspiration' | 'verification' | null) => void
+  onImageClick?: (url: string) => void
 }
 
-export function MessageBubble({ message, onReply, onImageClick, onCategoryToggle }: MessageBubbleProps) {
+export function MessageBubble({ message, onReply, onImageClick }: MessageBubbleProps) {
+  const speaker = speakerOf(message)
   const outbound = message.direction === 'outbound'
+  const failed = message.status === 'failed'
   const StatusIcon = message.status ? (STATUS_ICON[message.status] ?? Clock) : null
+  const label = SPEAKER_LABEL[speaker]
 
   return (
-    // Under this thread's dir="rtl" ancestor, `justify-start`/`justify-end` resolve relative to
-    // reading direction (start = right) — so outbound (own) messages need `justify-start` to
-    // land on the visual right, and inbound (customer) messages `justify-end` for the left.
-    <div className={`group relative flex ${outbound ? 'justify-start' : 'justify-end'} items-center gap-2`}>
-      {/* Reply trigger button */}
-      {onReply && (
+    // In RTL, `justify-start` is the right edge (the studio's side) and `justify-end` the left (the customer's).
+    <div className={cn('group flex items-center gap-1', outbound ? 'justify-start' : 'justify-end')}>
+      <div
+        className={cn(
+          'max-w-[85%] rounded-xl px-3 py-2 text-sm text-foreground sm:max-w-[70%]',
+          outbound ? 'rounded-ss-sm' : 'rounded-se-sm',
+          SPEAKER_STYLE[speaker],
+        )}
+      >
+        {label && <p className="mb-0.5 text-xs font-semibold text-muted-foreground">{label}</p>}
+        {message.replyToWamid && <p className="mb-1.5 rounded-md bg-foreground/5 px-2 py-1 text-xs text-muted-foreground">בתשובה להודעה</p>}
+        <MessageBody message={message} onImageClick={onImageClick} />
+        <p className="mt-1 flex items-center justify-end gap-1 text-xs text-muted-foreground tabular-nums" title={failed ? (message.errorDetail ?? undefined) : undefined}>
+          {failed && <span className="font-semibold text-destructive">לא נשלחה</span>}
+          {outbound && StatusIcon && speaker !== 'note' && (
+            <StatusIcon className={cn('size-3.5 shrink-0', message.status === 'read' && 'text-foreground', failed && 'text-destructive')} />
+          )}
+          <time dateTime={message.timestamp}>{formatTime(message.timestamp)}</time>
+        </p>
+      </div>
+
+      {onReply && speaker !== 'note' && (
         <button
           type="button"
           onClick={() => onReply(message)}
-          className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 text-muted-foreground hover:text-foreground cursor-pointer ${
-            outbound ? 'order-last' : 'order-first'
-          }`}
-          title="השב להודעה זו"
+          aria-label="תשובה להודעה"
+          className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted hover:text-foreground focus-visible:opacity-100 pointer-coarse:opacity-60"
         >
-          <Reply className="size-3.5" />
+          <Reply className="size-4" />
         </button>
       )}
-
-      <div
-        className={`max-w-[85%] rounded-2xl px-3.5 py-2 font-assistant text-sm shadow-sm sm:max-w-[75%] ${
-          outbound
-            ? 'bg-primary text-primary-foreground'
-            : 'border border-border bg-card text-foreground'
-        }`}
-      >
-        {/* Reply Context Banner */}
-        {message.replyToWamid && (
-          <div
-            className={`mb-1.5 rounded-lg border-r-2 p-1.5 text-xs ${
-              outbound
-                ? 'border-primary-foreground/60 bg-primary-foreground/10 text-primary-foreground/90'
-                : 'border-primary bg-muted/60 text-muted-foreground'
-            }`}
-          >
-            <span className="block font-semibold text-micro">בתשובה להודעה</span>
-          </div>
-        )}
-
-        <MessageBody
-          message={message}
-          onImageClick={onImageClick}
-          onCategoryToggle={onCategoryToggle}
-        />
-
-        <div
-          className={`mt-1 flex items-center justify-end gap-1 text-micro ${
-            outbound ? 'text-primary-foreground/70' : 'text-muted-foreground'
-          }`}
-        >
-          <span>{formatTime(message.timestamp)}</span>
-          {outbound && StatusIcon ? (
-            <StatusIcon
-              className={`size-3 ${message.status === 'read' ? 'text-sky-300' : ''} ${
-                message.status === 'failed' ? 'text-destructive' : ''
-              }`}
-            />
-          ) : null}
-        </div>
-
-        {message.status === 'failed' && message.errorDetail ? (
-          <p className="mt-1 text-micro text-destructive">{message.errorDetail}</p>
-        ) : null}
-      </div>
     </div>
   )
 }
 
-function MessageBody({
-  message,
-  onImageClick,
-  onCategoryToggle,
-}: {
-  message: UIMessage
-  onImageClick?: (url: string, category: 'inspiration' | 'verification' | null) => void
-  onCategoryToggle?: (messageId: string, currentCategory: 'inspiration' | 'verification' | null) => void
-}) {
-  const hasMedia = Boolean(message.mediaFilename)
-  const mediaUrl = hasMedia ? messageMediaUrl(message.id, message.mediaFilename!) : null
+function MessageBody({ message, onImageClick }: { message: UIMessage; onImageClick?: (url: string) => void }) {
+  const mediaUrl = message.mediaFilename ? messageMediaUrl(message.id, message.mediaFilename) : null
+  const caption = message.body ? <p className="whitespace-pre-wrap break-words">{message.body}</p> : null
 
   if (message.type === 'image' && mediaUrl) {
-    const isVerification = message.mediaCategory === 'verification'
     return (
-      <div className="space-y-1 relative group/image">
-        <div
-          onClick={() => onImageClick?.(mediaUrl, message.mediaCategory)}
-          className="cursor-pointer relative overflow-hidden rounded-lg animate-in fade-in zoom-in duration-200"
-        >
-          <img
-            src={mediaUrl}
-            alt={message.body || 'תמונה'}
-            className="max-h-64 rounded-lg object-cover"
-          />
-          {onCategoryToggle && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                onCategoryToggle(message.id, message.mediaCategory)
-              }}
-              className="absolute bottom-2 right-2 px-2 py-1 rounded-full text-micro font-bold shadow-xs backdrop-blur-md bg-background/80 hover:bg-background border border-border/40 transition select-none text-foreground cursor-pointer flex items-center gap-1 opacity-0 group-hover/image:opacity-100 focus:opacity-100 transition-opacity duration-200"
-            >
-              {isVerification ? '📁 אסמכתא' : '✨ השראה'}
-            </button>
+      <div className="flex flex-col gap-1">
+        <button type="button" onClick={() => onImageClick?.(mediaUrl)} className="relative block cursor-zoom-in overflow-hidden rounded-lg" aria-label="הגדלת התמונה">
+          <img src={mediaUrl} alt={message.body || 'תמונה'} className="max-h-64 rounded-lg object-cover" />
+          {message.mediaCategory && (
+            <span className="pointer-events-none absolute start-2 bottom-2 rounded-md bg-background/85 px-1.5 py-0.5 text-xs font-semibold text-foreground">
+              {message.mediaCategory === 'verification' ? 'אסמכתה' : 'השראה'}
+            </span>
           )}
-        </div>
-        {message.body ? <p className="whitespace-pre-wrap break-words">{message.body}</p> : null}
+        </button>
+        {caption}
       </div>
     )
   }
 
-  if ((message.type === 'video') && mediaUrl) {
+  if (message.type === 'video' && mediaUrl) {
     return (
-      <div className="space-y-1">
+      <div className="flex flex-col gap-1">
         <video src={mediaUrl} controls className="max-h-64 rounded-lg" />
-        {message.body ? <p className="whitespace-pre-wrap break-words">{message.body}</p> : null}
+        {caption}
       </div>
     )
   }
 
-  if (message.type === 'audio' && mediaUrl) {
-    return <audio src={mediaUrl} controls className="max-w-full" />
-  }
+  if (message.type === 'audio' && mediaUrl) return <audio src={mediaUrl} controls className="max-w-full" />
 
   if ((message.type === 'document' || message.type === 'sticker') && mediaUrl) {
     return (
-      <a
-        href={mediaUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="flex items-center gap-2 underline underline-offset-2"
-      >
+      <a href={mediaUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 underline underline-offset-2">
         <Download className="size-4 shrink-0" />
         <span className="break-all">{message.mediaFilename}</span>
       </a>
