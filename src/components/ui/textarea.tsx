@@ -2,7 +2,8 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { imControlClasses, imControlText } from "@/components/ui/input"
 
-export type IMTextareaProps = React.ComponentProps<"textarea">
+/** The text is `value` / `defaultValue`, never children. */
+export type IMTextareaProps = Omit<React.ComponentProps<"textarea">, "children">
 
 /** Multi-line text entry: notes, descriptions, message drafts. Grows vertically by hand. */
 export function IMTextarea({ className, ...props }: IMTextareaProps) {

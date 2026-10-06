@@ -21,7 +21,8 @@ export const imControlHeight =
 export const imControlText =
   "text-(length:--im-control-fs) [--im-control-fs:var(--text-base)] pointer-coarse:[--im-control-fs:1rem]"
 
-export type IMInputProps = React.ComponentProps<"input">
+/** No `children`: `<input>` is a void element, and React throws at render if it gets any. */
+export type IMInputProps = Omit<React.ComponentProps<"input">, "children">
 
 /** Single-line text entry. Phone, email, URL and money fields pass `dir="ltr"`. */
 export function IMInput({ className, type, ...props }: IMInputProps) {

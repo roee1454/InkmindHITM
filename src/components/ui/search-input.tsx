@@ -24,7 +24,7 @@ const VARIANTS: Record<IMSearchInputVariant, string> = {
 }
 
 export interface IMSearchInputProps
-  extends Omit<React.ComponentProps<"input">, "size" | "onChange" | "value" | "ref"> {
+  extends Omit<React.ComponentProps<"input">, "size" | "onChange" | "value" | "ref" | "children"> {
   value: string
   /** The settled value, after typing pauses. */
   onChange: (value: string) => void
@@ -37,6 +37,8 @@ export interface IMSearchInputProps
   size?: IMSearchInputSize
   containerRef?: React.Ref<HTMLDivElement>
   containerClassName?: string
+  /** Rendered inside the positioned wrapper, after the field: a results list anchored under it. */
+  children?: React.ReactNode
 }
 
 /**
@@ -55,6 +57,7 @@ export const IMSearchInput = React.forwardRef<HTMLInputElement, IMSearchInputPro
     containerClassName,
     className,
     placeholder = "חיפוש…",
+    children,
     ...inputProps
   },
   ref
@@ -113,6 +116,7 @@ export const IMSearchInput = React.forwardRef<HTMLInputElement, IMSearchInputPro
           <IMIcon name="close" size="sm" />
         </button>
       )}
+      {children}
     </div>
   )
 })

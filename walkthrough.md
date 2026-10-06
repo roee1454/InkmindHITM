@@ -1,3 +1,45 @@
+# Walkthrough: מערכת העיצוב IM, שלב 1
+
+צולם ב-7.10.2026 מול `localhost:3101`, בכהה ובבהיר, במחשב (1440px) ובטלפון (390px). שום דבר לא נשלח ולא נשמר ב-PocketBase: הסקריפט רק פותח מסכים ודיאלוגים.
+
+בשלב 1 השתנו רק הקומפוננטות המשותפות (`src/components/ui`). המסכים עצמם עוברים לתפקידי הטקסט ולאייקונים החדשים בשלב 2. לכן כותרות העמודים עדיין לא ב-Assistant, וחלק מהטקסט עדיין מעוצב בקלאסים.
+
+## דיאלוגים: כפתור האישור ראשון מימין
+![דיאלוג לקוח חדש, כהה](/home/roee/Projects/InkmindHITM/docs/walkthrough-assets/im-phase1/dark-03-customer-dialog.png)
+- **"הוספת לקוח"** מימין ו-**"ביטול"** משמאל, שניהם ברוחב שווה. זה הסדר מהמפרט, ו-15 דיאלוגים עודכנו אליו.
+- שדות ובוחרים ברדיוס 10px (היה 12). הכותרת בתפקיד `title`.
+
+![תור חדש, כהה](/home/roee/Projects/InkmindHITM/docs/walkthrough-assets/im-phase1/dark-05-new-appointment.png)
+- בוחרי התאריך והשעה: אייקון מלא מימין וחץ פתיחה בצד השני.
+- "המשך" הוא הפעולה הראשית, מימין.
+
+![הזמנת איש צוות, כהה](/home/roee/Projects/InkmindHITM/docs/walkthrough-assets/im-phase1/dark-09-add-staff-dialog.png)
+
+## רשימות ושדות חיפוש
+![לקוחות, בהיר](/home/roee/Projects/InkmindHITM/docs/walkthrough-assets/im-phase1/light-02-customers.png)
+- זכוכית המגדלת בחיפוש מלאה מבפנים (הייתה קו).
+- החץ בשורת הלקוח מצביע שמאלה, פנימה ב-RTL.
+
+## הגדרות
+![הגדרות כלליות, בהיר](/home/roee/Projects/InkmindHITM/docs/walkthrough-assets/im-phase1/light-06-settings-general.png)
+![סוכן AI, בהיר](/home/roee/Projects/InkmindHITM/docs/walkthrough-assets/im-phase1/light-07-settings-ai.png)
+
+## טלפון
+![לקוחות בטלפון, בהיר](/home/roee/Projects/InkmindHITM/docs/walkthrough-assets/im-phase1/light-12-mobile-customers.png)
+![תורים בטלפון, כהה](/home/roee/Projects/InkmindHITM/docs/walkthrough-assets/im-phase1/dark-13-mobile-calendar.png)
+- הניווט התחתון עם אייקונים מלאים. השדות בגובה 48px במגע.
+
+## באג שנמצא בצילום ותוקן
+**דף התורים קרס כולו** ("Something went wrong"): `CalendarSearch` מעביר את רשימת התוצאות כ-children של `IMSearchInput`. בשלב 1 הוסרה התמיכה ב-children, והן הגיעו אל `<input>`, שהוא אלמנט void. החזרתי את `children` ל-`IMSearchInput` (מרונדר בתוך העטיפה, אחרי השדה), ו-`IMInput`/`IMTextarea` כבר לא מקבלים `children` בכלל, כך ש-TypeScript תופס מקרה כזה מעכשיו. הוספתי טסט.
+
+## בדיקות RTL ותמות
+- כל המסכים נטענים בלי שגיאות קונסול בשתי התמות. יש אזהרת hydration אחת שלא קשורה לשינוי (style של input נסתר של Radix).
+- עברית מיושרת לימין, מספרים וטלפונים לא מתהפכים, אין גלילה אופקית בטלפון.
+
+כל 26 הצילומים: `docs/walkthrough-assets/im-phase1/`.
+
+---
+
 # Walkthrough: שינויי ה-UI של B6
 
 צולם ב-27/9/2026 מול `localhost:3101` עם משתמש אמיתי (איתי חיילי, admin), רובו במצב כהה.

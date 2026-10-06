@@ -25,6 +25,15 @@ describe('IMSearchInput', () => {
     expect(classes).not.toContain('text-(length:--im-control-fs)')
   })
 
+  it('renders children inside the wrapper, never inside the void <input> (calendar search results)', () => {
+    const html = renderToStaticMarkup(
+      <IMSearchInput value="" onChange={noop}>
+        <ul data-testid="results" />
+      </IMSearchInput>,
+    )
+    expect(html).toMatch(/<input[^>]*\/?>(?:(?!<\/input>).)*<ul data-testid="results">/s)
+  })
+
   it('merges a className override', () => {
     const classes = inputClasses(renderToStaticMarkup(<IMSearchInput value="" onChange={noop} className="h-9" />))
     expect(classes).toContain('h-9')
