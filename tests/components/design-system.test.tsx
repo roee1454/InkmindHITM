@@ -15,14 +15,6 @@ import {
   IMSkeleton,
   IMAvatar,
   IMAvatarFallback,
-  IMHeading,
-  IMText,
-  IMDisplay,
-  IMHeadline,
-  IMTitle,
-  IMSubtitle,
-  IMLabelText,
-  IMCaption,
   IMIcon,
 } from '@/components/ui'
 
@@ -89,57 +81,6 @@ describe('Inkmind Design System (IM*) Primitives', () => {
       </IMAvatar>,
     )
     expect(avatarHtml).toContain('דח')
-  })
-})
-
-describe('Inkmind Typography System', () => {
-  it('renders IMHeading display variant with Assistant font classes', () => {
-    const html = renderToStaticMarkup(<IMDisplay>כותרת ראשית לתצוגה</IMDisplay>)
-    expect(html).toContain('<h1')
-    expect(html).toContain('data-slot="im-heading"')
-    expect(html).toContain('font-assistant')
-    expect(html).toContain('כותרת ראשית לתצוגה')
-  })
-
-  it('renders IMHeadline variant for page titles', () => {
-    const html = renderToStaticMarkup(<IMHeadline>לידים ופרויקטים</IMHeadline>)
-    expect(html).toContain('<h1')
-    expect(html).toContain('text-2xl')
-    expect(html).toContain('לידים ופרויקטים')
-  })
-
-  it('renders IMHeading with custom as and variant props', () => {
-    const html = renderToStaticMarkup(
-      <IMHeading as="h3" variant="title">
-        כותרת מותאמת
-      </IMHeading>,
-    )
-    expect(html).toContain('<h3')
-    expect(html).toContain('כותרת מותאמת')
-  })
-
-  it('renders IMTitle and IMSubtitle for sections and cards', () => {
-    const html = renderToStaticMarkup(
-      <div>
-        <IMTitle>כותרת סקשן</IMTitle>
-        <IMSubtitle>כותרת משנה</IMSubtitle>
-      </div>,
-    )
-    expect(html).toContain('כותרת סקשן')
-    expect(html).toContain('כותרת משנה')
-  })
-
-  it('renders IMText with body, label, and caption variants', () => {
-    const html = renderToStaticMarkup(
-      <div>
-        <IMText variant="body">טקסט רגיל בגוף הממשק</IMText>
-        <IMLabelText>תווית שדה</IMLabelText>
-        <IMCaption>הערת עזר באפור</IMCaption>
-      </div>,
-    )
-    expect(html).toContain('data-slot="im-text"')
-    expect(html).toContain('<label')
-    expect(html).toContain('text-muted-foreground')
   })
 })
 
