@@ -44,7 +44,9 @@ export const StepStaffDuration: React.FC<StepStaffDurationProps> = ({
     <div className="space-y-4 font-assistant" dir="rtl">
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5" dir="rtl">
-          <label className="text-xs font-semibold text-foreground">מקעקע</label>
+          <label className="text-xs font-semibold text-foreground">
+            {values.type === 'sketch' ? 'מקעקע' : 'מקעקע *'}
+          </label>
           <Select
             value={values.staffId ?? NO_ARTIST}
             onValueChange={(val) => {

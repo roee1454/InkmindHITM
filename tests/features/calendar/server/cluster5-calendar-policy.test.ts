@@ -475,11 +475,11 @@ describe('Cluster 5: Calendar Tools, Working Hours, Shifts & Cancellation Policy
         }),
       } as any
 
-      // 2026-10-04 is Sunday (dayOfWeek 0)
+      // 2026-10-11 is Sunday (dayOfWeek 0)
       // Slot 1: 17:00 (inside second split window) for 2 hours -> should be available
       const checkEvening = await checkAvailabilityForBot(mockSu, {
         staffId: 'staff_split',
-        date: '2026-10-04',
+        date: '2026-10-11',
         timeSlot: '17:00',
         durationHours: 2,
       })
@@ -488,7 +488,7 @@ describe('Cluster 5: Calendar Tools, Working Hours, Shifts & Cancellation Policy
       // Slot 2: 13:30 (bridges across the 14:00-16:00 split gap) -> should be unavailable
       const checkBridging = await checkAvailabilityForBot(mockSu, {
         staffId: 'staff_split',
-        date: '2026-10-04',
+        date: '2026-10-11',
         timeSlot: '13:30',
         durationHours: 2,
       })

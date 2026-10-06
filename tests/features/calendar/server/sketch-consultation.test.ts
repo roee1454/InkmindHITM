@@ -140,13 +140,14 @@ describe('Sketch Consultation & Follow-up Workflows', () => {
     })
 
     // WhatsApp message verifies sketch copy without "מחיר הקעקוע:"
-    expect(sentMessages).toHaveLength(1)
+    expect(sentMessages).toHaveLength(2)
     const body = sentMessages[0]!.body
     expect(body).toContain('פרטי פגישת הייעוץ:')
     expect(body).toContain('אצל דור')
     expect(body).toContain('מקדמה לשריון: ₪150 (תקוזז מעלות הקעקוע).')
     expect(body).not.toContain('מחיר הקעקוע:')
     expect(body).not.toContain('מחיר משוער:')
+    expect(sentMessages[1]!.body).toContain('הצהרת בריאות קצרה')
   })
 
   it('handles free sketch consult (deposit: 0) and confirms slot directly when health declaration signed', async () => {
@@ -288,11 +289,12 @@ describe('Sketch Consultation & Follow-up Workflows', () => {
       duration_minutes: 180,
     })
 
-    expect(sentMessages).toHaveLength(1)
+    expect(sentMessages).toHaveLength(2)
     const body = sentMessages[0]!.body
     expect(body).toContain('פרטי התור לקעקוע:')
     expect(body).toContain('מחיר משוער: ₪800–1,000.')
     expect(body).toContain('מקדמה לשריון: ₪350.')
+    expect(sentMessages[1]!.body).toContain('הצהרת בריאות קצרה')
   })
 
   it('getActiveAppointmentSummary returns recently completed sketch appointment when conversation is in WANTS_TO_BOOK', async () => {
@@ -418,9 +420,11 @@ describe('Sketch Consultation & Follow-up Workflows', () => {
     })
 
     // Assert that WhatsApp message is the sketch consult message without "מחיר הקעקוע: ₪0"
-    const lastMsg = sentMessages[sentMessages.length - 1]!
-    expect(lastMsg.body).toContain('פרטי פגישת הייעוץ:')
-    expect(lastMsg.body).not.toContain('מחיר הקעקוע:')
+    expect(sentMessages).toHaveLength(2)
+    const firstMsg = sentMessages[0]!
+    expect(firstMsg.body).toContain('פרטי פגישת הייעוץ:')
+    expect(firstMsg.body).not.toContain('מחיר הקעקוע:')
+    expect(sentMessages[1]!.body).toContain('הצהרת בריאות קצרה')
   })
 
   it('does NOT treat a tattoo appointment as sketch merely because description contains "סקיצה", and rejects price 0', async () => {

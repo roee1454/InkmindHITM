@@ -74,10 +74,11 @@ export function AppDrawer({ open, onOpenChange, staff }: AppDrawerProps) {
         </SheetHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5">
-          {isAdmin && (
+          {isAdmin ? (
             <Link
               to="/dashboard/settings/ai"
-              className="flex items-center justify-between rounded-2xl border border-border px-3.5 py-2.5 font-assistant text-sm font-bold text-muted-foreground transition-colors duration-150 active:bg-muted"
+              onClick={() => onOpenChange(false)}
+              className="flex items-center justify-between rounded-2xl border border-border px-3.5 py-2.5 font-assistant text-sm font-bold text-muted-foreground transition-colors duration-150 hover:bg-muted/50 active:bg-muted"
             >
               <span className="flex items-center gap-2">
                 <span
@@ -89,6 +90,21 @@ export function AppDrawer({ open, onOpenChange, staff }: AppDrawerProps) {
                 {aiEnabled ? 'פעיל' : 'כבוי'}
               </span>
             </Link>
+          ) : (
+            <div
+              className="flex items-center justify-between rounded-2xl border border-border/70 bg-muted/20 px-3.5 py-2.5 font-assistant text-sm font-bold text-muted-foreground select-none"
+              title="מצב סוכן AI (ניהול למנהלים בלבד)"
+            >
+              <span className="flex items-center gap-2">
+                <span
+                  className={cn('size-2 rounded-full', aiEnabled ? 'bg-success' : 'bg-muted-foreground/40')}
+                />
+                סוכן AI
+              </span>
+              <span className={aiEnabled ? 'font-extrabold text-success' : 'text-muted-foreground'}>
+                {aiEnabled ? 'פעיל' : 'כבוי'}
+              </span>
+            </div>
           )}
 
           {DRAWER_NAV_ITEMS.map((item) => (

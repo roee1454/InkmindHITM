@@ -42,28 +42,44 @@ export interface BookingConfirmedTemplateParams {
   studioName?: string
 }
 
+export interface ArtistListItem {
+  name: string
+  portfolioUrl?: string | null
+}
+
+export interface ArtistsListTemplateParams {
+  artists: ArtistListItem[]
+}
+
+export interface HealthDeclarationTemplateParams {
+  formUrl: string
+}
+
 export const DETERMINISTIC_TEMPLATES = {
+  artistsList: ({ artists }: ArtistsListTemplateParams): string => {
+    const lines = artists.map((a) => {
+      const linkPart = a.portfolioUrl ? ` - תיק עבודות: ${a.portfolioUrl}` : ''
+      return `${a.name}${linkPart}`
+    })
+    return `יש לנו אמנים מעולים בסטודיו: 🖤\n\n${lines.join('\n')}\n\nעם מי מהם תרצה לקבוע ואיזה ימים נוחים לך?`
+  },
+
+  healthDeclarationNotice: ({ formUrl }: HealthDeclarationTemplateParams): string => {
+    return `📝 הצהרת בריאות:\nלפני שנוכל לשריין את התור במערכת, יש למלא הצהרת בריאות קצרה ומאובטחת בקישור הבא:\n${formUrl}\n\nמיד עם מילוי הטופס נמשיך לסגירת התור ביומן! 🙌`
+  },
+
+  staffEscalated: (): string => {
+    return 'העברתי את השיחה לבדיקת צוות הסטודיו. אחד המקעקעים או מנהל הסטודיו יחזור אליך כאן בהקדם האפשרי! 🙏'
+  },
+
   sketchHeld: ({ artistName, dateYmd, timeSlot }: SketchTemplateParams): string => {
     const { dayName, formattedDate } = formatHebrewDateDetails(dateYmd, timeSlot)
-    return `סגור לגמרי, קבענו פגישת סקיצה וייעוץ! ✨
-
-🗓 מתי: יום ${dayName} ה-${formattedDate} בשעה ${timeSlot}
-⏱ משך משוער: כ-30 דקות
-🎨 מקעקע/ת: ${artistName}
-📍 איפה: ${STUDIO_LOCATION_TEXT}
-
-הפרטים שמורים ביומן, נחזור אליך כאן לקראת המפגש לתכנון הסקיצה המושלמת מול המקעקע!`
+    return `מעולה! שריינתי לך את המשבצת במערכת (יום ${dayName} ה-${formattedDate} בשעה ${timeSlot} אצל ${artistName}) והעברתי את הפרטים לבדיקת צוות הסטודיו. נחזור אליך כאן בהקדם עם אישור ופרטים לשריון! 🙌`
   },
 
   tattooHeld: ({ artistName, dateYmd, timeSlot }: TattooTemplateParams): string => {
     const { dayName, formattedDate } = formatHebrewDateDetails(dateYmd, timeSlot)
-    return `איזה יופי, שריינתי לך את התור במערכת! 🖤
-
-🗓 מתי: יום ${dayName} ה-${formattedDate} בשעה ${timeSlot}
-🎨 מקעקע/ת: ${artistName}
-📍 איפה: ${STUDIO_LOCATION_TEXT}
-
-העברתי את הפרטים למקעקע/ת לבדיקת הסקיצה והגודל. נחזור אליך כאן בהקדם עם הצעת מחיר מדויקת ופרטים לשריון סופי!`
+    return `מעולה! שריינתי לך את המשבצת במערכת (יום ${dayName} ה-${formattedDate} בשעה ${timeSlot} אצל ${artistName}) והעברתי את הפרטים לבדיקת צוות הסטודיו. נחזור אליך כאן בהקדם עם הצעת מחיר ופרטים לשריון! 🖤`
   },
 
   waitlistJoined: (): string => {
@@ -81,7 +97,7 @@ export const DETERMINISTIC_TEMPLATES = {
 🎨 מקעקע/ת: ${artistName}
 📍 איפה: ${STUDIO_LOCATION_TEXT}
 
-נשלח לך תזכורת מסודרת לפני התור. אגב, אם יתפנה מועד קרוב יותר עקב ביטול, תרצה/י שנציע לך להקדים?`
+נשלח לך תזכורת מסודרת לפני התור. נתראה בקרוב! ✨`
   },
 }
 

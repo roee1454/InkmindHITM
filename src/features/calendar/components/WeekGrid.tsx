@@ -10,7 +10,7 @@ import type { GridHourRange } from '../utils/grid-hours'
 import { useFillRowHeight } from '../hooks/use-fill-row-height'
 import { HEBREW_DAYS_LONG, isToday, minutesToTime, timeToMinutes, toYmd, weekDays } from '../utils/date-utils'
 import { DayOverviewDialog } from './DayOverviewDialog'
-import { AppointmentGridCard } from './AppointmentGridCard'
+import { AppointmentCard } from './AppointmentCard'
 
 const MIN_ROW_HEIGHT = 64
 /** A card in a 7-way split has no room for a name; the overview dialog covers it instead. */
@@ -193,8 +193,9 @@ export const WeekGrid: React.FC<WeekGridProps> = ({
                 if (top < 0 || maxHeight <= 0) return null
 
                 return (
-                  <AppointmentGridCard
+                  <AppointmentCard
                     key={appointment.id}
+                    mode="block"
                     appointment={appointment}
                     top={top}
                     height={height}

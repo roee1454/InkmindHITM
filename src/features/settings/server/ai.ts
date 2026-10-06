@@ -109,6 +109,19 @@ export const toggleAiEnabled = createServerFn({ method: 'POST' })
     await su.collection('settings').update(record.id, {
       ai_enabled: data.enabled,
     })
+    await su
+      .collection('notifications')
+      .create({
+        title: data.enabled ? 'סוכן ה-AI הופעל' : 'סוכן ה-AI הושבת',
+        message: data.enabled
+          ? 'הבוט חזר לפעילות ומשיב ללקוחות בוואטסאפ.'
+          : 'הבוט הושבת. כל השיחות מנוהלות כעת במענה ידני על ידי הצוות.',
+        type: data.enabled ? 'info' : 'warning',
+        kind: 'system',
+        read: false,
+        link: '/dashboard/settings/ai',
+      })
+      .catch(() => null)
     return { ok: true, enabled: data.enabled }
   })
 

@@ -1,9 +1,6 @@
-import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Calendar, Check, Sparkle, AlertCircle } from '@/components/ui/icon'
+import { useQuery } from '@tanstack/react-query'
+import { Calendar, Check } from '@/components/ui/icon'
 import { getCurrentSession } from '@/features/auth/server/auth'
-import { completeOnboarding, getOnboardingGaps } from '@/features/onboarding/server/onboarding'
 import { useGoogleCalendarOAuth } from '../hooks/useGoogleCalendarOAuth'
 import { useOnboardingUiStore } from '../store/onboardingUiStore'
 import type { CurrentSession } from '@/features/auth/server/auth'
@@ -13,13 +10,7 @@ interface CalendarStepProps {
 }
 
 export function CalendarStep({ session: initialSession }: CalendarStepProps) {
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const [completeError, setCompleteError] = useState<string | null>(null)
-  const fixFromFinish = useOnboardingUiStore((s) => s.fixFromFinish)
-
-  // What is still missing, known before the last click rather than after it.
-  const { data: gaps = [] } = useQuery({ queryKey: ['onboarding-gaps'], queryFn: () => getOnboardingGaps(), staleTime: 0 })
+  const nextStep = useOnboardingUiStore((s) => s.nextStep)
 
   const { data: sessionData } = useQuery({
     queryKey: ['current-session'],
@@ -36,17 +27,6 @@ export function CalendarStep({ session: initialSession }: CalendarStepProps) {
     calendarError,
     handleConnectGoogle,
   } = useGoogleCalendarOAuth(staffId)
-
-  const completeMutation = useMutation({
-    mutationFn: () => completeOnboarding(),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['settings'] })
-      navigate({ to: '/dashboard' })
-    },
-    onError: (err: unknown) => {
-      setCompleteError(err instanceof Error ? err.message : 'שגיאה בסיום תהליך ההגדרה')
-    },
-  })
 
   return (
     <div className="step-body">
@@ -93,51 +73,25 @@ export function CalendarStep({ session: initialSession }: CalendarStepProps) {
         )}
       </div>
 
-      {gaps.length > 0 && (
-        <section aria-label="מה חסר לפני הסיום" className="flex flex-col gap-2 rounded-2xl border border-border p-4">
-          <h2 className="text-sm font-extrabold text-foreground">חסר עוד משהו לפני הסיום</h2>
-          <ul className="flex flex-col divide-y divide-border/70">
-            {gaps.map((gap) => (
-              <li key={gap.step} className="flex items-center justify-between gap-3 py-2 text-sm">
-                <span className="text-foreground">{gap.message}</span>
-                <button type="button" onClick={() => fixFromFinish(gap.step)} className="shrink-0 cursor-pointer text-sm font-bold text-foreground underline underline-offset-4">
-                  למלא עכשיו
-                </button>
-              </li>
-            ))}
-          </ul>
-          <p className="text-xs text-muted-foreground">אחרי המילוי תחזרו ישר לכאן.</p>
-        </section>
-      )}
-
-      {completeError && (
-        <p role="alert" className="flex items-center gap-2 text-sm font-semibold text-destructive">
-          <AlertCircle size={18} className="shrink-0" />
-          {completeError}
-        </p>
-      )}
-
       <div className="flex-1" />
 
       <div className="step-footer">
         <button
           type="button"
-          disabled={completeMutation.isPending || gaps.length > 0}
-          onClick={() => completeMutation.mutate()}
-          className="btn-native cursor-pointer"
+          onClick={nextStep}
+          className="btn-native cursor-pointer gap-2"
         >
-          <Sparkle size={18} />
-          <span>{completeMutation.isPending ? 'מסיים…' : 'סיום והתחלת עבודה'}</span>
+          <Check size={18} />
+          <span>אישור והמשך להזמנת צוות</span>
         </button>
 
         {!isCalendarConnected && (
           <button
             type="button"
-            disabled={completeMutation.isPending || gaps.length > 0}
-            onClick={() => completeMutation.mutate()}
+            onClick={nextStep}
             className="cursor-pointer text-center text-xs font-bold text-muted-foreground hover:text-foreground"
           >
-            דלג לעת עתה ועבור ללוח הבקרה
+            דלג לשלב הבא
           </button>
         )}
       </div>

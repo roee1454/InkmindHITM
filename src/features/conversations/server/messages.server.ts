@@ -5,7 +5,7 @@ import type { RecordModel } from 'pocketbase'
 import { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { getSession } from '@/lib/session.server'
 import { getActiveAppointmentForBot } from '@/features/calendar/server/bot-appointments.server'
-import { toYmd, minutesToTime } from '@/lib/date-utils'
+import { toYmd, minutesToTime, HEBREW_DAYS_LONG, formatDurationHebrew } from '@/lib/date-utils'
 import { transition } from './state-machine'
 import { runBotTurn, cancelPendingBotTurn } from '@/integrations/ai/agent.server'
 import { getStudioPolicyForBot } from '@/features/settings/server/policy'
@@ -229,18 +229,18 @@ export async function handleStaffConfirmHealthDeclaration(
 
   const cancellationPolicyText = customerCancellationPolicyText(policy.cancellationCutoffHours ?? 48)
 
-  let messageBody: string
+  const messagesToSend: string[] = []
   let targetState: 'AWAIT_PAYMENT' | 'AWAITING_APPOINTMENT'
   let reason: string
 
   const locationLine = '📍 איפה: שוהם מרקט קומה מינוס אחת, יש חנייה בשפע במתחם INKMIND!'
 
   if (isFreeSketch) {
-    messageBody = [
+    messagesToSend.push([
       'הצהרת הבריאות אושרה במערכת הסטודיו. פגישת הסקיצה מאושרת וסגורה ביומן! ✨',
       locationLine,
       'מחכים לראותך בסטודיו.',
-    ].join('\n')
+    ].join('\n'))
     targetState = 'AWAITING_APPOINTMENT'
     reason = 'staffConfirmHealthDeclaration_free_sketch'
     if (appointment) {
@@ -248,18 +248,43 @@ export async function handleStaffConfirmHealthDeclaration(
         ...statusChange('confirmed', 'staff', 'staff_confirmed_health_declaration_free_sketch'),
         slot_confirmed: true,
       }).catch(() => null)
+      const { syncAppointmentToGoogle } = await import('@/integrations/google-calendar/server/google-sync.server')
+      await syncAppointmentToGoogle(appointment.id).catch(() => null)
     }
   } else {
     const depositAmount = appointment?.deposit_amount != null ? Number(appointment.deposit_amount) : (policy.depositAmount ?? 100)
-    messageBody = [
+
+    const staffRecord = appointment?.staff
+      ? await su.collection('staff').getOne(appointment.staff as string).catch(() => null)
+      : null
+    const start = appointment?.start_time ? new Date(appointment.start_time as string) : null
+    const dateStr = start ? `${start.getDate()}.${start.getMonth() + 1}` : ''
+    const dayName = start ? (HEBREW_DAYS_LONG[start.getDay()] || 'ראשון') : ''
+    const timeStr = start ? minutesToTime(start.getHours() * 60 + start.getMinutes()) : ''
+    const whenLine = start ? `🗓 מועד: יום ${dayName}, ${dateStr} בשעה ${timeStr}${staffRecord ? ` אצל ${staffRecord.name}` : ''}` : ''
+    const durationMins = Number(appointment?.duration_minutes) || 120
+    const durationLabel = formatDurationHebrew(durationMins)
+    const priceMin = appointment?.price_min
+    const priceMax = appointment?.price_max
+    const priceRange = priceMin && priceMax ? (priceMin === priceMax ? `₪${priceMin}` : `₪${priceMin}–${priceMax}`) : ''
+
+    const msg1 = [
       'איזה יופי, הצהרת הבריאות אושרה בהצלחה! ✅',
       '',
+      'הנה סיכום פרטי התור לשריון:',
+      whenLine,
+      `⏱ משך משוער: ${durationLabel}.`,
+      !isSketch && priceRange ? `💰 מחיר משוער: ${priceRange}.` : '',
+    ].filter(Boolean).join('\n')
+
+    const msg2 = [
       `לשריון סופי של התור יש להעביר מקדמה בסך ₪${depositAmount}:`,
-      locationLine,
       policy.paymentInstructions ? `\n📲 לתשלום (ביט / PayBox / העברה):\n${policy.paymentInstructions}` : '',
       `\n${cancellationPolicyText}`,
       '\nלאחר ההעברה יש לשלוח כאן צילום מסך של האסמכתה ונועלים את התור!',
     ].filter(Boolean).join('\n')
+
+    messagesToSend.push(msg1, msg2)
     targetState = 'AWAIT_PAYMENT'
     reason = 'staffConfirmHealthDeclaration_await_payment'
   }
@@ -270,18 +295,20 @@ export async function handleStaffConfirmHealthDeclaration(
       accessToken: settings.accessToken,
     })
     try {
-      const { wamid } = await client.sendText({ to: customer.phone as string, body: messageBody })
-      await su.collection('messages').create({
-        conversation: conversation.id,
-        whatsapp_message_id: wamid,
-        direction: 'outbound',
-        sender_type: 'ai_bot',
-        type: 'text',
-        body: messageBody,
-        status: 'sent',
-        timestamp: nowIso,
-        seen: true,
-      })
+      for (const body of messagesToSend) {
+        const { wamid } = await client.sendText({ to: customer.phone as string, body })
+        await su.collection('messages').create({
+          conversation: conversation.id,
+          whatsapp_message_id: wamid,
+          direction: 'outbound',
+          sender_type: 'ai_bot',
+          type: 'text',
+          body,
+          status: 'sent',
+          timestamp: nowIso,
+          seen: true,
+        })
+      }
     } catch (err) {
       console.warn('[staffConfirmHealthDeclaration] failed to send WhatsApp message:', err)
     }

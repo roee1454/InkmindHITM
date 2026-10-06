@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildPriceQuoteMessage, healingGapLabel } from '@/features/calendar/utils/price-quote-message'
+import { buildPriceQuoteMessage, buildPriceQuoteMessages, healingGapLabel } from '@/features/calendar/utils/price-quote-message'
 import type { PriceQuoteMessageInput } from '@/features/calendar/utils/price-quote-message'
 
 const tattoo = (overrides: Partial<PriceQuoteMessageInput> = {}): PriceQuoteMessageInput => ({
@@ -58,6 +58,43 @@ describe('buildPriceQuoteMessage', () => {
     expect(message).toContain('פגישת הייעוץ ללא עלות.')
     expect(message).not.toContain('מחיר משוער')
     expect(message).not.toContain('מפגש אחד')
+  })
+
+  it('splits into two messages when health declaration is needed: summary and form link, neither having location', () => {
+    const messages = buildPriceQuoteMessages(tattoo({ needsHealthDeclaration: true }))
+    expect(messages).toHaveLength(2)
+    const [summary, health] = messages
+    expect(summary).toContain('🗓 מועד:')
+    expect(summary).toContain('💰 מחיר משוער:')
+    expect(summary).not.toContain('https://forms.example/health')
+    expect(summary).not.toContain('שוהם מרקט')
+
+    expect(health).toContain('https://forms.example/health')
+    expect(health).toContain('הצהרת בריאות')
+    expect(health).not.toContain('שוהם מרקט')
+  })
+
+  it('splits into two messages for paid tattoo when health is valid: summary and payment details, neither having location', () => {
+    const messages = buildPriceQuoteMessages(tattoo({ needsHealthDeclaration: false, depositAmount: 300 }))
+    expect(messages).toHaveLength(2)
+    const [summary, payment] = messages
+    expect(summary).toContain('🗓 מועד:')
+    expect(summary).toContain('💰 מחיר משוער:')
+    expect(summary).not.toContain('ביט 050-0000000')
+    expect(summary).not.toContain('שוהם מרקט')
+
+    expect(payment).toContain('ביט 050-0000000')
+    expect(payment).toContain('מדיניות ביטול')
+    expect(payment).toContain('צילום מסך של האסמכתה')
+    expect(payment).not.toContain('שוהם מרקט')
+  })
+
+  it('returns single confirmed message with studio location for free consultation when health is valid', () => {
+    const messages = buildPriceQuoteMessages(tattoo({ isSketch: true, depositAmount: 0, needsHealthDeclaration: false }))
+    expect(messages).toHaveLength(1)
+    expect(messages[0]).toContain('פגישת הייעוץ ללא עלות.')
+    expect(messages[0]).toContain('⏱ משך משוער: עד שעה.')
+    expect(messages[0]).toContain('שוהם מרקט קומה מינוס אחת')
   })
 })
 

@@ -14,7 +14,7 @@ export interface NavItem {
 const HOME: NavItem = { to: '/dashboard', label: 'בית', icon: Home, exact: true }
 const CALENDAR: NavItem = { to: '/dashboard/calendar', label: 'תורים', icon: CalendarDays, exact: false }
 const LEADS: NavItem = { to: '/dashboard/leads', label: 'לידים', icon: ClipboardList, exact: false }
-const PROJECTS: NavItem = { to: '/dashboard/projects', label: 'פרויקטים', icon: SquareKanban, exact: false }
+const PROJECTS: NavItem = { to: '/dashboard/projects', label: 'עבודות', icon: SquareKanban, exact: false }
 const CUSTOMERS: NavItem = { to: '/dashboard/customers', label: 'לקוחות', icon: Users, exact: false }
 const CONVERSATIONS: NavItem = { to: '/dashboard/conversations', label: 'שיחות', icon: MessageSquare, exact: false }
 const ANALYTICS: NavItem = { to: '/dashboard/analytics', label: 'אנליטיקות', icon: ChartBar, exact: false }
@@ -26,7 +26,7 @@ const ANALYTICS: NavItem = { to: '/dashboard/analytics', label: 'אנליטיק�
  */
 const PIPELINE_MOBILE: NavItem = {
   to: '/dashboard/projects',
-  label: 'צינורת',
+  label: 'עבודות',
   icon: SquareKanban,
   exact: false,
   activeMatch: (pathname) => pathname.startsWith('/dashboard/projects') || pathname.startsWith('/dashboard/leads'),
@@ -39,14 +39,14 @@ export interface NavGroup {
 
 /**
  * Desktop sidebar grouping, by intent rather than by menu order (track-b B6.6): today's
- * overview, the day-to-day work, the pipeline of work coming in, and the reflective/periodic
+ * overview, the day-to-day work, the repository of records, and the reflective/periodic
  * view. Group labels are hidden when the sidebar is collapsed to its icon-only rail.
  */
 export const NAV_GROUPS: readonly NavGroup[] = [
-  { label: 'היום', items: [HOME] },
+  { label: '', items: [HOME] },
   { label: 'עבודה שוטפת', items: [CALENDAR, CONVERSATIONS] },
-  { label: 'צינורת', items: [LEADS, PROJECTS, CUSTOMERS] },
-  { label: 'תובנות', items: [ANALYTICS] },
+  { label: 'מאגרי מידע', items: [PROJECTS, CUSTOMERS] },
+  { label: 'תובנות', items: [LEADS, ANALYTICS] },
 ]
 
 /** Flat view of every primary destination. `routeTitle` and the mobile top bar title read this. */

@@ -9,6 +9,7 @@ import { ProfileLinksStep } from './components/ProfileLinksStep'
 import { HoursStep } from './components/HoursStep'
 import { PaymentsStep } from './components/PaymentsStep'
 import { CalendarStep } from './components/CalendarStep'
+import { TeamStep } from './components/TeamStep'
 
 export function OnboardingPage() {
   const currentStep = useOnboardingUiStore((s) => s.currentStep)
@@ -53,13 +54,13 @@ export function OnboardingPage() {
   return (
     <OnboardingStepShell
       stepNumber={currentStep}
-      totalSteps={6}
+      totalSteps={7}
       onBack={currentStep > 1 ? handleBack : undefined}
       headline={'כמה שאלות קצרות,\nוהבוט שלך מוכן\nלעבודה'}
       benefits={[
         'הגדרת סטודיו ויצירת חשבון מנהל',
         'התאמת שעות עבודה, פרופיל ואמצעי תשלום',
-        'סנכרון יומן Google ומניעת התנגשויות תורים',
+        'סנכרון יומן Google והזמנת צוות',
       ]}
     >
       {currentStep === 1 && <StudioStep />}
@@ -68,6 +69,7 @@ export function OnboardingPage() {
       {currentStep === 4 && <HoursStep session={session} />}
       {currentStep === 5 && <PaymentsStep />}
       {currentStep === 6 && <CalendarStep session={session} />}
+      {currentStep === 7 && <TeamStep session={session} />}
     </OnboardingStepShell>
   )
 }

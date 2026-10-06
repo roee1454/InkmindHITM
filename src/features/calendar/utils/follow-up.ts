@@ -19,6 +19,7 @@ function sameProjectAndCustomer(appointment: ApiAppointment): FollowUpValues {
     priceMinIls: null,
     priceMaxIls: null,
     depositPaid: false,
+    minDate: appointment.date || null,
   }
 }
 
@@ -29,7 +30,8 @@ export function tattooAfterConsultationValues(consultation: ApiAppointment): Fol
     durationMinutes: 180,
     notes: consultation.hasDeposit && consultation.depositAmount ? `שולמה מקדמת סקיצה בסך ₪${consultation.depositAmount} לקיזוז` : '',
     status: 'pending',
-    depositAmount: consultation.hasDeposit ? consultation.depositAmount : null,
+    depositAmount: null,
+    depositPaid: consultation.hasDeposit,
   }
 }
 
@@ -41,8 +43,11 @@ export function nextSessionValues(session: ApiAppointment): FollowUpValues {
   return {
     ...sameProjectAndCustomer(session),
     durationMinutes: session.durationMinutes,
+    priceMinIls: session.priceMin,
+    priceMaxIls: session.priceMax,
     notes: '',
     status: 'confirmed',
     depositAmount: null,
+    depositPaid: true,
   }
 }

@@ -1,4 +1,4 @@
-import { CalendarPlus } from '@/components/ui/icon'
+import { CalendarPlus, ChevronLeft } from '@/components/ui/icon'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { appointmentKindLabel } from '@/features/calendar/utils/project-position'
@@ -31,6 +31,7 @@ interface ProjectSessionsProps {
   isAttaching: boolean
   onAttach: (appointmentId: string) => void
   onBook: () => void
+  onSelectAppointment?: (appointmentId: string) => void
 }
 
 /**
@@ -38,7 +39,7 @@ interface ProjectSessionsProps {
  * a consultation, then numbered sessions. Price, the next-up marker and any reschedule sit on the
  * appointment they belong to.
  */
-export function ProjectSessions({ appointments, project, isMoving, onMove, isAttaching, onAttach, onBook }: ProjectSessionsProps) {
+export function ProjectSessions({ appointments, project, isMoving, onMove, isAttaching, onAttach, onBook, onSelectAppointment }: ProjectSessionsProps) {
   return (
     <section aria-labelledby="project-sessions" className="flex flex-col gap-3">
       <div className="flex min-h-9 items-center justify-between gap-2">
@@ -70,11 +71,33 @@ export function ProjectSessions({ appointments, project, isMoving, onMove, isAtt
             return (
               <li key={appointment.id} className={cn('relative flex gap-3', !last && 'pb-4')}>
                 {!last && <span aria-hidden className="absolute top-4 bottom-0 start-[5px] w-px bg-border" />}
-                <span aria-hidden className={cn('relative mt-1.5 size-[11px] shrink-0 rounded-full', dotClass(appointment))} />
+                <span aria-hidden className={cn('relative mt-2 size-[11px] shrink-0 rounded-full', dotClass(appointment))} />
 
-                <div className={cn('flex min-w-0 flex-1 items-start justify-between gap-3', visual.isCancelled && 'opacity-60')}>
+                <div
+                  role={onSelectAppointment ? 'button' : undefined}
+                  tabIndex={onSelectAppointment ? 0 : undefined}
+                  onClick={() => onSelectAppointment?.(appointment.id)}
+                  onKeyDown={(e) => {
+                    if (onSelectAppointment && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault()
+                      onSelectAppointment(appointment.id)
+                    }
+                  }}
+                  className={cn(
+                    'group -m-1.5 flex min-w-0 flex-1 items-start justify-between gap-3 rounded-lg p-2 transition-colors',
+                    onSelectAppointment && 'cursor-pointer hover:bg-muted/60',
+                    visual.isCancelled && 'opacity-60',
+                  )}
+                >
                   <div className="flex min-w-0 flex-col gap-0.5">
-                    <span className="text-sm font-bold text-foreground">{appointmentKindLabel(appointment.kind, appointment.projectPosition)}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-bold text-foreground transition-colors group-hover:text-primary">
+                        {appointmentKindLabel(appointment.kind, appointment.projectPosition)}
+                      </span>
+                      {onSelectAppointment && (
+                        <ChevronLeft size={13} className="shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                      )}
+                    </div>
                     <span className={cn('text-xs tabular-nums', appointment.isNext ? 'font-bold text-foreground' : 'text-muted-foreground')}>
                       {appointment.isNext && 'הבא · '}
                       {formatShortSlot(appointment.start)}
@@ -88,7 +111,7 @@ export function ProjectSessions({ appointments, project, isMoving, onMove, isAtt
                     )}
                   </div>
 
-                  <div className="flex shrink-0 items-center gap-1">
+                  <div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     <span className={cn('rounded-full px-2 py-0.5 text-2xs font-bold', visual.badgeClass)}>{visual.label}</span>
                     {project.canManage && (
                       <MoveMenu appointment={appointment} otherProjects={project.otherProjects} disabled={isMoving} onMove={(target) => onMove(appointment.id, target)} />

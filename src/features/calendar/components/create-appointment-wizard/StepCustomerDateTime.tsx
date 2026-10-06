@@ -10,6 +10,7 @@ import { ProjectPicker } from './ProjectPicker'
 import { Needle, PencilLine } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
 import { formatPhoneForDisplay, phoneMatchesQuery } from '@/lib/phone'
+import { HEBREW_MONTHS, fromYmd } from '@/lib/date-utils'
 
 interface StepCustomerDateTimeProps {
   values: AppointmentFormValues
@@ -202,7 +203,16 @@ export const StepCustomerDateTime: React.FC<StepCustomerDateTimeProps> = ({ valu
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold text-foreground">תאריך *</label>
-          <DatePicker value={values.date} onChange={(ymd) => onChange({ date: ymd })} />
+          <DatePicker
+            value={values.date}
+            onChange={(ymd) => onChange({ date: ymd })}
+            minDate={values.minDate ?? undefined}
+          />
+          {values.minDate && (
+            <p className="text-micro text-muted-foreground">
+              פגישת המשך: ניתן לקבוע החל מ-{fromYmd(values.minDate).getDate()} ב{HEBREW_MONTHS[fromYmd(values.minDate).getMonth()]}
+            </p>
+          )}
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold text-foreground">שעה *</label>

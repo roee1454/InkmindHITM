@@ -23,4 +23,4 @@ function SelectInput({ className, children, dir = "rtl", ...props }: React.Compo
   )
 }
 
-export { SelectInput }
+export { SelectInput, SelectInput as IMSelectInput }

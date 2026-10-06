@@ -4,6 +4,7 @@
  * "test connection" can validate candidate credentials before they're saved.
  */
 import type { MetaMessageTemplate, WhatsAppCredentials } from './types'
+import { normalizePhoneForWhatsApp } from '@/lib/phone'
 
 const GRAPH_BASE = 'https://graph.facebook.com/v21.0'
 
@@ -140,7 +141,7 @@ export function createWhatsAppClient(creds: WhatsAppCredentials, options?: Whats
     async sendText(params: SendTextParams): Promise<SendResult> {
       return postMessage({
         recipient_type: 'individual',
-        to: params.to,
+        to: normalizePhoneForWhatsApp(params.to),
         type: 'text',
         text: { body: params.body, preview_url: false },
         ...(params.replyToWamid ? { context: { message_id: params.replyToWamid } } : {}),
@@ -150,7 +151,7 @@ export function createWhatsAppClient(creds: WhatsAppCredentials, options?: Whats
     async sendTemplate(params: SendTemplateParams): Promise<SendResult> {
       return postMessage({
         recipient_type: 'individual',
-        to: params.to,
+        to: normalizePhoneForWhatsApp(params.to),
         type: 'template',
         template: {
           name: params.templateName,
@@ -171,7 +172,7 @@ export function createWhatsAppClient(creds: WhatsAppCredentials, options?: Whats
 
       return postMessage({
         recipient_type: 'individual',
-        to: params.to,
+        to: normalizePhoneForWhatsApp(params.to),
         type: params.type,
         [params.type]: mediaObject,
         ...(params.replyToWamid ? { context: { message_id: params.replyToWamid } } : {}),

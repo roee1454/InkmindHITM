@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type OnboardingStepNumber = 1 | 2 | 3 | 4 | 5 | 6
+export type OnboardingStepNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7
 
 interface OnboardingUiState {
   currentStep: OnboardingStepNumber
@@ -117,8 +117,8 @@ export const useOnboardingUiStore = create<OnboardingUiState>((set) => ({
   nextStep: () =>
     set((state) =>
       state.returnToFinish
-        ? { currentStep: 6 as OnboardingStepNumber, returnToFinish: false }
-        : { currentStep: Math.min(6, state.currentStep + 1) as OnboardingStepNumber },
+        ? { currentStep: 7 as OnboardingStepNumber, returnToFinish: false }
+        : { currentStep: Math.min(7, state.currentStep + 1) as OnboardingStepNumber },
     ),
   prevStep: () =>
     set((state) => ({

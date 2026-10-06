@@ -27,7 +27,7 @@ export interface PriceQuoteMessageInput {
   healthFormUrl: string
 }
 
-const LOCATION_LINE = '📍 איפה: שוהם מרקט קומה מינוס אחת, יש חנייה בשפע במתחם INKMIND!'
+export const STUDIO_LOCATION_LINE = '📍 איפה: שוהם מרקט קומה מינוס אחת, יש חנייה בשפע במתחם INKMIND!'
 
 export function healingGapLabel(days: number): string {
   if (days === 7) return 'כשבוע'
@@ -46,49 +46,120 @@ function scopeLines(input: PriceQuoteMessageInput): string[] {
   ]
 }
 
-function healthDeclarationLines(input: PriceQuoteMessageInput, next: string): string[] {
-  return ['', '📝 לפני שריון התור, יש למלא הצהרת בריאות קצרה בקישור הבא:', input.healthFormUrl, next]
-}
-
-function paymentLines(input: PriceQuoteMessageInput, closing: string): string[] {
+function healthDeclarationMessage(input: PriceQuoteMessageInput, next: string): string {
   return [
-    input.paymentInstructions ? `\n📲 פרטי תשלום למקדמה (ביט / PayBox / העברה):\n${input.paymentInstructions}` : '',
-    `\n${input.cancellationPolicyText}`,
-    `\nלאחר ההעברה יש לשלוח כאן צילום מסך של האסמכתה ונסגור את ${closing}!`,
-  ]
+    '📝 לפני שריון התור, יש למלא הצהרת בריאות קצרה בקישור הבא:',
+    input.healthFormUrl,
+    '',
+    next,
+  ].filter(Boolean).join('\n')
 }
 
-function consultationMessage(input: PriceQuoteMessageInput, whenLine: string): string[] {
+function paymentMessage(input: PriceQuoteMessageInput, closing: string): string {
+  return [
+    `נשאר לנו רק שריון סופי של ${closing} באמצעות מקדמה על סך ₪${input.depositAmount ?? 0}:`,
+    input.paymentInstructions ? `\n📲 לתשלום למקדמה (ביט / PayBox / העברה):\n${input.paymentInstructions}` : '',
+    input.cancellationPolicyText ? `\n${input.cancellationPolicyText}` : '',
+    `\nלאחר ההעברה יש לשלוח כאן צילום מסך של האסמכתה ונסגור את ${closing}! 🙌`,
+  ].filter(Boolean).join('\n')
+}
+
+function consultationMessages(input: PriceQuoteMessageInput, whenLine: string): string[] {
   const hasDeposit = input.depositAmount != null && input.depositAmount > 0
-  const depositLine = hasDeposit ? `מקדמה לשריון: ₪${input.depositAmount} (תקוזז מעלות הקעקוע).` : 'פגישת הייעוץ ללא עלות.'
-  const head = [whenLine, `⏱ משך משוער: ${input.durationLabel}.`, depositLine, LOCATION_LINE]
+  const depositLine = hasDeposit ? `💳 מקדמה לשריון: ₪${input.depositAmount} (תקוזז מעלות הקעקוע).` : 'פגישת הייעוץ ללא עלות.'
+  
   if (input.needsHealthDeclaration) {
-    const next = hasDeposit ? 'לאחר מילוי ההצהרה נשלח את פרטי התשלום לשריון סופי.' : 'לאחר מילוי ההצהרה התור ייקבע ביומן.'
-    return ['היי! הצוות עבר על הפרטים, הנה פרטי פגישת הייעוץ: ✨', '', ...head, ...healthDeclarationLines(input, next)]
+    const slotSummary = [
+      'היי! הצוות עבר על הפרטים, הנה פרטי פגישת הייעוץ: ✨',
+      '',
+      whenLine,
+      '⏱ משך משוער: עד שעה.',
+      depositLine,
+    ].join('\n')
+
+    const next = hasDeposit
+      ? 'לאחר מילוי ההצהרה נשלח את פרטי התשלום לשריון סופי.'
+      : 'לאחר מילוי ההצהרה התור ייקבע ביומן.'
+    const healthMsg = healthDeclarationMessage(input, next)
+    return [slotSummary, healthMsg]
   }
-  return ['היי! הנה סיכום הפרטים של פגישת הייעוץ: ✨', '', ...head, ...(hasDeposit ? paymentLines(input, 'המועד') : [])]
+
+  if (hasDeposit) {
+    const slotSummary = [
+      'היי! הנה סיכום הפרטים של פגישת הייעוץ: ✨',
+      '',
+      whenLine,
+      '⏱ משך משוער: עד שעה.',
+      depositLine,
+    ].join('\n')
+    const payMsg = paymentMessage(input, 'המועד')
+    return [slotSummary, payMsg]
+  }
+
+  const confirmedMessage = [
+    'היי! הצוות אישר את פגישת הייעוץ והתור נקבע ביומן! ✨',
+    '',
+    whenLine,
+    '⏱ משך משוער: עד שעה.',
+    depositLine,
+    STUDIO_LOCATION_LINE,
+    '',
+    'נשלח לך תזכורת מסודרת לפני המפגש. מחכים לראותך! 🙌',
+  ].join('\n')
+  return [confirmedMessage]
 }
 
-function tattooMessage(input: PriceQuoteMessageInput, whenLine: string): string[] {
+function tattooMessages(input: PriceQuoteMessageInput, whenLine: string): string[] {
   const range = input.priceMin === input.priceMax ? `₪${input.priceMin.toLocaleString()}` : `₪${input.priceMin.toLocaleString()}–${input.priceMax.toLocaleString()}`
   const perSession = input.estimatedSessions !== null && input.estimatedSessions > 1
-  const head = [
+  const hasDeposit = input.depositAmount != null && input.depositAmount > 0
+  const depositLine = hasDeposit
+    ? (perSession
+      ? `💳 מקדמה לשריון המפגש הראשון: ₪${input.depositAmount}. ${perSessionDepositNote(input.depositPerSession)}`
+      : `💳 מקדמה לשריון: ₪${input.depositAmount}.`)
+    : ''
+
+  if (input.needsHealthDeclaration) {
+    const slotSummary = [
+      'היי! הצוות עבר על הפרטים, הנה פרטי התור לקעקוע: ✨',
+      '',
+      whenLine,
+      `⏱ משך משוער: ${input.durationLabel}.`,
+      `💰 מחיר משוער${perSession ? ' לכל מפגש' : ''}: ${range}.`,
+      ...scopeLines(input),
+      depositLine,
+    ].filter(Boolean).join('\n')
+
+    const next = hasDeposit
+      ? 'לאחר מילוי ההצהרה נשלח את פרטי התשלום לשריון סופי.'
+      : 'לאחר מילוי ההצהרה התור ייקבע ביומן.'
+    const healthMsg = healthDeclarationMessage(input, next)
+    return [slotSummary, healthMsg]
+  }
+
+  const slotSummary = [
+    'היי! הנה סיכום הפרטים של פרטי התור לקעקוע: ✨',
+    '',
     whenLine,
     `⏱ משך משוער: ${input.durationLabel}.`,
     `💰 מחיר משוער${perSession ? ' לכל מפגש' : ''}: ${range}.`,
     ...scopeLines(input),
-    perSession
-      ? `💳 מקדמה לשריון המפגש הראשון: ₪${input.depositAmount ?? 0}. ${perSessionDepositNote(input.depositPerSession)}`
-      : `💳 מקדמה לשריון: ₪${input.depositAmount ?? 0}.`,
-    LOCATION_LINE,
-  ]
-  if (input.needsHealthDeclaration) {
-    return ['היי! הצוות עבר על הפרטים, הנה פרטי התור לקעקוע: ✨', '', ...head, ...healthDeclarationLines(input, 'לאחר מילוי ההצהרה נשלח את פרטי התשלום לשריון סופי.')]
+    depositLine,
+  ].filter(Boolean).join('\n')
+
+  if (hasDeposit) {
+    const payMsg = paymentMessage(input, 'התור')
+    return [slotSummary, payMsg]
   }
-  return ['היי! הנה סיכום הפרטים של פרטי התור לקעקוע: ✨', '', ...head, ...paymentLines(input, 'התור')]
+
+  return [slotSummary]
+}
+
+export function buildPriceQuoteMessages(input: PriceQuoteMessageInput): string[] {
+  const whenLine = `🗓 מועד: ${input.when}${input.staffName ? ` אצל ${input.staffName}` : ''}.`
+  return input.isSketch ? consultationMessages(input, whenLine) : tattooMessages(input, whenLine)
 }
 
 export function buildPriceQuoteMessage(input: PriceQuoteMessageInput): string {
-  const whenLine = `🗓 מועד: ${input.when}${input.staffName ? ` אצל ${input.staffName}` : ''}.`
-  return (input.isSketch ? consultationMessage(input, whenLine) : tattooMessage(input, whenLine)).filter(Boolean).join('\n')
+  return buildPriceQuoteMessages(input).join('\n\n')
 }

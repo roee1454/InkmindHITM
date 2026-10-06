@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Calendar as CalendarIcon } from '@/components/ui/icon'
 import { cn } from "#/lib/utils.ts"
-import { HEBREW_MONTHS, fromYmd } from "#/lib/date-utils.ts"
+import { HEBREW_MONTHS, fromYmd, toYmd } from "#/lib/date-utils.ts"
 import { Popover, PopoverTrigger, PopoverContent } from "#/components/ui/popover.tsx"
 import { Calendar } from "#/components/ui/calendar.tsx"
 
@@ -12,6 +12,7 @@ export interface DatePickerProps {
   placeholder?: string
   disabled?: boolean | ((date: Date) => boolean)
   className?: string
+  minDate?: string
 }
 
 function formatDisplay(ymd: string): string {
@@ -25,10 +26,16 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   placeholder = "בחר תאריך",
   disabled,
   className,
+  minDate,
 }) => {
   const [open, setOpen] = React.useState(false)
   const isTriggerDisabled = typeof disabled === 'boolean' ? disabled : false
-  const calendarDisabled = typeof disabled === 'function' ? disabled : undefined
+  const calendarDisabled = (date: Date) => {
+    if (minDate && toYmd(date) < minDate) return true
+    if (typeof disabled === 'function') return disabled(date)
+    return false
+  }
+  const defaultAnchor = minDate ? fromYmd(minDate) : undefined
 
   return (
     <Popover open={isTriggerDisabled ? false : open} onOpenChange={isTriggerDisabled ? undefined : setOpen}>
@@ -57,9 +64,13 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             setOpen(false)
           }}
           disabled={calendarDisabled}
+          defaultAnchor={defaultAnchor}
         />
       </PopoverContent>
     </Popover>
   )
 }
+
+export { DatePicker as IMDatePicker }
+export type IMDatePickerProps = DatePickerProps
 export default DatePicker

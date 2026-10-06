@@ -1,7 +1,7 @@
 import React from 'react'
 import type { ApiAppointment } from '../types'
 import { Plus } from '@/components/ui/icon'
-import { AppointmentRowCard } from './AppointmentRowCard'
+import { AppointmentCard } from './AppointmentCard'
 
 interface DailyAppointmentCardsProps {
   appointments: ApiAppointment[]
@@ -37,8 +37,9 @@ export const DailyAppointmentCards: React.FC<DailyAppointmentCardsProps> = ({
   return (
     <div className="flex flex-col gap-2.5 font-assistant" dir="rtl">
       {appointments.map((appt) => (
-        <AppointmentRowCard
+        <AppointmentCard
           key={appt.id}
+          mode="row"
           appointment={appt}
           artistAvatars={artistAvatars}
           onSelect={() => onSelectAppointment(appt)}

@@ -337,7 +337,11 @@ describe('Health Declaration Integration', () => {
       )
       expect(result.messageDelivery.type).toBe('free_text')
       expect(result.messageDelivery.success).toBe(true)
-      expect(su._data.messages).toHaveLength(1)
+      expect(su._data.messages).toHaveLength(2)
+      expect(su._data.messages[0].body).toContain('הנה סיכום פרטי התור')
+      expect(su._data.messages[0].body).not.toContain('שוהם מרקט')
+      expect(su._data.messages[1].body).toContain('לשריון סופי של התור')
+      expect(su._data.messages[1].body).not.toContain('שוהם מרקט')
     })
 
     it('Branch B: when 24h window is CLOSED, avoids 131047 error and creates staff alert', async () => {

@@ -72,7 +72,7 @@ export function PriceQuoteSheet({
 
   useEffect(() => {
     if (open) {
-      setDuration(initialDurationMinutes ?? (isSketch ? 30 : 180))
+      setDuration(initialDurationMinutes ?? (isSketch ? 60 : 180))
       setPriceMin(initialPriceMin)
       setPriceMax(initialPriceMax)
       setDeposit(initialDeposit ?? (isSketch ? '150' : '350'))

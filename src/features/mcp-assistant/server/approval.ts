@@ -3,6 +3,7 @@ import { commitCalendarAction, CALENDAR_WRITE_TOOLS } from './tool-servers/calen
 import { commitMessagingAction, MESSAGING_WRITE_TOOLS } from './tool-servers/messaging.server'
 import { commitCustomersAction, CUSTOMERS_WRITE_TOOLS } from './tool-servers/customers.server'
 import { commitWaitlistAction, WAITLIST_WRITE_TOOLS } from './tool-servers/waitlist.server'
+import { commitProjectsAction, PROJECTS_WRITE_TOOLS } from './tool-servers/projects.server'
 import type { McpAction, McpActionDiff } from './types'
 
 /** Exported (not just module-private) so tests can assert against the real source of truth
@@ -12,6 +13,7 @@ export const WRITE_TOOL_NAMES = new Set([
   ...MESSAGING_WRITE_TOOLS,
   ...CUSTOMERS_WRITE_TOOLS,
   ...WAITLIST_WRITE_TOOLS,
+  ...PROJECTS_WRITE_TOOLS,
 ])
 
 const UNDO_WINDOW_MS = 5 * 60 * 1000
@@ -64,6 +66,7 @@ export function dispatchCommit(toolName: string, args: Record<string, unknown>):
   if (MESSAGING_WRITE_TOOLS.has(toolName)) return commitMessagingAction(toolName, args)
   if (CUSTOMERS_WRITE_TOOLS.has(toolName)) return commitCustomersAction(toolName, args)
   if (WAITLIST_WRITE_TOOLS.has(toolName)) return commitWaitlistAction(toolName, args)
+  if (PROJECTS_WRITE_TOOLS.has(toolName)) return commitProjectsAction(toolName, args)
   throw new Error(`No commit handler registered for tool "${toolName}"`)
 }
 

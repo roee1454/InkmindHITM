@@ -20,7 +20,8 @@ import type {
   WhatsAppConnectionStatus,
 } from '@/features/conversations/types'
 import { getActiveAppointmentForBot, cancelAppointmentForBot } from '@/features/calendar/server/bot-appointments.server'
-import { toYmd, minutesToTime, formatDurationHebrew } from '@/lib/date-utils'
+import { minutesToTime, formatDurationHebrew, HEBREW_DAYS_LONG } from '@/lib/date-utils'
+import { syncAppointmentToGoogle } from '@/integrations/google-calendar/server/google-sync.server'
 import { toCanonicalE164Phone, formatPhoneForDisplay } from '@/lib/phone'
 import { createStaleReferenceError } from '@/lib/stale-reference'
 import type { CustomerSource } from '@/features/customers/types'
@@ -340,7 +341,15 @@ export const confirmDepositReceived = createServerFn({ method: 'POST' })
     const appointment = await getActiveAppointmentForBot(su, customer.id)
     if (!appointment) throw new Error('לא נמצא תור פעיל ללקוח הזה לאישור תשלום.')
 
-    await su.collection('appointments').update(appointment.id, { deposit_paid: true })
+    await su.collection('appointments').update(appointment.id, {
+      deposit_paid: true,
+      ...statusChange('confirmed', 'staff', 'deposit_received_confirmed'),
+      slot_confirmed: true,
+    })
+
+    await syncAppointmentToGoogle(appointment.id).catch((syncErr) => {
+      console.error('[confirmDepositReceived] Google sync failed:', syncErr)
+    })
 
     const settings = await getWhatsAppSettings()
     if (!settings?.phoneNumberId || !settings.accessToken) {
@@ -356,7 +365,8 @@ export const confirmDepositReceived = createServerFn({ method: 'POST' })
       ? await su.collection('staff').getOne(appointment.staff as string).catch(() => null)
       : null
     const start = new Date(appointment.start_time as string)
-    const dateStr = toYmd(start)
+    const dayName = HEBREW_DAYS_LONG[start.getDay()] || 'ראשון'
+    const dateFormatted = `${start.getDate()}.${start.getMonth() + 1}`
     const timeStr = minutesToTime(start.getHours() * 60 + start.getMinutes())
 
     const isSketch =
@@ -370,30 +380,28 @@ export const confirmDepositReceived = createServerFn({ method: 'POST' })
     let messageBody: string
     if (isSketch) {
       messageBody = [
-        'איזה כיף, המקדמה לפגישת הסקיצה נקלטה בהצלחה! 💳✨',
+        'איזה כיף, המקדמה נקלטה בהצלחה והתור שלך נקבע רשמית! 🎉',
         '',
-        'הנה סיכום הפרטים לאישור סופי שלך:',
-        `🗓 מועד: ${dateStr} בשעה ${timeStr}${staffRecord ? ` עם ${staffRecord.name}` : ''}`,
+        `🗓 מועד: ${dayName}, ${dateFormatted} בשעה ${timeStr}${staffRecord ? ` עם ${staffRecord.name}` : ''}`,
         `⏱ משך משוער: ${durationText}`,
         `💳 מקדמה ששולמה: ₪${appointment.deposit_amount} (תקוזז מעלות הקעקוע)`,
         locationLine,
         '',
-        'הפרטים נכונים לסגירת המועד?',
+        'נשלח לך תזכורת מסודרת לפני המפגש. מחכים לראותך! ✨',
       ].filter(Boolean).join('\n')
     } else {
       const priceMin = appointment.price_min
       const priceMax = appointment.price_max
       const priceLabel = priceMin === priceMax ? `₪${priceMax}` : `₪${priceMin}–${priceMax}`
       messageBody = [
-        'איזה כיף, המקדמה נקלטה בהצלחה! 💳✨',
+        'איזה כיף, המקדמה נקלטה בהצלחה והתור שלך נקבע רשמית! 🎉',
         '',
-        'הנה סיכום הפרטים לאישור סופי שלך:',
-        `🗓 מועד: ${dateStr} בשעה ${timeStr}${staffRecord ? ` עם ${staffRecord.name as string}` : ''}`,
+        `🗓 מועד: ${dayName}, ${dateFormatted} בשעה ${timeStr}${staffRecord ? ` עם ${staffRecord.name as string}` : ''}`,
         `⏱ משך משוער: ${durationText}`,
         `💰 מחיר: ${priceLabel} (שולמה מקדמה ע״ס ₪${appointment.deposit_amount})`,
         locationLine,
         '',
-        'הפרטים נכונים לסגירת התור?',
+        'נשלח לך תזכורת מסודרת לפני התור. נתראה בקרוב! ✨',
       ].filter((line) => line !== null).join('\n')
     }
 
@@ -420,9 +428,9 @@ export const confirmDepositReceived = createServerFn({ method: 'POST' })
       seen: true,
     })
 
-    await transition(su, conversation.id, 'AWAIT_FINAL_CONFIRMATION', {
+    await transition(su, conversation.id, 'AWAITING_APPOINTMENT', {
       actor: 'staff',
-      reason: 'confirmDepositReceived',
+      reason: 'deposit_received_confirmed',
       extraFields: {
         status: 'bot_active',
         is_staff_called: false,

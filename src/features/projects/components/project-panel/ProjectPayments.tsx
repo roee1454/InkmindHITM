@@ -10,10 +10,11 @@ interface ProjectPaymentsProps {
   isLoading: boolean
   error: string | null
   appointments: PanelAppointment[]
+  onSelectAppointment?: (appointmentId: string) => void
 }
 
 /** The piece's money, newest first, each payment tied to the appointment it was taken at. */
-export function ProjectPayments({ finance, isLoading, error, appointments }: ProjectPaymentsProps) {
+export function ProjectPayments({ finance, isLoading, error, appointments, onSelectAppointment }: ProjectPaymentsProps) {
   const byId = new Map(appointments.map((a) => [a.id, a]))
   const payments = [...(finance?.payments ?? [])].reverse()
 
@@ -33,13 +34,20 @@ export function ProjectPayments({ finance, isLoading, error, appointments }: Pro
       ) : payments.length === 0 ? (
         <p className="text-sm text-muted-foreground">עדיין לא נרשמו תשלומים. מקדמה או תשלום שנרשמים בסגירת סשן יופיעו כאן.</p>
       ) : (
-        <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-xl border border-border">
+        <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
           {payments.map((payment) => {
             const appointment = payment.appointmentId ? byId.get(payment.appointmentId) : undefined
             const detail = [appointment && appointmentKindLabel(appointment.kind, appointment.projectPosition), payment.receivedAt && formatPaymentDay(payment.receivedAt)]
               .filter(Boolean)
               .join(' · ')
-            return <PaymentRow key={payment.id} payment={payment} detail={detail} />
+            return (
+              <PaymentRow
+                key={payment.id}
+                payment={payment}
+                detail={detail}
+                onSelectAppointment={onSelectAppointment}
+              />
+            )
           })}
         </ul>
       )}

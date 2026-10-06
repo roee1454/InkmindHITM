@@ -160,13 +160,23 @@ function DialogDescription({
 
 export {
   Dialog,
+  Dialog as IMDialog,
   DialogClose,
+  DialogClose as IMDialogClose,
   DialogContent,
+  DialogContent as IMDialogContent,
   DialogDescription,
+  DialogDescription as IMDialogDescription,
   DialogFooter,
+  DialogFooter as IMDialogFooter,
   DialogHeader,
+  DialogHeader as IMDialogHeader,
   DialogOverlay,
+  DialogOverlay as IMDialogOverlay,
   DialogPortal,
+  DialogPortal as IMDialogPortal,
   DialogTitle,
+  DialogTitle as IMDialogTitle,
   DialogTrigger,
+  DialogTrigger as IMDialogTrigger,
 }

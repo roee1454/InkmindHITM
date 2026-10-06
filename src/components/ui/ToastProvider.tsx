@@ -147,3 +147,5 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     </ToastContext.Provider>
   )
 }
+
+export { ToastProvider as IMToastProvider, useToast as useIMToast }

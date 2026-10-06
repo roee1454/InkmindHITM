@@ -7,7 +7,7 @@ import { CalendarGrid } from './components/CalendarGrid'
 import { CalendarSkeleton } from './components/CalendarSkeleton'
 import { CalendarToolbar } from './components/CalendarToolbar'
 import { CreateAppointmentDialog } from './components/CreateAppointmentDialog'
-import { EditAppointmentDialog } from './components/EditAppointmentDialog'
+import { EditAppointmentSheet } from './components/EditAppointmentSheet'
 import { AppointmentListView } from './components/AppointmentListView'
 import { useAppointmentMutations } from './hooks/use-appointment-mutations'
 import { useCalendarData } from './hooks/use-calendar-data'
@@ -96,13 +96,14 @@ export const CalendarPage: React.FC = () => {
     openCreate({ initialValues: tattooAfterConsultationValues(sketch) })
   }
 
-  // Set the filter to the logged-in artist on first entry.
+  // Set the default artist filter on first entry:
+  // Admins see all staff appointments by default; non-admins see only their own appointments.
   useEffect(() => {
     if (currentStaff?.id && !hasInitializedDefaultArtist) {
-      setSelectedArtist(currentStaff.id)
+      setSelectedArtist(currentStaff.isAdmin ? 'all' : currentStaff.id)
       setHasInitializedDefaultArtist(true)
     }
-  }, [currentStaff, hasInitializedDefaultArtist])
+  }, [currentStaff, hasInitializedDefaultArtist, setSelectedArtist, setHasInitializedDefaultArtist])
 
   // The mobile top bar's "+" navigates here with `?new=1` since it lives outside this tree —
   // pick it up once, then clear it so back-navigation doesn't reopen the dialog.
@@ -196,7 +197,7 @@ export const CalendarPage: React.FC = () => {
         error={formError}
       />
 
-      <EditAppointmentDialog
+      <EditAppointmentSheet
         appointment={editingAppointment}
         onOpenChange={(open) => !open && setEditingAppointment(null)}
         staff={staff}

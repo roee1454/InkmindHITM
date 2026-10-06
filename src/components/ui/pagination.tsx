@@ -125,3 +125,6 @@ export const Pagination: React.FC<PaginationProps> = ({
   )
 }
 
+export { Pagination as IMPagination }
+export type IMPaginationProps = PaginationProps
+

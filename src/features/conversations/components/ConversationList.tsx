@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Plus } from '@/components/ui/icon'
+import { Plus, BotOff } from '@/components/ui/icon'
 import { Button } from '@/components/ui/button'
 import { SearchInput } from '@/components/ui/search-input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { phoneMatchesQuery } from '@/lib/phone'
+import { getAiSettings } from '@/features/settings/server/ai'
 import { listConversations } from '../server/messages'
 import { inboxBucket } from '../utils/labels'
 import type { InboxBucket } from '../utils/labels'
@@ -33,6 +34,12 @@ export function ConversationList({ selectedId, onSelect }: ConversationListProps
     queryKey: ['conversations'],
     queryFn: () => listConversations(),
     refetchInterval: 30000,
+  })
+
+  const { data: aiSettings } = useQuery({
+    queryKey: ['ai-settings'],
+    queryFn: () => getAiSettings(),
+    refetchInterval: 60000,
   })
 
   const buckets = useMemo(() => new Map(conversations.map((c) => [c.id, inboxBucket(c)])), [conversations])
@@ -80,6 +87,13 @@ export function ConversationList({ selectedId, onSelect }: ConversationListProps
             )
           })}
         </div>
+
+        {aiSettings && !aiSettings.aiEnabled && (
+          <div className="flex items-center gap-2 rounded-xl border border-warning/25 bg-warning/10 px-3 py-2 text-xs text-warning">
+            <BotOff className="size-4 shrink-0 text-warning" />
+            <span className="font-bold">סוכן ה-AI מושבת בהגדרות – כל השיחות במענה ידני</span>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -93,7 +107,13 @@ export function ConversationList({ selectedId, onSelect }: ConversationListProps
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <p className="px-6 py-10 text-center text-sm text-muted-foreground">{searchQuery ? 'אין שיחות שמתאימות לחיפוש.' : activeFilter.empty}</p>
+          <p className="px-6 py-10 text-center text-sm text-muted-foreground">
+            {searchQuery
+              ? 'אין שיחות שמתאימות לחיפוש.'
+              : statusFilter === 'bot_active' && aiSettings && !aiSettings.aiEnabled
+                ? 'סוכן ה-AI מושבת בהגדרות הסטודיו. כל עוד הבוט כבוי, שיחות נכנסות מנוהלות ישירות ע״י הצוות.'
+                : activeFilter.empty}
+          </p>
         ) : (
           <ul className="divide-y divide-border/60">
             {filtered.map((c) => (

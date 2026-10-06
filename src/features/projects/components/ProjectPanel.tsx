@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query-keys'
+import { getAppointments } from '@/features/calendar/server/appointments'
+import { useAppointmentMutations } from '@/features/calendar/hooks/use-appointment-mutations'
+import { EditAppointmentSheet } from '@/features/calendar/components/EditAppointmentSheet'
 import { useProjectFinance } from '@/features/payments/hooks/use-project-finance'
 import { useProjectDetails } from '../hooks/use-project-details'
 import { summarizeProject } from '../utils/panel'
@@ -9,12 +15,16 @@ import type { DraftField, ProjectDraft } from '../utils/project-draft'
 import { MarkProjectLostDialog } from './MarkProjectLostDialog'
 import { CreateAppointmentDialog } from '@/features/calendar/components/CreateAppointmentDialog'
 import { useStaffDirectory } from '@/features/calendar/hooks/use-staff-directory'
+import { nextSessionValues, tattooAfterConsultationValues } from '@/features/calendar/utils/follow-up'
+import type { AppointmentFormValues } from '@/features/calendar/types'
 import { projectBookingValues } from '../utils/booking'
 import { ProjectPanelHeader } from './project-panel/ProjectPanelHeader'
 import { ProjectFacts } from './project-panel/ProjectFacts'
 import { ProjectSessions } from './project-panel/ProjectSessions'
 import { ProjectPayments } from './project-panel/ProjectPayments'
 import { ProjectEditFooter, ProjectLifecycleFooter } from './project-panel/ProjectPanelFooter'
+import { useIsMobile } from '@/hooks/useMediaQuery'
+import { cn } from '@/lib/utils'
 
 function errorText(error: unknown): string | null {
   return error instanceof Error ? error.message : null
@@ -37,23 +47,45 @@ function PanelSkeleton() {
 /**
  * One tattoo piece, whole: where it stands, what it's worth and what's owed, every appointment in
  * it and every payment against it. Opened from the projects board, the calendar and the customer
- * card. Editing the name, quote and estimate happens in place — the title and the facts become fields,
- * the footer becomes the save bar — so nothing moves while staff edit.
+ * card as an interactive Side Sheet (or bottom sheet on mobile).
  */
-export function ProjectPanel({ projectId, onClose }: { projectId: string | null; onClose: () => void }) {
+export function ProjectPanel({
+  projectId,
+  onClose,
+  onSelectAppointment,
+}: {
+  projectId: string | null
+  onClose: () => void
+  onSelectAppointment?: (appointmentId: string) => void
+}) {
+  const isMobile = useIsMobile()
   const { details, update, move, attach, book } = useProjectDetails(projectId)
   const directory = useStaffDirectory()
   const finance = useProjectFinance(projectId)
+  const apptMutations = useAppointmentMutations()
   const [draft, setDraft] = useState<ProjectDraft | null>(null)
   const [invalid, setInvalid] = useState<{ field: DraftField; message: string } | null>(null)
   const [losing, setLosing] = useState(false)
   const [booking, setBooking] = useState(false)
+  const [internalSelectedApptId, setInternalSelectedApptId] = useState<string | null>(null)
+  const [customBookingValues, setCustomBookingValues] = useState<Partial<AppointmentFormValues> | null>(null)
+
+  const appointmentsQuery = useQuery({
+    queryKey: queryKeys.appointments,
+    queryFn: () => getAppointments(),
+    enabled: Boolean(internalSelectedApptId),
+  })
+  const internalSelectedAppt = internalSelectedApptId
+    ? (appointmentsQuery.data?.find((a) => a.id === internalSelectedApptId) ?? null)
+    : null
+
   const project = details.data
   const now = new Date()
   const summary = project ? summarizeProject(project, finance.data, now) : null
   // Stable per project: the wizard resets its fields whenever `initialValues` changes identity, so a
   // fresh object on every render (any refetch) would wipe what staff are typing.
   const bookingValues = useMemo(() => (project ? projectBookingValues(project) : null), [project])
+  const effectiveBookingValues = customBookingValues ?? bookingValues
 
   const stopEditing = () => {
     setDraft(null)
@@ -72,23 +104,43 @@ export function ProjectPanel({ projectId, onClose }: { projectId: string | null;
   }
   const edit = draft ? { draft, invalidField: invalid?.field ?? null, onDraftChange: changeDraft } : null
 
+  const handleSelectAppointment = (appointmentId: string) => {
+    if (onSelectAppointment) {
+      onSelectAppointment(appointmentId)
+    } else {
+      setInternalSelectedApptId(appointmentId)
+    }
+  }
+
   return (
-    <ResponsiveDialog
-      open={Boolean(projectId)}
-      onOpenChange={(open) => {
-        if (open) return
-        stopEditing()
-        onClose()
-      }}
-      title={project ? project.title || 'פרויקט' : 'פרויקט'}
-      description={project ? project.customer.name || 'לקוח ללא שם' : undefined}
-      size="xl"
-      bare
-    >
-      {details.isLoading && <PanelSkeleton />}
-      {details.isError && !project && (
-        <p className="m-5 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{errorText(details.error) ?? 'טעינת הפרויקט נכשלה.'}</p>
-      )}
+    <>
+      <Sheet
+        open={Boolean(projectId)}
+        onOpenChange={(open) => {
+          if (open) return
+          stopEditing()
+          onClose()
+        }}
+      >
+        <SheetContent
+          side={isMobile ? 'bottom' : 'left'}
+          dir="rtl"
+          className={cn(
+            'gap-0 p-0 font-assistant outline-none bg-background shadow-2xl flex flex-col',
+            isMobile
+              ? 'max-h-[92svh] rounded-t-2xl border-t border-border'
+              : 'h-svh w-full sm:max-w-xl md:max-w-2xl lg:max-w-[40rem] xl:max-w-[44rem] border-s border-border',
+          )}
+        >
+          <SheetHeader className="sr-only">
+            <SheetTitle>{project ? project.title || 'פרויקט' : 'פרויקט'}</SheetTitle>
+            <SheetDescription>{project ? project.customer.name || 'לקוח ללא שם' : 'פרטי פרויקט'}</SheetDescription>
+          </SheetHeader>
+
+          {details.isLoading && <PanelSkeleton />}
+          {details.isError && !project && (
+            <p className="m-5 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{errorText(details.error) ?? 'טעינת הפרויקט נכשלה.'}</p>
+          )}
       {project && summary && (
         <>
           <form
@@ -115,23 +167,52 @@ export function ProjectPanel({ projectId, onClose }: { projectId: string | null;
             />
 
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-              <div className="flex flex-col gap-6 px-5 pb-6 lg:px-6">
+              <div className="flex flex-col gap-6 px-5 pt-5 pb-6 lg:px-6">
                 <ProjectFacts project={project} summary={summary} finance={finance.data} edit={edit} />
-                <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,19rem)] lg:gap-8">
-                  <ProjectSessions
-                    appointments={summary.appointments}
-                    project={project}
-                    isMoving={move.isPending}
-                    onMove={(appointmentId, target) => move.mutate({ appointmentId, target })}
-                    isAttaching={attach.isPending}
-                    onAttach={(appointmentId) => attach.mutate(appointmentId)}
-                    onBook={() => {
-                      book.reset()
-                      setBooking(true)
-                    }}
-                  />
-                  <ProjectPayments finance={finance.data} isLoading={finance.isLoading} error={errorText(finance.error)} appointments={summary.appointments} />
-                </div>
+
+                <Tabs dir='rtl' defaultValue="sessions" className="w-full gap-4">
+                  <TabsList className="h-10 rounded-xl bg-muted/60 p-1">
+                    <TabsTrigger value="sessions" className="gap-2 text-xs font-bold data-[state=active]:bg-card">
+                      <span>תורים וסשנים</span>
+                      <span className="rounded-full bg-muted-foreground/15 px-2 py-0.5 text-2xs font-bold text-foreground">
+                        {summary.appointments.length}
+                      </span>
+                    </TabsTrigger>
+                    <TabsTrigger value="payments" className="gap-2 text-xs font-bold data-[state=active]:bg-card">
+                      <span>תשלומים ופיננסים</span>
+                      <span className="rounded-full bg-muted-foreground/15 px-2 py-0.5 text-2xs font-bold text-foreground">
+                        {finance.data?.payments.length ?? 0}
+                      </span>
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="sessions" className="mt-0 focus-visible:outline-none">
+                    <ProjectSessions
+                      appointments={summary.appointments}
+                      project={project}
+                      isMoving={move.isPending}
+                      onMove={(appointmentId, target) => move.mutate({ appointmentId, target })}
+                      isAttaching={attach.isPending}
+                      onAttach={(appointmentId) => attach.mutate(appointmentId)}
+                      onBook={() => {
+                        book.reset()
+                        setCustomBookingValues(null)
+                        setBooking(true)
+                      }}
+                      onSelectAppointment={handleSelectAppointment}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="payments" className="mt-0 focus-visible:outline-none">
+                    <ProjectPayments
+                      finance={finance.data}
+                      isLoading={finance.isLoading}
+                      error={errorText(finance.error)}
+                      appointments={summary.appointments}
+                      onSelectAppointment={handleSelectAppointment}
+                    />
+                  </TabsContent>
+                </Tabs>
                 {(move.error || attach.error) && (
                   <p className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">{errorText(move.error ?? attach.error)}</p>
                 )}
@@ -154,16 +235,69 @@ export function ProjectPanel({ projectId, onClose }: { projectId: string | null;
           {/* The calendar's booking wizard, started inside this project: customer, artist and piece filled in. */}
           <CreateAppointmentDialog
             open={booking}
-            onOpenChange={setBooking}
+            onOpenChange={(open) => {
+              setBooking(open)
+              if (!open) setCustomBookingValues(null)
+            }}
             staff={directory.staff.data ?? []}
             googleConnections={directory.googleConnections.data ?? []}
-            initialValues={bookingValues}
-            onSave={(values) => book.mutate(values, { onSuccess: () => setBooking(false) })}
+            initialValues={effectiveBookingValues}
+            onSave={(values) =>
+              book.mutate(values, {
+                onSuccess: () => {
+                  setBooking(false)
+                  setCustomBookingValues(null)
+                },
+              })
+            }
             isSaving={book.isPending}
             error={errorText(book.error)}
           />
         </>
       )}
-    </ResponsiveDialog>
+        </SheetContent>
+      </Sheet>
+
+      {internalSelectedAppt && (
+        <EditAppointmentSheet
+          appointment={internalSelectedAppt}
+          onOpenChange={(open) => {
+            if (!open) setInternalSelectedApptId(null)
+          }}
+          staff={directory.staff.data ?? []}
+          googleConnections={directory.googleConnections.data ?? []}
+          onSave={(values) =>
+            apptMutations.update.mutate(
+              { id: internalSelectedAppt.id, body: values },
+              { onSuccess: () => setInternalSelectedApptId(null) },
+            )
+          }
+          isSaving={apptMutations.update.isPending}
+          error={errorText(apptMutations.update.error)}
+          onSendQuote={(quote) =>
+            apptMutations.sendQuote.mutate({ appointmentId: internalSelectedAppt.id, ...quote })
+          }
+          isSendingQuote={apptMutations.sendQuote.isPending}
+          onDelete={(id) =>
+            apptMutations.remove.mutate(id, {
+              onSuccess: () => setInternalSelectedApptId(null),
+            })
+          }
+          isDeleting={apptMutations.remove.isPending}
+          onScheduleNextSession={(session) => {
+            setInternalSelectedApptId(null)
+            book.reset()
+            setCustomBookingValues(nextSessionValues(session))
+            setBooking(true)
+          }}
+          onContinueToTattoo={(consultation) => {
+            setInternalSelectedApptId(null)
+            book.reset()
+            setCustomBookingValues(tattooAfterConsultationValues(consultation))
+            setBooking(true)
+          }}
+        />
+      )}
+    </>
   )
 }

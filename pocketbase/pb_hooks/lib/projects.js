@@ -54,6 +54,10 @@ function newProjectFor(app, record, customerId) {
   project.set('customer', customerId)
   project.set('title', record.getString('tattoo_description').slice(0, 200) || (kind === 'consultation' ? 'פגישת ייעוץ' : 'קעקוע'))
   project.set('primary_staff', record.getString('staff'))
+  const priceMin = record.getFloat('price_min')
+  const priceMax = record.getFloat('price_max')
+  if (priceMin > 0) project.set('quote_min', priceMin)
+  if (priceMax > 0) project.set('quote_max', priceMax)
   app.save(project)
   return project.id
 }
@@ -76,7 +80,18 @@ function ensureProject(app, record, original) {
   }
 
   const project = app.findRecordById('projects', projectId)
-  if (project.getString('customer') === customerId) return
+  if (project.getString('customer') === customerId) {
+    const pMin = project.getFloat('quote_min')
+    const pMax = project.getFloat('quote_max')
+    const aMin = record.getFloat('price_min')
+    const aMax = record.getFloat('price_max')
+    if (!pMin && !pMax && (aMin > 0 || aMax > 0)) {
+      if (aMin > 0) project.set('quote_min', aMin)
+      if (aMax > 0) project.set('quote_max', aMax)
+      app.save(project)
+    }
+    return
+  }
 
   const customerChanged = original && original.getString('customer') !== customerId
   const projectUnchanged = original && original.getString('project') === projectId

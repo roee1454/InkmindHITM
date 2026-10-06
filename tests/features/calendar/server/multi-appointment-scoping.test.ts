@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { createPendingHoldForBot } from '@/features/calendar/server/bot-appointments.server'
 import { handleGetActiveAppointmentSummary } from '@/features/conversations/server/messages.server'
 import type PocketBase from 'pocketbase'
@@ -33,7 +33,13 @@ vi.mock('@/features/mcp-assistant/server/waitlist-matcher', () => ({
 
 describe('Multi-Appointment & Media Scoping', () => {
   beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-20T10:00:00.000Z'))
     vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('createPendingHoldForBot excludes inspiration images sent before booking_session_started_at', async () => {

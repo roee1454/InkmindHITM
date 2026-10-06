@@ -34,7 +34,7 @@ import { quoteTargetState } from '../utils/price-quote'
 import { applyConversationAdvance, findConversationWaitingOn, isConsultation, planConversationAdvance } from '@/features/conversations/server/after-appointment.server'
 import { reconcileCustomerConversation } from '@/features/conversations/server/reconciler.server'
 import { loadProjectPolicy } from '@/features/settings/server/project-policy'
-import { buildPriceQuoteMessage } from '../utils/price-quote-message'
+import { buildPriceQuoteMessages } from '../utils/price-quote-message'
 import { cancelPendingBotTurn } from '@/integrations/ai/agent.server'
 import { isHealthDeclarationValid } from '@/features/health-declaration/server/health-service'
 
@@ -280,6 +280,20 @@ export async function createAppointmentHandler(data: CreateAppointmentServerInpu
     throw err
   })
 
+  if (created.project && (data.priceMinIls || data.priceMaxIls)) {
+    const proj = await su.collection('projects').getOne(created.project as string).catch(() => null)
+    if (proj && !proj.quote_min && !proj.quote_max) {
+      await su.collection('projects').update(proj.id, {
+        quote_min: data.priceMinIls ?? 0,
+        quote_max: data.priceMaxIls ?? 0,
+      }).catch(() => null)
+    }
+  }
+
+  await syncAppointmentToGoogle(created.id).catch((err) => {
+    console.error('[createAppointment] Google sync error:', err)
+  })
+
   const dateFormatted = data.date.split('-').reverse().join('/')
   await addSystemNotification({
     title: 'נקבע תור חדש',
@@ -423,6 +437,17 @@ export async function handleUpdateAppointment(
   await syncAppointmentToGoogle(data.id).catch((err) => {
     console.error('[updateAppointment] Google sync error:', err)
   })
+
+  const projectId = (before?.project as string) || null
+  if (projectId && (data.priceMinIls !== undefined || data.priceMaxIls !== undefined)) {
+    const proj = await su.collection('projects').getOne(projectId).catch(() => null)
+    if (proj && !proj.quote_min && !proj.quote_max && (data.priceMinIls || data.priceMaxIls)) {
+      await su.collection('projects').update(proj.id, {
+        quote_min: data.priceMinIls ?? 0,
+        quote_max: data.priceMaxIls ?? 0,
+      }).catch(() => null)
+    }
+  }
 
   if (before) {
     const customerName = before.customer_name_override || 'לקוח'
@@ -610,7 +635,7 @@ export async function sendPriceQuoteToCustomerHandler(data: SendPriceQuoteServer
   const projectPolicy = await loadProjectPolicy(su)
   // Not sent (an older caller) = one session; null = the artist doesn't know yet.
   const estimatedSessions = isSketch ? null : data.estimatedSessions === undefined ? 1 : data.estimatedSessions
-  const messageBody = buildPriceQuoteMessage({
+  const quoteMessages = buildPriceQuoteMessages({
     isSketch,
     needsHealthDeclaration,
     when: `${dayName}, ${dateFormatted} בשעה ${timeFormatted}`,
@@ -627,18 +652,39 @@ export async function sendPriceQuoteToCustomerHandler(data: SendPriceQuoteServer
     healthFormUrl,
   })
 
-  let wamid: string
-  try {
-    ;({ wamid } = await waClient.sendText({ to: customer.phone, body: messageBody }))
-  } catch (err) {
-    if (err instanceof WhatsAppApiError && err.code === ERROR_REENGAGEMENT_REQUIRED) {
-      throw new Error('החלון של 24 שעות פג — יש לחכות להודעה חדשה מהלקוח לפני שליחת הצעת מחיר.')
-    }
-    throw new Error(err instanceof WhatsAppApiError ? `שליחת הצעת המחיר נכשלה: ${err.message}` : 'שליחת הצעת המחיר נכשלה.')
+  if (conversation) {
+    cancelPendingBotTurn(conversation.id)
   }
 
   const now = new Date()
   const nowIso = now.toISOString()
+
+  for (const body of quoteMessages) {
+    let wamid: string
+    try {
+      ;({ wamid } = await waClient.sendText({ to: customer.phone, body }))
+    } catch (err) {
+      if (err instanceof WhatsAppApiError && err.code === ERROR_REENGAGEMENT_REQUIRED) {
+        throw new Error('החלון של 24 שעות פג — יש לחכות להודעה חדשה מהלקוח לפני שליחת הצעת מחיר.')
+      }
+      throw new Error(err instanceof WhatsAppApiError ? `שליחת הצעת המחיר נכשלה: ${err.message}` : 'שליחת הצעת המחיר נכשלה.')
+    }
+
+    if (conversation) {
+      await su.collection('messages').create({
+        conversation: conversation.id,
+        whatsapp_message_id: wamid,
+        direction: 'outbound',
+        sender_type: 'ai_bot',
+        type: 'text',
+        body,
+        status: 'sent',
+        timestamp: new Date().toISOString(),
+        seen: true,
+      })
+    }
+  }
+
   // The quote belongs to the project (it moves the funnel to "quoted"); recorded only once the
   // message went out. A consultation's details aren't a price quote.
   if (!isSketch && appointment.project) {
@@ -647,19 +693,6 @@ export async function sendPriceQuoteToCustomerHandler(data: SendPriceQuoteServer
     )
   }
   if (conversation) {
-    cancelPendingBotTurn(conversation.id)
-    await su.collection('messages').create({
-      conversation: conversation.id,
-      whatsapp_message_id: wamid,
-      direction: 'outbound',
-      sender_type: 'ai_bot',
-      type: 'text',
-      body: messageBody,
-      status: 'sent',
-      timestamp: nowIso,
-      seen: true,
-    })
-
     const targetState = target.state
     const reason = target.reason
     if (targetState === 'AWAITING_APPOINTMENT') {
@@ -667,6 +700,9 @@ export async function sendPriceQuoteToCustomerHandler(data: SendPriceQuoteServer
         ...statusChange('confirmed', 'staff', 'free_sketch_quote_confirmed'),
         slot_confirmed: true,
       })
+      await syncAppointmentToGoogle(data.appointmentId).catch((err) =>
+        console.error('[sendPriceQuote] Google sync failed:', err)
+      )
     }
 
     const nextStatus = targetState === 'AWAIT_PAYMENT' ? 'staff_handling' : 'bot_active'

@@ -30,7 +30,7 @@ export function ProjectPanelHeader({ project, now, draft, invalidField, onDraftC
   const age = stageAge(daysInStage(project.stageChangedAt, now))
 
   return (
-    <header className="flex flex-col gap-2 px-5 pt-5 pb-4 pe-12 lg:px-6 lg:pt-6 lg:pe-14">
+    <header className="sticky top-0 z-10 flex flex-col gap-2.5 border-b border-border/80 bg-card/95 px-5 pt-5 pb-4 pe-12 backdrop-blur-md lg:px-6 lg:pe-14">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <ProjectStageLabel stage={project.stage} />
         {lost ? (

@@ -8,6 +8,12 @@ import type { ProjectDetails } from '../types'
  */
 export function projectBookingValues(project: ProjectDetails): Partial<AppointmentFormValues> {
   const quoted = project.stage === 'quoted' || project.stage === 'consultation_done'
+  const activeAppointments = project.timeline?.filter((a) => a.status !== 'cancelled' && Boolean(a.date)) ?? []
+  const latestApptDate =
+    activeAppointments.length > 0
+      ? activeAppointments.reduce((latest, a) => (a.date > latest ? a.date : latest), activeAppointments[0]!.date)
+      : null
+
   return {
     projectId: project.id,
     customerId: project.customer.id,
@@ -19,5 +25,6 @@ export function projectBookingValues(project: ProjectDetails): Partial<Appointme
     priceMinIls: quoted ? project.quoteMin : null,
     priceMaxIls: quoted ? project.quoteMax : null,
     status: project.stage === 'in_progress' ? 'confirmed' : 'pending',
+    minDate: latestApptDate,
   }
 }

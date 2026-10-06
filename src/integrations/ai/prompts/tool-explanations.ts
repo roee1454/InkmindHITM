@@ -17,7 +17,7 @@ const TOOL_EXPLANATIONS: Partial<Record<string, string>> = {
   resolve_date:
     "- 'resolve_date': ממיר כל ביטוי תאריך ('ראשון הבא', 'עוד שבועיים', 'סופ״ש', '26.7') לתאריך מדויק. השתמש בו לכל ביטוי שאינו 'היום' או 'מחר'. אם מחזיר ambiguous — שאל שאלה מבהירה.",
   collect_tattoo_info:
-    "- 'collect_tattoo_info': קרא לכלי לאחר שהצגת סיכום מלא וקיבלת אישור מפורש מהלקוח על הפרטים. העבר type: 'sketch' לפגישת סקיצה (0.75 שעות) או type: 'tattoo' לקעקוע ישיר.",
+    "- 'collect_tattoo_info': קרא לכלי לאחר שהצגת סיכום מלא וקיבלת אישור מפורש מהלקוח על הפרטים. העבר type: 'sketch' לפגישת סקיצה (עד שעה) או type: 'tattoo' לקעקוע ישיר.",
   join_waitlist:
     "- 'join_waitlist': רושם את הלקוח לרשימת ההמתנה ומעביר את השיחה ל-WAITLIST כשאין מועדים פנויים ביומן או לבקשת הלקוח.",
   answer_faq:

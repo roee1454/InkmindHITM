@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import type PocketBase from 'pocketbase'
 import {
   getAvailableSlotsForBot,
@@ -27,8 +27,14 @@ describe('getAvailableSlotsForBot', () => {
   const staffId = 'staff_roee'
 
   beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-20T10:00:00.000Z'))
     vi.clearAllMocks()
     vi.mocked(isStudioClosedOn).mockResolvedValue({ closed: false, reason: null })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('calculates available slots accurately without proposing invalid or overlapping hours (live issue repro)', async () => {
@@ -225,10 +231,9 @@ describe('getAvailableSlotsForBot', () => {
     const lastSlotHour = Number(wednesday.recommendedSlots[2]!.split(':')[0])
     expect(lastSlotHour).toBeGreaterThanOrEqual(15)
 
-    // Summary and proposal explicitly indicate that the entire day is open
-    expect(wednesday.summaryHebrew).toContain('פנוי לאורך כל היום')
-    expect(wednesday.summaryHebrew).toContain('10:00-19:00')
-    expect(result.readyToUseProposal).toContain('פנוי לאורך כל שעות היום')
+    // Summary and proposal explicitly indicate that the entire day is open from start to end
+    expect(wednesday.summaryHebrew).toContain('פנוי כל היום מ-10:00 עד 19:00')
+    expect(result.readyToUseProposal).toContain('פנוי כל היום מ-10:00 עד 19:00')
   })
 })
 
@@ -236,8 +241,14 @@ describe('checkAvailabilityForBot with alternatives', () => {
   const staffId = 'staff_roee'
 
   beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-20T10:00:00.000Z'))
     vi.clearAllMocks()
     vi.mocked(isStudioClosedOn).mockResolvedValue({ closed: false, reason: null })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('returns alternative slots when the requested slot collides with an existing appointment', async () => {

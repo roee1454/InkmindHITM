@@ -196,4 +196,7 @@ export const HourPicker: React.FC<HourPickerProps> = ({
     </Popover>
   )
 }
+
+export { HourPicker as IMHourPicker }
+export type IMHourPickerProps = HourPickerProps
 export default HourPicker

@@ -25,3 +25,5 @@ export function StatusLabel({ role, children, className }: { role: StatusRole; c
     </span>
   )
 }
+
+export { StatusLabel as IMStatusLabel }

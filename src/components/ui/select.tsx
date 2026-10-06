@@ -181,13 +181,23 @@ function SelectScrollDownButton({
 
 export {
   Select,
+  Select as IMSelect,
   SelectContent,
+  SelectContent as IMSelectContent,
   SelectGroup,
+  SelectGroup as IMSelectGroup,
   SelectItem,
+  SelectItem as IMSelectItem,
   SelectLabel,
+  SelectLabel as IMSelectLabel,
   SelectScrollDownButton,
+  SelectScrollDownButton as IMSelectScrollDownButton,
   SelectScrollUpButton,
+  SelectScrollUpButton as IMSelectScrollUpButton,
   SelectSeparator,
+  SelectSeparator as IMSelectSeparator,
   SelectTrigger,
+  SelectTrigger as IMSelectTrigger,
   SelectValue,
+  SelectValue as IMSelectValue,
 }

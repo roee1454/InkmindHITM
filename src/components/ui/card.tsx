@@ -82,10 +82,17 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
 
 export {
   Card,
+  Card as IMCard,
   CardHeader,
+  CardHeader as IMCardHeader,
   CardFooter,
+  CardFooter as IMCardFooter,
   CardTitle,
+  CardTitle as IMCardTitle,
   CardAction,
+  CardAction as IMCardAction,
   CardDescription,
+  CardDescription as IMCardDescription,
   CardContent,
+  CardContent as IMCardContent,
 }

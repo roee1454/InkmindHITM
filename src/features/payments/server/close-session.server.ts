@@ -75,8 +75,19 @@ async function closeSessionExclusive(input: CloseSessionInput, actor: Actor, su:
     ...statusChange('completed', 'staff', 'session_closed'),
   })
   // Last in the batch, so the project's stage hook already sees this session completed.
+  const project = projectId ? await su.collection('projects').getOne(projectId).catch(() => null) : null
+  const projectUpdates: Record<string, unknown> = {}
   if (input.completesProject) {
-    batch.collection('projects').update(projectId, { completed_at: receivedAt, stage_actor: 'staff', stage_reason: 'last_session_closed' })
+    projectUpdates.completed_at = receivedAt
+    projectUpdates.stage_actor = 'staff'
+    projectUpdates.stage_reason = 'last_session_closed'
+  }
+  if (project && !project.quote_min && !project.quote_max && input.finalPrice && !input.chargeWaived) {
+    projectUpdates.quote_min = input.finalPrice
+    projectUpdates.quote_max = input.finalPrice
+  }
+  if (projectId && Object.keys(projectUpdates).length > 0) {
+    batch.collection('projects').update(projectId, projectUpdates)
   }
 
   try {

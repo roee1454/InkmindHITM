@@ -2,6 +2,7 @@ import { z } from 'zod'
 import type { ToolFactoryContext } from './types'
 import { getStudioPolicyForBot } from '@/features/settings/server/policy'
 import { CALL_STAFF_REASONS } from '../prompts'
+import { DETERMINISTIC_TEMPLATES, sendDeterministicMessage } from '../engine/deterministic-templates'
 
 export function buildSupportTools(ctx: ToolFactoryContext) {
   const {
@@ -15,9 +16,9 @@ export function buildSupportTools(ctx: ToolFactoryContext) {
 
   return {
     answer_faq: botTool(
-      'מחזיר רשימה ממוקדת של שאלות נפוצות (FAQ) מהסטודיו התואמות לנושא השאלה של הלקוח.',
+      'מחזיר רשימה ממוקדת של שאלות נפוצות (FAQ) מהסטודיו התואמות לנושא השאלה של הלקוח. אין לקרוא לכלי זה עבור מילים משובשות או שגיאות הקלדה (כגון "מה המבצ") שאינן שאלה ממשית.',
       z.object({
-        query: z.string().min(1).describe('שאילתת חיפוש ממוקדת לפי נושא שאלת הלקוח. העבירו מילת מפתח אחת או שתיים מרכזיות בלבד (למשל: "מחיר", "גיל", "אישור הורים", "טיפול") ולא משפטים ארוכים.'),
+        query: z.string().min(1).describe('שאילתת חיפוש ממוקדת לפי נושא שאלת הלקוח. העבירו מילת מפתח אחת או שתיים מרכזיות בלבד (למשל: "מחיר", "גיל", "אישור הורים", "טיפול") ולא משפטים ארוכים. איסור מוחלט לנחש מילות מפתח (כמו "מבצע") מתוך שגיאות הקלדה.'),
       }),
       async ({ query }) => {
         // su.filter() parametrizes the search words (FLOW-12) — they originate from
@@ -117,9 +118,13 @@ export function buildSupportTools(ctx: ToolFactoryContext) {
           staff_call_reason: reason,
         })
         await notifyStaff('הבוט ביקש עזרה מהצוות', details)
+        const templateText = DETERMINISTIC_TEMPLATES.staffEscalated()
+        const { sent } = await sendDeterministicMessage(ctx, templateText)
         return {
           status: 'success',
-          message: 'השיחה הועברה לצוות. הודע/י ללקוח בקצרה שחבר/ת צוות יחזור אליו/ה בהקדם, ואל תמשיך/י לטפל בבקשה בעצמך.',
+          message: sent
+            ? 'השיחה הועברה לצוות והודעת עדכון נשלחה ללקוח בוואטסאפ. אל תוסיף שום טקסט נוסף.'
+            : 'השיחה הועברה לצוות. הודע/י ללקוח בקצרה שחבר/ת צוות יחזור אליו/ה בהקדם, ואל תמשיך/י לטפל בבקשה בעצמך.',
         }
       }
     ),

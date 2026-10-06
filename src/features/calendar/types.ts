@@ -60,6 +60,8 @@ export interface ApiAppointment {
 export interface AppointmentFormValues {
   /** Set when booking a follow-up inside an existing project (e.g. a session after a consultation). */
   projectId?: string | null
+  /** If this appointment continues an earlier one, dates strictly before this (YYYY-MM-DD) are forbidden. */
+  minDate?: string | null
   customerId: string | null
   chatId: string | null
   leadName: string

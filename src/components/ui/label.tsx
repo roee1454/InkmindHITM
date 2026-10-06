@@ -19,4 +19,4 @@ function Label({
   )
 }
 
-export { Label }
+export { Label, Label as IMLabel }

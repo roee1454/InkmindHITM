@@ -14,9 +14,6 @@ vi.mock('@/features/calendar/server/bot-appointments.server', () => ({
 vi.mock('@/integrations/whatsapp-cloud-api/settings.server', () => ({
   getWhatsAppSettings: vi.fn().mockResolvedValue({ phoneNumberId: 'PNID', accessToken: 'T' }),
 }))
-vi.mock('@/features/leads/server/leads', () => ({
-  listLeads: vi.fn(),
-}))
 
 let getSuperuserClient: typeof GetSuperuserClient
 let dispatchCommit: typeof DispatchCommit
@@ -48,6 +45,10 @@ const ARGS = {
   freedAppointmentId: 'appt1',
   preferredStaffId: undefined,
   notBefore: undefined,
+  projectId: 'proj1',
+  action: 'reopen',
+  finalPrice: 1000,
+  payments: [],
 }
 
 describe('dispatchCommit routing', () => {
@@ -60,6 +61,7 @@ describe('dispatchCommit routing', () => {
     ])
     su._seed('customers', [{ id: 'cust1', name: 'Dana', phone: '+972500000000', notes: '' }])
     su._seed('waitlist_entries', [{ id: 'entry1', customer: 'cust1', offered_appointment: 'appt1', status: 'watching' }])
+    su._seed('projects', [{ id: 'proj1', customer: 'cust1', title: 'Dragon', stage: 'cancelled' }])
     vi.mocked(getSuperuserClient).mockResolvedValue(su as never)
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ messages: [{ id: 'wamid.1' }] }), { status: 200 })))
 

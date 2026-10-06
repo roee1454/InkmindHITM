@@ -15,7 +15,7 @@ import { coalesceHistory } from '@/integrations/ai/agent.server'
 import { buildMcpSystemPrompt } from './prompts'
 import { createPendingAction } from './approval'
 import { buildCalendarTools } from './tool-servers/calendar.server'
-import { buildLeadsTools } from './tool-servers/leads.server'
+import { buildProjectsTools } from './tool-servers/projects.server'
 import { buildPaymentsTools } from './tool-servers/payments.server'
 import { buildMessagingTools } from './tool-servers/messaging.server'
 import { buildCustomerTools } from './tool-servers/customers.server'
@@ -91,7 +91,7 @@ export async function runMcpTurn({ staff, conversationId, text }: RunMcpTurnInpu
   const toolCtx: McpToolContext = { su, staff, proposals }
   const tools = {
     ...buildCalendarTools(toolCtx),
-    ...buildLeadsTools(),
+    ...buildProjectsTools(toolCtx),
     ...buildPaymentsTools(),
     ...buildMessagingTools(toolCtx),
     ...buildCustomerTools(toolCtx),

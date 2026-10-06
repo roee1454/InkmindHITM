@@ -97,9 +97,15 @@ function AvatarGroupCount({
 
 export {
   Avatar,
+  Avatar as IMAvatar,
   AvatarImage,
+  AvatarImage as IMAvatarImage,
   AvatarFallback,
+  AvatarFallback as IMAvatarFallback,
   AvatarBadge,
+  AvatarBadge as IMAvatarBadge,
   AvatarGroup,
+  AvatarGroup as IMAvatarGroup,
   AvatarGroupCount,
+  AvatarGroupCount as IMAvatarGroupCount,
 }

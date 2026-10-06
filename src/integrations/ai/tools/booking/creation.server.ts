@@ -24,7 +24,7 @@ export function buildBookingCreationTools(ctx: ToolFactoryContext) {
         staffId: z.string().describe('מזהה האמן שנבחר על ידי הלקוח לביצוע הקעקוע (staffId)'),
         date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'תאריך חייב להיות בפורמט YYYY-MM-DD').describe('תאריך שנבחר לתור בפורמט YYYY-MM-DD'),
         timeSlot: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'שעה חייבת להיות בפורמט HH:MM בטווח 24 שעות').describe('שעת תחילת התור בפורמט HH:MM'),
-        durationHours: z.number().min(0.5).max(24).default(2).describe('משך התור המוערך בשעות (למשל: 0.5 לפגישת סקיצה של 30 דק\', או 2-3.5 לקעקוע)'),
+        durationHours: z.number().min(0.5).max(24).default(2).describe('משך התור המוערך בשעות (למשל: 0.5 לפגישת סקיצה של עד שעה, או 2-3.5 לקעקוע)'),
         customerDeclinedPhotos: z.boolean().default(false)
           .describe('true רק אם נשאל במפורש ואין לו/מסרב לשלוח תמונת השראה או תמונת מיקום'),
         allowException: z.boolean().default(false)

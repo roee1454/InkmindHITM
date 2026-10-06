@@ -1,18 +1,16 @@
 import { z } from 'zod'
 import type { ToolFactoryContext } from './types'
+import { getStudioPolicyForBot } from '@/features/settings/server/policy'
+import { DETERMINISTIC_TEMPLATES, sendDeterministicMessage } from '../engine/deterministic-templates'
 
-/** Distinguishes this template's rows in `messages` from any other `type: 'template'` send
- *  (e.g. a lifecycle reminder template) so the cooldown guard below only looks at its own kind. */
-const TEMPLATE_LABEL = '[תבנית] הצהרת בריאות'
-const TEMPLATE_NAME = 'health_declaration_notice'
 const RESEND_COOLDOWN_MS = 3 * 60 * 60 * 1000 // 3h — enough to stop every "אוקיי"/photo re-triggering a resend
 
 export function buildHealthDeclarationTools(ctx: ToolFactoryContext) {
-  const { su, conversationId, customerId, waClient, customerPhone, botTool } = ctx
+  const { su, conversationId, waClient, customerPhone, botTool } = ctx
 
   return {
     send_health_declaration_notice: botTool(
-      "שולח ללקוח הודעת תבנית מאושרת של וואטסאפ עם קישור למילוי הצהרת בריאות. קרא לכלי הזה בלבד כשצריך למסור ללקוח את הקישור או להסביר את שלב הצהרת הבריאות — אל תכתוב את הקישור או את ההסבר בעצמך בטקסט חופשי.",
+      "שולח ללקוח הודעת תבנית עם קישור למילוי הצהרת בריאות. קרא לכלי הזה בלבד כשצריך למסור ללקוח את הקישור או להסביר את שלב הצהרת הבריאות — אל תכתוב את הקישור או את ההסבר בעצמך בטקסט חופשי.",
       z.object({}),
       async () => {
         if (!waClient || !customerPhone) {
@@ -20,9 +18,9 @@ export function buildHealthDeclarationTools(ctx: ToolFactoryContext) {
         }
 
         const recent = await su.collection('messages').getList(1, 1, {
-          filter: su.filter('conversation = {:cid} && type = "template" && body = {:label}', {
+          filter: su.filter('conversation = {:cid} && direction = "outbound" && (type = "template" || body ~ {:snippet})', {
             cid: conversationId,
-            label: TEMPLATE_LABEL,
+            snippet: 'הצהרת בריאות',
           }),
           sort: '-timestamp',
         })
@@ -34,32 +32,29 @@ export function buildHealthDeclarationTools(ctx: ToolFactoryContext) {
           }
         }
 
-        const customer = await su.collection('customers').getOne(customerId).catch(() => null)
-        const customerName = (customer?.name as string) || 'לקוח/ה יקר/ה'
+        const policy = await getStudioPolicyForBot(su).catch(() => ({
+          healthDeclarationFormUrl: null,
+        }))
+        const healthFormUrl =
+          policy.healthDeclarationFormUrl?.trim() ||
+          process.env.HEALTH_DECLARATION_URL?.trim() ||
+          ''
 
-        const { wamid } = await waClient.sendTemplate({
-          to: customerPhone,
-          templateName: TEMPLATE_NAME,
-          languageCode: 'he',
-          components: [{ type: 'body', parameters: [{ type: 'text', text: customerName }] }],
-        })
-        ctx.didSendMessage = true
+        if (!healthFormUrl) {
+          return {
+            status: 'error',
+            message: 'טרם הוגדר קישור לטופס הצהרת בריאות במערכת — הודע ללקוח שהצוות יעביר לו קישור בהקדם.',
+          }
+        }
 
-        await su.collection('messages').create({
-          conversation: conversationId,
-          whatsapp_message_id: wamid,
-          direction: 'outbound',
-          sender_type: 'ai_bot',
-          type: 'template',
-          body: TEMPLATE_LABEL,
-          status: 'sent',
-          timestamp: new Date().toISOString(),
-          seen: true,
-        })
+        const templateText = DETERMINISTIC_TEMPLATES.healthDeclarationNotice({ formUrl: healthFormUrl })
+        const { sent } = await sendDeterministicMessage(ctx, templateText)
 
         return {
           status: 'success',
-          message: 'תבנית הצהרת הבריאות נשלחה ללקוח בוואטסאפ. אל תסביר או תחזור על תוכנה — המשך/י ישירות בשיחה.',
+          message: sent
+            ? 'תבנית הצהרת הבריאות נשלחה ללקוח בוואטסאפ. אל תסביר או תחזור על תוכנה — המשך/י ישירות בשיחה.'
+            : 'לא ניתן לשלוח את ההודעה כרגע — הסבר ללקוח שהצוות ישלח את הקישור בהקדם.',
         }
       },
     ),

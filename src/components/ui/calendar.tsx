@@ -19,13 +19,14 @@ export interface CalendarProps {
   onSelect: (ymd: string) => void
   disabled?: (date: Date) => boolean
   className?: string
+  defaultAnchor?: Date
 }
 
 // Month-grid calendar, RTL-native (the app sets dir="rtl" on <html>, so the day-of-week order in
 // the DOM stays chronological — Sun..Sat — and the grid flips visually via CSS). Reused on its
 // own or via DatePicker (Popover + this + a trigger button).
-export const Calendar: React.FC<CalendarProps> = ({ selected, onSelect, disabled, className }) => {
-  const initial = selected ? fromYmd(selected) : new Date()
+export const Calendar: React.FC<CalendarProps> = ({ selected, onSelect, disabled, className, defaultAnchor }) => {
+  const initial = selected ? fromYmd(selected) : (defaultAnchor ?? new Date())
   const [anchor, setAnchor] = React.useState(initial)
   const [focused, setFocused] = React.useState(initial)
   const buttonRefs = React.useRef(new Map<string, HTMLButtonElement>())
@@ -127,4 +128,7 @@ export const Calendar: React.FC<CalendarProps> = ({ selected, onSelect, disabled
     </div>
   )
 }
+
+export { Calendar as IMCalendar }
+export type IMCalendarProps = CalendarProps
 export default Calendar

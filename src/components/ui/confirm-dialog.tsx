@@ -96,3 +96,6 @@ export function ConfirmDialog({
     </ResponsiveDialog>
   )
 }
+
+export { ConfirmDialog as IMConfirmDialog }
+export type IMConfirmDialogProps = ConfirmDialogProps

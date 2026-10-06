@@ -99,13 +99,13 @@ export function buildBaseTools(ctx: ToolFactoryContext) {
         })
         return {
           status: 'success',
-          message: 'תהליך התיאום החל ומצב השיחה עודכן ל-WANTS_TO_BOOK. הצג ללקוח בטבעיות את שתי האפשרויות: פגישת ייעוץ וסקיצה אישית בסטודיו (כ-30 דק) או סשן קעקוע ישיר.',
+          message: 'תהליך התיאום החל ומצב השיחה עודכן ל-WANTS_TO_BOOK. הצג ללקוח בטבעיות את שתי האפשרויות: פגישת ייעוץ וסקיצה אישית בסטודיו (עד שעה) או סשן קעקוע ישיר.',
         }
       }
     ),
 
     choose_booking_track: botTool(
-      'מגדיר את מסלול התיאום שנבחר (sketch לפגישת סקיצה וייעוץ כ-30 דק\', או tattoo לסשן קעקוע ישיר) ומעביר את השיחה לשלב איסוף הפרטים (COLLECTING_INFO). קרא לכלי ברגע שהלקוח בוחר כיוון, או כשמוסר פרטים על מועד או רעיון.',
+      'מגדיר את מסלול התיאום שנבחר (sketch לפגישת סקיצה וייעוץ עד שעה, או tattoo לסשן קעקוע ישיר) ומעביר את השיחה לשלב איסוף הפרטים (COLLECTING_INFO). קרא לכלי ברגע שהלקוח בוחר כיוון, או כשמוסר פרטים על מועד או רעיון.',
       z.object({
         track: z.enum(['sketch', 'tattoo']).describe('סוג התור שנבחר: sketch לסקיצה/ייעוץ, tattoo לקעקוע ישיר'),
         customerAskedForConsultation: z
@@ -131,7 +131,7 @@ export function buildBaseTools(ctx: ToolFactoryContext) {
         })
         return {
           status: 'success',
-          message: `מסלול התיאום נקבע כ-${track === 'sketch' ? 'פגישת סקיצה וייעוץ (כ-30 דק)' : 'סשן קעקוע ישיר'} ומצב השיחה עודכן ל-COLLECTING_INFO. המשך כעת בבירור אמן, מועדים ובדיקת זמינות לפי כללי COLLECTING_INFO.`,
+          message: `מסלול התיאום נקבע כ-${track === 'sketch' ? 'פגישת סקיצה וייעוץ (עד שעה)' : 'סשן קעקוע ישיר'} ומצב השיחה עודכן ל-COLLECTING_INFO. המשך כעת בבירור אמן, מועדים ובדיקת זמינות לפי כללי COLLECTING_INFO.`,
         }
       }
     ),

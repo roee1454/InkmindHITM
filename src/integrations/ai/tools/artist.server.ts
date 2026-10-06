@@ -2,6 +2,7 @@ import { z } from 'zod'
 import type PocketBase from 'pocketbase'
 import type { ToolFactoryContext } from './types'
 import { suggestArtistsForBot, getWorkingHoursForStaff } from '@/features/settings/server/staff'
+import { DETERMINISTIC_TEMPLATES, sendDeterministicMessage } from '../engine/deterministic-templates'
 
 const DAY_NAMES = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
 
@@ -30,16 +31,22 @@ export function buildArtistTools(ctx: ToolFactoryContext) {
 
   return {
     suggest_artists: botTool(
-      'מחזיר את כל אמני הסטודיו הפעילים עם תיקי העבודות שלהם ושעות הפעילות (או מחפש לפי שם אמן מבוקש). יש להציג את האמנים ללקוח בהודעה מרוכזת עם שמותיהם, תחום התמחותם התמציתי (לפי ה-bio) והקישור לתיק העבודות.',
+      'מחזיר ושולח את כל אמני הסטודיו הפעילים עם תיקי העבודות שלהם. יש לקרוא לכלי זה אך ורק כשמציגים את אמני הסטודיו ללקוח שטרם בחר אמן. אין לקרוא לכלי כאשר הלקוח כבר ציין או בחר אמן (למשל: "אני רוצה עם דור", "בא לי את דור") — במקרה כזה המשך ישירות ובטבעיות בבירור מועדים מול שעות הפעילות שלו.',
       z.object({
-        artistName: z.string().optional().describe('שם אמן ספציפי שהלקוח ביקש'),
+        artistName: z.string().optional().describe('העבר רק אם הלקוח מבקש במפורש מידע או תיק עבודות של אמן ספציפי'),
       }),
       async ({ artistName }) => {
         if (!artistName) {
           const allArtists = await withWorkingHours(su, await suggestArtistsForBot(su, {}))
+          const templateText = DETERMINISTIC_TEMPLATES.artistsList({
+            artists: allArtists.map((a) => ({ name: a.name, portfolioUrl: a.portfolioUrl })),
+          })
+          const { sent } = await sendDeterministicMessage(ctx, templateText)
           return {
             status: 'success',
-            message: 'הצג ללקוח את אמני הסטודיו בהודעה מרוכזת. לכל אמן הצג את שמו, תחום התמחותו התמציתי (מתוך ה-bio) ואת הקישור לתיק העבודות (portfolioUrl). אם לאמן אין קישור, ציין את תחום התמחותו בלבד.',
+            message: sent
+              ? 'הודעת אמני הסטודיו נשלחה ללקוח בוואטסאפ. אל תחזור על שמותיהם או קישוריהם בטקסט חופשי.'
+              : 'הצג ללקוח את אמני הסטודיו בהודעה מרוכזת: לכל אמן הצג רק את שמו ואת הקישור לתיק העבודות.',
             data: allArtists,
           }
         }
@@ -50,13 +57,14 @@ export function buildArtistTools(ctx: ToolFactoryContext) {
         if (!isExactMatch) {
           return {
             status: 'fallback_all_artists',
-            message: 'לא נמצא אמן בשם זה. הנה כל אמני הסטודיו — הצג אותם בהודעה מרוכזת עם שמותיהם, תחום התמחותם (bio) והקישור לתיק העבודות (portfolioUrl).',
+            message: 'לא נמצא אמן בשם זה. הנה כל אמני הסטודיו ושעות הפעילות שלהם — ענה ללקוח בטבעיות.',
             data: matches,
           }
         }
+
         return {
           status: 'success',
-          message: 'הצג ללקוח את האמן המבוקש עם תחום התמחותו (bio) והקישור לתיק העבודות שלו (portfolioUrl). שעות הפעילות מצורפות (workingHours).',
+          message: 'הנה פרטי האמן ושעות הפעילות שלו (workingHours). ענה ללקוח בחום ובטבעיות עם ימי ושעות הפעילות שלו (לעולם אל תשתמש בדיווח רובוטי כמו "האמן נבחר"), ושאל מתי נוח לו לתאם או בדוק זמינות ביומן.',
           data: matches,
         }
       },

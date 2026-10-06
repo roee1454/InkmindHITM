@@ -9,6 +9,11 @@ import { StepStatusNotes } from './create-appointment-wizard/StepStatusNotes'
 import { WIZARD_STEPS, progressPercent } from './create-appointment-wizard/wizard-steps'
 import type { ApiGoogleConnection, AppointmentFormValues } from '../types'
 import { useWorkingHoursCheck } from '../hooks/useWorkingHoursCheck'
+import {
+  validateCustomerDateTimeStep,
+  validatePricingDepositStep,
+  validateStaffDurationStep,
+} from '../utils/appointment-validation'
 
 interface StaffItem {
   id: string
@@ -27,6 +32,7 @@ interface CreateAppointmentDialogProps {
   initialDate?: string
   initialTimeSlot?: string
   initialValues?: Partial<AppointmentFormValues> | null
+  minDate?: string | null
 }
 
 function emptyValues(): AppointmentFormValues {
@@ -48,6 +54,7 @@ function emptyValues(): AppointmentFormValues {
     depositPaid: false,
     notes: '',
     allowException: false,
+    minDate: null,
   }
 }
 
@@ -63,6 +70,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   initialDate,
   initialTimeSlot,
   initialValues,
+  minDate,
 }) => {
   const [values, setValues] = useState<AppointmentFormValues>(emptyValues)
   const [currentStep, setCurrentStep] = useState(0)
@@ -76,10 +84,11 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
       chatId: initialChatId ?? initialValues?.chatId ?? null,
       date: initialDate ?? initialValues?.date ?? '',
       timeSlot: initialTimeSlot ?? initialValues?.timeSlot ?? '',
+      minDate: minDate ?? initialValues?.minDate ?? null,
     })
     setCurrentStep(0)
     setLocalError(null)
-  }, [open, initialChatId, initialDate, initialTimeSlot, initialValues])
+  }, [open, initialChatId, initialDate, initialTimeSlot, initialValues, minDate])
 
   const handleChange = (patch: Partial<AppointmentFormValues>) =>
     setValues((prev) => ({ ...prev, ...patch }))
@@ -96,18 +105,23 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   const goNext = () => {
     setLocalError(null)
     if (currentStep === 0) {
-      if (!values.customerId || !values.date || !values.timeSlot) {
-        setLocalError('נא לבחור לקוח, תאריך ושעה')
+      const result = validateCustomerDateTimeStep(values)
+      if (!result.valid && result.error) {
+        setLocalError(result.error)
         return
       }
     }
     if (currentStep === 1) {
-      if (isStudioClosed && !values.allowException) {
-        setLocalError('יש לסמן שאתם מודעים שהסטודיו סגור בתאריך זה')
+      const result = validateStaffDurationStep(values, { isStudioClosed, fitsWorkingHours })
+      if (!result.valid && result.error) {
+        setLocalError(result.error)
         return
       }
-      if (!fitsWorkingHours && !values.allowException) {
-        setLocalError('יש לסמן שאתם מודעים שהתור מחוץ לשעות העבודה')
+    }
+    if (currentStep === 2) {
+      const result = validatePricingDepositStep(values)
+      if (!result.valid && result.error) {
+        setLocalError(result.error)
         return
       }
     }
@@ -126,6 +140,16 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
     if (e.target !== e.currentTarget) return
     if (!isLastStep) {
       goNext()
+      return
+    }
+    const staffCheck = validateStaffDurationStep(values, { isStudioClosed, fitsWorkingHours })
+    if (!staffCheck.valid && staffCheck.error) {
+      setLocalError(staffCheck.error)
+      return
+    }
+    const pricingCheck = validatePricingDepositStep(values)
+    if (!pricingCheck.valid && pricingCheck.error) {
+      setLocalError(pricingCheck.error)
       return
     }
     onSave(values)

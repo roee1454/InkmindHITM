@@ -100,3 +100,28 @@ describe('appointment filtering (track-b B6.8)', () => {
     expect(countByStatus(all)).toEqual({ all: 3, confirmed: 1, pending: 1, cancelled: 1, completed: 0, no_show: 0 })
   })
 })
+
+describe('calendar default artist filter based on staff role', () => {
+  it('defaults to "all" when staff member is an admin or owner', () => {
+    const adminStaff = { id: 'admin_1', isAdmin: true, name: 'Admin', role: 'admin' }
+    const defaultArtist = adminStaff.isAdmin ? 'all' : adminStaff.id
+    expect(defaultArtist).toBe('all')
+  })
+
+  it('defaults to personal staffId when staff member is not an admin', () => {
+    const regularStaff = { id: 'artist_1', isAdmin: false, name: 'Artist', role: 'staff' }
+    const defaultArtist = regularStaff.isAdmin ? 'all' : regularStaff.id
+    expect(defaultArtist).toBe('artist_1')
+  })
+
+  it('shows all appointments across all staff when selectedArtist is "all"', () => {
+    const appointments = [
+      appointment({ id: 'a', staffId: 'artist_1' }),
+      appointment({ id: 'b', staffId: 'artist_2' }),
+      appointment({ id: 'c', staffId: 'admin_1' }),
+    ]
+    const visible = filterAppointments(appointments, { artistId: 'all', status: 'all', query: '' })
+    expect(visible).toHaveLength(3)
+    expect(visible.map((a) => a.id)).toEqual(['a', 'b', 'c'])
+  })
+})

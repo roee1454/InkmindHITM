@@ -12,6 +12,6 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     // Needs a real PocketBase — run separately with `pnpm test:integration`.
-    exclude: [...configDefaults.exclude, 'tests/integration/**'],
+    exclude: [...configDefaults.exclude, 'tests/integration/**', '.claude/**'],
   },
 })

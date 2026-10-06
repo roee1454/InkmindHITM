@@ -180,13 +180,23 @@ function SheetDescription({
 
 export {
   Sheet,
+  Sheet as IMSheet,
   SheetClose,
+  SheetClose as IMSheetClose,
   SheetContent,
+  SheetContent as IMSheetContent,
   SheetDescription,
+  SheetDescription as IMSheetDescription,
   SheetFooter,
+  SheetFooter as IMSheetFooter,
   SheetHeader,
+  SheetHeader as IMSheetHeader,
   SheetOverlay,
+  SheetOverlay as IMSheetOverlay,
   SheetPortal,
+  SheetPortal as IMSheetPortal,
   SheetTitle,
+  SheetTitle as IMSheetTitle,
   SheetTrigger,
+  SheetTrigger as IMSheetTrigger,
 }

@@ -73,12 +73,43 @@ function quoteFact(project: ProjectDetails, edit: EditProps | null): Fact {
   return quote ? { label: 'הצעת מחיר', value: quote } : { label: 'הצעת מחיר', value: '—', hint: 'לא נשלחה הצעה' }
 }
 
-function balanceFact(finance: ProjectFinance | undefined, locked: boolean): Fact {
+export function balanceFact(
+  project: ProjectDetails,
+  summary: PanelSummary,
+  finance: ProjectFinance | undefined,
+  locked: boolean,
+): Fact {
   if (!finance) return { label: 'יתרה', value: '…', locked }
   const { due, credit, billed, paid } = finance.balance
   if (due > 0) return { label: 'יתרה לתשלום', value: formatIls(due), hint: `שולמו ${formatIls(paid)} מתוך ${formatIls(billed)}`, tone: 'text-warning', locked }
-  if (credit > 0) return { label: 'זיכוי ללקוח', value: formatIls(credit), hint: 'שולם מעבר למה שחויב', tone: 'text-status-done', locked }
-  if (billed > 0) return { label: 'יתרה', value: 'מאוזן', hint: `שולמו ${formatIls(paid)}`, tone: 'text-status-done', locked }
+
+  const hasUnclosedCompleted = summary.appointments.some(
+    (a) => (a.kind === 'session' || a.kind === 'touch_up') && a.status === 'completed' && a.finalPrice == null && !a.chargeWaived,
+  )
+  if (hasUnclosedCompleted) {
+    return { label: 'יתרה', value: 'ממתין לסגירה', hint: 'חסר מחיר סופי לסשן שהסתיים', tone: 'text-warning', locked }
+  }
+
+  const upcomingCount = summary.appointments.filter((a) => a.status === 'pending' || a.status === 'confirmed').length
+  if (credit > 0) {
+    if (upcomingCount > 0) {
+      return {
+        label: 'מקדמה שולמה',
+        value: formatIls(credit),
+        hint: upcomingCount > 1 ? 'משוריין לתורים הבאים' : 'משוריין לתור הבא',
+        tone: 'text-status-done',
+        locked,
+      }
+    }
+    if (project.stage === 'completed' && billed === 0) {
+      return { label: 'יתרה', value: 'מאוזן', hint: `שולמו ${formatIls(paid)} במלואם`, tone: 'text-status-done', locked }
+    }
+    return { label: 'זיכוי ללקוח', value: formatIls(credit), hint: 'שולם מעבר למה שחויב', tone: 'text-status-done', locked }
+  }
+
+  if (billed > 0 || (project.stage === 'completed' && paid > 0)) {
+    return { label: 'יתרה', value: 'מאוזן', hint: `שולמו ${formatIls(paid)} במלואם`, tone: 'text-status-done', locked }
+  }
   return { label: 'יתרה', value: '₪0', hint: 'עוד לא חויב', locked }
 }
 
@@ -97,7 +128,7 @@ interface ProjectFactsProps {
  * happens in the same cells, so the numbers never jump to a separate form.
  */
 export function ProjectFacts({ project, summary, finance, edit }: ProjectFactsProps) {
-  const facts = [progressFact(project, summary, edit), quoteFact(project, edit), balanceFact(finance, Boolean(edit))]
+  const facts = [progressFact(project, summary, edit), quoteFact(project, edit), balanceFact(project, summary, finance, Boolean(edit))]
 
   return (
     <dl className="grid gap-px overflow-hidden rounded-xl border border-border bg-border lg:grid-cols-3">

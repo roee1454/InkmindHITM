@@ -403,7 +403,7 @@ export async function getAvailableSlotsForBot(
     const [, monthStr = '01', dayStr = '01'] = dateStr.split('-')
     const shortDate = `${dayStr}.${monthStr}`
     const summaryHebrew = isEntireDayFree
-      ? `${dayName} (${shortDate}): פנוי לאורך כל היום (${workingHoursRange}) — למשל: ${recommendedSlots.join(' או ')}`
+      ? `${dayName} (${shortDate}): פנוי כל היום מ-${workStartStr} עד ${workEndStr}`
       : `${dayName} (${shortDate}): ${recommendedSlots.join(' או ')} (מתוך ${daySlots.length} משבצות פנויות)`
 
     availableDays.push({
@@ -423,15 +423,15 @@ export async function getAvailableSlotsForBot(
   if (availableDays.length === 0) {
     readyToUseProposal = `לא נמצאו תורים פנויים של ${durationHours} שעות בטווח התאריכים שנבדק.`
   } else {
-    const durText = durationHours === 0.75 ? 'כ-45 דקות' : durationHours === 1 ? 'כשעה' : `כ-${durationHours} שעות`
     const daysProposal = availableDays.slice(0, 3).map((ad) => {
       const [, m = '01', d = '01'] = ad.date.split('-')
       if (ad.isEntireDayFree && ad.workingHoursRange) {
-        return `ב${ad.dayOfWeek} (${d}.${m}) פנוי לאורך כל שעות היום (${ad.workingHoursRange}) — למשל ב-${ad.recommendedSlots.join(' או ב-')}`
+        const [start = '10:00', end = '18:00'] = ad.workingHoursRange.split('-')
+        return `ב${ad.dayOfWeek} (${d}.${m}) פנוי כל היום מ-${start} עד ${end}`
       }
       return `ב${ad.dayOfWeek} (${d}.${m}) ב-${ad.recommendedSlots.join(' או ב-')}`
     })
-    readyToUseProposal = `${artistName} יכול להתחיל לתור של ${durText}: ${daysProposal.join(', ')}. איזו שעה הכי נוחה לך?`
+    readyToUseProposal = `${artistName} פנוי: ${daysProposal.join(', ')}. איזו שעה נוחה לך?`
   }
 
   return {

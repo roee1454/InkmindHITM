@@ -7,11 +7,12 @@ import { z } from 'zod'
 import { getActiveAppointmentForBot } from '@/features/calendar/server/bot-appointments.server'
 import { transition } from '@/features/conversations/server/state-machine'
 import { addSystemNotification } from '@/features/notifications/server/notifications'
-import { createWhatsAppClient, WhatsAppApiError } from '@/integrations/whatsapp-cloud-api/client'
+import { createWhatsAppClient, WhatsAppApiError, ERROR_REENGAGEMENT_REQUIRED } from '@/integrations/whatsapp-cloud-api/client'
 import { getWhatsAppSettings } from '@/integrations/whatsapp-cloud-api/settings.server'
 import { getStudioPolicyForBot } from '@/features/settings/server/policy'
 import { cancelPendingBotTurn } from '@/integrations/ai/agent.server'
 import { extractPhoneCandidates, toCanonicalE164Phone } from '@/lib/phone'
+import { HEBREW_DAYS_LONG, minutesToTime, formatDurationHebrew } from '@/lib/date-utils'
 import { isSurveySourceQuestion, extractSourceFromSurveyAnswer } from '@/features/analytics/utils/attribution'
 import type { CustomerSource } from '@/features/customers/types'
 
@@ -424,7 +425,14 @@ export async function processHealthDeclaration(
 
     // 4. Send WhatsApp message (ONLY when in AWAIT_HEALTH_NOTICE)
     const windowExpiresAt = conversation.whatsapp_window_expires_at as string | undefined
-    const isWindowOpen = Boolean(windowExpiresAt && new Date(windowExpiresAt).getTime() > Date.now())
+    const lastMsgTime = conversation.last_message_at ? new Date(conversation.last_message_at as string).getTime() : 0
+    const isRecentInbound = Boolean(lastMsgTime && Date.now() - lastMsgTime < 24 * 60 * 60 * 1000)
+    const isWindowExplicitlyExpired = Boolean(windowExpiresAt && new Date(windowExpiresAt).getTime() <= Date.now())
+    const isWindowOpen = Boolean(
+      (windowExpiresAt && new Date(windowExpiresAt).getTime() > Date.now()) ||
+      (!isWindowExplicitlyExpired && isRecentInbound) ||
+      !windowExpiresAt
+    )
     const settings = await getWhatsAppSettings()
 
     if (settings?.phoneNumberId && settings.accessToken) {
@@ -436,20 +444,34 @@ export async function processHealthDeclaration(
           accessToken: settings.accessToken,
         })
 
-        let textBody: string
+        const messagesToSend: string[] = []
         const locationLine = '📍 איפה: שוהם מרקט קומה מינוס אחת, יש חנייה בשפע במתחם INKMIND!'
 
+        const staffRecord = activeAppointment.staff
+          ? await su.collection('staff').getOne(activeAppointment.staff as string).catch(() => null)
+          : null
+        const start = activeAppointment.start_time ? new Date(activeAppointment.start_time as string) : null
+        const dateStr = start ? `${start.getDate()}.${start.getMonth() + 1}` : ''
+        const dayName = start ? (HEBREW_DAYS_LONG[start.getDay()] || 'ראשון') : ''
+        const timeStr = start ? minutesToTime(start.getHours() * 60 + start.getMinutes()) : ''
+        const whenLine = start ? `🗓 מועד: יום ${dayName}, ${dateStr} בשעה ${timeStr}${staffRecord ? ` אצל ${staffRecord.name}` : ''}` : ''
+
         if (isFreeSketch) {
-          textBody = [
+          messagesToSend.push([
             'איזה יופי, הצהרת הבריאות נקלטה בהצלחה! ✅',
             '',
             'פגישת הייעוץ מאושרת ביומן:',
-            `🗓 מועד: ${activeAppointment.start_time ? activeAppointment.start_time.slice(0, 10) : ''}`,
-            '⏱ משך משוער: כ-30 דקות',
+            whenLine,
+            '⏱ משך משוער: עד שעה',
             locationLine,
             '',
             'נשלח לך תזכורת מסודרת לפני המפגש. מחכים לראותך! ✨',
-          ].filter(Boolean).join('\n')
+          ].filter(Boolean).join('\n'))
+
+          const { syncAppointmentToGoogle } = await import('@/integrations/google-calendar/server/google-sync.server')
+          await syncAppointmentToGoogle(activeAppointment.id).catch((err) =>
+            console.error('[processHealthDeclaration] Google sync failed:', err)
+          )
         } else {
           const policy = await getStudioPolicyForBot(su).catch(() => ({
             paymentInstructions: null,
@@ -462,36 +484,51 @@ export async function processHealthDeclaration(
               : (policy.depositAmount ?? 100)
           const cancellationPolicyText = `📌 ${customerCancellationPolicyText(policy.cancellationCutoffHours ?? 48)}`
 
-          textBody = [
+          const durationMins = Number(activeAppointment.duration_minutes) || 120
+          const durationLabel = activeAppointment.type === 'sketch' ? 'עד שעה' : formatDurationHebrew(durationMins)
+          const priceMin = activeAppointment.price_min
+          const priceMax = activeAppointment.price_max
+          const priceRange = priceMin && priceMax ? (priceMin === priceMax ? `₪${priceMin}` : `₪${priceMin}–${priceMax}`) : ''
+
+          const msg1 = [
             'איזה יופי, הצהרת הבריאות נקלטה בהצלחה! ✅',
             '',
-            `נשאר לנו רק שריון סופי של התור באמצעות מקדמה על סך ₪${depositAmount}:`,
-            locationLine,
+            'הנה סיכום פרטי התור לשריון:',
+            whenLine,
+            `⏱ משך משוער: ${durationLabel}.`,
+            priceRange ? `💰 מחיר משוער: ${priceRange}.` : '',
+          ].filter(Boolean).join('\n')
+
+          const msg2 = [
+            `לשריון סופי של התור יש להעביר מקדמה על סך ₪${depositAmount}:`,
             policy.paymentInstructions ? `\n📲 לתשלום (ביט / PayBox / העברה):\n${policy.paymentInstructions}` : '',
             `\n${cancellationPolicyText}`,
             '\nרק שולחים כאן צילום מסך של האסמכתה ונועלים את התור רשמית! 🙌',
-          ]
-            .filter(Boolean)
-            .join('\n')
+          ].filter(Boolean).join('\n')
+
+          messagesToSend.push(msg1, msg2)
         }
 
         try {
-          const { wamid } = await client.sendText({
-            to: customerRecord.phone as string,
-            body: textBody,
-          })
+          console.log('[processHealthDeclaration] Sending WhatsApp messages to customer:', customerRecord.phone, 'count:', messagesToSend.length)
+          for (const body of messagesToSend) {
+            const { wamid } = await client.sendText({
+              to: customerRecord.phone as string,
+              body,
+            })
 
-          await su.collection('messages').create({
-            conversation: conversation.id,
-            whatsapp_message_id: wamid,
-            direction: 'outbound',
-            sender_type: 'bot',
-            type: 'text',
-            body: textBody,
-            status: 'sent',
-            timestamp: new Date().toISOString(),
-            seen: true,
-          })
+            await su.collection('messages').create({
+              conversation: conversation.id,
+              whatsapp_message_id: wamid,
+              direction: 'outbound',
+              sender_type: 'ai_bot',
+              type: 'text',
+              body,
+              status: 'sent',
+              timestamp: new Date().toISOString(),
+              seen: true,
+            })
+          }
 
           await su.collection('conversations').update(conversation.id, {
             last_message_at: new Date().toISOString(),
@@ -499,11 +536,22 @@ export async function processHealthDeclaration(
 
           deliveryResult = { channel: 'whatsapp', type: 'free_text', success: true }
         } catch (err) {
-          deliveryResult = {
-            channel: 'whatsapp',
-            type: 'free_text',
-            success: false,
-            error: err instanceof WhatsAppApiError ? err.message : String(err),
+          console.error('[processHealthDeclaration] Failed to deliver WhatsApp message:', err)
+          if (err instanceof WhatsAppApiError && err.code === ERROR_REENGAGEMENT_REQUIRED) {
+            await addSystemNotification({
+              title: 'הצהרת בריאות נקלטה (חלון 24 שעות סגור)',
+              message: `הצהרת בריאות מולאה על ידי ${payload.name}, אך חלון 24 השעות סגור. באפשרותך לפנות בוואטסאפ ווב.`,
+              type: 'warning',
+              link: `/dashboard/conversations?chatId=${conversation.id}`,
+            }).catch(() => null)
+            deliveryResult = { channel: 'whatsapp', type: 'window_closed_alert', success: true }
+          } else {
+            deliveryResult = {
+              channel: 'whatsapp',
+              type: 'free_text',
+              success: false,
+              error: err instanceof WhatsAppApiError ? err.message : String(err),
+            }
           }
         }
       } else {

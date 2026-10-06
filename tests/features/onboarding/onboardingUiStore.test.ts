@@ -32,7 +32,7 @@ describe('Onboarding UI Store Unit Tests', () => {
     expect(state.calendarError).toBeNull()
   })
 
-  it('manages step navigation within bounds (1 to 6)', () => {
+  it('manages step navigation within bounds (1 to 7)', () => {
     const store = useOnboardingUiStore.getState()
     expect(store.currentStep).toBe(1)
 
@@ -53,12 +53,15 @@ describe('Onboarding UI Store Unit Tests', () => {
     store.nextStep()
     expect(useOnboardingUiStore.getState().currentStep).toBe(6)
 
-    // cannot go above 6
     store.nextStep()
-    expect(useOnboardingUiStore.getState().currentStep).toBe(6)
+    expect(useOnboardingUiStore.getState().currentStep).toBe(7)
+
+    // cannot go above 7
+    store.nextStep()
+    expect(useOnboardingUiStore.getState().currentStep).toBe(7)
 
     store.prevStep()
-    expect(useOnboardingUiStore.getState().currentStep).toBe(5)
+    expect(useOnboardingUiStore.getState().currentStep).toBe(6)
   })
 
   it('updates studio name and marks as edited', () => {
@@ -151,12 +154,12 @@ describe('Onboarding UI Store Unit Tests', () => {
 
   it('sends someone back from the last step to fix a gap and returns them straight to it', () => {
     const store = useOnboardingUiStore.getState()
-    store.setCurrentStep(6)
+    store.setCurrentStep(7)
     store.fixFromFinish(3)
     expect(useOnboardingUiStore.getState().currentStep).toBe(3)
 
     useOnboardingUiStore.getState().nextStep()
-    expect(useOnboardingUiStore.getState().currentStep).toBe(6)
+    expect(useOnboardingUiStore.getState().currentStep).toBe(7)
     expect(useOnboardingUiStore.getState().returnToFinish).toBe(false)
 
     // Normal navigation is untouched afterwards.

@@ -12,7 +12,7 @@ export function buildAvailabilityTools(ctx: ToolFactoryContext) {
       staffId: z.string().describe('מזהה איש הצוות כפי שהתקבל מ-suggest_artists'),
       fromDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'תאריך חייב להיות בפורמט YYYY-MM-DD').describe('תאריך התחלה בפורמט YYYY-MM-DD'),
       days: z.number().int().min(1).max(30).default(7).describe('מספר הימים לבדיקת זמינות קדימה (ברירת מחדל 7)'),
-      durationHours: z.number().min(0.5).max(24).default(2).describe('משך התור המבוקש בשעות (למשל: 0.5 לפגישת סקיצה של 30 דק, או 2-3.5 לקעקוע)'),
+      durationHours: z.number().min(0.5).max(24).default(2).describe('משך התור המבוקש בשעות (למשל: 0.5 לפגישת סקיצה של עד שעה, או 2-3.5 לקעקוע)'),
       type: z.enum(['tattoo', 'sketch']).optional().describe('סוג התור: tattoo לקעקוע (ברירת מחדל 2 שעות) או sketch לפגישת סקיצה (ברירת מחדל 0.5 שעות)'),
     }),
     handler: async ({ staffId, fromDate, days = 7, durationHours = 2, type }: {
@@ -58,8 +58,8 @@ export function buildAvailabilityTools(ctx: ToolFactoryContext) {
 ${daysFormatted}
 
 הנחיות חשובות למענה:
-1. השעות שהוצגו הן דוגמאות מומלצות ומפוזרות (בוקר, צהריים, אחה״צ).
-2. אם צוין שהיומן פנוי לאורך כל היום — ציין זאת מפורשות ללקוח!
+1. כאשר יום מסוים פנוי לאורך כל היום — אמור בפשטות שהאמן פנוי כל היום משעה עד שעה ושאל איזו שעה נוחה ללקוח (ללא זריקת שעות אקראיות כדוגמה).
+2. כאשר יום תפוס בחלקו — הצע את שעות ההתחלה הפנויות הספציפיות שהוצגו.
 הצעה מוכנה לשימוש:
 "${result.readyToUseProposal}"
 3. אם הלקוח שואל "הוא לא פנוי כל היום?", שואל על חלק אחר ביום (כמו אחה״צ או ערב), או מציין שהמקעקע פנוי: אל תטען בטעות שהוא תפוס! אשר שהיומן פנוי לאורך שעות הפעילות ושאל איזו שעה נוחה לו.
@@ -76,7 +76,7 @@ ${daysFormatted}
         staffId: z.string().describe('מזהה איש הצוות'),
         date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'תאריך חייב להיות בפורמט YYYY-MM-DD').describe('תאריך בפורמט YYYY-MM-DD'),
         timeSlot: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'שעה חייבת להיות בפורמט HH:MM בטווח 24 שעות').describe('שעה בפורמט HH:MM'),
-        durationHours: z.number().min(0.5).max(24).default(2).describe('משך התור המבוקש בשעות (למשל: 0.5 לפגישת סקיצה של 30 דק, או 2-3.5 לקעקוע)'),
+        durationHours: z.number().min(0.5).max(24).default(2).describe('משך התור המבוקש בשעות (למשל: 0.5 לפגישת סקיצה של עד שעה, או 2-3.5 לקעקוע)'),
         type: z.enum(['tattoo', 'sketch']).optional().describe('סוג התור: tattoo לקעקוע (ברירת מחדל 2 שעות) או sketch לפגישת סקיצה (ברירת מחדל 0.5 שעות)'),
         allowException: z.boolean().default(false).describe('יש להגדיר true אך ורק אם איש צוות/אמן הציע או אישר במפורש בהיסטוריית השיחה את השעה הזו, כדי לעקוף אילוצי מערכת.'),
       }),

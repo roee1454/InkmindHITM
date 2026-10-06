@@ -17,6 +17,8 @@ export const TOOL_LABELS: Record<string, string> = {
   add_to_waitlist: 'הוספה לרשימת המתנה',
   remove_from_waitlist: 'הסרה מרשימת המתנה',
   offer_waitlist_slot: 'הצעת משבצת מוקדמת ללקוח/ה',
+  close_session: 'סגירת סשן ותשלום',
+  update_project_stage: 'עדכון שלב פרויקט',
 }
 
 // Internal identifiers a staff member has no reason to hand-edit — everything else in `args`
@@ -24,7 +26,7 @@ export const TOOL_LABELS: Record<string, string> = {
 // bespoke picker per tool (a real date/time picker, a stage <select>, …) is a deliberate v1
 // scope trim: it keeps one component covering every write tool instead of one per tool, at the
 // cost of the mockup's richer per-field controls (MCP-08's calendar popover).
-const HIDDEN_ARG_KEYS = new Set(['appointmentId', 'customerId', 'staffId', 'waitlistEntryId', 'freedAppointmentId'])
+const HIDDEN_ARG_KEYS = new Set(['appointmentId', 'customerId', 'staffId', 'projectId', 'waitlistEntryId', 'freedAppointmentId'])
 
 interface McpActionCardProps {
   action: McpAction

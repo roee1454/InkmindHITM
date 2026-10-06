@@ -83,6 +83,18 @@ describe('AI Tab — Schemas & Validation', () => {
       expect(toggleAiSchema.safeParse({ enabled: true }).success).toBe(true)
       expect(toggleAiSchema.safeParse({ enabled: false }).success).toBe(true)
       expect(toggleAiSchema.safeParse({ enabled: 'true' }).success).toBe(false)
+      expect(toggleAiSchema.safeParse({ enabled: 1 }).success).toBe(false)
+      expect(toggleAiSchema.safeParse({}).success).toBe(false)
+    })
+
+    it('formats appropriate notification copy for on vs off states', () => {
+      const getCopy = (enabled: boolean) => ({
+        title: enabled ? 'סוכן ה-AI הופעל' : 'סוכן ה-AI הושבת',
+        type: enabled ? 'info' : 'warning',
+      })
+
+      expect(getCopy(true)).toEqual({ title: 'סוכן ה-AI הופעל', type: 'info' })
+      expect(getCopy(false)).toEqual({ title: 'סוכן ה-AI הושבת', type: 'warning' })
     })
   })
 

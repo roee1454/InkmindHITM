@@ -4,7 +4,7 @@ import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dial
 import { Button } from '@/components/ui/button'
 import type { ApiAppointment } from '../types'
 import { formatDayTitle, toYmd } from '../utils/date-utils'
-import { AppointmentRowCard } from './AppointmentRowCard'
+import { AppointmentCard } from './AppointmentCard'
 
 interface DayOverviewDialogProps {
   date: Date | null
@@ -66,7 +66,7 @@ export const DayOverviewDialog: React.FC<DayOverviewDialogProps> = ({
       ) : (
         <div className="flex flex-col gap-2.5">
           {dayAppointments.map((appt) => (
-            <AppointmentRowCard key={appt.id} appointment={appt} artistAvatars={artistAvatars} onSelect={() => handleRowClick(appt)} />
+            <AppointmentCard key={appt.id} mode="row" appointment={appt} artistAvatars={artistAvatars} onSelect={() => handleRowClick(appt)} />
           ))}
         </div>
       )}

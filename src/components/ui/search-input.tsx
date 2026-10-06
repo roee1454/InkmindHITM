@@ -152,3 +152,6 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
 
 SearchInput.displayName = 'SearchInput'
 
+export { SearchInput as IMSearchInput }
+export type IMSearchInputProps = SearchInputProps
+

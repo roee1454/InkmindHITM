@@ -27,7 +27,7 @@ export const StepPricingDeposit: React.FC<StepPricingDepositProps> = ({ values, 
       ) : (
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-foreground">מחיר מינימלי (₪)</label>
+            <label className="text-xs font-semibold text-foreground">מחיר מינימלי (₪) *</label>
             <Input
               type="number"
               min="0"
@@ -38,7 +38,7 @@ export const StepPricingDeposit: React.FC<StepPricingDepositProps> = ({ values, 
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-foreground">מחיר מקסימלי (₪)</label>
+            <label className="text-xs font-semibold text-foreground">מחיר מקסימלי (₪) *</label>
             <Input
               type="number"
               min="0"
@@ -53,22 +53,32 @@ export const StepPricingDeposit: React.FC<StepPricingDepositProps> = ({ values, 
 
       <div className="flex flex-col gap-1.5">
         <label className="text-xs font-semibold text-foreground">
-          {isSketch ? 'מקדמה לשריון הפגישה (₪)' : 'מקדמה (₪)'}
+          {isSketch ? 'מקדמה לשריון הפגישה (₪)' : 'מקדמה (₪) *'}
         </label>
         <Input
           type="number"
           min="0"
           value={values.depositAmount ?? ''}
+          placeholder={values.projectId && values.depositPaid && !values.depositAmount ? 'המקדמה כבר שולמה בפרויקט' : ''}
           onChange={(e) => onChange({ depositAmount: e.target.value === '' ? null : Number(e.target.value) })}
           dir="rtl"
           className="text-right"
         />
+        {values.projectId && values.depositPaid && !values.depositAmount && (
+          <span className="text-micro font-medium text-status-done">
+            ✓ קיימת מקדמה משוריינת בפרויקט מהפגישה הקודמת (אין צורך להזין סכום נוסף אלא אם נדרשת תוספת)
+          </span>
+        )}
       </div>
 
       <div className="flex items-center justify-between border-t border-border pt-4">
         <div className="flex flex-col gap-0.5">
           <span className="text-xs font-bold text-foreground">מקדמה שולמה</span>
-          <span className="text-micro text-muted-foreground">סמן אם מקדמת התור שולמה</span>
+          <span className="text-micro text-muted-foreground">
+            {values.projectId && values.depositPaid
+              ? 'המקדמה סומנה כשולמה (הועברה מהייעוץ או מתור קודם)'
+              : 'סמן אם מקדמת התור שולמה'}
+          </span>
         </div>
         <Switch
           id="appointment-deposit-paid"

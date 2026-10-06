@@ -246,6 +246,7 @@ export function useDashboardRealtime({ sessionToken, sessionStaff }: DashboardRe
         // notification toasts — including escalations, which link to a conversation and used to
         // be skipped by a `chatId=` check meant only for message notifications.
         if (newNotification.kind === 'system') {
+          queryClient.invalidateQueries({ queryKey: ['ai-settings'] })
           toastRef.current(
             notifTitle,
             notifMessage,

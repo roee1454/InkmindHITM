@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 
 const TABS = [
-  { to: '/dashboard/projects', label: 'פרויקטים' },
+  { to: '/dashboard/projects', label: 'עבודות' },
   { to: '/dashboard/leads', label: 'לידים' },
 ] as const
 

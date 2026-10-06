@@ -5,7 +5,7 @@ import { fitsWithinWorkingHours } from '@/lib/working-hours'
 import type { StaffMember } from '@/features/settings/server/staff'
 import type { ApiAppointment, ApiExternalBusyPeriod } from '../types'
 import { ArtistBadge } from './ArtistBadge'
-import { AppointmentGridCard } from './AppointmentGridCard'
+import { AppointmentCard } from './AppointmentCard'
 import { DayOverviewDialog } from './DayOverviewDialog'
 import { useFillRowHeight } from '../hooks/use-fill-row-height'
 import { layoutOverlaps } from '../utils/overlap-layout'
@@ -157,8 +157,9 @@ export function DayResourceGrid({ date, appointments, busyPeriods, staff, artist
                 if (top < 0 || maxHeight <= 0) return null
 
                 return (
-                  <AppointmentGridCard
+                  <AppointmentCard
                     key={appointment.id}
+                    mode="block"
                     appointment={appointment}
                     top={top}
                     height={height}

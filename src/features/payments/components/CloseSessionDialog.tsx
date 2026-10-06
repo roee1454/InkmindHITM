@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Loader2 } from '@/components/ui/icon'
+import { Loader2, AlertCircle } from '@/components/ui/icon'
 import { formatDatabaseError } from '@/lib/pocketbase-error'
 import type { ApiAppointment } from '@/features/calendar/types'
 import { appointmentKindLabel } from '@/features/calendar/utils/project-position'
+import { formatIls } from '../utils/labels'
 import { useCloseSession } from '../hooks/use-close-session'
 import { defaultIsLastSession } from '../utils/closing'
 import type { NewPayment } from '../types'
@@ -60,6 +61,10 @@ export function CloseSessionDialog({
   }, [open, appointment.id])
 
   const price = Number(finalPrice) > 0 ? Number(finalPrice) : null
+  const quoteMin = finance.data?.quoteMin ?? appointment.priceMin ?? null
+  const quoteMax = finance.data?.quoteMax ?? appointment.priceMax ?? null
+  const isOverQuote = price !== null && quoteMax !== null && price > quoteMax
+  const isUnderQuote = price !== null && quoteMin !== null && price < quoteMin
   const newPayments = toNewPayments(rows)
   const canSubmit = (chargeWaived || price !== null) && isLastSession !== null && !close.isPending
 
@@ -99,7 +104,23 @@ export function CloseSessionDialog({
         }}
       >
         <div className="flex flex-col gap-2">
-          <label htmlFor="final-price" className="form-label">מחיר סופי</label>
+          <div className="flex items-center justify-between">
+            <label htmlFor="final-price" className="form-label">מחיר סופי</label>
+            {(quoteMin || quoteMax) && (
+              <span className="text-2xs text-muted-foreground">
+                הצעת מחיר:{' '}
+                <strong className="text-foreground tabular-nums">
+                  {quoteMin && quoteMax
+                    ? quoteMin === quoteMax
+                      ? formatIls(quoteMin)
+                      : `${formatIls(quoteMin)} – ${formatIls(quoteMax)}`
+                    : quoteMin
+                      ? `החל מ-${formatIls(quoteMin)}`
+                      : `עד ${formatIls(quoteMax!)}`}
+                </strong>
+              </span>
+            )}
+          </div>
           <Input
             id="final-price"
             type="number"
@@ -110,6 +131,21 @@ export function CloseSessionDialog({
             disabled={chargeWaived || close.isPending}
             onChange={(event) => setFinalPrice(event.target.value)}
           />
+          {isOverQuote && (
+            <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 p-2.5 text-xs text-warning">
+              <AlertCircle size={16} className="mt-0.5 shrink-0" />
+              <div className="flex flex-col gap-0.5 text-start">
+                <span className="font-bold text-foreground">חריגה מהצעת המחיר המקסימלית</span>
+                <span>המחיר שהוזן ({formatIls(price)}) גבוה מטווח ההצעה ({formatIls(quoteMax)}). בסגירת הסשן מחיר הפרויקט יותאם אוטומטית.</span>
+              </div>
+            </div>
+          )}
+          {isUnderQuote && (
+            <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 p-2 text-2xs text-muted-foreground">
+              <AlertCircle size={14} className="mt-0.5 shrink-0 text-muted-foreground" />
+              <span>המחיר שהוזן ({formatIls(price)}) נמוך מהטווח המינימלי שנקבע ({formatIls(quoteMin)}).</span>
+            </div>
+          )}
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <Switch checked={chargeWaived} onCheckedChange={setChargeWaived} disabled={close.isPending} />
             ללא חיוב (למשל טאץ'-אפ)

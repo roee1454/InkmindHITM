@@ -173,3 +173,6 @@ export function DialogActions({ start, error, children }: { start?: React.ReactN
     </>
   )
 }
+
+export { ResponsiveDialog as IMResponsiveDialog, DialogActions as IMDialogActions }
+export type IMResponsiveDialogProps = ResponsiveDialogProps

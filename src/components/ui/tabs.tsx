@@ -61,4 +61,13 @@ function TabsContent({
   )
 }
 
-export { Tabs, TabsList, TabsTrigger, TabsContent }
+export {
+  Tabs,
+  Tabs as IMTabs,
+  TabsList,
+  TabsList as IMTabsList,
+  TabsTrigger,
+  TabsTrigger as IMTabsTrigger,
+  TabsContent,
+  TabsContent as IMTabsContent,
+}

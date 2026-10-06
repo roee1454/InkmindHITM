@@ -3,7 +3,7 @@ import { Plus } from '@/components/ui/icon'
 import type { ApiAppointment, ApiExternalBusyPeriod } from '../types'
 import { HEBREW_DAYS_SHORT, buildMonthMatrix, isSameMonth, isToday, toYmd } from '../utils/date-utils'
 import { DayOverviewDialog } from './DayOverviewDialog'
-import { AppointmentMonthChip } from './AppointmentMonthChip'
+import { AppointmentCard } from './AppointmentCard'
 import { cn } from '@/lib/utils'
 
 const DEFAULT_SLOT = '12:00'
@@ -121,7 +121,7 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
                     key={busy.googleEventId}
                     style={BUSY_STRIPES}
                     title={`חסימה: ${timeOf(busy.startsAt)}`}
-                    className="pointer-events-none flex h-[22px] w-full min-w-0 items-center gap-1 overflow-hidden rounded-md border border-border bg-muted/40 px-1.5 text-right text-2xs text-muted-foreground"
+                    className="pointer-events-none flex h-6 w-full min-w-0 items-center gap-1 overflow-hidden rounded-md border border-border bg-muted/40 px-1.5 text-right text-2xs text-muted-foreground"
                   >
                     <span className="shrink-0 font-semibold tabular-nums">{timeOf(busy.startsAt)}</span>
                     <span className="hidden @[70px]:inline truncate">חסימה</span>
@@ -129,8 +129,9 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
                 ))}
 
                 {visibleAppointments.map((appointment) => (
-                  <AppointmentMonthChip
+                  <AppointmentCard
                     key={appointment.id}
+                    mode="chip"
                     appointment={appointment}
                     artistAvatars={artistAvatars}
                     onSelect={() => onSelectAppointment(appointment)}

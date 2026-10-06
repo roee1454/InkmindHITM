@@ -62,7 +62,26 @@ describe('primary navigation grouping (track-b B6.6)', () => {
     const grouped = NAV_GROUPS.flatMap((g) => g.items.map((i) => i.to))
     expect(grouped).toEqual(NAV_ITEMS.map((i) => i.to))
     expect(new Set(grouped).size).toBe(grouped.length)
-    expect(NAV_GROUPS.map((g) => g.label)).toEqual(['היום', 'עבודה שוטפת', 'צינורת', 'תובנות'])
+    expect(NAV_GROUPS.map((g) => g.label)).toEqual(['', 'עבודה שוטפת', 'מאגרי מידע', 'תובנות'])
+
+    const ongoingGroup = NAV_GROUPS.find((g) => g.label === 'עבודה שוטפת')
+    expect(ongoingGroup?.items.map((i) => i.to)).toEqual([
+      '/dashboard/calendar',
+      '/dashboard/conversations',
+    ])
+
+    const databasesGroup = NAV_GROUPS.find((g) => g.label === 'מאגרי מידע')
+    expect(databasesGroup?.items.map((i) => i.to)).toEqual([
+      '/dashboard/projects',
+      '/dashboard/customers',
+    ])
+    expect(databasesGroup?.items.find((i) => i.to === '/dashboard/projects')?.label).toBe('עבודות')
+
+    const insightsGroup = NAV_GROUPS.find((g) => g.label === 'תובנות')
+    expect(insightsGroup?.items.map((i) => i.to)).toEqual([
+      '/dashboard/leads',
+      '/dashboard/analytics',
+    ])
   })
 
   it('caps the mobile bottom bar at 5 tabs and moves analytics to the drawer', () => {

@@ -19,6 +19,24 @@ describe('buildMcpSystemPrompt', () => {
     expect(prompt).toContain('offer_waitlist_slot')
     expect(prompt).toContain('record_waitlist_response')
   })
+
+  it('instructs on projects pipeline and tools', () => {
+    expect(prompt).toContain('פרויקטים במשפך')
+    expect(prompt).toContain('search_projects')
+    expect(prompt).toContain('get_project')
+    expect(prompt).toContain('update_project_stage')
+  })
+
+  it('instructs on session close-out vs status updates', () => {
+    expect(prompt).toContain('close_session')
+    expect(prompt).toContain('mark_appointment_status')
+  })
+
+  it('instructs on WhatsApp conversation reading tools', () => {
+    expect(prompt).toContain('get_customer_conversation')
+    expect(prompt).toContain('list_conversations')
+    expect(prompt).toContain('search_conversation_messages')
+  })
 })
 
 // Regression guard for the bug where the assistant computed its own (wrong) day-of-week — it

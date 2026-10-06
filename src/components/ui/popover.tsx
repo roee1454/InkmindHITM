@@ -43,4 +43,13 @@ function PopoverContent({
   )
 }
 
-export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor }
+export {
+  Popover,
+  Popover as IMPopover,
+  PopoverTrigger,
+  PopoverTrigger as IMPopoverTrigger,
+  PopoverContent,
+  PopoverContent as IMPopoverContent,
+  PopoverAnchor,
+  PopoverAnchor as IMPopoverAnchor,
+}

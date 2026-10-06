@@ -27,6 +27,13 @@ export const TOOL_LABELS: Record<string, string> = {
   offer_waitlist_slot: 'הצעת פנייה ללקוח/ה',
   record_waitlist_response: 'רישום תשובת לקוח/ה',
   list_staff: 'רשימת צוות',
+  close_session: 'הצעת סגירת סשן',
+  update_project_stage: 'הצעת עדכון שלב פרויקט',
+  search_projects: 'חיפוש פרויקטים',
+  get_project: 'פרטי פרויקט',
+  get_customer_conversation: 'קריאת שיחת לקוח/ה',
+  list_conversations: 'רשימת שיחות',
+  search_conversation_messages: 'חיפוש בהודעות שיחה',
 }
 
 interface McpToolCallCardProps {

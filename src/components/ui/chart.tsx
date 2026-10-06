@@ -363,9 +363,15 @@ function getPayloadConfigFromPayload(
 
 export {
   ChartContainer,
+  ChartContainer as IMChartContainer,
   ChartTooltip,
+  ChartTooltip as IMChartTooltip,
   ChartTooltipContent,
+  ChartTooltipContent as IMChartTooltipContent,
   ChartLegend,
+  ChartLegend as IMChartLegend,
   ChartLegendContent,
+  ChartLegendContent as IMChartLegendContent,
   ChartStyle,
+  ChartStyle as IMChartStyle,
 }

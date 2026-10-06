@@ -24,4 +24,15 @@ describe('projectBookingValues', () => {
   it('carries the quote into the first session of a quoted piece', () => {
     expect(projectBookingValues(project({ stage: 'quoted' }))).toMatchObject({ status: 'pending', priceMinIls: 4500, priceMaxIls: 6000 })
   })
+
+  it('sets minDate to the latest appointment date in the project timeline', () => {
+    const withTimeline = project({
+      timeline: [
+        { id: 'a1', kind: 'session', status: 'completed', date: '2026-10-10', timeSlot: '12:00', projectPosition: null },
+        { id: 'a2', kind: 'session', status: 'confirmed', date: '2026-10-25', timeSlot: '14:00', projectPosition: null },
+        { id: 'a3', kind: 'session', status: 'cancelled', date: '2026-11-05', timeSlot: '14:00', projectPosition: null },
+      ],
+    })
+    expect(projectBookingValues(withTimeline)).toMatchObject({ minDate: '2026-10-25' })
+  })
 })

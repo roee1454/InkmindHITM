@@ -153,13 +153,15 @@ describe('Health Declaration CRM Actions (staffConfirmHealthDeclaration & resend
       }),
     )
 
-    // Verify payment message sent
-    expect(sentWhatsAppMessages).toHaveLength(1)
+    // Verify messages sent (slot summary and payment instructions, neither having location)
+    expect(sentWhatsAppMessages).toHaveLength(2)
     expect(sentWhatsAppMessages[0]?.to).toBe('972521234567')
     expect(sentWhatsAppMessages[0]?.body).toContain('הצהרת הבריאות אושרה בהצלחה')
-    expect(sentWhatsAppMessages[0]?.body).toContain('₪200')
-    expect(sentWhatsAppMessages[0]?.body).toContain('ביט למספר טלפון: 0527051611')
-    expect(sentWhatsAppMessages[0]?.body).toContain('בנק 12 סניף 685 מס חשבון 474412')
+    expect(sentWhatsAppMessages[0]?.body).not.toContain('שוהם מרקט')
+    expect(sentWhatsAppMessages[1]?.body).toContain('₪200')
+    expect(sentWhatsAppMessages[1]?.body).toContain('ביט למספר טלפון: 0527051611')
+    expect(sentWhatsAppMessages[1]?.body).toContain('בנק 12 סניף 685 מס חשבון 474412')
+    expect(sentWhatsAppMessages[1]?.body).not.toContain('שוהם מרקט')
   })
 
   it('staffConfirmHealthDeclaration transitions to AWAITING_APPOINTMENT directly for free sketch consultation (deposit = 0)', async () => {

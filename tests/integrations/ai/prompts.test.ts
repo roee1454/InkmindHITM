@@ -214,3 +214,33 @@ describe('health declaration notice — tool call, not a raw link', () => {
   })
 })
 
+describe('Understanding input & artist selection guardrails', () => {
+  it('forbids autocompleting typos into business terms like מבצע and guides natural greeting handling', () => {
+    const prompt = buildStaticSystemPrompt({ state: 'NEW', isEscalated: false })
+    expect(prompt).toContain('מה המבצ')
+    expect(prompt).toContain('איסור מוחלט לנסות להשלים מילים משובשות למונחים עסקיים שלא הוזכרו')
+    expect(prompt).toContain('מה המצב')
+  })
+
+  it('forbids re-calling suggest_artists once customer selects an artist in COLLECTING_INFO', () => {
+    const prompt = buildStaticSystemPrompt({ state: 'COLLECTING_INFO', isEscalated: false })
+    expect(prompt).toContain("איסור מוחלט לקרוא שוב ל-'suggest_artists'")
+    expect(prompt).toContain('ימי ושעות הפעילות של האמן')
+  })
+
+  it('contains anti_robotic_guardrail forbidding mechanical status reports across all states', () => {
+    for (const state of ALL_STATES) {
+      const prompt = buildStaticSystemPrompt({ state, isEscalated: false })
+      expect(prompt).toContain('<anti_robotic_guardrail>')
+      expect(prompt).toContain('איסור מוחלט על שפה רובוטית')
+      expect(prompt).toContain('נבחר')
+      expect(prompt).toContain('סטטוס עודכן')
+    }
+  })
+
+  it('expressly forbids robotic phrases like "דור נבחר" in COLLECTING_INFO', () => {
+    const prompt = buildStaticSystemPrompt({ state: 'COLLECTING_INFO', isEscalated: false })
+    expect(prompt).toContain('דור נבחר')
+  })
+})
+
