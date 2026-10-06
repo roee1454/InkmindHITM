@@ -4,7 +4,7 @@ Branch: `feat/im-design-system` (from `19b6936`). Baseline: `tsc` clean, 121 tes
 
 **Target spec (approved 2026-10-06):** [`spec/`](spec/README.md), mirrored from the live design-system artifact. Phase 1 implements it; where this plan and the spec disagree, the spec wins.
 
-**Status:** Phase 0 done (2026-10-06) · Phase 1 running.
+**Status:** Phase 0 done · Phase 1 done (A 876ec89, B f045451, C e6a2472) · Phase 1b running · audit baseline for Phase 2: 1,428.
 
 Goal: one fixed design system for every shared component (`IM*` prefix), for text (sizes, fonts, when to use which) and for icons (palette, always-filled look) — then bring every feature onto it, in parallel, with a repeatable audit that proves it.
 
@@ -174,6 +174,14 @@ Waves exist so that codemod bugs, missing primitives and missing icons found in 
 6. Local re-implementations of primitives (a feature-local button, chip or empty-state component) are deleted in favour of the `IM*` one.
 7. **States**: don't add new behaviour. Do report every view missing a loading skeleton, an empty state or an error state, as a gap for a later pass.
 
+**Learned in Phase 1** (added to every Phase 2 brief):
+- Icons passed as component references (`icon: Calendar`, `<item.icon />`, status maps) become `IMIconName` strings; the codemod lists them.
+- A spinning `refresh` icon becomes `<IMIcon name="spinner" spin />` (only `spinner` spins).
+- Pending-state buttons use `<IMButton loading>` instead of `{isPending && <Loader2/>}`.
+- The superseded CSS classes (`btn-native`, `card-native`, `row-native`, `field-native`, `pill`, `tap-target`, `avatar-native`, `auth-*`, `step-*`, `form-label`) map to IM components per `docs/design-system/components.md`; their CSS goes in Phase 3.
+- Any footer the Phase 1b reorder skipped: the confirming action goes first.
+- Text classes follow the migration table in `docs/design-system/typography.md` literally.
+
 **Removes** (each feature agent, in its folder): ad-hoc heading/text class strings · class-based icon sizing · raw controls · feature-local duplicates of `IM*` primitives, along with their tests and mocks · tests that only asserted removed markup.
 
 ---
@@ -183,6 +191,7 @@ Waves exist so that codemod bugs, missing primitives and missing icons found in 
 | Item | Unblocked when | Removes |
 |---|---|---|
 | 3.1 Legacy icons | `grep -rw` of every `icon-legacy.ts` export finds no caller in `src` or `tests` | `icon-legacy.ts` and its re-export |
+| 3.1b Superseded CSS | `ds:audit` components column is 0 | `.btn-native`, `.btn-native-ghost`, `.card-native`, `.row-native`, `.field-native`, `.pill`, `.tap-target`, `.avatar-native`, `.auth-*`, `.step-*`, `.form-label`, `.page-head` rules in `styles.css`; `--text-micro`, `--text-mini`; consider `--text-*: initial` so Tailwind's unused default sizes can't be used |
 | 3.2 Font alias | `grep -r "font-assistant" src` is empty | `--font-assistant` in `styles.css` |
 | 3.3 Spec mirror | The three pillar pages under `docs/design-system/` are complete | `docs/im-design-system/spec/` |
 | 3.4 Final audit | — | — |
