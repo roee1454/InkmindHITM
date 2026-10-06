@@ -14,7 +14,7 @@ import { FaqDialog } from './FaqDialog'
 export function AiKnowledgeBaseSection() {
   const queryClient = useQueryClient()
   const confirm = useConfirm()
-  const { toast } = useIMToast()
+  const { show: toast } = useIMToast()
   const [faqTarget, setFaqTarget] = useState<ApiFaqEntry | 'new' | null>(null)
   const { data: entries = [], isLoading } = useQuery<ApiFaqEntry[]>({ queryKey: ['faq-list'], queryFn: () => getFaqList() })
 
@@ -32,7 +32,7 @@ export function AiKnowledgeBaseSection() {
   const removeFaq = useMutation({
     mutationFn: (id: string) => deleteFaq({ data: { id } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['faq-list'] }),
-    onError: (err: unknown) => toast('המחיקה נכשלה', err instanceof Error ? err.message : '', 'error'),
+    onError: (err: unknown) => toast({ tone: 'destructive', title: 'המחיקה נכשלה', description: err instanceof Error ? err.message : '' }),
   })
 
   const open = (target: ApiFaqEntry | 'new') => {

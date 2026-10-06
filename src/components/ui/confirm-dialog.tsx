@@ -2,6 +2,7 @@ import type * as React from "react"
 
 import { IMButton } from "@/components/ui/button"
 import { IMDialogActions, IMResponsiveDialog } from "@/components/ui/responsive-dialog"
+import { IMText } from "@/components/ui/typography"
 
 export interface IMConfirmDetail {
   label: string
@@ -65,9 +66,6 @@ export function IMConfirmDialog({
       description={description}
       footer={
         <IMDialogActions error={error}>
-          <IMButton type="button" variant="ghost" disabled={isPending} onClick={() => onOpenChange(false)}>
-            {cancelLabel}
-          </IMButton>
           {!hideConfirm && (
             <IMButton
               type="button"
@@ -80,15 +78,22 @@ export function IMConfirmDialog({
               {isPending ? (pendingLabel ?? confirmLabel) : confirmLabel}
             </IMButton>
           )}
+          <IMButton type="button" variant="ghost" disabled={isPending} onClick={() => onOpenChange(false)}>
+            {cancelLabel}
+          </IMButton>
         </IMDialogActions>
       }
     >
       {details && details.length > 0 && (
-        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 rounded-md bg-surface-2 px-4 py-3 text-sm">
+        <dl className="grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-4 gap-y-2 rounded-md bg-surface-2 px-4 py-3">
           {details.map((detail) => (
             <div key={detail.label} className="contents">
-              <dt className="font-medium text-muted-foreground">{detail.label}</dt>
-              <dd className="min-w-0 truncate font-bold text-foreground">{detail.value}</dd>
+              <IMText as="dt" variant="label" tone="muted">
+                {detail.label}
+              </IMText>
+              <IMText as="dd" variant="body-sm" className="min-w-0 truncate">
+                {detail.value}
+              </IMText>
             </div>
           ))}
         </dl>

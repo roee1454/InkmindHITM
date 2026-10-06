@@ -58,13 +58,14 @@ describe('IMPagination', () => {
 
   it('marks the current page and clamps an out-of-range page', () => {
     const html = renderToStaticMarkup(<IMPagination currentPage={99} totalPages={7} onPageChange={noop} />)
-    expect(html).toMatch(/aria-current="page"[^>]*>7</)
+    expect(html).toMatch(/aria-current="page"[^>]*><span data-slot="im-num" dir="ltr"[^>]*>7</)
     expect(html.match(/aria-current="page"/g)).toHaveLength(1)
   })
 
   it('collapses to "page / total" on phones', () => {
     const html = renderToStaticMarkup(<IMPagination currentPage={2} totalPages={7} onPageChange={noop} />)
     expect(html).toMatch(/dir="ltr"[^>]*>2(?:<!-- -->)? \/ (?:<!-- -->)?7</)
+    expect(html).not.toContain('עמוד 2 מתוך')
   })
 
   it('disables previous on the first page and next on the last', () => {

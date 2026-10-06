@@ -67,11 +67,11 @@ export const EditClosureDialog: React.FC<EditClosureDialogProps> = ({
       description={isSingleDate ? undefined : `${group?.dates.length} ימים. השם החדש יחול על כולם.`}
       footer={
         <IMDialogActions>
-          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            ביטול
-          </IMButton>
           <IMButton type="submit" form="edit-closure-form" disabled={!reason.trim() || updateMutation.isPending} className="min-w-28">
             {updateMutation.isPending ? 'שומר…' : 'שמירה'}
+          </IMButton>
+          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            ביטול
           </IMButton>
         </IMDialogActions>
       }

@@ -55,7 +55,7 @@ export function PriceQuoteSheet({
   onTakeover,
   isTakingOver = false,
 }: PriceQuoteSheetProps) {
-  const { toast } = useIMToast()
+  const { show: toast } = useIMToast()
   const isSketch = appointmentType === 'sketch'
   const durationPresets = isSketch ? SKETCH_DURATION_PRESETS : TATTOO_DURATION_PRESETS
   const depositPresets = isSketch ? SKETCH_DEPOSIT_PRESETS : TATTOO_DEPOSIT_PRESETS
@@ -104,14 +104,14 @@ export function PriceQuoteSheet({
       })
     },
     onSuccess: () => {
-      toast(
-        isSketch ? 'אישור פגישת הסקיצה נשלח בהצלחה ללקוח בוואטסאפ' : 'הצעת המחיר נשלחה בהצלחה ללקוח בוואטסאפ',
-        'success',
-      )
+      toast({
+        tone: 'success',
+        title: isSketch ? 'אישור פגישת הסקיצה נשלח בהצלחה ללקוח בוואטסאפ' : 'הצעת המחיר נשלחה בהצלחה ללקוח בוואטסאפ',
+      })
       onSuccess()
     },
     onError: (err) => {
-      toast(err instanceof Error ? err.message : 'שליחת הצעת המחיר נכשלה', 'error')
+      toast({ tone: 'destructive', title: err instanceof Error ? err.message : 'שליחת הצעת המחיר נכשלה' })
     },
   })
 
@@ -124,19 +124,19 @@ export function PriceQuoteSheet({
       bodyClassName="flex flex-col gap-5"
       footer={
         <IMDialogActions
-          start={
+          secondary={
             <IMButton type="button" variant="ghost" disabled={isTakingOver} onClick={onTakeover} className="gap-1.5">
               <BotOff size={15} />
               לקחת שליטה
             </IMButton>
           }
         >
-          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={quoteMutation.isPending}>
-            ביטול
-          </IMButton>
           <IMButton type="button" className="min-w-28 gap-1.5" disabled={quoteMutation.isPending || !isTattooPriceValid} onClick={() => quoteMutation.mutate()}>
             <SendHorizontal size={15} />
             {quoteMutation.isPending ? 'שולח…' : isSketch ? 'שליחת אישור' : 'שליחת ההצעה'}
+          </IMButton>
+          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={quoteMutation.isPending}>
+            ביטול
           </IMButton>
         </IMDialogActions>
       }

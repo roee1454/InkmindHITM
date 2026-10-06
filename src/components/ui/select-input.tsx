@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { ChevronDownIcon } from "@/components/ui/icon"
+import { IMIcon } from "@/components/ui/icon"
 import { imControlClasses, imControlHeight, imControlText } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
@@ -27,8 +27,7 @@ export function IMSelectInput({ className, children, dir = "rtl", ...props }: IM
       >
         {children}
       </select>
-      {/* Phase 1b: <IMIcon name="chevron-down" size="sm" tone="muted" /> */}
-      <ChevronDownIcon className="pointer-events-none absolute end-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      <IMIcon name="chevron-down" size="sm" tone="muted" className="pointer-events-none absolute end-3.5 top-1/2 -translate-y-1/2" />
     </div>
   )
 }

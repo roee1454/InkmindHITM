@@ -3,13 +3,13 @@ import { cva } from "class-variance-authority"
 import type { VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
-import { Loader2 } from "@/components/ui/icon"
+import { IMIcon } from "@/components/ui/icon"
+import type { IMIconName, IMIconSize } from "@/components/ui/icon"
 import { imControlHeight } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
-// An svg child without its own `size-*` class (a legacy glyph) takes the size that matches the
-// button: sm 16 in `sm`, md 20 in `md`/`lg`/`icon-sm`, lg 24 in an icon-only toolbar `icon`
-// ("Sizes by context", docs/design-system/icons.md). IMIcon sets its own `size-*` and is left alone.
+// An svg child without its own `size-*` class (a legacy glyph passed as a child, until Phase 2
+// moves it to `icon`) takes the size that matches the button. IMIcon sets its own `size-*`.
 const imButtonVariants = cva(
   // `active:scale-97` is the press affordance. Tailwind v4 compiles `hover:` behind
   // `@media (hover: hover)`, so on touch every hover style is inert and `active` is the only feedback.
@@ -46,25 +46,40 @@ const imButtonVariants = cva(
 type IMButtonVariant = NonNullable<VariantProps<typeof imButtonVariants>["variant"]>
 type IMButtonSize = NonNullable<VariantProps<typeof imButtonVariants>["size"]>
 
+/** The icon that matches the button ("Sizes by context", docs/design-system/icons.md). */
+const ICON_SIZES: Record<IMButtonSize, IMIconSize> = {
+  sm: "sm",
+  md: "md",
+  lg: "md",
+  icon: "lg",
+  "icon-sm": "md",
+}
+
 export interface IMButtonProps extends React.ComponentProps<"button"> {
   variant?: IMButtonVariant
   size?: IMButtonSize
+  /** Leading icon, sized to the button and in its colour. On `icon` sizes it is the whole content. */
+  icon?: IMIconName
+  /** Trailing icon ("המשך" + `chevron-end`). */
+  iconEnd?: IMIconName
   /** Render the single child (a router `<Link>`) with button styling. `loading` is ignored then. */
   asChild?: boolean
-  /** In flight: a spinner takes the leading slot and the button is disabled. Pass the in-progress
-   *  verb as the label ("שומר…"). On `icon` sizes the spinner replaces the glyph, so the square holds. */
+  /** In flight: the spinner takes the `icon` slot and the button is disabled, so a button with an
+   *  icon keeps its width. Pass the in-progress verb as the label ("שומר…"). */
   loading?: boolean
 }
 
 /**
  * The one button: every clickable action, from a full-width CTA (`lg`) to an icon-only toolbar
- * control (`icon`, which needs an `aria-label`). One `primary` per view; `destructive` only for the
- * action that destroys.
+ * control (`size="icon" icon="trash" aria-label="מחיקה"`). One `primary` per view; `destructive`
+ * only for the action that destroys.
  */
 export function IMButton({
   className,
   variant = "primary",
   size = "md",
+  icon,
+  iconEnd,
   asChild = false,
   loading = false,
   disabled,
@@ -73,9 +88,15 @@ export function IMButton({
 }: IMButtonProps) {
   const Comp = asChild ? Slot.Root : "button"
   const busy = loading && !asChild
-  // Phase 1b: <IMIcon name="spinner" spin />, swapped into the `icon` prop's slot.
-  const spinner = <Loader2 aria-hidden className="motion-safe:animate-spin" />
-  const iconOnly = size === "icon" || size === "icon-sm"
+  const iconSize = ICON_SIZES[size]
+  const lead = busy ? (
+    <IMIcon name="spinner" size={iconSize} spin />
+  ) : (
+    icon && <IMIcon name={icon} size={iconSize} />
+  )
+  const trail = iconEnd && <IMIcon name={iconEnd} size={iconSize} />
+  // An icon-only button that is loading shows the spinner alone, so the square holds.
+  const iconOnlyBusy = busy && (size === "icon" || size === "icon-sm")
 
   return (
     <Comp
@@ -87,18 +108,10 @@ export function IMButton({
       className={cn(imButtonVariants({ variant, size }), className)}
       {...props}
     >
-      {busy ? (
-        iconOnly ? (
-          spinner
-        ) : (
-          <>
-            {spinner}
-            {children}
-          </>
-        )
-      ) : (
-        children
-      )}
+      {/* No wrapping fragment: with `asChild`, Slot must see the Slottable among its direct children. */}
+      {lead}
+      {!iconOnlyBusy && (asChild ? <Slot.Slottable>{children}</Slot.Slottable> : children)}
+      {!iconOnlyBusy && trail}
     </Comp>
   )
 }

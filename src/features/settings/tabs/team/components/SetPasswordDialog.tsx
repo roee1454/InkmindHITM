@@ -57,11 +57,11 @@ export function SetPasswordDialog({ open, onOpenChange, trigger, staffId, name, 
       description={hasPassword ? 'הסיסמה הקודמת תפסיק לעבוד.' : undefined}
       footer={
         <IMDialogActions error={error}>
-          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            ביטול
-          </IMButton>
           <IMButton type="submit" form="set-password-form" disabled={mutation.isPending} className="min-w-28">
             {mutation.isPending ? 'שומר…' : hasPassword ? 'איפוס' : 'קביעת סיסמה'}
+          </IMButton>
+          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            ביטול
           </IMButton>
         </IMDialogActions>
       }

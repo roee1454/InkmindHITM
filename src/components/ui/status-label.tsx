@@ -1,3 +1,4 @@
+import { IM_TYPE_ROLES } from "@/components/ui/typography"
 import { cn } from "@/lib/utils"
 
 /** The four status roles, plus the two reserved for "needs attention soon" and failures. */
@@ -29,7 +30,8 @@ export function IMStatusLabel({ role, children, className }: IMStatusLabelProps)
     <span
       data-slot="status-label"
       data-role={role}
-      className={cn("inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold whitespace-nowrap text-foreground/85", className)}
+      // The caption role, a step bolder (spec: 12.5/600) so the word holds its own beside the dot.
+      className={cn(IM_TYPE_ROLES.caption, "inline-flex shrink-0 items-center gap-1.5 font-semibold whitespace-nowrap text-foreground/85", className)}
     >
       <span aria-hidden className={cn("size-2 shrink-0 rounded-full", DOT[role])} />
       {children}

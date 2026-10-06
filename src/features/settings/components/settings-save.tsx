@@ -67,7 +67,7 @@ export function useSettingsSave(id: string, { dirty, save, reset }: { dirty: boo
 }
 
 function SettingsSaveBar({ dirtyIds, handlers }: { dirtyIds: ReadonlySet<string>; handlers: React.RefObject<Map<string, SaveHandlers>> }) {
-  const { toast } = useIMToast()
+  const { show: toast } = useIMToast()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   if (dirtyIds.size === 0) return null
@@ -79,7 +79,7 @@ function SettingsSaveBar({ dirtyIds, handlers }: { dirtyIds: ReadonlySet<string>
     setSaving(false)
     const failed = results.find((r): r is PromiseRejectedResult => r.status === 'rejected')
     if (failed) setError(failed.reason instanceof Error ? failed.reason.message : 'השמירה נכשלה.')
-    else toast('השינויים נשמרו', '', 'success')
+    else toast({ tone: 'success', title: 'השינויים נשמרו' })
   }
 
   const discardAll = () => {

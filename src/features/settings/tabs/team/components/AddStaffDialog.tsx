@@ -84,11 +84,11 @@ export const AddStaffDialog: React.FC<AddStaffDialogProps> = ({ open, onOpenChan
           </IMDialogActions>
         ) : (
           <IMDialogActions error={addForm.formState.errors.root?.message ?? null}>
-            <IMButton type="button" variant="ghost" onClick={handleClose}>
-              ביטול
-            </IMButton>
             <IMButton type="submit" form="add-staff-form" disabled={addStaffMutation.isPending} className="min-w-28">
               {addStaffMutation.isPending ? 'יוצר הזמנה…' : 'שליחת הזמנה'}
+            </IMButton>
+            <IMButton type="button" variant="ghost" onClick={handleClose}>
+              ביטול
             </IMButton>
           </IMDialogActions>
         )

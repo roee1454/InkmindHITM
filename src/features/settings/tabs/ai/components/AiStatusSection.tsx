@@ -12,7 +12,7 @@ import { SettingsRow, SettingsSection } from '@/features/settings/components/set
 export function AiStatusSection() {
   const queryClient = useQueryClient()
   const confirm = useConfirm()
-  const { toast } = useIMToast()
+  const { show: toast } = useIMToast()
   const [localChecked, setLocalChecked] = useState<boolean | null>(null)
 
   const { data: settings } = useQuery<AiSettings>({
@@ -40,7 +40,7 @@ export function AiStatusSection() {
       if (context?.prev) {
         queryClient.setQueryData(['ai-settings'], context.prev)
       }
-      toast('שגיאה בשינוי מצב הבוט', err instanceof Error ? err.message : 'לא ניתן היה לעדכן את הגדרות הבוט.', 'error')
+      toast({ tone: 'destructive', title: 'שגיאה בשינוי מצב הבוט', description: err instanceof Error ? err.message : 'לא ניתן היה לעדכן את הגדרות הבוט.' })
     },
     onSuccess: (result, nextEnabled) => {
       const finalState = result?.enabled ?? nextEnabled
@@ -48,13 +48,13 @@ export function AiStatusSection() {
       queryClient.setQueryData<AiSettings>(['ai-settings'], (old) =>
         old ? { ...old, aiEnabled: finalState } : old,
       )
-      toast(
-        finalState ? 'סוכן ה-AI הופעל' : 'סוכן ה-AI הושבת',
-        finalState
+      toast({
+        tone: 'success',
+        title: finalState ? 'סוכן ה-AI הופעל' : 'סוכן ה-AI הושבת',
+        description: finalState
           ? 'הבוט יחזור לענות לבד בכל השיחות הפעילות.'
           : 'הבוט הפסיק לענות. ההודעות ימשיכו להגיע והמענה עבר לצוות.',
-        'success',
-      )
+      })
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['ai-settings'] })

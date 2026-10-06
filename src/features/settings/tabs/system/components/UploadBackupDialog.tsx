@@ -110,9 +110,6 @@ export const UploadBackupDialog: React.FC<UploadBackupDialogProps> = ({
       description="קובץ ZIP של גיבוי שנשמר אצלך. הוא נשמר ברשימת הגיבויים, ואפשר גם לשחזר ממנו מיד."
       footer={
         <IMDialogActions error={error}>
-          <IMButton type="button" variant="ghost" onClick={() => handleDialogChange(false)} disabled={isProcessing}>
-            ביטול
-          </IMButton>
           <IMButton
             type="button"
             variant={shouldRestore ? 'destructive' : 'primary'}
@@ -122,6 +119,9 @@ export const UploadBackupDialog: React.FC<UploadBackupDialogProps> = ({
           >
             {shouldRestore ? <RotateCcw size={15} /> : <Upload size={15} />}
             {isProcessing ? (shouldRestore ? 'מעלה ומשחזר…' : 'מעלה…') : shouldRestore ? 'העלאה ושחזור' : 'העלאה'}
+          </IMButton>
+          <IMButton type="button" variant="ghost" onClick={() => handleDialogChange(false)} disabled={isProcessing}>
+            ביטול
           </IMButton>
         </IMDialogActions>
       }

@@ -23,7 +23,7 @@ function errorText(err: unknown, fallback: string): string {
 /** Creating a customer, and saving the details tab of an open customer card. */
 export function useCustomerMutations() {
   const queryClient = useQueryClient()
-  const { toast } = useIMToast()
+  const { show: toast } = useIMToast()
   const { setIsCreating, resetForm, setFormError } = useCustomersUiStore()
 
   const refresh = () =>
@@ -59,7 +59,7 @@ export function useCustomerMutations() {
       }),
     onSuccess: () => {
       setFormError(null)
-      toast('הפרטים נשמרו', '', 'success')
+      toast({ tone: 'success', title: 'הפרטים נשמרו' })
       return refresh()
     },
     onError: (err: unknown) => setFormError(errorText(err, 'שגיאה בעדכון הלקוח')),

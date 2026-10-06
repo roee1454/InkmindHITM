@@ -31,7 +31,7 @@ export function ReceiptVerificationSheet({
   onTakeover,
   isTakingOver = false,
 }: ReceiptVerificationSheetProps) {
-  const { toast } = useIMToast()
+  const { show: toast } = useIMToast()
   const [amount, setAmount] = useState(initialAmount)
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export function ReceiptVerificationSheet({
   const confirmMutation = useMutation({
     mutationFn: () => confirmDepositReceived({ data: { conversationId } }),
     onSuccess: () => {
-      toast('המקדמה אושרה והתור ננעל ביומן', 'success')
+      toast({ tone: 'success', title: 'המקדמה אושרה והתור ננעל ביומן' })
       onSuccess()
     },
   })
@@ -51,7 +51,7 @@ export function ReceiptVerificationSheet({
   const rejectMutation = useMutation({
     mutationFn: () => rejectDepositReceipt({ data: { conversationId } }),
     onSuccess: () => {
-      toast('נשלחה ללקוח בקשה לאסמכתה ברורה יותר', 'info')
+      toast({ title: 'נשלחה ללקוח בקשה לאסמכתה ברורה יותר' })
       onSuccess()
     },
   })
@@ -65,19 +65,19 @@ export function ReceiptVerificationSheet({
       bodyClassName="flex flex-col gap-5"
       footer={
         <IMDialogActions
-          start={
+          secondary={
             <IMButton type="button" variant="ghost" disabled={rejectMutation.isPending} onClick={() => rejectMutation.mutate()}>
               {rejectMutation.isPending ? 'שולח…' : 'לבקש צילום ברור'}
             </IMButton>
           }
         >
-          <IMButton type="button" variant="ghost" disabled={isTakingOver} onClick={onTakeover} className="gap-1.5">
-            <BotOff size={15} />
-            לקחת שליטה
-          </IMButton>
           <IMButton type="button" className="min-w-28 gap-1.5" disabled={confirmMutation.isPending} onClick={() => confirmMutation.mutate()}>
             <BadgeCheck size={16} />
             {confirmMutation.isPending ? 'מאשר…' : 'אישור התשלום'}
+          </IMButton>
+          <IMButton type="button" variant="ghost" disabled={isTakingOver} onClick={onTakeover} className="gap-1.5">
+            <BotOff size={15} />
+            לקחת שליטה
           </IMButton>
         </IMDialogActions>
       }

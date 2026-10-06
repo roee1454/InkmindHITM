@@ -156,7 +156,7 @@ const RENAMES: Record<string, Record<string, string | null>> = {
   switch: { Switch: 'IMSwitch' },
   tabs: { Tabs: 'IMTabs', TabsList: 'IMTabsList', TabsTrigger: 'IMTabsTrigger', TabsContent: 'IMTabsContent' },
   textarea: { Textarea: 'IMTextarea' },
-  toast: { ToastProvider: 'IMToastProvider', useToast: 'useIMToast', ToastType: 'IMToastType', ToastItem: null },
+  toast: { ToastProvider: 'IMToastProvider', useToast: 'useIMToast', ToastType: null, ToastItem: null },
 }
 
 /** Old file basename → new one. */

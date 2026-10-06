@@ -2,6 +2,7 @@ import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 import type { TooltipValueType } from "recharts"
 
+import { IMNum, IM_TYPE_ROLES } from "@/components/ui/typography"
 import { cn } from "@/lib/utils"
 
 // Format: { THEME_NAME: CSS_SELECTOR }
@@ -66,7 +67,8 @@ export function IMChartContainer({
         data-slot="chart"
         data-chart={chartId}
         className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden",
+          IM_TYPE_ROLES.caption,
+          "flex aspect-video justify-center [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden",
           className
         )}
         {...props}
@@ -163,7 +165,7 @@ export function IMChartTooltipContent({
 
     if (labelFormatter) {
       return (
-        <div className={cn("font-medium", labelClassName)}>
+        <div className={cn("font-semibold text-foreground", labelClassName)}>
           {labelFormatter(value, payload)}
         </div>
       )
@@ -173,7 +175,7 @@ export function IMChartTooltipContent({
       return null
     }
 
-    return <div className={cn("font-medium", labelClassName)}>{value}</div>
+    return <div className={cn("font-semibold text-foreground", labelClassName)}>{value}</div>
   }, [
     label,
     labelFormatter,
@@ -193,7 +195,8 @@ export function IMChartTooltipContent({
   return (
     <div
       className={cn(
-        "grid min-w-32 items-start gap-1.5 rounded-md border border-border bg-card px-2.5 py-2 text-xs font-medium shadow-lg",
+        IM_TYPE_ROLES.caption,
+        "grid min-w-32 items-start gap-1.5 rounded-md border border-border bg-card px-2.5 py-2 shadow-lg",
         className
       )}
     >
@@ -255,11 +258,11 @@ export function IMChartTooltipContent({
                         </span>
                       </div>
                       {item.value != null && (
-                        <span className="font-bold text-foreground tabular-nums">
+                        <IMNum className="font-bold text-foreground">
                           {typeof item.value === "number"
                             ? item.value.toLocaleString()
                             : String(item.value)}
-                        </span>
+                        </IMNum>
                       )}
                     </div>
                   </>
@@ -293,7 +296,8 @@ export function IMChartLegendContent({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center justify-center gap-3.5 text-xs font-semibold",
+        IM_TYPE_ROLES.caption,
+        "flex flex-wrap items-center justify-center gap-3.5 font-semibold",
         verticalAlign === "top" ? "pb-3" : "pt-3",
         className
       )}

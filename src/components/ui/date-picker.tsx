@@ -1,7 +1,7 @@
 import * as React from "react"
 
 import { IMCalendar } from "@/components/ui/calendar"
-import { Calendar as CalendarGlyph, ChevronDown } from "@/components/ui/icon"
+import { IMIcon } from "@/components/ui/icon"
 import { imControlClasses, imControlHeight } from "@/components/ui/input"
 import { IMPopover, IMPopoverContent, IMPopoverTrigger } from "@/components/ui/popover"
 import { HEBREW_DAYS_LONG, HEBREW_MONTHS, fromYmd, toYmd } from "@/lib/date-utils"
@@ -57,12 +57,11 @@ export function IMDatePicker({
     <IMPopover open={triggerDisabled ? false : open} onOpenChange={triggerDisabled ? undefined : setOpen}>
       <IMPopoverTrigger asChild>
         <button type="button" disabled={triggerDisabled} className={cn(imPickerTriggerClasses, className)}>
-          {/* Phase 1b: <IMIcon name="calendar" size="sm" tone="muted" /> … <IMIcon name="chevron-down" size="sm" tone="muted" /> */}
-          <CalendarGlyph aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+          <IMIcon name="calendar" size="sm" tone="muted" />
           <span className={cn("min-w-0 flex-1 truncate", !value && "text-muted-foreground/70")}>
             {value ? formatDisplay(value) : placeholder}
           </span>
-          <ChevronDown aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+          <IMIcon name="chevron-down" size="sm" tone="muted" />
         </button>
       </IMPopoverTrigger>
       <IMPopoverContent className="w-auto p-2" dir="rtl">

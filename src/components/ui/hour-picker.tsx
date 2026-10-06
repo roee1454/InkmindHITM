@@ -1,9 +1,10 @@
 import * as React from "react"
 
 import { imPickerTriggerClasses } from "@/components/ui/date-picker"
-import { ChevronDown, Clock } from "@/components/ui/icon"
+import { IMIcon } from "@/components/ui/icon"
 import { IMPopover, IMPopoverContent, IMPopoverTrigger } from "@/components/ui/popover"
 import { IMSearchInput } from "@/components/ui/search-input"
+import { IMCaption, IMNum, IMText, IM_TYPE_ROLES } from "@/components/ui/typography"
 import { minutesToTime, timeToMinutes } from "@/lib/date-utils"
 import { cn } from "@/lib/utils"
 
@@ -114,12 +115,11 @@ export function IMHourPicker({
     <IMPopover open={disabled ? false : open} onOpenChange={disabled ? undefined : setOpen}>
       <IMPopoverTrigger asChild>
         <button type="button" disabled={disabled} className={cn(imPickerTriggerClasses, className)}>
-          {/* Phase 1b: <IMIcon name="clock" size="sm" tone="muted" /> … <IMIcon name="chevron-down" size="sm" tone="muted" /> */}
-          {!hideIcon && <Clock aria-hidden className="size-4 shrink-0 text-muted-foreground" />}
-          <span className={cn("min-w-0 flex-1 truncate tabular-nums", !value && "text-muted-foreground/70")}>
-            {value || placeholder}
+          {!hideIcon && <IMIcon name="clock" size="sm" tone="muted" />}
+          <span className={cn("min-w-0 flex-1 truncate", !value && "text-muted-foreground/70")}>
+            {value ? <IMNum>{value}</IMNum> : placeholder}
           </span>
-          {!disabled && <ChevronDown aria-hidden className="size-4 shrink-0 text-muted-foreground" />}
+          {!disabled && <IMIcon name="chevron-down" size="sm" tone="muted" />}
         </button>
       </IMPopoverTrigger>
       <IMPopoverContent className="w-48 p-0" dir="rtl">
@@ -146,13 +146,13 @@ export function IMHourPicker({
           className="max-h-60 overflow-y-auto overscroll-contain p-1.5"
         >
           {groups.length === 0 ? (
-            <p className="px-3 py-6 text-center text-xs font-medium text-muted-foreground">לא נמצאה התאמה</p>
+            <IMCaption className="px-3 py-6 text-center">לא נמצאה התאמה</IMCaption>
           ) : (
             groups.map((group) => (
               <div key={group.key}>
-                <div className="sticky top-0 z-10 bg-popover px-3 py-1.5 text-2xs font-semibold text-muted-foreground">
+                <IMText as="div" variant="micro" tone="muted" className="sticky top-0 z-10 bg-popover px-3 py-1.5">
                   {group.label}
-                </div>
+                </IMText>
                 {group.times.map((time) => (
                   <button
                     key={time}
@@ -163,11 +163,12 @@ export function IMHourPicker({
                       setOpen(false)
                     }}
                     className={cn(
-                      "flex h-11 w-full cursor-pointer items-center rounded-md px-3 text-start text-base font-medium tabular-nums outline-none transition-colors duration-100 hover:bg-surface-2 focus-visible:bg-surface-2",
+                      IM_TYPE_ROLES.body,
+                      "flex h-11 w-full cursor-pointer items-center rounded-md px-3 text-start outline-none transition-colors duration-100 hover:bg-surface-2 focus-visible:bg-surface-2",
                       time === value && "bg-accent-soft font-bold"
                     )}
                   >
-                    {time}
+                    <IMNum>{time}</IMNum>
                   </button>
                 ))}
               </div>

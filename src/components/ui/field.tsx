@@ -1,8 +1,9 @@
 import * as React from "react"
 import { Slot } from "radix-ui"
 
-import { AlertCircle } from "@/components/ui/icon"
+import { IMIcon } from "@/components/ui/icon"
 import { IMLabel } from "@/components/ui/label"
+import { IMText } from "@/components/ui/typography"
 import { cn } from "@/lib/utils"
 
 export interface IMFieldProps extends Omit<React.ComponentProps<"div">, "children" | "id"> {
@@ -52,16 +53,15 @@ export function IMField({ label, help, error, required, id, className, children,
         {children}
       </Slot.Root>
       {invalid ? (
-        <p id={errorId} data-slot="field-error" className="flex items-center gap-1.5 ps-1 text-sm font-bold text-destructive">
-          {/* Phase 1b: <IMIcon name="warning-circle" size="sm" /> */}
-          <AlertCircle aria-hidden className="size-4 shrink-0" />
+        <IMText id={errorId} data-slot="field-error" variant="label" tone="destructive" className="flex items-center gap-1.5 ps-1">
+          <IMIcon name="warning-circle" size="sm" />
           {error}
-        </p>
+        </IMText>
       ) : (
         help && (
-          <p id={helpId} data-slot="field-help" className="ps-1 text-sm font-medium text-muted-foreground">
+          <IMText id={helpId} data-slot="field-help" variant="body-sm" tone="muted" className="ps-1">
             {help}
-          </p>
+          </IMText>
         )
       )}
     </div>

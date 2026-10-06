@@ -2,6 +2,7 @@ import * as React from "react"
 import { Dialog as SheetPrimitive } from "radix-ui"
 
 import { IMOverlayClose } from "@/components/ui/dialog"
+import { IM_TYPE_ROLES } from "@/components/ui/typography"
 import { useDragToDismiss } from "@/hooks/useDragToDismiss"
 import { cn } from "@/lib/utils"
 
@@ -122,7 +123,7 @@ export function IMSheetTitle({ className, ...props }: React.ComponentProps<typeo
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
-      className={cn("text-lg font-bold text-foreground", className)}
+      className={cn(IM_TYPE_ROLES.title, "text-foreground", className)}
       {...props}
     />
   )
@@ -133,7 +134,7 @@ export function IMSheetDescription({ className, ...props }: React.ComponentProps
   return (
     <SheetPrimitive.Description
       data-slot="sheet-description"
-      className={cn("text-sm font-medium text-muted-foreground", className)}
+      className={cn(IM_TYPE_ROLES["body-sm"], "text-muted-foreground", className)}
       {...props}
     />
   )

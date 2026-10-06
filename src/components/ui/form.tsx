@@ -5,6 +5,7 @@ import type { ControllerProps, FieldPath, FieldValues } from "react-hook-form"
 
 import { IMLabel } from "@/components/ui/label"
 import type { IMLabelProps } from "@/components/ui/label"
+import { IMText } from "@/components/ui/typography"
 import { cn } from "@/lib/utils"
 
 /**
@@ -82,32 +83,36 @@ export function IMFormControl(props: React.ComponentProps<typeof Slot.Root>) {
 }
 
 /** Help text under the control: the `body-sm` role, muted. */
-export function IMFormDescription({ className, ...props }: React.ComponentProps<"p">) {
+export function IMFormDescription({ className, ...props }: Omit<React.HTMLAttributes<HTMLParagraphElement>, "dir">) {
   const { formDescriptionId } = useFormField()
   return (
-    <p
+    <IMText
       data-slot="form-description"
       id={formDescriptionId}
-      className={cn("ps-1 text-sm font-medium text-muted-foreground", className)}
+      variant="body-sm"
+      tone="muted"
+      className={cn("ps-1", className)}
       {...props}
     />
   )
 }
 
 /** The field's error, or `children` when there is none. Says how to fix it. */
-export function IMFormMessage({ className, children, ...props }: React.ComponentProps<"p">) {
+export function IMFormMessage({ className, children, ...props }: Omit<React.HTMLAttributes<HTMLParagraphElement>, "dir">) {
   const { error, formMessageId } = useFormField()
   const body = error ? String(error.message ?? "") : children
   if (!body) return null
 
   return (
-    <p
+    <IMText
       data-slot="form-message"
       id={formMessageId}
-      className={cn("ps-1 text-sm font-bold text-destructive", className)}
+      variant="label"
+      tone="destructive"
+      className={cn("ps-1", className)}
       {...props}
     >
       {body}
-    </p>
+    </IMText>
   )
 }

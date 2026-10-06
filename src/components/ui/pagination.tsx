@@ -1,5 +1,5 @@
 import { IMButton } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "@/components/ui/icon"
+import { IMNum, IMText, IM_TYPE_ROLES } from "@/components/ui/typography"
 import { cn } from "@/lib/utils"
 
 export type IMPaginationItem = number | "ellipsis-start" | "ellipsis-end"
@@ -59,29 +59,27 @@ export function IMPagination({
       className={cn("flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3.5", className)}
     >
       {totalItems !== undefined && (
-        <p className="text-sm font-medium text-muted-foreground">
-          מציג <span className="tabular-nums">{startItem}–{endItem}</span> מתוך{" "}
-          <span className="tabular-nums">{totalItems}</span> {itemLabel}
-        </p>
+        <IMText variant="body-sm" tone="muted">
+          מציג <IMNum>{startItem}–{endItem}</IMNum> מתוך <IMNum>{totalItems}</IMNum> {itemLabel}
+        </IMText>
       )}
 
       <div className="ms-auto flex items-center gap-1">
-        {/* Phase 1b: icon="chevron-start" / iconEnd="chevron-end" — the registry mirrors them for RTL. */}
         <IMButton
           type="button"
           variant="outline"
           size="sm"
+          icon="chevron-start"
           onClick={() => onPageChange(page - 1)}
           disabled={page === 1}
           aria-label="עמוד קודם"
         >
-          <ChevronRight />
           הקודם
         </IMButton>
 
-        <span dir="ltr" className="px-2 text-sm font-bold text-muted-foreground tabular-nums sm:hidden">
+        <IMText as="span" variant="label" tone="muted" numeric className="px-2 sm:hidden">
           {page} / {totalPages}
-        </span>
+        </IMText>
 
         <div className="hidden items-center gap-1 px-1 sm:flex">
           {imPaginationPages(page, totalPages).map((item) =>
@@ -89,7 +87,7 @@ export function IMPagination({
               <span
                 key={item}
                 aria-hidden
-                className="grid size-8 place-items-center text-sm font-bold text-muted-foreground select-none"
+                className={cn(IM_TYPE_ROLES.label, "grid size-8 place-items-center text-muted-foreground select-none")}
               >
                 …
               </span>
@@ -101,13 +99,14 @@ export function IMPagination({
                 aria-current={item === page ? "page" : undefined}
                 aria-label={`עמוד ${item}`}
                 className={cn(
-                  "grid size-8 cursor-pointer place-items-center rounded-md border text-sm font-bold tabular-nums outline-none transition-[transform,background-color,color] duration-150 ease-native focus-visible:ring-4 focus-visible:ring-ring/35 active:scale-95",
+                  IM_TYPE_ROLES.label,
+                  "grid size-8 cursor-pointer place-items-center rounded-md border outline-none transition-[transform,background-color,color] duration-150 ease-native focus-visible:ring-4 focus-visible:ring-ring/35 active:scale-95",
                   item === page
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border bg-card text-muted-foreground hover:bg-surface-2 hover:text-foreground"
                 )}
               >
-                {item}
+                <IMNum>{item}</IMNum>
               </button>
             )
           )}
@@ -117,12 +116,12 @@ export function IMPagination({
           type="button"
           variant="outline"
           size="sm"
+          iconEnd="chevron-end"
           onClick={() => onPageChange(page + 1)}
           disabled={page === totalPages}
           aria-label="עמוד הבא"
         >
           הבא
-          <ChevronLeft />
         </IMButton>
       </div>
     </nav>

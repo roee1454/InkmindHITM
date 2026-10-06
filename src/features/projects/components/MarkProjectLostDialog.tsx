@@ -40,12 +40,12 @@ export function MarkProjectLostDialog({ projectId, projectTitle, open, onOpenCha
       description={`${projectTitle || 'הפרויקט'} יוצא מהלוח הפתוח. אפשר לפתוח אותו מחדש בכל רגע.`}
       footer={
         <IMDialogActions error={markLost.isError ? (markLost.error instanceof Error ? markLost.error.message : 'הסימון נכשל.') : null}>
-          <IMButton type="button" variant="ghost" disabled={markLost.isPending} onClick={() => onOpenChange(false)}>
-            ביטול
-          </IMButton>
           <IMButton type="button" disabled={markLost.isPending} onClick={submit} className="min-w-28 gap-2">
             {markLost.isPending && <Loader2 size={14} className="animate-spin" />}
             סימון כאבוד
+          </IMButton>
+          <IMButton type="button" variant="ghost" disabled={markLost.isPending} onClick={() => onOpenChange(false)}>
+            ביטול
           </IMButton>
         </IMDialogActions>
       }

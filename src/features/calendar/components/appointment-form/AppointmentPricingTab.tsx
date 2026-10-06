@@ -28,7 +28,7 @@ function amount(value: string): number | null {
 
 /** Whether a confirmed appointment reached the artist's Google Calendar, and a retry when it didn't. */
 function GoogleSyncRow({ appointment, readOnly }: { appointment: ApiAppointment; readOnly: boolean }) {
-  const { toast } = useIMToast()
+  const { show: toast } = useIMToast()
   const [status, setStatus] = useState(appointment.googleSyncStatus)
   const [retrying, setRetrying] = useState(false)
 
@@ -37,10 +37,10 @@ function GoogleSyncRow({ appointment, readOnly }: { appointment: ApiAppointment;
     try {
       const res = await retrySyncAppointmentToGoogle({ data: { appointmentId: appointment.id } })
       setStatus(res.ok ? 'synced' : 'push_failed')
-      if (res.ok) toast('סנכרון יומן', 'התור סונכרן ל-Google Calendar.', 'success')
-      else toast('שגיאת סנכרון', 'הסנכרון נכשל. ודאו שהמקעקע חיבר יומן Google.', 'warning')
+      if (res.ok) toast({ tone: 'success', title: 'סנכרון יומן', description: 'התור סונכרן ל-Google Calendar.' })
+      else toast({ tone: 'warning', title: 'שגיאת סנכרון', description: 'הסנכרון נכשל. ודאו שהמקעקע חיבר יומן Google.' })
     } catch {
-      toast('שגיאה', 'הסנכרון נכשל באופן לא צפוי.', 'error')
+      toast({ tone: 'destructive', title: 'שגיאה', description: 'הסנכרון נכשל באופן לא צפוי.' })
     } finally {
       setRetrying(false)
     }

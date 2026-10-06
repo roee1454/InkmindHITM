@@ -166,7 +166,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
       description={`שלב ${currentStep + 1} מתוך ${WIZARD_STEPS.length} · ${WIZARD_STEPS[currentStep]?.title ?? ''}`}
       footer={
         <IMDialogActions
-          start={
+          secondary={
             currentStep > 0 && (
               <IMButton type="button" variant="ghost" onClick={goBack} className="gap-1">
                 <ChevronRight size={16} />
@@ -175,11 +175,11 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
             )
           }
         >
-          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            ביטול
-          </IMButton>
           <IMButton type="submit" form="create-appointment-form" disabled={isSaving} className="min-w-28">
             {isLastStep ? (isSaving ? 'שומר…' : 'קביעת התור') : 'המשך'}
+          </IMButton>
+          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            ביטול
           </IMButton>
         </IMDialogActions>
       }

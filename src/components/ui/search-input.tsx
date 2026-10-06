@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { Search, X } from "@/components/ui/icon"
+import { IMIcon } from "@/components/ui/icon"
 import { IMInput } from "@/components/ui/input"
 import { useDebouncedCallback } from "@/hooks/useDebounce"
 import { cn } from "@/lib/utils"
@@ -93,11 +93,7 @@ export const IMSearchInput = React.forwardRef<HTMLInputElement, IMSearchInputPro
       data-size={size}
       className={cn("relative flex w-full items-center", containerClassName)}
     >
-      {/* Phase 1b: <IMIcon name="search" size="sm" tone="muted" /> */}
-      <Search
-        aria-hidden
-        className={cn("pointer-events-none absolute size-4 text-muted-foreground", SIZES[size].icon)}
-      />
+      <IMIcon name="search" size="sm" tone="muted" className={cn("pointer-events-none absolute", SIZES[size].icon)} />
       <IMInput
         ref={inputRef}
         type="text"
@@ -114,8 +110,7 @@ export const IMSearchInput = React.forwardRef<HTMLInputElement, IMSearchInputPro
           aria-label="ניקוי החיפוש"
           className="absolute end-2 grid size-7 cursor-pointer place-items-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-surface-2 hover:text-foreground focus-visible:ring-4 focus-visible:ring-ring/35"
         >
-          {/* Phase 1b: <IMIcon name="close" size="xs" /> */}
-          <X className="size-3.5" />
+          <IMIcon name="close" size="sm" />
         </button>
       )}
     </div>

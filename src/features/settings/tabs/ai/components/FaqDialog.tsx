@@ -60,11 +60,11 @@ export function FaqDialog({ target, onClose, onSave, isSaving, error }: FaqDialo
       description="הבוט עונה ללקוחות לפי השאלות והתשובות במאגר."
       footer={
         <IMDialogActions error={error}>
-            <IMButton type="button" variant="ghost" onClick={onClose}>
-              ביטול
-            </IMButton>
             <IMButton type="submit" form="faq-form" disabled={isSaving} className="min-w-28">
               {isSaving ? 'שומר…' : entry ? 'שמירה' : 'הוספה למאגר'}
+            </IMButton>
+            <IMButton type="button" variant="ghost" onClick={onClose}>
+              ביטול
             </IMButton>
         </IMDialogActions>
       }

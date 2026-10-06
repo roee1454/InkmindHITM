@@ -4,6 +4,7 @@ import { IMBadge } from '@/components/ui/badge'
 import { IMButton } from '@/components/ui/button'
 import { IMCard, IMCardContent, IMCardHeader, IMCardTitle, IMListRow } from '@/components/ui/card'
 import { IMCheckbox } from '@/components/ui/checkbox'
+import { IMDialogActions } from '@/components/ui/responsive-dialog'
 import { IMChip } from '@/components/ui/chip'
 import { IMInput } from '@/components/ui/input'
 import { IMLabel } from '@/components/ui/label'
@@ -14,6 +15,9 @@ import { IMTabs, IMTabsList, IMTabsTrigger } from '@/components/ui/tabs'
 import { IMTextarea } from '@/components/ui/textarea'
 
 const classOf = (html: string) => /class="([^"]*)"/.exec(html)?.[1]?.split(' ') ?? []
+/** The class lists of every IMIcon in the markup, in order. */
+const icons = (html: string) =>
+  [...html.matchAll(/<svg[^>]*data-slot="im-icon"[^>]*class="([^"]*)"/g)].map((m) => m[1]?.split(' ') ?? [])
 
 // Typography and icons have their own suites (typography.test.tsx, icon.test.tsx).
 describe('IMButton', () => {
@@ -57,6 +61,43 @@ describe('IMButton', () => {
     expect(html.indexOf('<svg')).toBeLessThan(html.indexOf('שומר…'))
   })
 
+  it('icon and iconEnd frame the label, sized to the button', () => {
+    const html = renderToStaticMarkup(
+      <IMButton icon="plus" iconEnd="chevron-end">
+        לקוח חדש
+      </IMButton>,
+    )
+    const [lead, trail] = icons(html)
+    expect(lead).toContain('size-5')
+    expect(trail).toContain('size-5')
+    expect(html.indexOf('data-slot="im-icon"')).toBeLessThan(html.indexOf('לקוח חדש'))
+    expect(html.lastIndexOf('data-slot="im-icon"')).toBeGreaterThan(html.indexOf('לקוח חדש'))
+    expect(icons(renderToStaticMarkup(<IMButton size="sm" icon="plus">א</IMButton>))[0]).toContain('size-4')
+    expect(icons(renderToStaticMarkup(<IMButton size="icon" icon="trash" aria-label="מחיקה" />))[0]).toContain('size-6')
+  })
+
+  it('loading puts the spinner in the icon slot, so a button with an icon keeps its width', () => {
+    const html = renderToStaticMarkup(
+      <IMButton icon="save" loading>
+        שומר…
+      </IMButton>,
+    )
+    const all = icons(html)
+    expect(all).toHaveLength(1)
+    expect(all[0]).toContain('motion-safe:animate-spin')
+    expect(html).toContain('שומר…')
+  })
+
+  it('asChild keeps its icons inside the slotted link', () => {
+    const html = renderToStaticMarkup(
+      <IMButton asChild icon="plus">
+        <a href="/x">פרויקט חדש</a>
+      </IMButton>,
+    )
+    expect(html).toMatch(/^<a href="\/x" data-slot="button"[^>]*><svg[^>]*data-slot="im-icon"/)
+    expect(html).toContain('פרויקט חדש</a>')
+  })
+
   it('loading an icon-only button swaps the glyph for the spinner, so the square holds', () => {
     const html = renderToStaticMarkup(
       <IMButton size="icon" aria-label="מחיקה" loading>
@@ -73,6 +114,10 @@ describe('IMBadge', () => {
     const html = renderToStaticMarkup(<IMBadge>טיוטה</IMBadge>)
     expect(html).toContain('data-variant="muted"')
     expect(classOf(html)).toContain('bg-surface-2')
+  })
+
+  it('takes an xs icon', () => {
+    expect(icons(renderToStaticMarkup(<IMBadge icon="check">שולם</IMBadge>))[0]).toContain('size-3')
   })
 
   it('renders the status roles without a hue: new is an outline, dead a filled grey', () => {
@@ -92,7 +137,8 @@ describe('IMCard and IMListRow', () => {
       </IMCard>,
     )
     expect(html).toContain('data-slot="card"')
-    expect(html).toMatch(/data-slot="card-title" class="text-lg font-bold/)
+    // IMTitle: an <h2> by default, 17/700.
+    expect(html).toMatch(/<h2 data-slot="card-title"[^>]*class="text-lg font-bold/)
     expect(html).toContain('תוכן')
   })
 
@@ -161,7 +207,20 @@ describe('IMTabs', () => {
     )
     expect(html).toContain('data-slot="tabs-count"')
     expect(html.match(/data-slot="tabs-count"/g)).toHaveLength(1)
-    expect(html).toContain('>57<')
+    expect(html).toMatch(/data-slot="tabs-count"[^>]*dir="ltr"[^>]*>57</)
+  })
+
+  it('takes an sm icon', () => {
+    const html = renderToStaticMarkup(
+      <IMTabs defaultValue="all">
+        <IMTabsList>
+          <IMTabsTrigger value="all" icon="users">
+            הכל
+          </IMTabsTrigger>
+        </IMTabsList>
+      </IMTabs>,
+    )
+    expect(icons(html)[0]).toContain('size-4')
   })
 })
 
@@ -174,6 +233,27 @@ describe('IMChip', () => {
     expect(off).toContain('aria-pressed="false"')
     expect(off).toContain('type="button"')
     expect(off).toContain('data-slot="chip-count"')
+  })
+
+  it('takes an sm icon', () => {
+    expect(icons(renderToStaticMarkup(<IMChip icon="filter">סינון</IMChip>))[0]).toContain('size-4')
+  })
+})
+
+describe('IMDialogActions', () => {
+  it('puts the error first, then the confirming action, cancel, and the secondary action — the DOM order is the reading order', () => {
+    const html = renderToStaticMarkup(
+      <IMDialogActions error="השמירה נכשלה." secondary={<IMButton variant="ghost">מחיקה</IMButton>}>
+        <IMButton>שמירה</IMButton>
+        <IMButton variant="ghost">ביטול</IMButton>
+      </IMDialogActions>,
+    )
+    const order = ['השמירה נכשלה.', 'שמירה<', 'ביטול', 'מחיקה'].map((text) => html.indexOf(text))
+    expect(order.every((at) => at >= 0)).toBe(true)
+    expect([...order].sort((a, b) => a - b)).toEqual(order)
+    expect(html).toContain('role="alert"')
+    // The two main actions share the row equally.
+    expect(html).toContain('*:flex-1')
   })
 })
 

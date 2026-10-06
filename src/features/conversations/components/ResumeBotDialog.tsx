@@ -30,7 +30,7 @@ export function ResumeBotDialog({
   onSuccess,
 }: ResumeBotDialogProps) {
   const queryClient = useQueryClient()
-  const { toast } = useIMToast()
+  const { show: toast } = useIMToast()
   const [instruction, setInstruction] = useState('')
   const [triggerTurn, setTriggerTurn] = useState(!windowExpired)
 
@@ -50,23 +50,23 @@ export function ResumeBotDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       queryClient.invalidateQueries({ queryKey: ['messages', conversation.id] })
-      toast(
-        triggerTurn && !windowExpired ? 'הבוט הופעל ומעבד מענה' : 'הבוט הופעל במצב המתנה',
-        triggerTurn && !windowExpired
+      toast({
+        tone: 'success',
+        title: triggerTurn && !windowExpired ? 'הבוט הופעל ומעבד מענה' : 'הבוט הופעל במצב המתנה',
+        description: triggerTurn && !windowExpired
           ? 'ה-AI מייצר מענה ראשוני בהתאם להנחיה'
           : 'השיחה הוחזרה לבוט, יגיב להודעה הבאה של הלקוח',
-        'success',
-      )
+      })
       onOpenChange(false)
       setInstruction('')
       onSuccess?.()
     },
     onError: (err: Error) => {
-      toast(
-        'הפעלת הבוט נכשלה',
-        err.message || 'אירעה שגיאה בעת הפעלת הבוט',
-        'error',
-      )
+      toast({
+        tone: 'destructive',
+        title: 'הפעלת הבוט נכשלה',
+        description: err.message || 'אירעה שגיאה בעת הפעלת הבוט',
+      })
     },
   })
 
@@ -80,9 +80,6 @@ export function ResumeBotDialog({
       description={`הבוט ימשיך את השיחה עם ${customer}.`}
       footer={
         <IMDialogActions>
-          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={resumeMutation.isPending}>
-            ביטול
-          </IMButton>
           <IMButton type="button" disabled={resumeMutation.isPending} onClick={() => resumeMutation.mutate()} className="min-w-28 gap-1.5">
             {resumeMutation.isPending ? (
               'מפעיל…'
@@ -97,6 +94,9 @@ export function ResumeBotDialog({
                 החזרה לבוט
               </>
             )}
+          </IMButton>
+          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={resumeMutation.isPending}>
+            ביטול
           </IMButton>
         </IMDialogActions>
       }

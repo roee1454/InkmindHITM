@@ -1,7 +1,7 @@
 import * as React from "react"
 
 import { IMButton } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "@/components/ui/icon"
+import { IMCaption, IMNum, IMSubtitle, IM_TYPE_ROLES } from "@/components/ui/typography"
 import {
   HEBREW_DAYS_SHORT,
   addMonths,
@@ -59,33 +59,32 @@ export function IMCalendar({ selected, onSelect, disabled, className, defaultAnc
   return (
     <div data-slot="calendar" className={cn("flex w-74 flex-col gap-2", className)}>
       <div className="flex items-center justify-between">
-        {/* Phase 1b: icon="chevron-start" / "chevron-end" — the registry mirrors them for RTL. */}
         <IMButton
           type="button"
           variant="ghost"
           size="icon-sm"
+          icon="chevron-start"
           onClick={() => setAnchor((a) => addMonths(a, -1))}
           aria-label="חודש קודם"
-        >
-          <ChevronRight />
-        </IMButton>
-        <span className="text-base font-semibold text-foreground">{formatMonthTitle(anchor)}</span>
+        />
+        <IMSubtitle as="span" aria-live="polite">
+          {formatMonthTitle(anchor)}
+        </IMSubtitle>
         <IMButton
           type="button"
           variant="ghost"
           size="icon-sm"
+          icon="chevron-end"
           onClick={() => setAnchor((a) => addMonths(a, 1))}
           aria-label="חודש הבא"
-        >
-          <ChevronLeft />
-        </IMButton>
+        />
       </div>
 
       <div className="grid grid-cols-7 gap-0.5" onKeyDown={handleKeyDown}>
         {HEBREW_DAYS_SHORT.map((label) => (
-          <div key={label} className="grid h-7 place-items-center text-xs font-semibold text-muted-foreground">
+          <IMCaption key={label} as="div" className="grid h-7 place-items-center">
             {label}
-          </div>
+          </IMCaption>
         ))}
 
         {buildMonthMatrix(anchor)
@@ -108,14 +107,15 @@ export function IMCalendar({ selected, onSelect, disabled, className, defaultAnc
                 onClick={() => onSelect(ymd)}
                 aria-pressed={isSelected}
                 className={cn(
-                  "grid h-10 cursor-pointer place-items-center rounded-md text-sm font-medium tabular-nums outline-none transition-colors duration-100 hover:bg-surface-2 focus-visible:ring-4 focus-visible:ring-ring/35",
+                  IM_TYPE_ROLES["body-sm"],
+                  "grid h-10 cursor-pointer place-items-center rounded-md outline-none transition-colors duration-100 hover:bg-surface-2 focus-visible:ring-4 focus-visible:ring-ring/35",
                   isSameMonth(day, anchor) ? "text-foreground" : "text-muted-foreground/60",
                   isToday(day) && !isSelected && "font-bold inset-ring-[1.5px] inset-ring-ring",
                   isSelected && "bg-primary font-bold text-primary-foreground hover:bg-primary",
                   isDisabled && "cursor-not-allowed opacity-30 hover:bg-transparent"
                 )}
               >
-                {day.getDate()}
+                <IMNum>{day.getDate()}</IMNum>
               </button>
             )
           })}

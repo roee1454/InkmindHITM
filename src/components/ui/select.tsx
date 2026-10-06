@@ -1,8 +1,9 @@
 import * as React from "react"
 import { Select as SelectPrimitive } from "radix-ui"
 
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "@/components/ui/icon"
+import { IMIcon } from "@/components/ui/icon"
 import { imControlClasses, imControlHeight } from "@/components/ui/input"
+import { IM_TYPE_ROLES } from "@/components/ui/typography"
 import { cn } from "@/lib/utils"
 
 /**
@@ -43,8 +44,7 @@ export function IMSelectTrigger({ className, size = "md", children, ...props }: 
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        {/* Phase 1b: <IMIcon name="chevron-down" size="sm" tone="muted" /> */}
-        <ChevronDownIcon className="size-4" />
+        <IMIcon name="chevron-down" size="sm" tone="muted" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   )
@@ -90,7 +90,7 @@ export function IMSelectLabel({ className, ...props }: React.ComponentProps<type
   return (
     <SelectPrimitive.Label
       data-slot="select-label"
-      className={cn("px-3 py-1.5 text-xs font-bold text-muted-foreground", className)}
+      className={cn(IM_TYPE_ROLES.label, "px-3 py-1.5 text-muted-foreground", className)}
       {...props}
     />
   )
@@ -102,15 +102,15 @@ export function IMSelectItem({ className, children, ...props }: React.ComponentP
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex h-11 w-full cursor-pointer select-none items-center gap-2 rounded-md ps-3 pe-9 text-base font-medium outline-none transition-colors duration-100 data-[highlighted]:bg-surface-2 data-[state=checked]:bg-accent-soft data-[state=checked]:font-bold data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        IM_TYPE_ROLES.body,
+        "relative flex h-11 w-full cursor-pointer select-none items-center gap-2 rounded-md ps-3 pe-9 outline-none transition-colors duration-100 data-[highlighted]:bg-surface-2 data-[state=checked]:bg-accent-soft data-[state=checked]:font-bold data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className
       )}
       {...props}
     >
       <span data-slot="select-item-indicator" className="absolute end-3 flex size-4 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          {/* Phase 1b: <IMIcon name="check" size="sm" /> */}
-          <CheckIcon className="size-4" />
+          <IMIcon name="check" size="sm" />
         </SelectPrimitive.ItemIndicator>
       </span>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
@@ -130,11 +130,9 @@ export function IMSelectSeparator({ className, ...props }: React.ComponentProps<
 
 function ScrollButton({ direction }: { direction: "up" | "down" }) {
   const Primitive = direction === "up" ? SelectPrimitive.ScrollUpButton : SelectPrimitive.ScrollDownButton
-  // Phase 1b: <IMIcon name="chevron-up" | "chevron-down" size="sm" />
-  const Glyph = direction === "up" ? ChevronUpIcon : ChevronDownIcon
   return (
     <Primitive className="flex cursor-default items-center justify-center py-1">
-      <Glyph className="size-4" />
+      <IMIcon name={direction === "up" ? "chevron-up" : "chevron-down"} size="sm" />
     </Primitive>
   )
 }

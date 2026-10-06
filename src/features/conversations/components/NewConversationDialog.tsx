@@ -29,7 +29,7 @@ export function NewConversationDialog({
   onSelectConversation,
 }: NewConversationDialogProps) {
   const queryClient = useQueryClient()
-  const { toast } = useIMToast()
+  const { show: toast } = useIMToast()
 
   const [step, setStep] = useState<'recipient' | 'template'>('recipient')
   const [recipientQuery, setRecipientQuery] = useState('')
@@ -152,12 +152,12 @@ export function NewConversationDialog({
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       queryClient.invalidateQueries({ queryKey: ['messages', res.conversationId] })
-      toast('התבנית נשלחה והשיחה נפתחה בהצלחה!', '', 'success')
+      toast({ tone: 'success', title: 'התבנית נשלחה והשיחה נפתחה בהצלחה!' })
       onOpenChange(false)
       onSelectConversation(res.conversationId)
     },
     onError: (err: Error) => {
-      toast('שליחת השיחה נכשלה', err.message || 'אירעה שגיאה', 'error')
+      toast({ tone: 'destructive', title: 'שליחת השיחה נכשלה', description: err.message || 'אירעה שגיאה' })
     },
   })
 
@@ -171,7 +171,7 @@ export function NewConversationDialog({
       footer={
         step === 'template' ? (
           <IMDialogActions
-            start={
+            secondary={
               <IMButton type="button" variant="ghost" onClick={() => setStep('recipient')} disabled={sendMutation.isPending}>
                 חזרה
               </IMButton>

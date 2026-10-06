@@ -20,7 +20,7 @@ import type { QuoteToSend } from '../components/BotQuoteBanner'
  */
 export function useAppointmentMutations() {
   const queryClient = useQueryClient()
-  const { toast } = useIMToast()
+  const { show: toast } = useIMToast()
   const closeCreate = useCalendarUiStore((s) => s.closeCreate)
   const setEditingAppointment = useCalendarUiStore((s) => s.setEditingAppointment)
   const setFormError = useCalendarUiStore((s) => s.setFormError)
@@ -74,9 +74,9 @@ export function useAppointmentMutations() {
     onSuccess: () => {
       refresh()
       setEditingAppointment(null)
-      toast('התור נמחק', 'התור וכל הנתונים המקושרים הוסרו בהצלחה.', 'success')
+      toast({ tone: 'success', title: 'התור נמחק', description: 'התור וכל הנתונים המקושרים הוסרו בהצלחה.' })
     },
-    onError: (err: unknown) => toast('שגיאה במחיקת התור', formatDatabaseError(err, 'מחיקת התור נכשלה.'), 'error'),
+    onError: (err: unknown) => toast({ tone: 'destructive', title: 'שגיאה במחיקת התור', description: formatDatabaseError(err, 'מחיקת התור נכשלה.') }),
   })
 
   const sendQuote = useMutation({

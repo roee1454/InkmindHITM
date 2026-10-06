@@ -14,7 +14,7 @@ export function projectDetailsQueryKey(projectId: string | null) {
 /** The project panel's data, and the edits it makes: details, moving, attaching and booking appointments. */
 export function useProjectDetails(projectId: string | null) {
   const queryClient = useQueryClient()
-  const { toast } = useIMToast()
+  const { show: toast } = useIMToast()
 
   const details = useQuery({
     queryKey: projectDetailsQueryKey(projectId),
@@ -39,7 +39,7 @@ export function useProjectDetails(projectId: string | null) {
     mutationFn: (input: { title: string; quoteMin: number | null; quoteMax: number | null; estimatedSessions: number | null }) =>
       updateProjectDetails({ data: { projectId: projectId ?? '', ...input } }),
     onSuccess: () => {
-      toast('הפרויקט עודכן', '', 'success')
+      toast({ tone: 'success', title: 'הפרויקט עודכן' })
       return refresh()
     },
   })
@@ -47,7 +47,7 @@ export function useProjectDetails(projectId: string | null) {
   const move = useMutation({
     mutationFn: (input: { appointmentId: string; target: string }) => moveAppointmentToProject({ data: input }),
     onSuccess: () => {
-      toast('התור הועבר', 'השלבים של שני הפרויקטים חושבו מחדש.', 'success')
+      toast({ tone: 'success', title: 'התור הועבר', description: 'השלבים של שני הפרויקטים חושבו מחדש.' })
       return refresh()
     },
   })
@@ -56,7 +56,7 @@ export function useProjectDetails(projectId: string | null) {
   const attach = useMutation({
     mutationFn: (appointmentId: string) => moveAppointmentToProject({ data: { appointmentId, target: projectId ?? '' } }),
     onSuccess: () => {
-      toast('התור שויך לפרויקט', 'השלבים של שני הפרויקטים חושבו מחדש.', 'success')
+      toast({ tone: 'success', title: 'התור שויך לפרויקט', description: 'השלבים של שני הפרויקטים חושבו מחדש.' })
       return refresh()
     },
   })
@@ -64,7 +64,7 @@ export function useProjectDetails(projectId: string | null) {
   const book = useMutation({
     mutationFn: (values: AppointmentFormValues) => createAppointment({ data: toCreateAppointmentInput(values) }),
     onSuccess: () => {
-      toast('התור נקבע', 'הוא מופיע ביומן ובפרויקט.', 'success')
+      toast({ tone: 'success', title: 'התור נקבע', description: 'הוא מופיע ביומן ובפרויקט.' })
       return refresh()
     },
   })

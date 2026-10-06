@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Checkbox as CheckboxPrimitive } from "radix-ui"
 
-import { CheckIcon } from "@/components/ui/icon"
+import { IMIcon } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
 
 export type IMCheckboxProps = React.ComponentProps<typeof CheckboxPrimitive.Root>
@@ -21,8 +21,7 @@ export function IMCheckbox({ className, ...props }: IMCheckboxProps) {
       {...props}
     >
       <CheckboxPrimitive.Indicator data-slot="checkbox-indicator" className="grid place-items-center">
-        {/* Phase 1b: <IMIcon name="check" size="sm" /> */}
-        <CheckIcon className="size-4" />
+        <IMIcon name="check" size="sm" />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )

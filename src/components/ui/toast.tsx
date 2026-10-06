@@ -1,31 +1,50 @@
 import * as React from "react"
 
-import { AlertCircle, AlertTriangle, CheckCircle, ChevronLeft, Info, X } from "@/components/ui/icon"
-import { IM_TONES } from "@/components/ui/tones"
+import { IMButton } from "@/components/ui/button"
+import { IMIcon } from "@/components/ui/icon"
+import type { IMIconName, IMIconTone } from "@/components/ui/icon"
+import { IMSubtitle, IMText } from "@/components/ui/typography"
 import { cn } from "@/lib/utils"
 
-/** Sets the leading icon only — the surface stays `card`. */
-export type IMToastType = "info" | "warning" | "error" | "success"
+/** Sets the leading icon only — the surface stays `card`. `default` is news; the rest report an outcome. */
+export type IMToastTone = "default" | "success" | "warning" | "destructive"
 
-interface ToastItem {
-  id: string
+export interface IMToastAction {
+  /** A verb ("ביטול השליחה"). */
+  label: string
+  onClick: () => void
+}
+
+export interface IMToastOptions {
+  tone?: IMToastTone
+  /** Past tense for an outcome ("הפרטים נשמרו"); for an error, what failed. */
   title: string
-  message: string
-  type: IMToastType
-  duration: number
+  /** One or two lines; for an error, what to do. */
+  description?: string
+  /** One follow-up action, as a link under the text. */
+  action?: IMToastAction
+  /** ms before it goes; paused while hovered or focused. Default 4500. */
+  duration?: number
+  /** Makes the whole toast a link (open the thing it reports). */
   onClick?: () => void
 }
 
 interface ToastContextValue {
-  toast: (title: string, message: string, type?: IMToastType, duration?: number, onClick?: () => void) => void
+  show: (options: IMToastOptions) => void
+}
+
+interface ToastItem extends IMToastOptions {
+  id: string
+  tone: IMToastTone
+  duration: number
 }
 
 const ToastContext = React.createContext<ToastContextValue | undefined>(undefined)
 
 /**
- * `toast(title, message, type?, duration?, onClick?)` — a short, self-dismissing report of something
- * that just happened. Title in past tense for outcomes ("הפרטים נשמרו"); errors say what failed and
- * what to do. Never for something the user must act on: that's a dialog or an inline message.
+ * `useIMToast().show({ tone, title, description?, action?, duration?, onClick? })` — a short,
+ * self-dismissing report of something that just happened. Never for something the user must act
+ * on: that's a dialog or an inline message.
  */
 export function useIMToast(): ToastContextValue {
   const context = React.useContext(ToastContext)
@@ -36,18 +55,17 @@ export function useIMToast(): ToastContextValue {
 /** More than this and they stop being read; the oldest goes first. */
 const MAX_VISIBLE = 3
 const EXIT_MS = 160
+const DEFAULT_DURATION = 4500
 
-// Phase 1b: IMIcon names — info, check-circle, warning, warning-circle.
-const ICONS: Record<IMToastType, typeof Info> = { info: Info, success: CheckCircle, warning: AlertTriangle, error: AlertCircle }
-const TONES: Record<IMToastType, string> = {
-  info: IM_TONES.muted,
-  success: IM_TONES.success,
-  warning: IM_TONES.warning,
-  error: IM_TONES.destructive,
+const ICONS: Record<IMToastTone, { name: IMIconName; tone: IMIconTone }> = {
+  default: { name: "info", tone: "muted" },
+  success: { name: "check-circle", tone: "success" },
+  warning: { name: "warning", tone: "warning" },
+  destructive: { name: "warning-circle", tone: "destructive" },
 }
 
 function Toast({ item, leaving, onDismiss }: { item: ToastItem; leaving: boolean; onDismiss: (id: string) => void }) {
-  const Icon = ICONS[item.type]
+  const icon = ICONS[item.tone]
   const remaining = React.useRef(item.duration)
   const startedAt = React.useRef(0)
   const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -69,17 +87,25 @@ function Toast({ item, leaving, onDismiss }: { item: ToastItem; leaving: boolean
 
   const text = (
     <>
-      <span className="flex items-center gap-1 text-sm font-bold text-foreground">
-        <span className="min-w-0 truncate">{item.title}</span>
-        {item.onClick && <ChevronLeft aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />}
+      <span className="flex items-center gap-1">
+        <IMSubtitle as="span" className="min-w-0 truncate">
+          {item.title}
+        </IMSubtitle>
+        {item.onClick && <IMIcon name="chevron-end" size="sm" tone="muted" />}
       </span>
-      {item.message && <span className="line-clamp-2 text-sm font-medium text-muted-foreground">{item.message}</span>}
+      {item.description && (
+        <IMText as="span" variant="body-sm" tone="muted" className="line-clamp-2">
+          {item.description}
+        </IMText>
+      )}
     </>
   )
 
   return (
     <div
-      role={item.type === "error" ? "alert" : "status"}
+      role={item.tone === "destructive" ? "alert" : "status"}
+      data-slot="toast"
+      data-tone={item.tone}
       onMouseEnter={pause}
       onMouseLeave={resume}
       onFocus={pause}
@@ -90,28 +116,44 @@ function Toast({ item, leaving, onDismiss }: { item: ToastItem; leaving: boolean
         leaving && "motion-safe:animate-out motion-safe:fade-out motion-safe:zoom-out-95 motion-safe:duration-150"
       )}
     >
-      <Icon aria-hidden className={cn("mt-0.5 size-5 shrink-0", TONES[item.type])} />
-      {item.onClick ? (
-        <button
-          type="button"
-          onClick={() => {
-            item.onClick?.()
-            onDismiss(item.id)
-          }}
-          className="-m-1 flex min-w-0 flex-1 cursor-pointer flex-col gap-0.5 rounded-md p-1 text-start outline-none transition-colors hover:bg-surface-2/60 focus-visible:ring-4 focus-visible:ring-ring/35"
-        >
-          {text}
-        </button>
-      ) : (
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">{text}</div>
-      )}
+      <IMIcon name={icon.name} tone={icon.tone} className="mt-0.5" />
+      <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+        {item.onClick ? (
+          <button
+            type="button"
+            onClick={() => {
+              item.onClick?.()
+              onDismiss(item.id)
+            }}
+            className="-m-1 flex w-full min-w-0 cursor-pointer flex-col gap-0.5 rounded-md p-1 text-start outline-none transition-colors hover:bg-surface-2/60 focus-visible:ring-4 focus-visible:ring-ring/35"
+          >
+            {text}
+          </button>
+        ) : (
+          text
+        )}
+        {item.action && (
+          <IMButton
+            type="button"
+            variant="link"
+            size="sm"
+            onClick={() => {
+              item.action?.onClick()
+              onDismiss(item.id)
+            }}
+            className="mt-1"
+          >
+            {item.action.label}
+          </IMButton>
+        )}
+      </div>
       <button
         type="button"
         onClick={() => onDismiss(item.id)}
         aria-label="סגירת ההודעה"
         className="-me-1 -mt-1 grid size-7 shrink-0 cursor-pointer place-items-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-surface-2 hover:text-foreground focus-visible:ring-4 focus-visible:ring-ring/35"
       >
-        <X aria-hidden className="size-4" />
+        <IMIcon name="close" size="sm" />
       </button>
     </div>
   )
@@ -138,15 +180,13 @@ export function IMToastProvider({ children }: { children: React.ReactNode }) {
     }, EXIT_MS)
   }, [])
 
-  const toast = React.useCallback(
-    (title: string, message: string, type: IMToastType = "info", duration = 4500, onClick?: () => void) => {
-      const id = Math.random().toString(36).substring(2, 9)
-      setToasts((prev) => [...prev, { id, title, message, type, duration, onClick }].slice(-MAX_VISIBLE))
-    },
-    []
-  )
+  const show = React.useCallback((options: IMToastOptions) => {
+    const id = Math.random().toString(36).substring(2, 9)
+    const item: ToastItem = { ...options, id, tone: options.tone ?? "default", duration: options.duration ?? DEFAULT_DURATION }
+    setToasts((prev) => [...prev, item].slice(-MAX_VISIBLE))
+  }, [])
 
-  const value = React.useMemo(() => ({ toast }), [toast])
+  const value = React.useMemo(() => ({ show }), [show])
 
   return (
     <ToastContext.Provider value={value}>

@@ -28,11 +28,11 @@ export function CustomerDialog({ open, onOpenChange, form, onFormChange, formErr
       title="לקוח חדש"
       footer={
         <IMDialogActions>
-          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            ביטול
-          </IMButton>
           <IMButton type="submit" form={FORM_ID} disabled={isSaving} className="min-w-28">
             {isSaving ? 'יוצר לקוח…' : 'הוספת לקוח'}
+          </IMButton>
+          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            ביטול
           </IMButton>
         </IMDialogActions>
       }

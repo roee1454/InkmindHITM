@@ -7,7 +7,7 @@ import { useProjectFinance } from './use-project-finance'
 
 /** Loads the project's money state for the close-out preview and submits the close-out. */
 export function useCloseSession(projectId: string | null, open: boolean, onClosed: () => void) {
-  const { toast } = useIMToast()
+  const { show: toast } = useIMToast()
 
   const finance = useProjectFinance(projectId, open)
 
@@ -16,7 +16,7 @@ export function useCloseSession(projectId: string | null, open: boolean, onClose
     onSuccess: (result) => {
       const { due, credit } = result.balance
       const tail = due > 0 ? `נותרה יתרה של ${formatIls(due)}.` : credit > 0 ? `לזכות הלקוח נשארו ${formatIls(credit)}.` : 'הפרויקט מאוזן.'
-      toast('הסשן נסגר', tail, 'success')
+      toast({ tone: 'success', title: 'הסשן נסגר', description: tail })
       onClosed()
     },
   })

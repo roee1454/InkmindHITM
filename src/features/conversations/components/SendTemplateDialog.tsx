@@ -122,12 +122,12 @@ export function SendTemplateDialog({
       footer={
         templates.length > 0 && !isLoading ? (
           <IMDialogActions error={error}>
-            <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={isSending}>
-              ביטול
-            </IMButton>
             <IMButton type="button" onClick={handleSend} disabled={isSending || !currentTemplate} className="min-w-28 gap-1.5">
               {isSending ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
               {isSending ? 'שולח…' : 'שליחה'}
+            </IMButton>
+            <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={isSending}>
+              ביטול
             </IMButton>
           </IMDialogActions>
         ) : undefined

@@ -16,6 +16,7 @@ import {
   IMSheetTitle,
   IMSheetTrigger,
 } from "@/components/ui/sheet"
+import { IMText } from "@/components/ui/typography"
 import { useIsMobile } from "@/hooks/useMediaQuery"
 import { cn } from "@/lib/utils"
 
@@ -149,29 +150,29 @@ export function IMResponsiveDialog({
 }
 
 export interface IMDialogActionsProps {
-  /** A secondary action (a ghost "delete", say) alone at the inline start. */
-  start?: React.ReactNode
-  /** Takes the start slot while there is one, right beside the button that caused it. */
-  error?: string | null
+  /** The confirming action first, then "ביטול". They share the row equally. */
   children: React.ReactNode
+  /** A third, quieter action (a ghost "מחיקה", "חזרה", "לקחת שליטה"), alone at the inline end. */
+  secondary?: React.ReactNode
+  /** What went wrong, on its own line above the buttons. */
+  error?: string | null
 }
 
 /**
- * The action bar's layout, so every dialog orders its buttons the same way: `children` are packed
- * at the inline end — pass "ביטול" first and the primary action last, which puts the primary at
- * the far end in RTL.
+ * The action bar's layout, so every dialog orders its buttons the same way: the confirming action
+ * at the inline start, cancel beside it, both `flex-1`. The DOM order is the visual order, so focus
+ * moves the way the eye reads (right to left in RTL).
  */
-export function IMDialogActions({ start, error, children }: IMDialogActionsProps) {
+export function IMDialogActions({ children, secondary, error }: IMDialogActionsProps) {
   return (
-    <>
-      {error ? (
-        <p role="alert" className="min-w-0 flex-1 text-sm font-bold text-destructive">
+    <div data-slot="dialog-actions" className="flex w-full flex-wrap items-center gap-2">
+      {error && (
+        <IMText role="alert" variant="label" tone="destructive" className="basis-full">
           {error}
-        </p>
-      ) : (
-        start
+        </IMText>
       )}
-      <div className="ms-auto flex shrink-0 items-center gap-2">{children}</div>
-    </>
+      <div className="flex min-w-0 flex-1 items-center gap-2 *:flex-1">{children}</div>
+      {secondary}
+    </div>
   )
 }

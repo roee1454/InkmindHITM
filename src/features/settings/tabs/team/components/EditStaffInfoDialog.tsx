@@ -61,11 +61,11 @@ export function EditStaffInfoDialog({ open, onOpenChange, trigger, staffId, role
       title={`עריכת הפרטים של ${initial.name}`}
       footer={
         <IMDialogActions error={error}>
-          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            ביטול
-          </IMButton>
           <IMButton type="submit" form="staff-info-form" disabled={mutation.isPending} className="min-w-28">
             {mutation.isPending ? 'שומר…' : 'שמירה'}
+          </IMButton>
+          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            ביטול
           </IMButton>
         </IMDialogActions>
       }

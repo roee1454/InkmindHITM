@@ -264,7 +264,7 @@ export const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({
             ) : (
               <IMDialogActions
                 error={error || localError}
-                start={
+                secondary={
                   onDelete && (
                     <IMButton
                       type="button"
@@ -278,11 +278,11 @@ export const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({
                   )
                 }
               >
-                <IMButton type="button" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-                  ביטול
-                </IMButton>
                 <IMButton type="submit" form="appointment-form" disabled={isSaving || isDeleting} size="sm" className="min-w-24 font-bold">
                   {isSaving ? 'שומר…' : 'שמירה'}
+                </IMButton>
+                <IMButton type="button" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+                  ביטול
                 </IMButton>
               </IMDialogActions>
             )}

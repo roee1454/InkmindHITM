@@ -32,7 +32,7 @@ Why per file: it is what ~380 call sites already did; a barrel's `export *` hid 
 | Actions on one thing, from a `more` button | `IMDropdownMenu` | a popover of buttons |
 | Pick one of a short known list | `IMSelect` | a dropdown menu of choices |
 | Free-form floating content anchored to a trigger (a picker, a filter panel) | `IMPopover` | a dialog |
-| Report something that just happened | `useIMToast()` | a dialog; a toast for something the user must act on |
+| Report something that just happened | `useIMToast().show(…)` | a dialog; a toast for something the user must act on |
 
 ## Pick the right choice control
 
@@ -53,7 +53,13 @@ Why per file: it is what ~380 call sites already did; a barrel's `export *` hid 
 Every clickable action, from a full-width CTA to an icon-only toolbar control.
 - **Use** for any action. One `primary` per view or dialog; a second action is `outline` or `secondary`; `ghost` for toolbar and row actions on a surface; `link` inside text; `destructive` only for the action that destroys (the confirm button of a delete dialog).
 - **Not** for a toggleable option (`IMChip`), a whole pressable row (`IMListRow asChild`), or a link that looks like text in a paragraph without an action (`<Link>`).
-- **Props**: `variant` `primary` (default) · `secondary` · `outline` · `ghost` · `destructive` · `link`. `size` `sm` 40 · `md` 44/48 (default) · `lg` 56, full width (auth, onboarding, sheet footers only) · `icon` 44 square · `icon-sm` 40 square. Icon-only sizes need an `aria-label`. `loading` — spinner in the leading slot + disabled + `aria-busy`; pass the in-progress verb as the label ("שומר…"); on `icon` sizes the spinner replaces the glyph so the square holds. `asChild` — style a router `<Link>`.
+- **Props**: `variant` `primary` (default) · `secondary` · `outline` · `ghost` · `destructive` · `link`. `size` `sm` 40 · `md` 44/48 (default) · `lg` 56, full width (auth, onboarding, sheet footers only) · `icon` 44 square · `icon-sm` 40 square. `icon` / `iconEnd` — an `IMIconName`, sized to the button (sm 16 in `sm`, md 20 in `md`/`lg`/`icon-sm`, lg 24 in `icon`) and in its colour; on the icon sizes `icon` is the whole content, with an `aria-label` on the button. `loading` — the spinner takes the `icon` slot (so a button with an icon keeps its width) + disabled + `aria-busy`; pass the in-progress verb as the label ("שומר…"); a text-only button gains the spinner in front. `asChild` — style a router `<Link>`; `icon` / `iconEnd` still render inside it.
+```tsx
+<IMButton icon="plus">לקוח חדש</IMButton>
+<IMButton variant="outline" iconEnd="chevron-end">המשך</IMButton>
+<IMButton variant="ghost" size="icon" icon="more" aria-label="פעולות נוספות" />
+<IMButton icon="save" loading={save.isPending}>{save.isPending ? 'שומר…' : 'שמירה'}</IMButton>
+```
 - **Copy**: a verb that says what happens ("שמירה", "שליחה ב-WhatsApp", "מחיקת לקוח"), never "אישור" when a real verb exists.
 - **Replaces**: `Button`, `buttonVariants`, `.btn-native`, `.btn-native-ghost`, `.tap-target`, raw `<button>`.
 
@@ -61,7 +67,7 @@ Every clickable action, from a full-width CTA to an icon-only toolbar control.
 One choice in a row of toggleable options: filter chips, quick presets, deposit amounts.
 - **Use** when the options wrap or scroll, there are more than five, or several can be on.
 - **Not** for up to five views of the same data (`IMTabs`), a state label (`IMBadge`), or an action (`IMButton`).
-- **Props**: `selected` (renders `aria-pressed`; fills with `primary`), `count`. 40px, `rounded-lg`. Lay out a group with `flex flex-wrap gap-2`.
+- **Props**: `selected` (renders `aria-pressed`; fills with `primary`), `icon` (sm), `count` (the `micro` role, numeric). 40px, `rounded-lg`, the `label` role. Lay out a group with `flex flex-wrap gap-2`.
 - **Replaces**: hand-rolled toggle chips in projects, analytics, onboarding, invite, conversations and `WeeklyHoursEditor`.
 
 ## Status
@@ -70,7 +76,7 @@ One choice in a row of toggleable options: filter chips, quick presets, deposit 
 A pill that names a state or a category in one or two words.
 - **Use** where the state is the headline (a project header, a payment status).
 - **Not** in dense lists — a column of pills is louder than the data (`IMStatusLabel`). Never nested inside another pill.
-- **Props**: `variant` `new` (outline) · `wait` · `done` · `dead` (filled grey) · `muted` (default) · `outline` · `destructive` (failures only, never a passive state like "lost"). No colour props.
+- **Props**: `variant` `new` (outline) · `wait` · `done` · `dead` (filled grey) · `muted` (default) · `outline` · `destructive` (failures only, never a passive state like "lost"). `icon` — an `IMIconName`, drawn `xs` in the badge's colour. No colour props.
 - **Replaces**: `Badge`, `.pill`, ad-hoc `rounded-full px-2 text-xs bg-…` chips.
 
 ### IMStatusLabel — `status-label.tsx`
@@ -81,7 +87,7 @@ A state in words: a dot in the role's colour and ordinary text.
 ## Surfaces
 
 ### IMCard (+ IMListRow) — `card.tsx`
-The one raised surface: `IMCard` › `IMCardHeader` (`IMCardTitle`, `IMCardDescription`, `IMCardAction`) · `IMCardContent` · `IMCardFooter`.
+The one raised surface: `IMCard` › `IMCardHeader` (`IMCardTitle`, `IMCardDescription`, `IMCardAction`) · `IMCardContent` · `IMCardFooter`. `IMCardTitle` is `IMTitle` (an `<h2>`; `as` sets the outline level); `IMCardDescription` is `body-sm` muted.
 - **Use** for a group of content on a page. Padding 24 (16 on phones); footer actions at the inline end, one primary at most.
 - **Not** inside another card — inside a card, group with spacing, a `border` hairline or a `surface-2` block.
 - **Props**: `variant="flush"` — the card is a list: the content drops its padding and stacks `IMListRow`s separated by hairlines.
@@ -141,7 +147,7 @@ Date and time entry. Triggers are styled as IMInput with a muted leading icon an
 ## Navigation
 
 ### IMTabs — `tabs.tsx`
-Switch between views of the same data, in place: `IMTabs` › `IMTabsList` › `IMTabsTrigger` (+ `IMTabsContent`). A `surface-2` rail (`rounded-lg`) with 38px triggers (`rounded-md`); the active one lifts to `card`. `count` on a trigger shows how many items the view holds.
+Switch between views of the same data, in place: `IMTabs` › `IMTabsList` › `IMTabsTrigger` (+ `IMTabsContent`). A `surface-2` rail (`rounded-lg`) with 38px triggers (`rounded-md`); the active one lifts to `card`. On a trigger, `icon` (sm) leads the label and `count` (the `micro` role, numeric) shows how many items the view holds.
 - **Not** for more than five options (`IMChip` or `IMSelect`).
 
 ### IMPagination — `pagination.tsx`
@@ -153,7 +159,15 @@ Windowed pagination under a list: a range summary ("מציג 11–20 מתוך 57
 ### IMResponsiveDialog (+ IMDialogActions) — `responsive-dialog.tsx`
 The dialog features use: centred on desktop, a bottom sheet on phones, with a fixed header, a body that scrolls on its own and a pinned action bar.
 - **Props**: `open`, `onOpenChange`, `title` (a question or a task: "למחוק את התור?", "תור חדש"), `description` (the consequence), `footer`, `size` `sm` (a confirmation) · `md` (a short form, default) · `lg` (a wizard or a list) · `xl` (a work hub), `trigger`, `hideHeader`, `bare`.
-- **IMDialogActions** lays the footer out: `children` packed at the inline end (cancel first, the primary last), an optional `start` action, and an `error` that takes the start slot.
+- **IMDialogActions** lays the footer out. **The confirming action comes first** — first in the DOM and at the inline start (right, in RTL) — then "ביטול"; the two share the row equally (`flex-1`), and the DOM order is the visual order, so focus follows the eye. `secondary` holds a third, quieter action (a ghost "מחיקה", "חזרה", "לקחת שליטה") alone at the inline end; `error` sits on its own line above the buttons.
+```tsx
+footer={
+  <IMDialogActions error={error} secondary={<IMButton variant="ghost" onClick={onDelete}>מחיקה</IMButton>}>
+    <IMButton type="submit" form="faq-form" loading={isSaving}>{isSaving ? 'שומר…' : 'שמירה'}</IMButton>
+    <IMButton variant="ghost" onClick={onClose}>ביטול</IMButton>
+  </IMDialogActions>
+}
+```
 - Facts the user is confirming go in a `surface-2` key/value block — not a nested card.
 
 ### IMConfirmDialog — `confirm-dialog.tsx`
@@ -176,7 +190,28 @@ Free-form floating content anchored to a trigger: `IMPopover` › `IMPopoverTrig
 ## Feedback
 
 ### IMToast — `toast.tsx`
-`IMToastProvider` is mounted once at the root; `useIMToast().toast(title, message, type?, duration?, onClick?)` reports something that just happened. `type` (`info` · `success` · `warning` · `error`) sets the leading icon only; the surface stays `card`. Title in past tense for outcomes ("הפרטים נשמרו"); errors say what failed and what to do. Never for something the user must act on.
+`IMToastProvider` is mounted once at the root; `useIMToast().show({ tone, title, description?, action?, duration?, onClick? })` reports something that just happened.
+- `tone` (`default` · `success` · `warning` · `destructive`) sets the leading icon only (`info`, `check-circle`, `warning`, `warning-circle`); the surface stays `card`, and a `destructive` toast is announced as an alert.
+- `title` in past tense for outcomes ("הפרטים נשמרו"); for an error, what failed — and `description` says what to do. `action` (`{ label, onClick }`) adds one follow-up link; `onClick` makes the whole toast a link to what it reports. `duration` defaults to 4500ms and pauses while the toast is hovered or focused.
+- Never for something the user must act on: that's a dialog or an inline message.
+```tsx
+const { show: toast } = useIMToast()
+toast({ tone: 'success', title: 'הפרטים נשמרו' })
+toast({ tone: 'destructive', title: 'השליחה נכשלה', description: 'בדקו את החיבור ונסו שוב.' })
+```
+
+### IMEmptyState — `empty-state.tsx`
+What a data view shows when it has nothing to show: `icon` (an `IMIconName`, drawn `xl` and muted in a 64px `surface-2` disc), `title` (IMTitle, as a paragraph), an optional `description` (`body-sm` muted) and at most one `action`.
+- The icon names the missing thing (`users`, `kanban`, `chat`), not a generic inbox.
+- Say why it's empty and what to do next: filtered-empty ("אין לקוחות שמתאימים") offers to clear the filter; first-run empty ("עדיין אין פרויקטים") offers to create one.
+```tsx
+<IMEmptyState
+  icon="users"
+  title="אין לקוחות שמתאימים"
+  description="נסו לשנות את הסינון."
+  action={<IMButton variant="outline" onClick={clearFilters}>ניקוי הסינון</IMButton>}
+/>
+```
 
 ### IMSkeleton — `skeleton.tsx`
 The loading state: `surface-2` blocks in the exact shape of the content (avatar circle, two text lines, trailing meta), so nothing jumps when data lands. Never "טוען…" as text, never a spinner in place of a list. The pulse stops under reduced motion.
@@ -207,7 +242,6 @@ These `@layer components` classes in `src/styles.css` are replaced by the primit
 
 Outside `src/components/ui/`: no raw `<button>`, `<input>` (a hidden `type="file"` picker is fine), `<select>` or `<textarea>`; no `radix-ui` / `@radix-ui/*` imports; no `@/components/ui/dialog` import. Everywhere: the import convention above, and the superseded classes.
 
-## Not here yet
+## Icons and text inside the primitives
 
-- `icon` / `iconEnd` on IMButton, IMBadge and IMTabsTrigger, and `IMIcon` inside the primitives — Phase 1b, once `IMIcon name=` lands. Until then pass a glyph as a child; it takes the size that matches the button.
-- `IMEmptyState` — Phase 1b.
+Every glyph in `ui/` is an `IMIcon name=…`, and every piece of text a primitive renders is a role (`IMText`, `IMTitle`, `IMCaption`, `IMNum`, or `IM_TYPE_ROLES` where a Radix part can't wrap one). A call site passes an icon by name (`icon=`, `iconEnd=`) and never sizes it. Until Phase 2 moves them, legacy glyphs passed as children still take the size that matches the button.

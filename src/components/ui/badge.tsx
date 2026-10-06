@@ -2,6 +2,8 @@ import * as React from "react"
 import { cva } from "class-variance-authority"
 import type { VariantProps } from "class-variance-authority"
 
+import { IMIcon } from "@/components/ui/icon"
+import type { IMIconName } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
 
 const imBadgeVariants = cva(
@@ -32,19 +34,24 @@ type IMBadgeVariant = NonNullable<VariantProps<typeof imBadgeVariants>["variant"
 
 export interface IMBadgeProps extends React.ComponentProps<"span"> {
   variant?: IMBadgeVariant
+  /** A leading icon, `xs`, in the badge's colour. */
+  icon?: IMIconName
 }
 
 /**
  * A pill that names a state or a category in one or two words. In a dense list prefer
  * IMStatusLabel — a column of pills is louder than the data.
  */
-export function IMBadge({ className, variant = "muted", ...props }: IMBadgeProps) {
+export function IMBadge({ className, variant = "muted", icon, children, ...props }: IMBadgeProps) {
   return (
     <span
       data-slot="badge"
       data-variant={variant}
       className={cn(imBadgeVariants({ variant }), className)}
       {...props}
-    />
+    >
+      {icon && <IMIcon name={icon} size="xs" />}
+      {children}
+    </span>
   )
 }

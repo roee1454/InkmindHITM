@@ -1,11 +1,11 @@
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import { Loader2, Trash2 } from '@/components/ui/icon'
 
 export function DeleteButton({ pending }: { pending: boolean }) {
   return (
-    <Button>
+    <IMButton>
       {pending ? <Loader2 className="size-4 animate-spin text-muted-foreground" aria-hidden="true" /> : <Trash2 className="h-4 w-4 text-muted-foreground" />}
       מחיקה
-    </Button>
+    </IMButton>
   )
 }

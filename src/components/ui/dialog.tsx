@@ -1,7 +1,8 @@
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
-import { XIcon } from "@/components/ui/icon"
+import { IMIcon } from "@/components/ui/icon"
+import { IM_TYPE_ROLES } from "@/components/ui/typography"
 import { cn } from "@/lib/utils"
 
 /**
@@ -62,8 +63,7 @@ export function IMOverlayClose() {
       data-slot="overlay-close"
       className="absolute end-4 top-4 grid size-8 cursor-pointer place-items-center rounded-md text-muted-foreground outline-none transition-colors duration-100 hover:bg-surface-2 hover:text-foreground focus-visible:ring-4 focus-visible:ring-ring/35 disabled:pointer-events-none"
     >
-      {/* Phase 1b: <IMIcon name="close" size="sm" /> */}
-      <XIcon className="size-4" />
+      <IMIcon name="close" size="sm" />
       <span className="sr-only">סגירה</span>
     </DialogPrimitive.Close>
   )
@@ -84,7 +84,7 @@ export function IMDialogTitle({ className, ...props }: React.ComponentProps<type
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-lg font-bold text-foreground", className)}
+      className={cn(IM_TYPE_ROLES.title, "text-foreground", className)}
       {...props}
     />
   )
@@ -95,7 +95,7 @@ export function IMDialogDescription({ className, ...props }: React.ComponentProp
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("text-sm font-medium text-muted-foreground", className)}
+      className={cn(IM_TYPE_ROLES["body-sm"], "text-muted-foreground", className)}
       {...props}
     />
   )

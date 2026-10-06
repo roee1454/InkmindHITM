@@ -39,7 +39,7 @@ function errorText(err: unknown, fallback: string): string {
  */
 export function BackupSections() {
   const queryClient = useQueryClient()
-  const { toast } = useIMToast()
+  const { show: toast } = useIMToast()
   const [backupToDelete, setBackupToDelete] = useState<BackupFile | null>(null)
   const [backupToRestore, setBackupToRestore] = useState<BackupFile | null>(null)
   const [isUploadOpen, setIsUploadOpen] = useState(false)
@@ -55,19 +55,19 @@ export function BackupSections() {
     mutationFn: (vars: { enabled: boolean; intervalHours: number }) =>
       saveBackupSettings({ data: { backupEnabled: vars.enabled, backupIntervalHours: vars.intervalHours, backupRetentionCount: 1 } }),
     onSuccess: (_, vars) => {
-      toast(vars.enabled ? 'גיבוי אוטומטי מופעל' : 'גיבוי אוטומטי כבוי', '', 'success')
+      toast({ tone: 'success', title: vars.enabled ? 'גיבוי אוטומטי מופעל' : 'גיבוי אוטומטי כבוי' })
       refresh()
     },
-    onError: (err: unknown) => toast('שמירת הגדרות הגיבוי נכשלה', errorText(err, ''), 'error'),
+    onError: (err: unknown) => toast({ tone: 'destructive', title: 'שמירת הגדרות הגיבוי נכשלה', description: errorText(err, '') }),
   })
 
   const runNow = useMutation({
     mutationFn: () => runBackupNow(),
     onSuccess: () => {
-      toast('נוצר גיבוי', '', 'success')
+      toast({ tone: 'success', title: 'נוצר גיבוי' })
       refresh()
     },
-    onError: (err: unknown) => toast('הגיבוי נכשל', errorText(err, ''), 'error'),
+    onError: (err: unknown) => toast({ tone: 'destructive', title: 'הגיבוי נכשל', description: errorText(err, '') }),
   })
 
   const deleteMutation = useMutation({
@@ -82,7 +82,7 @@ export function BackupSections() {
     mutationFn: (key: string) => restoreBackup({ data: { key } }),
     onSuccess: () => {
       setBackupToRestore(null)
-      toast('הנתונים שוחזרו', 'השרת הופעל מחדש.', 'success')
+      toast({ tone: 'success', title: 'הנתונים שוחזרו', description: 'השרת הופעל מחדש.' })
       queryClient.invalidateQueries({ queryKey: ['backups'] })
     },
   })
@@ -160,7 +160,7 @@ export function BackupSections() {
         onOpenChange={setIsUploadOpen}
         onSuccess={(uploadedKey, autoRestored) => {
           queryClient.invalidateQueries({ queryKey: ['backups'] })
-          toast(autoRestored ? 'הגיבוי הועלה והנתונים שוחזרו' : 'הגיבוי הועלה', autoRestored ? 'השרת הופעל מחדש.' : uploadedKey, 'success')
+          toast({ tone: 'success', title: autoRestored ? 'הגיבוי הועלה והנתונים שוחזרו' : 'הגיבוי הועלה', description: autoRestored ? 'השרת הופעל מחדש.' : uploadedKey })
         }}
       />
 

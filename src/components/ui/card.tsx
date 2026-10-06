@@ -1,6 +1,8 @@
 import * as React from "react"
 import { Slot } from "radix-ui"
 
+import { IMText, IMTitle } from "@/components/ui/typography"
+import type { IMHeadingShortcutProps, IMTextProps } from "@/components/ui/typography"
 import { cn } from "@/lib/utils"
 
 type IMCardVariant = "default" | "flush"
@@ -42,22 +44,14 @@ export function IMCardHeader({ className, ...props }: React.ComponentProps<"div"
   )
 }
 
-/** The `title` text role (17/700). */
-export function IMCardTitle({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div data-slot="card-title" className={cn("text-lg font-bold text-foreground", className)} {...props} />
-  )
+/** IMTitle (17/700), an `<h2>` by default; `as` sets the outline level. */
+export function IMCardTitle(props: IMHeadingShortcutProps) {
+  return <IMTitle data-slot="card-title" {...props} />
 }
 
-/** The `body-sm` text role, muted. */
-export function IMCardDescription({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="card-description"
-      className={cn("text-sm font-medium text-muted-foreground", className)}
-      {...props}
-    />
-  )
+/** The `body-sm` role, muted. */
+export function IMCardDescription(props: Omit<IMTextProps, "variant" | "numeric">) {
+  return <IMText data-slot="card-description" variant="body-sm" tone="muted" {...props} />
 }
 
 export function IMCardAction({ className, ...props }: React.ComponentProps<"div">) {

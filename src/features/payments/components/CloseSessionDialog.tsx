@@ -85,12 +85,12 @@ export function CloseSessionDialog({
       description="המחיר הסופי והתשלום שהתקבל נשמרים יחד. מקדמות קודמות כבר רשומות ומקוזזות."
       footer={
         <IMDialogActions>
-          <IMButton type="button" variant="ghost" disabled={close.isPending} onClick={() => onOpenChange(false)}>
-            ביטול
-          </IMButton>
           <IMButton type="submit" form="close-session-form" disabled={!canSubmit} className="min-w-28 gap-2">
             {close.isPending && <Loader2 size={14} className="animate-spin" />}
             סגירת הסשן
+          </IMButton>
+          <IMButton type="button" variant="ghost" disabled={close.isPending} onClick={() => onOpenChange(false)}>
+            ביטול
           </IMButton>
         </IMDialogActions>
       }

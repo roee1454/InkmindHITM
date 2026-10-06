@@ -1,6 +1,9 @@
 import * as React from "react"
 import { Tabs as TabsPrimitive } from "radix-ui"
 
+import { IMIcon } from "@/components/ui/icon"
+import type { IMIconName } from "@/components/ui/icon"
+import { IMText, IM_TYPE_ROLES } from "@/components/ui/typography"
 import { cn } from "@/lib/utils"
 
 /**
@@ -23,29 +26,36 @@ export function IMTabsList({ className, ...props }: React.ComponentProps<typeof 
 }
 
 export interface IMTabsTriggerProps extends React.ComponentProps<typeof TabsPrimitive.Trigger> {
+  /** A leading icon, `sm`, in the trigger's colour. */
+  icon?: IMIconName
   /** How many items the view holds, shown after the label. */
   count?: number
 }
 
 /** A 38px trigger (`radius-inset`); the active one lifts to `card` with `shadow-raised`. */
-export function IMTabsTrigger({ className, count, children, ...props }: IMTabsTriggerProps) {
+export function IMTabsTrigger({ className, icon, count, children, ...props }: IMTabsTriggerProps) {
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "inline-flex h-9.5 flex-1 cursor-pointer select-none items-center justify-center gap-1.5 rounded-md px-3 text-sm leading-none font-bold whitespace-nowrap text-muted-foreground outline-none transition-[background-color,color,box-shadow] duration-150 ease-native focus-visible:ring-4 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-card data-[state=active]:font-extrabold data-[state=active]:text-foreground data-[state=active]:shadow-xs [&_svg:not([class*='size-'])]:size-4",
+        IM_TYPE_ROLES.label,
+        "inline-flex h-9.5 flex-1 cursor-pointer select-none items-center justify-center gap-1.5 rounded-md px-3 leading-none whitespace-nowrap text-muted-foreground outline-none transition-[background-color,color,box-shadow] duration-150 ease-native focus-visible:ring-4 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-card data-[state=active]:font-extrabold data-[state=active]:text-foreground data-[state=active]:shadow-xs [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
     >
+      {icon && <IMIcon name={icon} size="sm" />}
       {children}
       {count !== undefined && (
-        <span
+        <IMText
           data-slot="tabs-count"
-          className="rounded-full bg-foreground/8 px-1.5 py-0.75 text-2xs leading-none font-semibold tabular-nums"
+          variant="micro"
+          tone="inherit"
+          numeric
+          className="rounded-full bg-foreground/8 px-1.5 py-0.75 leading-none"
         >
           {count}
-        </span>
+        </IMText>
       )}
     </TabsPrimitive.Trigger>
   )

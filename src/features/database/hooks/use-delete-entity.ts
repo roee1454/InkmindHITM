@@ -27,7 +27,7 @@ function removeFromList(queryClient: ReturnType<typeof useQueryClient>, collecti
  */
 export function useDeleteEntity({ collection, id, open, onClose, onDeleted }: UseDeleteEntityOptions) {
   const queryClient = useQueryClient()
-  const { toast } = useIMToast()
+  const { show: toast } = useIMToast()
 
   const impact = useQuery({
     queryKey: ['delete-impact', collection, id],
@@ -51,11 +51,11 @@ export function useDeleteEntity({ collection, id, open, onClose, onDeleted }: Us
         void invalidateEntityLists(queryClient, collection)
       }
       if (result.status === 'deleted') {
-        toast('המחיקה הושלמה', `${ENTITY_LABELS[collection]} "${result.label}" נמחק/ה לצמיתות.`, 'success')
+        toast({ tone: 'success', title: 'המחיקה הושלמה', description: `${ENTITY_LABELS[collection]} "${result.label}" נמחק/ה לצמיתות.` })
         onClose()
         onDeleted?.()
       } else if (result.status === 'not_found') {
-        toast('הרשומה כבר לא קיימת', NOT_FOUND_MESSAGE, 'info')
+        toast({ title: 'הרשומה כבר לא קיימת', description: NOT_FOUND_MESSAGE })
         onClose()
       } else if (result.status === 'blocked') {
         // Something changed since the preview (e.g. an appointment was just booked): show why.
