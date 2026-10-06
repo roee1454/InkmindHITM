@@ -8,6 +8,24 @@ import dsTypography from './eslint/design-system/typography.js'
 
 // ESLint keeps only the last config of a rule, so the pillars are merged into one of each.
 const designSystem = [dsColors, dsComponents, dsTypography, dsIcons]
+const exempt = designSystem.flatMap((pillar) => pillar.exempt)
+
+/** @param {{ insideUi: boolean }} where */
+function designSystemRules({ insideUi }) {
+  /** @template {{ outsideUi?: boolean }} T @param {T[]} entries */
+  const keep = (entries) =>
+    entries.filter((e) => !(insideUi && e.outsideUi)).map(({ outsideUi: _, ...rule }) => rule)
+  return {
+    'no-restricted-syntax': ['error', ...keep(designSystem.flatMap((p) => p.syntax))],
+    'no-restricted-imports': [
+      'error',
+      {
+        paths: keep(designSystem.flatMap((p) => p.imports.paths)),
+        patterns: keep(designSystem.flatMap((p) => p.imports.patterns)),
+      },
+    ],
+  }
+}
 
 export default [
   ...tanstackConfig,
@@ -28,17 +46,14 @@ export default [
     // Design system guard rails, one file per pillar under eslint/design-system/. The tokens are
     // only worth having if nothing can route around them. `pnpm ds:audit` counts what's left.
     files: ['src/**/*.{ts,tsx}'],
-    ignores: designSystem.flatMap((pillar) => pillar.exempt),
-    rules: {
-      'no-restricted-syntax': ['error', ...designSystem.flatMap((pillar) => pillar.syntax)],
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: designSystem.flatMap((pillar) => pillar.imports.paths),
-          patterns: designSystem.flatMap((pillar) => pillar.imports.patterns),
-        },
-      ],
-    },
+    ignores: [...exempt, 'src/components/ui/**'],
+    rules: designSystemRules({ insideUi: false }),
+  },
+  {
+    // ui/ is where the primitives are built from raw elements, so rules marked `outsideUi` skip it.
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    ignores: exempt,
+    rules: designSystemRules({ insideUi: true }),
   },
   {
     ignores: [

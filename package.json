@@ -20,6 +20,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "db:audit": "tsx pocketbase/scripts/db-audit.ts",
     "ds:audit": "tsx scripts/ds-audit.ts",
+    "ds:codemod": "tsx scripts/ds/codemods/index.ts",
     "ai:models": "tsx scripts/check-anthropic-models.ts"
   },
   "dependencies": {
