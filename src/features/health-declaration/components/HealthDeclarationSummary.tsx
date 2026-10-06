@@ -1,4 +1,4 @@
-import { StatusLabel } from '@/components/ui/status-label'
+import { IMStatusLabel } from '@/components/ui/status-label'
 import { extractMedicalAlerts } from '../utils/health-alerts'
 import { isHealthDeclarationValid } from '../utils/validity'
 import type { HealthDeclarationViewerProps } from './HealthDeclarationViewer'
@@ -23,11 +23,11 @@ export function HealthDeclarationSummary({ signed = false, date, medicalNotes, a
         <div className="flex min-w-0 flex-col gap-0.5">
           <span className="text-sm font-bold text-foreground">הצהרת בריאות</span>
           {!signed ? (
-            <StatusLabel role="new">עדיין לא נחתמה</StatusLabel>
+            <IMStatusLabel role="new">עדיין לא נחתמה</IMStatusLabel>
           ) : expired ? (
-            <StatusLabel role="warning">{`פגה${dateText ? ` (נחתמה ${dateText})` : ''}, צריך לחדש`}</StatusLabel>
+            <IMStatusLabel role="warning">{`פגה${dateText ? ` (נחתמה ${dateText})` : ''}, צריך לחדש`}</IMStatusLabel>
           ) : (
-            <StatusLabel role="done">{`נחתמה${dateText ? ` ב-${dateText}` : ''}`}</StatusLabel>
+            <IMStatusLabel role="done">{`נחתמה${dateText ? ` ב-${dateText}` : ''}`}</IMStatusLabel>
           )}
         </div>
         {onOpenFull && signed && (

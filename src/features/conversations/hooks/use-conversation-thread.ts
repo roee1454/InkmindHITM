@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useIMToast } from '@/components/ui/toast'
 import { queryKeys } from '@/lib/query-keys'
 import { getActiveAppointmentSummary, listMessages, markConversationAsSeen, sendMessage, takeOverConversation } from '../server/messages'
 import { useConversationsUiStore } from '../store/conversationsUiStore'
@@ -14,7 +14,7 @@ type MessagesPage = { messages: UIMessage[]; hasMore: boolean }
 /** One conversation's data and the thread-level changes: send, take over, mark seen. */
 export function useConversationThread(conversation: UIConversation) {
   const queryClient = useQueryClient()
-  const { toast } = useToast()
+  const { toast } = useIMToast()
   const { draft, replyingTo, selectedFile, messagesLimit, setDraft, setReplyingTo, setSelectedFile, resetThread } = useConversationsUiStore()
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
-import { Input } from '@/components/ui/input'
+import { IMInput } from '@/components/ui/input'
 import { bootstrapAdmin } from '@/features/auth/server/auth'
 import { ensureSettings } from '@/features/onboarding/server/onboarding'
 import { Mail, Lock, User, Phone, AlertCircle, Eye, EyeOff } from '@/components/ui/icon'
@@ -118,7 +118,7 @@ export function AdminStep() {
           <label className="text-sm font-bold text-foreground">שם מלא *</label>
           <div className="flex h-14 w-full items-center gap-2.5 rounded-2xl border border-input bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
             <User className="size-[18px] shrink-0 text-muted-foreground" />
-            <Input
+            <IMInput
               autoFocus
               placeholder="ישראל ישראלי"
               value={adminName}
@@ -134,7 +134,7 @@ export function AdminStep() {
           <label className="text-sm font-bold text-foreground">כתובת מייל ראשית *</label>
           <div className="flex h-14 w-full items-center gap-2.5 rounded-2xl border border-input bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
             <Mail className="size-[18px] shrink-0 text-muted-foreground" />
-            <Input
+            <IMInput
               type="email"
               dir="ltr"
               placeholder="name@studio.com"
@@ -151,7 +151,7 @@ export function AdminStep() {
           <label className="text-sm font-bold text-foreground">מספר טלפון פנימי *</label>
           <div className="flex h-14 w-full items-center gap-2.5 rounded-2xl border border-input bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
             <Phone className="size-[18px] shrink-0 text-muted-foreground" />
-            <Input
+            <IMInput
               type="tel"
               dir="ltr"
               placeholder="050-1234567"
@@ -171,7 +171,7 @@ export function AdminStep() {
           <label className="text-sm font-bold text-foreground">סיסמה *</label>
           <div className="flex h-14 w-full items-center gap-2.5 rounded-2xl border border-input bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
             <Lock className="size-[18px] shrink-0 text-muted-foreground" />
-            <Input
+            <IMInput
               type={showPassword ? 'text' : 'password'}
               placeholder="לפחות 8 תווים"
               value={adminPassword}
@@ -194,7 +194,7 @@ export function AdminStep() {
           <label className="text-sm font-bold text-foreground">אימות סיסמה *</label>
           <div className="flex h-14 w-full items-center gap-2.5 rounded-2xl border border-input bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
             <Lock className="size-[18px] shrink-0 text-muted-foreground" />
-            <Input
+            <IMInput
               type={showPasswordConfirm ? 'text' : 'password'}
               placeholder="הזן שוב את הסיסמה"
               value={adminPasswordConfirm}

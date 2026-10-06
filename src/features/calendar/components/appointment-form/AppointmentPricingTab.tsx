@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { ArrowsClockwise, CalendarCheck, CalendarX } from '@/components/ui/icon'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
-import { Button } from '@/components/ui/button'
-import { useToast } from '@/components/ui/ToastProvider'
+import { IMInput } from '@/components/ui/input'
+import { IMSelect, IMSelectContent, IMSelectItem, IMSelectTrigger, IMSelectValue } from '@/components/ui/select'
+import { IMSwitch } from '@/components/ui/switch'
+import { IMButton } from '@/components/ui/button'
+import { useIMToast } from '@/components/ui/toast'
 import { cn } from '@/lib/utils'
 import { retrySyncAppointmentToGoogle } from '../../server/appointments'
 import { STATUS_LABELS } from '../../types'
@@ -28,7 +28,7 @@ function amount(value: string): number | null {
 
 /** Whether a confirmed appointment reached the artist's Google Calendar, and a retry when it didn't. */
 function GoogleSyncRow({ appointment, readOnly }: { appointment: ApiAppointment; readOnly: boolean }) {
-  const { toast } = useToast()
+  const { toast } = useIMToast()
   const [status, setStatus] = useState(appointment.googleSyncStatus)
   const [retrying, setRetrying] = useState(false)
 
@@ -67,10 +67,10 @@ function GoogleSyncRow({ appointment, readOnly }: { appointment: ApiAppointment;
       {status === 'push_failed' && (
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">אולי היומן של המקעקע לא מחובר, או שפג תוקף החיבור.</p>
-          <Button type="button" variant="outline" size="sm" disabled={retrying || readOnly} onClick={retry} className="shrink-0 gap-1.5">
+          <IMButton type="button" variant="outline" size="sm" disabled={retrying || readOnly} onClick={retry} className="shrink-0 gap-1.5">
             <ArrowsClockwise size={13} className={cn(retrying && 'animate-spin')} />
             {retrying ? 'מסנכרן…' : 'ניסיון חוזר'}
-          </Button>
+          </IMButton>
         </div>
       )}
     </div>
@@ -93,13 +93,13 @@ export function AppointmentPricingTab({ values, onChange, appointment, isEdit, r
             <label htmlFor="price-min" className="form-label">
               מחיר מ- (₪)
             </label>
-            <Input id="price-min" type="number" min="0" inputMode="numeric" disabled={readOnly} value={values.priceMinIls ?? ''} onChange={(e) => onChange({ priceMinIls: amount(e.target.value) })} />
+            <IMInput id="price-min" type="number" min="0" inputMode="numeric" disabled={readOnly} value={values.priceMinIls ?? ''} onChange={(e) => onChange({ priceMinIls: amount(e.target.value) })} />
           </div>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="price-max" className="form-label">
               עד (₪)
             </label>
-            <Input id="price-max" type="number" min="0" inputMode="numeric" disabled={readOnly} value={values.priceMaxIls ?? ''} onChange={(e) => onChange({ priceMaxIls: amount(e.target.value) })} />
+            <IMInput id="price-max" type="number" min="0" inputMode="numeric" disabled={readOnly} value={values.priceMaxIls ?? ''} onChange={(e) => onChange({ priceMaxIls: amount(e.target.value) })} />
           </div>
         </div>
       )}
@@ -108,7 +108,7 @@ export function AppointmentPricingTab({ values, onChange, appointment, isEdit, r
         <label htmlFor="deposit" className="form-label">
           {isSketch ? 'מקדמה לשריון (₪)' : 'מקדמה (₪)'}
         </label>
-        <Input id="deposit" type="number" min="0" inputMode="numeric" disabled={readOnly} value={values.depositAmount ?? ''} onChange={(e) => onChange({ depositAmount: amount(e.target.value) })} />
+        <IMInput id="deposit" type="number" min="0" inputMode="numeric" disabled={readOnly} value={values.depositAmount ?? ''} onChange={(e) => onChange({ depositAmount: amount(e.target.value) })} />
       </div>
 
       <label className="flex cursor-pointer items-center justify-between gap-3">
@@ -116,26 +116,26 @@ export function AppointmentPricingTab({ values, onChange, appointment, isEdit, r
           <span className="text-sm font-bold text-foreground">המקדמה שולמה</span>
           <span className="text-xs text-muted-foreground">במלואה</span>
         </span>
-        <Switch disabled={readOnly} checked={values.depositPaid} onCheckedChange={(checked) => onChange({ depositPaid: checked })} />
+        <IMSwitch disabled={readOnly} checked={values.depositPaid} onCheckedChange={(checked) => onChange({ depositPaid: checked })} />
       </label>
 
       <div className="flex flex-col gap-1.5">
         <span className="form-label">סטטוס</span>
-        <Select dir="rtl" disabled={readOnly} value={values.status} onValueChange={(v) => onChange({ status: v as AppointmentStatus })}>
-          <SelectTrigger className="w-full" aria-label="סטטוס">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent align="end" dir="rtl">
+        <IMSelect dir="rtl" disabled={readOnly} value={values.status} onValueChange={(v) => onChange({ status: v as AppointmentStatus })}>
+          <IMSelectTrigger className="w-full" aria-label="סטטוס">
+            <IMSelectValue />
+          </IMSelectTrigger>
+          <IMSelectContent align="end" dir="rtl">
             {Object.entries(STATUS_LABELS).map(([key, label]) => {
               const viaCloseOut = key === 'completed' && closesViaCloseOut
               return (
-                <SelectItem key={key} value={key} disabled={viaCloseOut}>
+                <IMSelectItem key={key} value={key} disabled={viaCloseOut}>
                   {viaCloseOut ? `${label} (דרך "סגירת סשן")` : label}
-                </SelectItem>
+                </IMSelectItem>
               )
             })}
-          </SelectContent>
-        </Select>
+          </IMSelectContent>
+        </IMSelect>
       </div>
 
       {values.status === 'confirmed' && isEdit && appointment && <GoogleSyncRow appointment={appointment} readOnly={readOnly} />}

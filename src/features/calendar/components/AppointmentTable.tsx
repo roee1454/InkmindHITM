@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import { PencilSimple, Trash, Image as ImageIcon, PencilLine, Needle, CalendarCheck, CalendarX } from '@/components/ui/icon'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  IMSelect,
+  IMSelectContent,
+  IMSelectItem,
+  IMSelectTrigger,
+  IMSelectValue,
 } from '@/components/ui/select'
 import type { ApiAppointment, AppointmentStatus } from '../types'
 import { STATUS_LABELS } from '../types'
@@ -96,21 +96,21 @@ const AppointmentTableRow = React.memo<AppointmentTableRowProps>(({
       {/* Status Dropdown */}
       <td className="px-6 py-4 align-middle">
         <div className="w-36">
-          <Select
+          <IMSelect
             value={appt.status}
             onValueChange={(val) => onStatusChange(appt.id, val as AppointmentStatus)}
           >
-            <SelectTrigger size="sm" className="h-8 text-xs py-1 rounded-xl">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent align="end" position="popper" dir="rtl">
+            <IMSelectTrigger size="sm" className="h-8 text-xs py-1 rounded-xl">
+              <IMSelectValue />
+            </IMSelectTrigger>
+            <IMSelectContent align="end" position="popper" dir="rtl">
               {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                <SelectItem key={key} value={key} className="text-xs">
+                <IMSelectItem key={key} value={key} className="text-xs">
                   {label}
-                </SelectItem>
+                </IMSelectItem>
               ))}
-            </SelectContent>
-          </Select>
+            </IMSelectContent>
+          </IMSelect>
           {appt.status === 'confirmed' && (
             <div className="mt-1 flex items-center gap-1">
               {appt.googleSyncStatus === 'push_failed' ? (

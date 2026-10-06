@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useIMToast } from '@/components/ui/toast'
 import { invalidateEntityLists, queryKeys } from '@/lib/query-keys'
 import { formatDatabaseError } from '@/lib/pocketbase-error'
 import { deleteEntity, getDeleteImpact } from '../server/delete-entity'
@@ -27,7 +27,7 @@ function removeFromList(queryClient: ReturnType<typeof useQueryClient>, collecti
  */
 export function useDeleteEntity({ collection, id, open, onClose, onDeleted }: UseDeleteEntityOptions) {
   const queryClient = useQueryClient()
-  const { toast } = useToast()
+  const { toast } = useIMToast()
 
   const impact = useQuery({
     queryKey: ['delete-impact', collection, id],

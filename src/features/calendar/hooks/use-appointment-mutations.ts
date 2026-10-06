@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useIMToast } from '@/components/ui/toast'
 import { formatDatabaseError } from '@/lib/pocketbase-error'
 import { toCanonicalE164Phone } from '@/lib/phone'
 import {
@@ -20,7 +20,7 @@ import type { QuoteToSend } from '../components/BotQuoteBanner'
  */
 export function useAppointmentMutations() {
   const queryClient = useQueryClient()
-  const { toast } = useToast()
+  const { toast } = useIMToast()
   const closeCreate = useCalendarUiStore((s) => s.closeCreate)
   const setEditingAppointment = useCalendarUiStore((s) => s.setEditingAppointment)
   const setFormError = useCalendarUiStore((s) => s.setFormError)

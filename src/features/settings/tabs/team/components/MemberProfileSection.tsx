@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import { IMInput } from '@/components/ui/input'
+import { IMTextarea } from '@/components/ui/textarea'
 import { saveArtistProfile } from '@/features/settings/server/settings'
 import type { StaffMember } from '@/features/settings/server/settings'
 import { SettingsRow, SettingsSection } from '@/features/settings/components/settings-layout'
@@ -39,10 +39,10 @@ export function MemberProfileSection({ member, readOnly }: { member: StaffMember
   return (
     <SettingsSection title="פרופיל" description="הבוט משתמש בזה כשלקוח שואל על המקעקע. הכל אופציונלי.">
       <SettingsRow label="תיק עבודות" htmlFor={`portfolio-${member.id}`} hint="אינסטגרם, אתר או כל קישור לעבודות.">
-        <Input id={`portfolio-${member.id}`} value={portfolioUrl} onChange={(e) => setPortfolioUrl(e.target.value)} placeholder="https://…" dir="ltr" disabled={readOnly} />
+        <IMInput id={`portfolio-${member.id}`} value={portfolioUrl} onChange={(e) => setPortfolioUrl(e.target.value)} placeholder="https://…" dir="ltr" disabled={readOnly} />
       </SettingsRow>
       <SettingsRow label="תיאור קצר" htmlFor={`bio-${member.id}`} stacked>
-        <Textarea
+        <IMTextarea
           id={`bio-${member.id}`}
           value={bio}
           onChange={(e) => setBio(e.target.value)}

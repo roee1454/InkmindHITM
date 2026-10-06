@@ -1,7 +1,7 @@
 import React from 'react'
 import { Plus } from '@/components/ui/icon'
-import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { Button } from '@/components/ui/button'
+import { IMDialogActions, IMResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMButton } from '@/components/ui/button'
 import type { ApiAppointment } from '../types'
 import { formatDayTitle, toYmd } from '../utils/date-utils'
 import { AppointmentCard } from './AppointmentCard'
@@ -46,19 +46,19 @@ export const DayOverviewDialog: React.FC<DayOverviewDialogProps> = ({
   }
 
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
       size="lg"
       title={formatDayTitle(date)}
       description={dayAppointments.length === 0 ? 'אין תורים ביום הזה.' : `${dayAppointments.length} תורים · ${tattooCount} קעקועים · ${sketchCount} סקיצות`}
       footer={
-        <DialogActions>
-          <Button type="button" onClick={handleCreate} className="gap-1.5">
+        <IMDialogActions>
+          <IMButton type="button" onClick={handleCreate} className="gap-1.5">
             <Plus size={14} />
             תור חדש ביום הזה
-          </Button>
-        </DialogActions>
+          </IMButton>
+        </IMDialogActions>
       }
     >
       {dayAppointments.length === 0 ? (
@@ -70,7 +70,7 @@ export const DayOverviewDialog: React.FC<DayOverviewDialogProps> = ({
           ))}
         </div>
       )}
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }
 

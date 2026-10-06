@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useIMToast } from '@/components/ui/toast'
 import { queryKeys } from '@/lib/query-keys'
 import { toCanonicalE164Phone } from '@/lib/phone'
 import { createCustomer, updateCustomer } from '../server/customers'
@@ -23,7 +23,7 @@ function errorText(err: unknown, fallback: string): string {
 /** Creating a customer, and saving the details tab of an open customer card. */
 export function useCustomerMutations() {
   const queryClient = useQueryClient()
-  const { toast } = useToast()
+  const { toast } = useIMToast()
   const { setIsCreating, resetForm, setFormError } = useCustomersUiStore()
 
   const refresh = () =>

@@ -1,18 +1,18 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Switch } from '@/components/ui/switch'
+import { IMSwitch } from '@/components/ui/switch'
 import { Loader2 } from '@/components/ui/icon'
 import { getAiSettings, toggleAiEnabled } from '@/features/settings/server/ai'
 import type { AiSettings } from '@/features/settings/server/ai'
 import { useConfirm } from '#/hooks/useConfirm'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useIMToast } from '@/components/ui/toast'
 import { SettingsRow, SettingsSection } from '@/features/settings/components/settings-layout'
 
 /** The bot's master switch. Applies at once — asks before turning off to prevent accidental interruption. */
 export function AiStatusSection() {
   const queryClient = useQueryClient()
   const confirm = useConfirm()
-  const { toast } = useToast()
+  const { toast } = useIMToast()
   const [localChecked, setLocalChecked] = useState<boolean | null>(null)
 
   const { data: settings } = useQuery<AiSettings>({
@@ -89,7 +89,7 @@ export function AiStatusSection() {
           <span className={enabled ? 'text-sm font-bold text-status-done' : 'text-sm font-bold text-muted-foreground'}>
             {enabled ? 'פעיל' : 'כבוי'}
           </span>
-          <Switch
+          <IMSwitch
             checked={enabled}
             disabled={!settings || toggle.isPending}
             onCheckedChange={onChange}

@@ -1,12 +1,26 @@
 import * as React from "react"
+import { Slot } from "radix-ui"
+
 import { cn } from "@/lib/utils"
 
-function Card({ className, ...props }: React.ComponentProps<"div">) {
+type IMCardVariant = "default" | "flush"
+
+export interface IMCardProps extends React.ComponentProps<"div"> {
+  /** `flush` — the card is a list: its content drops the padding and stacks IMListRows. */
+  variant?: IMCardVariant
+}
+
+/**
+ * The one raised surface. A card never sits inside a card: inside one, group with spacing, a
+ * `border` hairline or a `surface-2` block.
+ */
+export function IMCard({ className, variant = "default", ...props }: IMCardProps) {
   return (
     <div
       data-slot="card"
+      data-variant={variant}
       className={cn(
-        "flex flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm",
+        "group/card flex flex-col rounded-xl border border-border bg-card text-card-foreground shadow-xs",
         className
       )}
       {...props}
@@ -14,12 +28,13 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+/** Title and description in the first column; an IMCardAction, when present, at the inline end. */
+export function IMCardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-header"
       className={cn(
-        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
+        "grid auto-rows-min items-start gap-x-3 gap-y-0.5 px-4 pt-5 has-data-[slot=card-action]:grid-cols-[minmax(0,1fr)_auto] lg:px-6",
         className
       )}
       {...props}
@@ -27,32 +42,41 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+/** The `title` text role (17/700). */
+export function IMCardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div
-      data-slot="card-title"
-      className={cn("leading-none font-semibold", className)}
-      {...props}
-    />
+    <div data-slot="card-title" className={cn("text-lg font-bold text-foreground", className)} {...props} />
   )
 }
 
-function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
+/** The `body-sm` text role, muted. */
+export function IMCardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-description"
-      className={cn("text-sm text-muted-foreground", className)}
+      className={cn("text-sm font-medium text-muted-foreground", className)}
       {...props}
     />
   )
 }
 
-function CardAction({ className, ...props }: React.ComponentProps<"div">) {
+export function IMCardAction({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-action"
+      className={cn("col-start-2 row-span-2 row-start-1 self-start justify-self-end", className)}
+      {...props}
+    />
+  )
+}
+
+export function IMCardContent({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-content"
       className={cn(
-        "col-start-2 row-span-2 row-start-1 self-start justify-self-end",
+        "flex flex-col gap-3 px-4 pt-4 pb-6 first:pt-6 lg:px-6",
+        "group-data-[variant=flush]/card:gap-0 group-data-[variant=flush]/card:px-0 group-data-[variant=flush]/card:pt-2 group-data-[variant=flush]/card:pb-0 group-data-[variant=flush]/card:first:pt-0",
         className
       )}
       {...props}
@@ -60,39 +84,38 @@ function CardAction({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CardContent({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="card-content"
-      className={cn("px-6", className)}
-      {...props}
-    />
-  )
-}
-
-function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
+/** Actions at the inline end, under a hairline. One primary at most. */
+export function IMCardFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-footer"
-      className={cn("flex items-center px-6 [.border-t]:pt-6", className)}
+      className={cn("flex items-center justify-end gap-2 border-t border-border px-4 py-3.5 lg:px-6", className)}
       {...props}
     />
   )
 }
 
-export {
-  Card,
-  Card as IMCard,
-  CardHeader,
-  CardHeader as IMCardHeader,
-  CardFooter,
-  CardFooter as IMCardFooter,
-  CardTitle,
-  CardTitle as IMCardTitle,
-  CardAction,
-  CardAction as IMCardAction,
-  CardDescription,
-  CardDescription as IMCardDescription,
-  CardContent,
-  CardContent as IMCardContent,
+export interface IMListRowProps extends React.ComponentProps<"div"> {
+  /** Render the single child (a `<button>` or router `<Link>`) as the row; it gets the pressed state. */
+  asChild?: boolean
+}
+
+/**
+ * One row of a list, usually inside an `IMCard variant="flush"`: leading media, a `min-w-0 flex-1`
+ * text column, trailing meta. Rows are separated by hairlines; the first has none.
+ */
+export function IMListRow({ className, asChild = false, ...props }: IMListRowProps) {
+  const Comp = asChild ? Slot.Root : "div"
+  return (
+    <Comp
+      data-slot="list-row"
+      className={cn(
+        "flex w-full items-center gap-3 border-t border-border/60 px-4 py-3 text-start first:border-t-0",
+        asChild &&
+          "cursor-pointer select-none outline-none transition-colors duration-100 hover:bg-surface-2/60 focus-visible:bg-surface-2 active:bg-surface-2",
+        className
+      )}
+      {...props}
+    />
+  )
 }

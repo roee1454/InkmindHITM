@@ -1,26 +1,34 @@
 import * as React from "react"
-import { ChevronDownIcon } from '@/components/ui/icon'
-import { cn } from "#/lib/utils.ts"
 
-function SelectInput({ className, children, dir = "rtl", ...props }: React.ComponentProps<"select">) {
+import { ChevronDownIcon } from "@/components/ui/icon"
+import { imControlClasses, imControlHeight, imControlText } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
+
+export type IMSelectInputProps = React.ComponentProps<"select">
+
+/**
+ * A native `<select>` styled as IMInput — only where the OS picker beats a popover: long numeric
+ * ranges on phones. Everything else is IMSelect.
+ */
+export function IMSelectInput({ className, children, dir = "rtl", ...props }: IMSelectInputProps) {
   return (
     <div className="relative w-full">
       <select
         data-slot="select-input"
         dir={dir}
         className={cn(
-          "flex h-12 w-full cursor-pointer appearance-none rounded-2xl border border-input bg-card pe-10 ps-4 font-assistant text-base text-foreground shadow-xs transition-all duration-150 ease-native outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:h-11 md:text-base",
-          "focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10",
-          "aria-invalid:border-destructive aria-invalid:ring-4 aria-invalid:ring-destructive/10",
+          "flex cursor-pointer appearance-none ps-4 pe-10",
+          imControlClasses,
+          imControlHeight,
+          imControlText,
           className
         )}
         {...props}
       >
         {children}
       </select>
-      <ChevronDownIcon className="pointer-events-none absolute end-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground opacity-60" />
+      {/* Phase 1b: <IMIcon name="chevron-down" size="sm" tone="muted" /> */}
+      <ChevronDownIcon className="pointer-events-none absolute end-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
     </div>
   )
 }
-
-export { SelectInput, SelectInput as IMSelectInput }

@@ -3,14 +3,14 @@ import { useQuery } from '@tanstack/react-query'
 import { Bell, LogOut, Settings } from '@/components/ui/icon'
 import { cn } from '#/lib/utils.ts'
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '#/components/ui/sheet.tsx'
-import { Button } from '#/components/ui/button.tsx'
+  IMSheet,
+  IMSheetContent,
+  IMSheetDescription,
+  IMSheetFooter,
+  IMSheetHeader,
+  IMSheetTitle,
+} from '@/components/ui/sheet'
+import { IMButton } from '@/components/ui/button'
 import { BrandMark } from '#/components/BrandMark.tsx'
 import { ThemeModeControl } from '#/components/ThemeModeControl.tsx'
 import { logout } from '#/features/auth/server/auth.ts'
@@ -61,17 +61,17 @@ export function AppDrawer({ open, onOpenChange, staff }: AppDrawerProps) {
   const isAdmin = staff.role === 'owner' || staff.role === 'admin'
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="gap-0 p-0 shadow-lg">
-        <SheetHeader className="flex-row items-center gap-3 border-border">
+    <IMSheet open={open} onOpenChange={onOpenChange}>
+      <IMSheetContent side="right" className="gap-0 p-0 shadow-lg">
+        <IMSheetHeader className="flex-row items-center gap-3 border-border">
           <BrandMark size="sm" />
           <div className="flex min-w-0 flex-col items-start">
-            <SheetTitle>INKMIND</SheetTitle>
-            <SheetDescription className="text-2xs font-bold uppercase text-muted-foreground">
+            <IMSheetTitle>INKMIND</IMSheetTitle>
+            <IMSheetDescription className="text-2xs font-bold uppercase text-muted-foreground">
               ניהול סטודיו
-            </SheetDescription>
+            </IMSheetDescription>
           </div>
-        </SheetHeader>
+        </IMSheetHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5">
           {isAdmin ? (
@@ -151,7 +151,7 @@ export function AppDrawer({ open, onOpenChange, staff }: AppDrawerProps) {
           </Link>
         </div>
 
-        <SheetFooter className="border-border">
+        <IMSheetFooter className="border-border">
           <div>
             <p className="font-assistant text-sm font-bold text-foreground">{staff.name}</p>
             <p className="font-assistant text-sm text-muted-foreground">
@@ -159,7 +159,7 @@ export function AppDrawer({ open, onOpenChange, staff }: AppDrawerProps) {
             </p>
           </div>
           <ThemeModeControl />
-          <Button
+          <IMButton
             variant="ghost"
             className="h-11 w-full justify-start gap-2"
             onClick={async () => {
@@ -170,9 +170,9 @@ export function AppDrawer({ open, onOpenChange, staff }: AppDrawerProps) {
           >
             <LogOut className="size-4" />
             התנתקות
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+          </IMButton>
+        </IMSheetFooter>
+      </IMSheetContent>
+    </IMSheet>
   )
 }

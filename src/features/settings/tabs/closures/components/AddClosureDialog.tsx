@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Switch } from '@/components/ui/switch'
-import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { IMButton } from '@/components/ui/button'
+import { IMInput } from '@/components/ui/input'
+import { IMCheckbox } from '@/components/ui/checkbox'
+import { IMSwitch } from '@/components/ui/switch'
+import { IMDialogActions, IMResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMTabs, IMTabsContent, IMTabsList, IMTabsTrigger } from '@/components/ui/tabs'
 import { getHebcalHolidays, addStudioClosure } from '@/features/settings/server/closures'
 import type { HebcalHoliday } from '@/integrations/hebcal/hebcal.server'
 
@@ -103,41 +103,41 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
   const mutationError = (addingHolidays ? addHolidaysMutation.error : addCustomMutation.error)
 
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
       title="ימי סגירה"
       description="בימים האלה הבוט לא מציע תורים."
       footer={
-        <DialogActions error={mutationError?.message ?? null}>
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+        <IMDialogActions error={mutationError?.message ?? null}>
+          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)}>
             סגירה
-          </Button>
+          </IMButton>
           {addingHolidays ? (
-            <Button type="button" onClick={() => addHolidaysMutation.mutate()} disabled={selectedTitles.size === 0 || isPending} className="min-w-28">
+            <IMButton type="button" onClick={() => addHolidaysMutation.mutate()} disabled={selectedTitles.size === 0 || isPending} className="min-w-28">
               {addHolidaysMutation.isPending ? 'מוסיף…' : selectedTitles.size > 0 ? `הוספת ${selectedTitles.size} חגים` : 'הוספת חגים'}
-            </Button>
+            </IMButton>
           ) : (
-            <Button type="button" onClick={() => addCustomMutation.mutate()} disabled={!customDate || isPending} className="min-w-28">
+            <IMButton type="button" onClick={() => addCustomMutation.mutate()} disabled={!customDate || isPending} className="min-w-28">
               {addCustomMutation.isPending ? 'מוסיף…' : 'הוספת התאריך'}
-            </Button>
+            </IMButton>
           )}
-        </DialogActions>
+        </IMDialogActions>
       }
     >
-      <Tabs value={tab} onValueChange={(v) => setTab(v as 'holidays' | 'custom')} dir="rtl" className="gap-4">
-        <TabsList className="grid grid-cols-2">
-          <TabsTrigger value="holidays">חגים</TabsTrigger>
-          <TabsTrigger value="custom">תאריך מסוים</TabsTrigger>
-        </TabsList>
+      <IMTabs value={tab} onValueChange={(v) => setTab(v as 'holidays' | 'custom')} dir="rtl" className="gap-4">
+        <IMTabsList className="grid grid-cols-2">
+          <IMTabsTrigger value="holidays">חגים</IMTabsTrigger>
+          <IMTabsTrigger value="custom">תאריך מסוים</IMTabsTrigger>
+        </IMTabsList>
 
-        <TabsContent value="holidays" className="flex flex-col gap-3">
+        <IMTabsContent value="holidays" className="flex flex-col gap-3">
           <label className="flex cursor-pointer items-center justify-between gap-3">
             <span className="flex flex-col">
               <span className="text-sm font-bold text-foreground">גם מועדים קטנים וצומות</span>
               <span className="text-xs text-muted-foreground">אחרת רק החגים המרכזיים</span>
             </span>
-            <Switch checked={includeMinor} onCheckedChange={setIncludeMinor} />
+            <IMSwitch checked={includeMinor} onCheckedChange={setIncludeMinor} />
           </label>
 
           {holidaysQuery.isLoading ? (
@@ -147,13 +147,13 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
           ) : (
             <div className="flex flex-col overflow-hidden rounded-lg border border-border">
               <label className="flex cursor-pointer items-center gap-2.5 border-b border-border bg-muted/40 px-3 py-2 text-sm font-bold text-foreground">
-                <Checkbox checked={allSelected} onCheckedChange={(checked) => toggleSelectAll(Boolean(checked))} />
+                <IMCheckbox checked={allSelected} onCheckedChange={(checked) => toggleSelectAll(Boolean(checked))} />
                 הכל
               </label>
               <div className="max-h-60 overflow-y-auto">
                 {groupedHolidays.map((holiday) => (
                   <label key={holiday.title} className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/50">
-                    <Checkbox checked={selectedTitles.has(holiday.title)} onCheckedChange={() => toggleHoliday(holiday.title)} />
+                    <IMCheckbox checked={selectedTitles.has(holiday.title)} onCheckedChange={() => toggleHoliday(holiday.title)} />
                     <span className="flex-1 font-medium text-foreground">{holiday.hebrew}</span>
                   </label>
                 ))}
@@ -168,21 +168,21 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
             </a>
             .
           </p>
-        </TabsContent>
+        </IMTabsContent>
 
-        <TabsContent value="custom" className="form-stack">
+        <IMTabsContent value="custom" className="form-stack">
           <div className="grid grid-cols-[auto_1fr] gap-3">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="closure-custom-date" className="form-label">
                 תאריך
               </label>
-              <Input id="closure-custom-date" type="date" value={customDate} onChange={(e) => setCustomDate(e.target.value)} className="w-40" dir="ltr" />
+              <IMInput id="closure-custom-date" type="date" value={customDate} onChange={(e) => setCustomDate(e.target.value)} className="w-40" dir="ltr" />
             </div>
             <div className="flex min-w-0 flex-col gap-1.5">
               <label htmlFor="closure-custom-reason" className="form-label">
                 סיבה <span className="font-medium text-muted-foreground">(לא חובה)</span>
               </label>
-              <Input id="closure-custom-reason" value={customReason} onChange={(e) => setCustomReason(e.target.value)} placeholder="למשל: שיפוצים" />
+              <IMInput id="closure-custom-reason" value={customReason} onChange={(e) => setCustomReason(e.target.value)} placeholder="למשל: שיפוצים" />
             </div>
           </div>
           <label className="flex cursor-pointer items-center justify-between gap-3">
@@ -190,11 +190,11 @@ export function AddClosureDialog({ open, onOpenChange }: AddClosureDialogProps) 
               <span className="text-sm font-bold text-foreground">לסגור כל שנה</span>
               <span className="text-xs text-muted-foreground">אחרת רק בתאריך הזה</span>
             </span>
-            <Switch checked={customRecurring} onCheckedChange={setCustomRecurring} />
+            <IMSwitch checked={customRecurring} onCheckedChange={setCustomRecurring} />
           </label>
-        </TabsContent>
-      </Tabs>
-    </ResponsiveDialog>
+        </IMTabsContent>
+      </IMTabs>
+    </IMResponsiveDialog>
   )
 }
 

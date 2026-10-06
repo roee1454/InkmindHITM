@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Image as ImageIcon } from '@/components/ui/icon'
 import { getSettings, updateStudioSettings, uploadStudioLogo } from '@/features/onboarding/server/onboarding'
-import { Input } from '@/components/ui/input'
+import { IMInput } from '@/components/ui/input'
 import { ThemeModeControl } from '@/components/ThemeModeControl'
 import { SettingsTabSkeleton } from '@/features/settings/components/SettingsTabSkeleton'
 import { SettingsPage, SettingsRow, SettingsSection } from '@/features/settings/components/settings-layout'
@@ -122,7 +122,7 @@ function GeneralSettings() {
               </div>
             </SettingsRow>
             <SettingsRow label="שם הסטודיו" htmlFor="studio-name">
-              <Input id="studio-name" value={studioName} onChange={(e) => setStudioName(e.target.value)} placeholder="שם הסטודיו" />
+              <IMInput id="studio-name" value={studioName} onChange={(e) => setStudioName(e.target.value)} placeholder="שם הסטודיו" />
             </SettingsRow>
           </SettingsSection>
 

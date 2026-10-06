@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { TriangleAlert } from '@/components/ui/icon'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { IMTextarea } from '@/components/ui/textarea'
+import { IMSelect, IMSelectContent, IMSelectItem, IMSelectTrigger, IMSelectValue } from '@/components/ui/select'
+import { IMSwitch } from '@/components/ui/switch'
+import { IMAvatar, IMAvatarFallback, IMAvatarImage } from '@/components/ui/avatar'
 import type { ApiGoogleConnection, AppointmentFormValues } from '../../types'
 import { formatDuration } from '@/features/conversations/utils/format'
 import { NoCalendarWarningDialog } from '../NoCalendarWarningDialog'
@@ -47,7 +47,7 @@ export const StepStaffDuration: React.FC<StepStaffDurationProps> = ({
           <label className="text-xs font-semibold text-foreground">
             {values.type === 'sketch' ? 'מקעקע' : 'מקעקע *'}
           </label>
-          <Select
+          <IMSelect
             value={values.staffId ?? NO_ARTIST}
             onValueChange={(val) => {
               const staffId = val === NO_ARTIST ? null : val
@@ -58,11 +58,11 @@ export const StepStaffDuration: React.FC<StepStaffDurationProps> = ({
               }
             }}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="ללא שיוך" />
-            </SelectTrigger>
-            <SelectContent align="end">
-              <SelectItem value={NO_ARTIST}>ללא שיוך</SelectItem>
+            <IMSelectTrigger className="w-full">
+              <IMSelectValue placeholder="ללא שיוך" />
+            </IMSelectTrigger>
+            <IMSelectContent align="end">
+              <IMSelectItem value={NO_ARTIST}>ללא שיוך</IMSelectItem>
               {staff.map((artist) => {
                 const connection = googleConnections.find(
                   (c) => c.staffId === artist.id && c.status === 'connected',
@@ -70,40 +70,40 @@ export const StepStaffDuration: React.FC<StepStaffDurationProps> = ({
                 const picture = connection?.googleAccountPicture || artist.avatar
 
                 return (
-                  <SelectItem key={artist.id} value={artist.id}>
+                  <IMSelectItem key={artist.id} value={artist.id}>
                     <div className="flex items-center gap-2">
-                      <Avatar className="size-5">
-                        <AvatarImage src={picture ?? undefined} />
-                        <AvatarFallback className="text-micro bg-muted">
+                      <IMAvatar className="size-5">
+                        <IMAvatarImage src={picture ?? undefined} />
+                        <IMAvatarFallback className="text-micro bg-muted">
                           {artist.name.slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
+                        </IMAvatarFallback>
+                      </IMAvatar>
                       <span>{artist.name}</span>
                     </div>
-                  </SelectItem>
+                  </IMSelectItem>
                 )
               })}
-            </SelectContent>
-          </Select>
+            </IMSelectContent>
+          </IMSelect>
         </div>
 
         <div className="flex flex-col gap-1.5" dir="rtl">
           <label className="text-xs font-semibold text-foreground">משך</label>
-          <Select
+          <IMSelect
             value={String(values.durationMinutes)}
             onValueChange={(val) => onChange({ durationMinutes: Number(val) })}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent align="end">
+            <IMSelectTrigger className="w-full">
+              <IMSelectValue />
+            </IMSelectTrigger>
+            <IMSelectContent align="end">
               {DURATION_OPTIONS.map((minutes) => (
-                <SelectItem key={minutes} value={String(minutes)}>
+                <IMSelectItem key={minutes} value={String(minutes)}>
                   {formatDuration(minutes)}
-                </SelectItem>
+                </IMSelectItem>
               ))}
-            </SelectContent>
-          </Select>
+            </IMSelectContent>
+          </IMSelect>
         </div>
       </div>
 
@@ -118,7 +118,7 @@ export const StepStaffDuration: React.FC<StepStaffDurationProps> = ({
           </p>
           <div className="flex items-center justify-between pt-1">
             <span className="text-xs font-semibold text-foreground">אני מודע/ת שהסטודיו סגור — שריין בכל זאת</span>
-            <Switch
+            <IMSwitch
               id="appointment-allow-closure-exception"
               checked={values.allowException}
               onCheckedChange={(checked) => onChange({ allowException: checked })}
@@ -138,7 +138,7 @@ export const StepStaffDuration: React.FC<StepStaffDurationProps> = ({
           </p>
           <div className="flex items-center justify-between pt-1">
             <span className="text-xs font-semibold text-foreground">אני מודע/ת שזה מחוץ לשעות העבודה — שריין בכל זאת</span>
-            <Switch
+            <IMSwitch
               id="appointment-allow-exception"
               checked={values.allowException}
               onCheckedChange={(checked) => onChange({ allowException: checked })}
@@ -151,7 +151,7 @@ export const StepStaffDuration: React.FC<StepStaffDurationProps> = ({
         <label className="text-xs font-semibold text-foreground">
           {values.type === 'sketch' ? 'נושא פגישת הסקיצה / ייעוץ' : 'תיאור הקעקוע'}
         </label>
-        <Textarea
+        <IMTextarea
           rows={3}
           placeholder={
             values.type === 'sketch'

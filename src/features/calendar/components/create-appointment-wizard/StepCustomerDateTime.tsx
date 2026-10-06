@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Input } from '@/components/ui/input'
-import { DatePicker } from '@/components/ui/date-picker'
-import { HourPicker } from '@/components/ui/hour-picker'
+import { IMInput } from '@/components/ui/input'
+import { IMDatePicker } from '@/components/ui/date-picker'
+import { IMHourPicker } from '@/components/ui/hour-picker'
 import type { AppointmentFormValues } from '../../types'
 import { customersQueryOptions } from '@/features/customers/utils/customers-query'
 import { AddCustomerDialog } from './AddCustomerDialog'
@@ -135,7 +135,7 @@ export const StepCustomerDateTime: React.FC<StepCustomerDateTimeProps> = ({ valu
       <div className="flex flex-col gap-1.5 relative">
         <label className="text-xs font-semibold text-foreground">בחר לקוח מהמאגר *</label>
         <div className="relative">
-          <Input
+          <IMInput
             type="text"
             placeholder="חפש לפי שם או טלפון…"
             value={
@@ -203,7 +203,7 @@ export const StepCustomerDateTime: React.FC<StepCustomerDateTimeProps> = ({ valu
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold text-foreground">תאריך *</label>
-          <DatePicker
+          <IMDatePicker
             value={values.date}
             onChange={(ymd) => onChange({ date: ymd })}
             minDate={values.minDate ?? undefined}
@@ -216,7 +216,7 @@ export const StepCustomerDateTime: React.FC<StepCustomerDateTimeProps> = ({ valu
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold text-foreground">שעה *</label>
-          <HourPicker value={values.timeSlot} onChange={(time) => onChange({ timeSlot: time })} />
+          <IMHourPicker value={values.timeSlot} onChange={(time) => onChange({ timeSlot: time })} />
         </div>
       </div>
 

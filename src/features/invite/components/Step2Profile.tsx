@@ -1,5 +1,5 @@
 import React from 'react'
-import { Input } from '@/components/ui/input'
+import { IMInput } from '@/components/ui/input'
 import { Link2 } from '@/components/ui/icon'
 import { useInviteUiStore } from '../store/inviteUiStore'
 import { useInviteMutations } from '../hooks/useInviteMutations'
@@ -38,7 +38,7 @@ export function Step2Profile() {
           <label className="text-sm font-bold text-foreground">קישור לאינסטגרם או תיק עבודות *</label>
           <div className="flex h-14 w-full items-center gap-2.5 rounded-2xl border border-input bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
             <Link2 className="size-[18px] shrink-0 text-muted-foreground" />
-            <Input
+            <IMInput
               dir="ltr"
               placeholder="https://instagram.com/your_handle"
               value={portfolioUrl}

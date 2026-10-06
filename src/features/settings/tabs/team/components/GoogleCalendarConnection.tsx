@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { AlertTriangle } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import { SettingsRow } from '@/features/settings/components/settings-layout'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getCurrentStaffInfo } from '@/features/settings/server/staff'
@@ -121,16 +121,16 @@ export const GoogleCalendarConnection: React.FC<GoogleCalendarConnectionProps> =
           <>
             <span className="text-sm font-bold text-status-done">מחובר</span>
             {canManage && (
-              <Button type="button" variant="ghost" size="sm" onClick={handleDisconnect} disabled={disconnectMutation.isPending}>
+              <IMButton type="button" variant="ghost" size="sm" onClick={handleDisconnect} disabled={disconnectMutation.isPending}>
                 {disconnectMutation.isPending ? 'מנתק…' : 'ניתוק'}
-              </Button>
+              </IMButton>
             )}
           </>
         ) : (
           canManage && (
-            <Button type="button" variant="outline" size="sm" onClick={handleConnect} disabled={connecting}>
+            <IMButton type="button" variant="outline" size="sm" onClick={handleConnect} disabled={connecting}>
               {connecting ? 'מתחבר…' : isError ? 'חיבור מחדש' : 'חיבור'}
-            </Button>
+            </IMButton>
           )
         )}
       </div>

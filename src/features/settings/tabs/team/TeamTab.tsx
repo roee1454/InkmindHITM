@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft, Plus } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
+import { IMButton } from '@/components/ui/button'
+import { IMSkeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '#/hooks/useMediaQuery'
 import { getCurrentStaffInfo, getStaffList } from '@/features/settings/server/staff'
@@ -61,14 +61,14 @@ export function TeamTab({ selectedStaffId, onSelectStaff }: TeamTabProps) {
   if (loadingStaff || loadingMe) {
     return (
       <SettingsPage title="צוות">
-        <Skeleton className="h-48 w-full rounded-xl" />
+        <IMSkeleton className="h-48 w-full rounded-xl" />
       </SettingsPage>
     )
   }
 
   if (!currentStaff?.isAdmin) {
     const me = sortedStaff.find((m) => m.id === currentStaff?.id)
-    return <SettingsPage title="הפרופיל שלי">{me ? <MemberDetail member={me} currentStaff={currentStaff} /> : <Skeleton className="h-48 w-full rounded-xl" />}</SettingsPage>
+    return <SettingsPage title="הפרופיל שלי">{me ? <MemberDetail member={me} currentStaff={currentStaff} /> : <IMSkeleton className="h-48 w-full rounded-xl" />}</SettingsPage>
   }
 
   const selectedMember = sortedStaff.find((m) => m.id === selectedStaffId)
@@ -79,10 +79,10 @@ export function TeamTab({ selectedStaffId, onSelectStaff }: TeamTabProps) {
       title="חברי הצוות"
       description={`${staff.length} אנשים`}
       action={
-        <Button type="button" variant="outline" size="sm" onClick={() => setAddOpen(true)} className="gap-1.5">
+        <IMButton type="button" variant="outline" size="sm" onClick={() => setAddOpen(true)} className="gap-1.5">
           <Plus size={14} />
           הזמנה
-        </Button>
+        </IMButton>
       }
     >
       {sortedStaff.map((member) => (

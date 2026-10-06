@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import { useConfirm } from '#/hooks/useConfirm'
 import { resetAppData } from '@/features/database/server/reset-data'
 import type { ResetDataResult, ResetScope } from '@/features/database/server/reset-data.server'
@@ -83,9 +83,9 @@ function DevResetRow({ option }: { option: ResetOption }) {
   return (
     <SettingsRow label={option.label} hint={hint}>
       <div className="flex justify-end">
-        <Button type="button" variant="destructive" size="sm" disabled={reset.isPending} onClick={onClick}>
+        <IMButton type="button" variant="destructive" size="sm" disabled={reset.isPending} onClick={onClick}>
           {reset.isPending ? 'מוחק…' : option.buttonLabel}
-        </Button>
+        </IMButton>
       </div>
     </SettingsRow>
   )

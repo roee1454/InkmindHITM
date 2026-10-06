@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Plus, TriangleAlert } from '@/components/ui/icon'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { DatePicker } from '@/components/ui/date-picker'
-import { HourPicker } from '@/components/ui/hour-picker'
+import { IMTextarea } from '@/components/ui/textarea'
+import { IMSelect, IMSelectContent, IMSelectItem, IMSelectTrigger, IMSelectValue } from '@/components/ui/select'
+import { IMSwitch } from '@/components/ui/switch'
+import { IMAvatar, IMAvatarFallback, IMAvatarImage } from '@/components/ui/avatar'
+import { IMDatePicker } from '@/components/ui/date-picker'
+import { IMHourPicker } from '@/components/ui/hour-picker'
 import { formatDuration } from '@/features/conversations/utils/format'
 import { useWorkingHoursCheck } from '../../hooks/useWorkingHoursCheck'
 import type { ApiGoogleConnection, AppointmentFormValues } from '../../types'
@@ -34,7 +34,7 @@ function ExceptionNotice({ title, text, checked, readOnly, onCheckedChange }: { 
       <p className="text-xs text-foreground/80">{text}</p>
       <label className="flex cursor-pointer items-center justify-between gap-3 text-xs font-bold text-foreground">
         לקבוע בכל זאת
-        <Switch disabled={readOnly} checked={checked} onCheckedChange={onCheckedChange} />
+        <IMSwitch disabled={readOnly} checked={checked} onCheckedChange={onCheckedChange} />
       </label>
     </div>
   )
@@ -59,54 +59,54 @@ export function AppointmentDetailsTab({ values, onChange, staff, googleConnectio
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">
           <span className="form-label">תאריך</span>
-          <DatePicker value={values.date} onChange={(ymd) => onChange({ date: ymd })} disabled={readOnly} />
+          <IMDatePicker value={values.date} onChange={(ymd) => onChange({ date: ymd })} disabled={readOnly} />
         </div>
         <div className="flex flex-col gap-1.5">
           <span className="form-label">שעה</span>
-          <HourPicker value={values.timeSlot} onChange={(time) => onChange({ timeSlot: time })} disabled={readOnly} />
+          <IMHourPicker value={values.timeSlot} onChange={(time) => onChange({ timeSlot: time })} disabled={readOnly} />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">
           <span className="form-label">מקעקע</span>
-          <Select dir="rtl" disabled={readOnly} value={values.staffId ?? NO_ARTIST} onValueChange={pickArtist}>
-            <SelectTrigger className="w-full" aria-label="מקעקע">
-              <SelectValue placeholder="ללא שיוך" />
-            </SelectTrigger>
-            <SelectContent align="end" dir="rtl">
-              <SelectItem value={NO_ARTIST}>ללא שיוך</SelectItem>
+          <IMSelect dir="rtl" disabled={readOnly} value={values.staffId ?? NO_ARTIST} onValueChange={pickArtist}>
+            <IMSelectTrigger className="w-full" aria-label="מקעקע">
+              <IMSelectValue placeholder="ללא שיוך" />
+            </IMSelectTrigger>
+            <IMSelectContent align="end" dir="rtl">
+              <IMSelectItem value={NO_ARTIST}>ללא שיוך</IMSelectItem>
               {staff.map((artist) => {
                 const connection = googleConnections.find((c) => c.staffId === artist.id && c.status === 'connected')
                 return (
-                  <SelectItem key={artist.id} value={artist.id}>
+                  <IMSelectItem key={artist.id} value={artist.id}>
                     <span className="flex items-center gap-2">
-                      <Avatar className="size-5">
-                        <AvatarImage src={(connection?.googleAccountPicture || artist.avatar) ?? undefined} />
-                        <AvatarFallback className="bg-muted text-micro">{artist.name.slice(0, 2)}</AvatarFallback>
-                      </Avatar>
+                      <IMAvatar className="size-5">
+                        <IMAvatarImage src={(connection?.googleAccountPicture || artist.avatar) ?? undefined} />
+                        <IMAvatarFallback className="bg-muted text-micro">{artist.name.slice(0, 2)}</IMAvatarFallback>
+                      </IMAvatar>
                       {artist.name}
                     </span>
-                  </SelectItem>
+                  </IMSelectItem>
                 )
               })}
-            </SelectContent>
-          </Select>
+            </IMSelectContent>
+          </IMSelect>
         </div>
         <div className="flex flex-col gap-1.5">
           <span className="form-label">משך</span>
-          <Select dir="rtl" disabled={readOnly} value={String(values.durationMinutes)} onValueChange={(v) => onChange({ durationMinutes: Number(v) })}>
-            <SelectTrigger className="w-full" aria-label="משך">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent align="end" dir="rtl">
+          <IMSelect dir="rtl" disabled={readOnly} value={String(values.durationMinutes)} onValueChange={(v) => onChange({ durationMinutes: Number(v) })}>
+            <IMSelectTrigger className="w-full" aria-label="משך">
+              <IMSelectValue />
+            </IMSelectTrigger>
+            <IMSelectContent align="end" dir="rtl">
               {DURATION_OPTIONS.map((minutes) => (
-                <SelectItem key={minutes} value={String(minutes)}>
+                <IMSelectItem key={minutes} value={String(minutes)}>
                   {formatDuration(minutes)}
-                </SelectItem>
+                </IMSelectItem>
               ))}
-            </SelectContent>
-          </Select>
+            </IMSelectContent>
+          </IMSelect>
         </div>
       </div>
 
@@ -133,7 +133,7 @@ export function AppointmentDetailsTab({ values, onChange, staff, googleConnectio
         <label htmlFor="appointment-description" className="form-label">
           {isSketch ? 'על מה הפגישה' : 'תיאור הקעקוע'}
         </label>
-        <Textarea
+        <IMTextarea
           id="appointment-description"
           rows={3}
           disabled={readOnly}
@@ -156,7 +156,7 @@ export function AppointmentDetailsTab({ values, onChange, staff, googleConnectio
               </button>
             )}
           </div>
-          <Textarea
+          <IMTextarea
             id="appointment-notes"
             rows={2}
             disabled={readOnly}

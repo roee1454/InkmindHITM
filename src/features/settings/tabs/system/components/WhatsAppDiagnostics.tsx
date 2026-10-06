@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Check, Copy, Activity, AlertTriangle, CheckCircle2 } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { IMButton } from '@/components/ui/button'
+import { IMInput } from '@/components/ui/input'
 import { SettingsRow, SettingsSection } from '@/features/settings/components/settings-layout'
 import { getWhatsAppSettingsForm, testWhatsAppConnection, getWhatsAppErrorLog } from '@/features/settings/server/settings'
 
@@ -87,10 +87,10 @@ export function WhatsAppDiagnostics() {
           }
         >
           <div className="flex justify-end">
-            <Button type="button" variant="outline" size="sm" onClick={() => testMutation.mutate()} disabled={testMutation.isPending} className="gap-1.5">
+            <IMButton type="button" variant="outline" size="sm" onClick={() => testMutation.mutate()} disabled={testMutation.isPending} className="gap-1.5">
               <Activity size={14} />
               {testMutation.isPending ? 'בודק…' : 'בדיקה'}
-            </Button>
+            </IMButton>
           </div>
         </SettingsRow>
       </SettingsSection>
@@ -145,10 +145,10 @@ function ReadOnlyCopyInput({ value, placeholder, label }: { value: string; place
 
   return (
     <div className="flex items-center gap-2">
-      <Input value={value} placeholder={placeholder} readOnly dir="ltr" aria-label={label} className="min-w-0 flex-1 bg-muted/50 font-mono text-xs text-muted-foreground" />
-      <Button type="button" variant="outline" size="icon" disabled={!value} className="shrink-0 cursor-pointer" onClick={handleCopy} aria-label={`העתקת ${label}`}>
+      <IMInput value={value} placeholder={placeholder} readOnly dir="ltr" aria-label={label} className="min-w-0 flex-1 bg-muted/50 font-mono text-xs text-muted-foreground" />
+      <IMButton type="button" variant="outline" size="icon" disabled={!value} className="shrink-0 cursor-pointer" onClick={handleCopy} aria-label={`העתקת ${label}`}>
         {copied ? <Check className="size-4 text-status-done" /> : <Copy className="size-4" />}
-      </Button>
+      </IMButton>
     </div>
   )
 }

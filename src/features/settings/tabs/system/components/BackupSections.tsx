@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Plus, RefreshCw, Upload } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
-import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { useToast } from '@/components/ui/ToastProvider'
+import { IMButton } from '@/components/ui/button'
+import { IMSwitch } from '@/components/ui/switch'
+import { IMSelect, IMSelectContent, IMSelectItem, IMSelectTrigger, IMSelectValue } from '@/components/ui/select'
+import { IMSkeleton } from '@/components/ui/skeleton'
+import { IMConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useIMToast } from '@/components/ui/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getBackupSettings, saveBackupSettings, runBackupNow, listBackups, restoreBackup, deleteBackup } from '@/features/settings/server/settings'
 import type { BackupSettings, BackupFile } from '@/features/settings/server/settings'
@@ -39,7 +39,7 @@ function errorText(err: unknown, fallback: string): string {
  */
 export function BackupSections() {
   const queryClient = useQueryClient()
-  const { toast } = useToast()
+  const { toast } = useIMToast()
   const [backupToDelete, setBackupToDelete] = useState<BackupFile | null>(null)
   const [backupToRestore, setBackupToRestore] = useState<BackupFile | null>(null)
   const [isUploadOpen, setIsUploadOpen] = useState(false)
@@ -96,7 +96,7 @@ export function BackupSections() {
       <SettingsSection title="גיבויים" description="גיבוי מלא של הנתונים והקבצים. גיבוי חדש מחליף את הקודם, כדי לא למלא את השרת.">
         <SettingsRow label="גיבוי אוטומטי" hint={autoEnabled ? lastBackup : 'כבוי: גיבוי נוצר רק כשמבקשים.'}>
           <div className="flex justify-end">
-            <Switch
+            <IMSwitch
               checked={autoEnabled}
               disabled={!settings || saveSettings.isPending}
               onCheckedChange={(checked) => saveSettings.mutate({ enabled: checked, intervalHours: Number(interval) })}
@@ -106,30 +106,30 @@ export function BackupSections() {
         </SettingsRow>
         {autoEnabled && (
           <SettingsRow label="תדירות">
-            <Select value={interval} onValueChange={(v) => saveSettings.mutate({ enabled: true, intervalHours: Number(v) })} disabled={saveSettings.isPending}>
-              <SelectTrigger className="w-full" aria-label="תדירות">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent dir="rtl">
+            <IMSelect value={interval} onValueChange={(v) => saveSettings.mutate({ enabled: true, intervalHours: Number(v) })} disabled={saveSettings.isPending}>
+              <IMSelectTrigger className="w-full" aria-label="תדירות">
+                <IMSelectValue />
+              </IMSelectTrigger>
+              <IMSelectContent dir="rtl">
                 {INTERVAL_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
+                  <IMSelectItem key={opt.value} value={opt.value}>
                     {opt.label}
-                  </SelectItem>
+                  </IMSelectItem>
                 ))}
-              </SelectContent>
-            </Select>
+              </IMSelectContent>
+            </IMSelect>
           </SettingsRow>
         )}
         <SettingsRow label="גיבוי ידני" hint={autoEnabled ? 'לא זמין כשהגיבוי האוטומטי פעיל.' : lastBackup}>
           <div className="flex flex-wrap justify-end gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => setIsUploadOpen(true)} className="gap-1.5">
+            <IMButton type="button" variant="outline" size="sm" onClick={() => setIsUploadOpen(true)} className="gap-1.5">
               <Upload size={14} />
               העלאה
-            </Button>
-            <Button type="button" size="sm" onClick={() => runNow.mutate()} disabled={autoEnabled || runNow.isPending} className="gap-1.5">
+            </IMButton>
+            <IMButton type="button" size="sm" onClick={() => runNow.mutate()} disabled={autoEnabled || runNow.isPending} className="gap-1.5">
               <RefreshCw size={14} className={runNow.isPending ? 'animate-spin' : ''} />
               {runNow.isPending ? 'מגבה…' : 'גיבוי עכשיו'}
-            </Button>
+            </IMButton>
           </div>
         </SettingsRow>
       </SettingsSection>
@@ -137,17 +137,17 @@ export function BackupSections() {
       <SettingsSection title="קבצים שמורים" description={backups.length > 0 ? `${backups.length} קבצים` : undefined}>
         {isLoading ? (
           <div className="flex flex-col gap-2 p-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
+            <IMSkeleton className="h-10 w-full" />
+            <IMSkeleton className="h-10 w-full" />
           </div>
         ) : backups.length === 0 ? (
           <div className="flex flex-col items-center gap-3 px-4 py-8 text-center">
             <p className="text-sm text-muted-foreground">אין גיבויים שמורים. אפשר ליצור גיבוי עכשיו או להעלות קובץ ZIP קיים.</p>
             {!autoEnabled && (
-              <Button type="button" size="sm" onClick={() => runNow.mutate()} disabled={runNow.isPending} className="gap-1.5">
+              <IMButton type="button" size="sm" onClick={() => runNow.mutate()} disabled={runNow.isPending} className="gap-1.5">
                 <Plus size={14} />
                 גיבוי ראשון
-              </Button>
+              </IMButton>
             )}
           </div>
         ) : (
@@ -164,13 +164,13 @@ export function BackupSections() {
         }}
       />
 
-      <ConfirmDialog
+      <IMConfirmDialog
         open={backupToDelete !== null}
         onOpenChange={(open) => !open && setBackupToDelete(null)}
         title="מחיקת קובץ הגיבוי"
         description="אי אפשר יהיה לשחזר ממנו אחרי המחיקה."
         details={backupToDelete ? backupDetails(backupToDelete) : undefined}
-        tone="destructive"
+        variant="destructive"
         confirmLabel="מחיקה"
         pendingLabel="מוחק…"
         isPending={deleteMutation.isPending}
@@ -178,13 +178,13 @@ export function BackupSections() {
         onConfirm={() => backupToDelete && deleteMutation.mutate(backupToDelete.key)}
       />
 
-      <ConfirmDialog
+      <IMConfirmDialog
         open={backupToRestore !== null}
         onOpenChange={(open) => !open && setBackupToRestore(null)}
         title="שחזור מהגיבוי"
         description="כל מה שנוצר אחרי הגיבוי — תורים, שיחות, לקוחות, הודעות — יימחק, והשרת יופעל מחדש. אי אפשר לבטל."
         details={backupToRestore ? backupDetails(backupToRestore) : undefined}
-        tone="destructive"
+        variant="destructive"
         confirmLabel="שחזור"
         pendingLabel="משחזר…"
         isPending={restoreMutation.isPending}

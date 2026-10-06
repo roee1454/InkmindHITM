@@ -1,4 +1,4 @@
-import type { StatusRole } from '@/components/ui/status-label'
+import type { IMStatusRole } from '@/components/ui/status-label'
 import type { LostReason, ProjectStage } from '../types'
 
 export const PROJECT_STAGE_LABELS: Record<ProjectStage, string> = {
@@ -22,7 +22,7 @@ export const LOST_REASON_LABELS: Record<LostReason, string> = {
 }
 
 /** Status role per stage (DESIGN.md): open inquiries, the money part of the funnel, done, lost. */
-export const PROJECT_STAGE_ROLE: Record<ProjectStage, StatusRole> = {
+export const PROJECT_STAGE_ROLE: Record<ProjectStage, IMStatusRole> = {
   inquiry: 'new',
   consultation_scheduled: 'new',
   consultation_done: 'new',

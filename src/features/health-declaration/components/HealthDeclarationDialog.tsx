@@ -1,5 +1,5 @@
 import React from 'react'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { HealthDeclarationViewer } from './HealthDeclarationViewer'
 import type { HealthDeclarationViewerProps } from './HealthDeclarationViewer'
 
@@ -15,7 +15,7 @@ export const HealthDeclarationDialog: React.FC<HealthDeclarationDialogProps> = (
   ...viewerProps
 }) => {
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
       size="lg"
@@ -23,7 +23,7 @@ export const HealthDeclarationDialog: React.FC<HealthDeclarationDialogProps> = (
       description="התראות רפואיות ותשובות השאלון."
     >
       <HealthDeclarationViewer customerName={customerName} {...viewerProps} />
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }
 

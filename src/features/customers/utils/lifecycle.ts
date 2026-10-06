@@ -1,4 +1,4 @@
-import type { StatusRole } from '@/components/ui/status-label'
+import type { IMStatusRole } from '@/components/ui/status-label'
 import type { ProjectStage } from '@/features/projects/types'
 
 /**
@@ -54,7 +54,7 @@ export const CUSTOMER_LIFECYCLE_LABELS: Record<CustomerLifecycle, string> = {
   dormant: 'רדום',
 }
 
-export const CUSTOMER_LIFECYCLE_ROLE: Record<CustomerLifecycle, StatusRole> = {
+export const CUSTOMER_LIFECYCLE_ROLE: Record<CustomerLifecycle, IMStatusRole> = {
   lead: 'new',
   prospect: 'wait',
   client: 'done',

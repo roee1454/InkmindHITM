@@ -1,6 +1,7 @@
 import * as React from "react"
-import { ChevronLeft, ChevronRight } from '@/components/ui/icon'
-import { cn } from "#/lib/utils.ts"
+
+import { IMButton } from "@/components/ui/button"
+import { ChevronLeft, ChevronRight } from "@/components/ui/icon"
 import {
   HEBREW_DAYS_SHORT,
   addMonths,
@@ -11,10 +12,14 @@ import {
   isSameMonth,
   isToday,
   toYmd,
-} from "#/lib/date-utils.ts"
+} from "@/lib/date-utils"
+import { cn } from "@/lib/utils"
 
-export interface CalendarProps {
-  // "YYYY-MM-DD", or null/empty when nothing is selected yet.
+// Days to move per arrow key. Left = forward in time, right = backward: the RTL reading direction.
+const KEY_STEPS: Record<string, number> = { ArrowLeft: 1, ArrowRight: -1, ArrowDown: 7, ArrowUp: -7 }
+
+export interface IMCalendarProps {
+  /** "YYYY-MM-DD", or null/empty when nothing is selected yet. */
   selected: string | null
   onSelect: (ymd: string) => void
   disabled?: (date: Date) => boolean
@@ -22,10 +27,12 @@ export interface CalendarProps {
   defaultAnchor?: Date
 }
 
-// Month-grid calendar, RTL-native (the app sets dir="rtl" on <html>, so the day-of-week order in
-// the DOM stays chronological — Sun..Sat — and the grid flips visually via CSS). Reused on its
-// own or via DatePicker (Popover + this + a trigger button).
-export const Calendar: React.FC<CalendarProps> = ({ selected, onSelect, disabled, className, defaultAnchor }) => {
+/**
+ * A month grid, RTL-native: the document is `dir="rtl"`, so the DOM keeps the days chronological
+ * (Sun..Sat) and the grid flips visually. The week starts on Sunday (א); today has a ring and the
+ * selected day is `primary`. Used on its own or inside IMDatePicker.
+ */
+export function IMCalendar({ selected, onSelect, disabled, className, defaultAnchor }: IMCalendarProps) {
   const initial = selected ? fromYmd(selected) : (defaultAnchor ?? new Date())
   const [anchor, setAnchor] = React.useState(initial)
   const [focused, setFocused] = React.useState(initial)
@@ -43,92 +50,76 @@ export const Calendar: React.FC<CalendarProps> = ({ selected, onSelect, disabled
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Left = forward in time, right = backward, matching RTL nav convention.
-    switch (e.key) {
-      case "ArrowLeft":
-        e.preventDefault()
-        moveFocus(1)
-        break
-      case "ArrowRight":
-        e.preventDefault()
-        moveFocus(-1)
-        break
-      case "ArrowDown":
-        e.preventDefault()
-        moveFocus(7)
-        break
-      case "ArrowUp":
-        e.preventDefault()
-        moveFocus(-7)
-        break
-    }
+    const step = KEY_STEPS[e.key]
+    if (step === undefined) return
+    e.preventDefault()
+    moveFocus(step)
   }
 
-  const weeks = buildMonthMatrix(anchor)
-
   return (
-    <div className={cn("w-80 font-assistant", className)}>
-      <div className="mb-2 flex items-center justify-between">
-        <button
+    <div data-slot="calendar" className={cn("flex w-74 flex-col gap-2", className)}>
+      <div className="flex items-center justify-between">
+        {/* Phase 1b: icon="chevron-start" / "chevron-end" — the registry mirrors them for RTL. */}
+        <IMButton
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={() => setAnchor((a) => addMonths(a, -1))}
-          className="flex size-9 cursor-pointer items-center justify-center rounded-xl text-muted-foreground transition-colors duration-100 active:bg-muted"
           aria-label="חודש קודם"
         >
-          <ChevronRight size={18} />
-        </button>
-        <span className="text-base font-extrabold text-foreground">{formatMonthTitle(anchor)}</span>
-        <button
+          <ChevronRight />
+        </IMButton>
+        <span className="text-base font-semibold text-foreground">{formatMonthTitle(anchor)}</span>
+        <IMButton
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={() => setAnchor((a) => addMonths(a, 1))}
-          className="flex size-9 cursor-pointer items-center justify-center rounded-xl text-muted-foreground transition-colors duration-100 active:bg-muted"
           aria-label="חודש הבא"
         >
-          <ChevronLeft size={18} />
-        </button>
+          <ChevronLeft />
+        </IMButton>
       </div>
 
-      <div className="grid grid-cols-7 gap-y-1" onKeyDown={handleKeyDown}>
+      <div className="grid grid-cols-7 gap-0.5" onKeyDown={handleKeyDown}>
         {HEBREW_DAYS_SHORT.map((label) => (
-          <div key={label} className="flex h-9 items-center justify-center text-xs font-bold text-muted-foreground">
+          <div key={label} className="grid h-7 place-items-center text-xs font-semibold text-muted-foreground">
             {label}
           </div>
         ))}
 
-        {weeks.flat().map((day) => {
-          const ymd = toYmd(day)
-          const isDisabled = disabled?.(day) ?? false
-          const isSelected = !!selected && isSameDay(day, fromYmd(selected))
-          const inMonth = isSameMonth(day, anchor)
-          return (
-            <button
-              key={ymd}
-              ref={(el) => {
-                if (el) buttonRefs.current.set(ymd, el)
-                else buttonRefs.current.delete(ymd)
-              }}
-              type="button"
-              disabled={isDisabled}
-              tabIndex={isSameDay(day, focused) ? 0 : -1}
-              onFocus={() => setFocused(day)}
-              onClick={() => onSelect(ymd)}
-              className={cn(
-                "flex size-11 cursor-pointer items-center justify-center justify-self-center rounded-xl text-base font-medium transition-colors duration-100 active:bg-primary/10",
-                inMonth ? "text-foreground" : "opacity-40",
-                isToday(day) && !isSelected && "border border-primary font-bold",
-                isSelected && "bg-primary font-extrabold text-primary-foreground active:bg-primary",
-                isDisabled && "cursor-not-allowed opacity-30 active:bg-transparent"
-              )}
-            >
-              {day.getDate()}
-            </button>
-          )
-        })}
+        {buildMonthMatrix(anchor)
+          .flat()
+          .map((day) => {
+            const ymd = toYmd(day)
+            const isDisabled = disabled?.(day) ?? false
+            const isSelected = !!selected && isSameDay(day, fromYmd(selected))
+            return (
+              <button
+                key={ymd}
+                ref={(el) => {
+                  if (el) buttonRefs.current.set(ymd, el)
+                  else buttonRefs.current.delete(ymd)
+                }}
+                type="button"
+                disabled={isDisabled}
+                tabIndex={isSameDay(day, focused) ? 0 : -1}
+                onFocus={() => setFocused(day)}
+                onClick={() => onSelect(ymd)}
+                aria-pressed={isSelected}
+                className={cn(
+                  "grid h-10 cursor-pointer place-items-center rounded-md text-sm font-medium tabular-nums outline-none transition-colors duration-100 hover:bg-surface-2 focus-visible:ring-4 focus-visible:ring-ring/35",
+                  isSameMonth(day, anchor) ? "text-foreground" : "text-muted-foreground/60",
+                  isToday(day) && !isSelected && "font-bold inset-ring-[1.5px] inset-ring-ring",
+                  isSelected && "bg-primary font-bold text-primary-foreground hover:bg-primary",
+                  isDisabled && "cursor-not-allowed opacity-30 hover:bg-transparent"
+                )}
+              >
+                {day.getDate()}
+              </button>
+            )
+          })}
       </div>
     </div>
   )
 }
-
-export { Calendar as IMCalendar }
-export type IMCalendarProps = CalendarProps
-export default Calendar

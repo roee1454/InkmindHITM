@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Image as ImageIcon, ReceiptText } from '@/components/ui/icon'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { IMResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMTabs, IMTabsList, IMTabsTrigger, IMTabsContent } from '@/components/ui/tabs'
 import { ImageGalleryDialog } from '@/features/calendar/components/ImageGalleryDialog'
 
 export interface ReceiptEntry {
@@ -29,26 +29,26 @@ export function InspirationGalleryDialog({
 
   return (
     <>
-      <ResponsiveDialog
+      <IMResponsiveDialog
         open={open}
         onOpenChange={onOpenChange}
         size="lg"
         title="תמונות מהשיחה"
         description="מה שהלקוח שלח: השראה ואסמכתות תשלום."
       >
-          <Tabs defaultValue="images" dir="rtl">
-            <TabsList>
-              <TabsTrigger value="images">
+          <IMTabs defaultValue="images" dir="rtl">
+            <IMTabsList>
+              <IMTabsTrigger value="images">
                 <ImageIcon size={15} />
                 תמונות השראה
-              </TabsTrigger>
-              <TabsTrigger value="receipts">
+              </IMTabsTrigger>
+              <IMTabsTrigger value="receipts">
                 <ReceiptText size={15} />
                 אסמכתות
-              </TabsTrigger>
-            </TabsList>
+              </IMTabsTrigger>
+            </IMTabsList>
 
-            <TabsContent value="images" className="pt-3">
+            <IMTabsContent value="images" className="pt-3">
               {inspirationImages.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">אין תמונות השראה בשיחה הזאת</p>
               ) : (
@@ -65,9 +65,9 @@ export function InspirationGalleryDialog({
                   ))}
                 </div>
               )}
-            </TabsContent>
+            </IMTabsContent>
 
-            <TabsContent value="receipts" className="pt-3">
+            <IMTabsContent value="receipts" className="pt-3">
               {receipts.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">אין אסמכתות בשיחה הזאת</p>
               ) : (
@@ -94,9 +94,9 @@ export function InspirationGalleryDialog({
                   ))}
                 </div>
               )}
-            </TabsContent>
-          </Tabs>
-      </ResponsiveDialog>
+            </IMTabsContent>
+          </IMTabs>
+      </IMResponsiveDialog>
 
       <ImageGalleryDialog
         images={zoom?.images ?? []}

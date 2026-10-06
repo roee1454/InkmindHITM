@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { Button } from '@/components/ui/button'
+import { IMDialogActions, IMResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMButton } from '@/components/ui/button'
 import {
   listApprovedTemplates,
   sendConversationTemplate,
@@ -113,7 +113,7 @@ export function SendTemplateDialog({
   }
 
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
       size="lg"
@@ -121,15 +121,15 @@ export function SendTemplateDialog({
       description="חלון 24 השעות נסגר, אז אפשר לפנות ללקוח רק בתבנית ש-Meta אישרה."
       footer={
         templates.length > 0 && !isLoading ? (
-          <DialogActions error={error}>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={isSending}>
+          <IMDialogActions error={error}>
+            <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={isSending}>
               ביטול
-            </Button>
-            <Button type="button" onClick={handleSend} disabled={isSending || !currentTemplate} className="min-w-28 gap-1.5">
+            </IMButton>
+            <IMButton type="button" onClick={handleSend} disabled={isSending || !currentTemplate} className="min-w-28 gap-1.5">
               {isSending ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
               {isSending ? 'שולח…' : 'שליחה'}
-            </Button>
-          </DialogActions>
+            </IMButton>
+          </IMDialogActions>
         ) : undefined
       }
     >
@@ -144,6 +144,6 @@ export function SendTemplateDialog({
         recipientPhone={conversation.customerPhone}
         recipientDisplayName={conversation.customerName}
       />
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useIMToast } from '@/components/ui/toast'
 import { queryKeys } from '@/lib/query-keys'
 import { completeProject, markProjectLost, reopenProject } from '../server/projects'
 import type { LostReason } from '../types'
@@ -9,7 +9,7 @@ export const pipelineQueryKey = queryKeys.pipeline
 /** Lost / reopen / complete, refreshing every view that shows a project's stage. */
 export function useProjectMilestones() {
   const queryClient = useQueryClient()
-  const { toast } = useToast()
+  const { toast } = useIMToast()
 
   const refresh = () =>
     Promise.all([

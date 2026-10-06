@@ -1,5 +1,5 @@
 import { CheckCheck, Trash2 } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 
 export interface NotificationsHeaderProps {
   /** What the active tab holds, for its actions. */
@@ -20,11 +20,11 @@ export function NotificationsHeader({ unread, total, isMarkingAllRead, isClearin
         <p>מה קרה במערכת, ומי כתב בוואטסאפ.</p>
       </div>
       <div className="flex items-center gap-1 lg:ms-auto">
-        <Button type="button" variant="ghost" size="sm" onClick={onMarkAllRead} disabled={unread === 0 || isMarkingAllRead} className="gap-1.5">
+        <IMButton type="button" variant="ghost" size="sm" onClick={onMarkAllRead} disabled={unread === 0 || isMarkingAllRead} className="gap-1.5">
           <CheckCheck size={15} />
           סימון הכל כנקרא
-        </Button>
-        <Button
+        </IMButton>
+        <IMButton
           type="button"
           variant="ghost"
           size="sm"
@@ -34,7 +34,7 @@ export function NotificationsHeader({ unread, total, isMarkingAllRead, isClearin
         >
           <Trash2 size={15} />
           ניקוי
-        </Button>
+        </IMButton>
       </div>
     </div>
   )

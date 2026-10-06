@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { IMButton } from '@/components/ui/button'
+import { IMInput } from '@/components/ui/input'
+import { IMSelect, IMSelectContent, IMSelectItem, IMSelectTrigger, IMSelectValue } from '@/components/ui/select'
 import { Plus, X } from '@/components/ui/icon'
 import { PAYMENT_METHODS } from '../types'
 import type { PaymentMethod } from '../types'
@@ -19,19 +19,19 @@ export function PaymentRowsEditor({ rows, onChange, disabled }: { rows: PaymentR
     <div className="flex flex-col gap-2">
       {rows.map((row, index) => (
         <div key={index} className="flex items-center gap-2">
-          <Select value={row.method} onValueChange={(method) => update(index, { method: method as PaymentMethod })} disabled={disabled}>
-            <SelectTrigger className="w-36 shrink-0 text-start" dir="rtl" aria-label="אמצעי תשלום">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent align="end" dir="rtl">
+          <IMSelect value={row.method} onValueChange={(method) => update(index, { method: method as PaymentMethod })} disabled={disabled}>
+            <IMSelectTrigger className="w-36 shrink-0 text-start" dir="rtl" aria-label="אמצעי תשלום">
+              <IMSelectValue />
+            </IMSelectTrigger>
+            <IMSelectContent align="end" dir="rtl">
               {PAYMENT_METHODS.map((method) => (
-                <SelectItem key={method} value={method}>
+                <IMSelectItem key={method} value={method}>
                   {PAYMENT_METHOD_LABELS[method]}
-                </SelectItem>
+                </IMSelectItem>
               ))}
-            </SelectContent>
-          </Select>
-          <Input
+            </IMSelectContent>
+          </IMSelect>
+          <IMInput
             type="number"
             inputMode="decimal"
             min={0}
@@ -42,7 +42,7 @@ export function PaymentRowsEditor({ rows, onChange, disabled }: { rows: PaymentR
             disabled={disabled}
             className="flex-1"
           />
-          <Button
+          <IMButton
             type="button"
             variant="ghost"
             size="icon"
@@ -51,10 +51,10 @@ export function PaymentRowsEditor({ rows, onChange, disabled }: { rows: PaymentR
             onClick={() => onChange(rows.filter((_, i) => i !== index))}
           >
             <X size={16} />
-          </Button>
+          </IMButton>
         </div>
       ))}
-      <Button
+      <IMButton
         type="button"
         variant="outline"
         size="sm"
@@ -64,7 +64,7 @@ export function PaymentRowsEditor({ rows, onChange, disabled }: { rows: PaymentR
       >
         <Plus size={14} />
         הוספת תשלום
-      </Button>
+      </IMButton>
     </div>
   )
 }

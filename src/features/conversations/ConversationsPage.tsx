@@ -7,7 +7,7 @@ import {
   listConversations,
 } from '@/features/conversations/server/messages'
 import { useIsMobile } from '#/hooks/useMediaQuery'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 
 interface ConversationsPageProps {
   chatId?: string
@@ -65,9 +65,9 @@ export function ConversationsPage({ chatId, onSelectChat, onBack }: Conversation
                 !isFetchingConversations && (
                   <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-background font-assistant">
                     <p className="text-sm text-muted-foreground">השיחה הזו כבר לא קיימת.</p>
-                    <Button variant="outline" size="sm" onClick={onBack}>
+                    <IMButton variant="outline" size="sm" onClick={onBack}>
                       חזרה לרשימת השיחות
-                    </Button>
+                    </IMButton>
                   </div>
                 )
               ))}

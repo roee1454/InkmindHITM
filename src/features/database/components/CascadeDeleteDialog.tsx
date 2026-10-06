@@ -1,6 +1,6 @@
 import type React from 'react'
-import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { Button } from '@/components/ui/button'
+import { IMConfirmDialog } from '@/components/ui/confirm-dialog'
+import { IMButton } from '@/components/ui/button'
 import { AlertTriangle, Info } from '@/components/ui/icon'
 import { formatDatabaseError } from '@/lib/pocketbase-error'
 import { cn } from '@/lib/utils'
@@ -58,12 +58,12 @@ export function CascadeDeleteDialog({ open, onOpenChange, collection, id, entity
   const displayName = (ready && preview.label) || entityName || typeLabel
 
   return (
-    <ConfirmDialog
+    <IMConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
       title={`מחיקת ${typeLabel}: ${displayName}`}
       description="המחיקה סופית ואי אפשר לשחזר אותה."
-      tone="destructive"
+      variant="destructive"
       confirmLabel={hasCascade ? 'מחיקה כולל הנתונים המקושרים' : 'מחיקה'}
       pendingLabel="מוחק…"
       isPending={remove.isPending}
@@ -78,9 +78,9 @@ export function CascadeDeleteDialog({ open, onOpenChange, collection, id, entity
         {impact.isError && (
           <Notice tone="error">
             {formatDatabaseError(impact.error, 'לא הצלחנו לבדוק מה עוד יושפע מהמחיקה.')}
-            <Button type="button" variant="link" size="sm" className="block h-auto px-0 pt-1 text-xs" onClick={() => void impact.refetch()}>
+            <IMButton type="button" variant="link" size="sm" className="block h-auto px-0 pt-1 text-xs" onClick={() => void impact.refetch()}>
               נסה שוב
-            </Button>
+            </IMButton>
           </Notice>
         )}
 
@@ -92,6 +92,6 @@ export function CascadeDeleteDialog({ open, onOpenChange, collection, id, entity
 
         {failureMessage && <Notice tone="error">{failureMessage}</Notice>}
       </div>
-    </ConfirmDialog>
+    </IMConfirmDialog>
   )
 }

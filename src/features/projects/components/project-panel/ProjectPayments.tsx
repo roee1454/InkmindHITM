@@ -1,4 +1,4 @@
-import { Skeleton } from '@/components/ui/skeleton'
+import { IMSkeleton } from '@/components/ui/skeleton'
 import { PaymentRow } from '@/features/payments/components/PaymentRow'
 import { formatPaymentDay } from '@/features/payments/utils/labels'
 import type { ProjectFinance } from '@/features/payments/types'
@@ -26,8 +26,8 @@ export function ProjectPayments({ finance, isLoading, error, appointments, onSel
 
       {isLoading && !finance ? (
         <div className="flex flex-col gap-2">
-          <Skeleton className="h-14 w-full rounded-xl" />
-          <Skeleton className="h-14 w-full rounded-xl" />
+          <IMSkeleton className="h-14 w-full rounded-xl" />
+          <IMSkeleton className="h-14 w-full rounded-xl" />
         </div>
       ) : error && !finance ? (
         <p className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">{error}</p>

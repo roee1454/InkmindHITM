@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Plus, Loader2, User, Phone, ArrowLeft } from '@/components/ui/icon'
-import { Input } from '@/components/ui/input'
-import { SearchInput } from '@/components/ui/search-input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
+import { IMInput } from '@/components/ui/input'
+import { IMSearchInput } from '@/components/ui/search-input'
+import { IMLabel } from '@/components/ui/label'
+import { IMButton } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Customer } from '@/features/customers/types'
 import { formatPhoneForDisplay, toCanonicalE164Phone } from '@/lib/phone'
@@ -107,9 +107,9 @@ export function NewConversationRecipientStep({
 
       {mode === 'existing' ? (
         <div className="flex flex-col gap-3">
-          <SearchInput
+          <IMSearchInput
             size="sm"
-            variant="card"
+            variant="default"
             className="h-9 text-xs"
             placeholder="חיפוש לקוח/ה לפי שם או טלפון…"
             value={query}
@@ -165,7 +165,7 @@ export function NewConversationRecipientStep({
                   {query.trim() ? 'לא נמצא לקוח/ה תואם/ת בחיפוש' : 'הקלידו שם או מספר טלפון לחיפוש'}
                 </p>
                 {query.trim().length >= 2 && (
-                  <Button
+                  <IMButton
                     type="button"
                     variant="outline"
                     size="sm"
@@ -174,7 +174,7 @@ export function NewConversationRecipientStep({
                   >
                     <Plus className="size-3.5 text-primary" />
                     <span>הוספת איש קשר חדש: &quot;{query.trim()}&quot;</span>
-                  </Button>
+                  </IMButton>
                 )}
               </div>
             )}
@@ -183,11 +183,11 @@ export function NewConversationRecipientStep({
       ) : (
         <form onSubmit={handleCreateContactSubmit} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3.5">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="contact-name" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+            <IMLabel htmlFor="contact-name" className="text-xs font-bold text-foreground flex items-center gap-1.5">
               <User className="size-3.5 text-primary" />
               <span>שם מלא של הלקוח/ה *</span>
-            </Label>
-            <Input
+            </IMLabel>
+            <IMInput
               id="contact-name"
               value={newName}
               onChange={(e) => {
@@ -201,11 +201,11 @@ export function NewConversationRecipientStep({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="contact-phone" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+            <IMLabel htmlFor="contact-phone" className="text-xs font-bold text-foreground flex items-center gap-1.5">
               <Phone className="size-3.5 text-primary" />
               <span>מספר טלפון (WhatsApp) *</span>
-            </Label>
-            <Input
+            </IMLabel>
+            <IMInput
               id="contact-phone"
               type="tel"
               value={newPhone}
@@ -229,14 +229,14 @@ export function NewConversationRecipientStep({
             </div>
           )}
 
-          <Button
+          <IMButton
             type="submit"
             size="sm"
             className="w-full mt-1 font-bold gap-1.5 cursor-pointer bg-primary hover:bg-primary/90"
           >
             <span>המשך לבחירת תבנית</span>
             <ArrowLeft className="size-3.5" />
-          </Button>
+          </IMButton>
         </form>
       )}
     </div>

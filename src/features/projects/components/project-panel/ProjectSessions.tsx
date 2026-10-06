@@ -1,5 +1,5 @@
 import { CalendarPlus, ChevronLeft } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { appointmentKindLabel } from '@/features/calendar/utils/project-position'
 import { getAppointmentStatusVisual } from '@/features/calendar/utils/appointment-status'
@@ -49,10 +49,10 @@ export function ProjectSessions({ appointments, project, isMoving, onMove, isAtt
         {project.canManage && (
           <div className="flex items-center gap-1">
             {project.attachable.length > 0 && <AttachMenu appointments={project.attachable} disabled={isAttaching} onAttach={onAttach} />}
-            <Button type="button" variant="outline" size="sm" onClick={onBook} className="h-8 gap-1.5 px-2.5">
+            <IMButton type="button" variant="outline" size="sm" onClick={onBook} className="h-8 gap-1.5 px-2.5">
               <CalendarPlus size={15} />
               קביעת תור
-            </Button>
+            </IMButton>
           </div>
         )}
       </div>

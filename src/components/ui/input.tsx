@@ -1,20 +1,36 @@
 import * as React from "react"
-import { cn } from "#/lib/utils.ts"
+import { cn } from "@/lib/utils"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+/**
+ * The surface every entry control shares — IMInput, IMTextarea, IMSelectInput, the IMSelect /
+ * IMDatePicker / IMHourPicker triggers and IMSearchInput — so a picker trigger reads exactly like
+ * an input. Radius is `radius-control` (rounded-lg, 10), depth `shadow-raised`, focus a 4px halo.
+ */
+export const imControlClasses =
+  "w-full min-w-0 rounded-lg border border-border bg-card font-medium text-foreground shadow-xs outline-none transition-[border-color,box-shadow] duration-150 ease-native placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-ring/22 aria-invalid:border-destructive aria-invalid:ring-4 aria-invalid:ring-destructive/14 disabled:cursor-not-allowed disabled:opacity-50"
+
+// Height and text size go through variables that only the pointer media query changes, so a
+// caller's plain `h-9` or `text-sm` replaces the default on every device (tailwind-merge drops the
+// `h-(…)` / `text-(…)` class; a `pointer-coarse:h-12` would have survived and won on touch).
+
+/** 44 on desktop, 48 on touch. */
+export const imControlHeight =
+  "h-(--im-control-h) [--im-control-h:calc(var(--spacing)*11)] pointer-coarse:[--im-control-h:calc(var(--spacing)*12)]"
+
+/** 15px (`text-base`), and on touch the 16px floor (1rem) below which iOS zooms into a focused field. */
+export const imControlText =
+  "text-(length:--im-control-fs) [--im-control-fs:var(--text-base)] pointer-coarse:[--im-control-fs:1rem]"
+
+export type IMInputProps = React.ComponentProps<"input">
+
+/** Single-line text entry. Phone, email, URL and money fields pass `dir="ltr"`. */
+export function IMInput({ className, type, ...props }: IMInputProps) {
   return (
     <input
       type={type}
       data-slot="input"
-      className={cn(
-        "flex h-12 w-full min-w-0 rounded-2xl border border-input bg-card px-4 font-assistant text-base text-foreground shadow-xs transition-all duration-150 ease-native outline-none selection:bg-primary/15 selection:text-foreground file:inline-flex file:h-8 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:h-11 md:text-base",
-        "focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 focus-visible:shadow-sm",
-        "aria-invalid:border-destructive aria-invalid:ring-4 aria-invalid:ring-destructive/10",
-        className
-      )}
+      className={cn("flex px-4", imControlClasses, imControlHeight, imControlText, className)}
       {...props}
     />
   )
 }
-
-export { Input, Input as IMInput }

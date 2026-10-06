@@ -1,7 +1,8 @@
 import * as React from "react"
-import { cn } from "@/lib/utils"
 import * as RechartsPrimitive from "recharts"
 import type { TooltipValueType } from "recharts"
+
+import { cn } from "@/lib/utils"
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const
@@ -9,7 +10,9 @@ const THEMES = { light: "", dark: ".dark" } as const
 const INITIAL_DIMENSION = { width: 320, height: 200 } as const
 type TooltipNameType = number | string
 
-export type ChartConfig = Record<
+/** Series by key: label, icon and colour (or a colour per theme). Series that are people use the
+ *  artist ramp (`var(--artist-N)` slot); categories use `chart-1…5`. Never an inline colour. */
+export type IMChartConfig = Record<
   string,
   {
     label?: React.ReactNode
@@ -21,7 +24,7 @@ export type ChartConfig = Record<
 >
 
 type ChartContextProps = {
-  config: ChartConfig
+  config: IMChartConfig
 }
 
 const ChartContext = React.createContext<ChartContextProps | null>(null)
@@ -30,13 +33,14 @@ function useChart() {
   const context = React.useContext(ChartContext)
 
   if (!context) {
-    throw new Error("useChart must be used within a <ChartContainer />")
+    throw new Error("IMChart parts must be used within <IMChartContainer>")
   }
 
   return context
 }
 
-function ChartContainer({
+/** Recharts inside a responsive container that turns the config into `--color-<key>` variables. */
+export function IMChartContainer({
   id,
   className,
   children,
@@ -44,7 +48,7 @@ function ChartContainer({
   initialDimension = INITIAL_DIMENSION,
   ...props
 }: React.ComponentProps<"div"> & {
-  config: ChartConfig
+  config: IMChartConfig
   children: React.ComponentProps<
     typeof RechartsPrimitive.ResponsiveContainer
   >["children"]
@@ -78,9 +82,9 @@ function ChartContainer({
   )
 }
 
-const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
+function ChartStyle({ id, config }: { id: string; config: IMChartConfig }) {
   const colorConfig = Object.entries(config).filter(
-    ([, config]) => config.theme ?? config.color
+    ([, item]) => item.theme ?? item.color
   )
 
   if (!colorConfig.length) {
@@ -111,9 +115,10 @@ ${colorConfig
   )
 }
 
-const ChartTooltip = RechartsPrimitive.Tooltip
+export const IMChartTooltip = RechartsPrimitive.Tooltip
 
-function ChartTooltipContent({
+/** A small `card` with `shadow-overlay`, a swatch per series and tabular values. */
+export function IMChartTooltipContent({
   active,
   payload,
   className,
@@ -188,7 +193,7 @@ function ChartTooltipContent({
   return (
     <div
       className={cn(
-        "grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
+        "grid min-w-32 items-start gap-1.5 rounded-md border border-border bg-card px-2.5 py-2 text-xs font-medium shadow-lg",
         className
       )}
     >
@@ -219,7 +224,7 @@ function ChartTooltipContent({
                       !hideIndicator && (
                         <div
                           className={cn(
-                            "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
+                            "shrink-0 rounded-full border-(--color-border) bg-(--color-bg)",
                             {
                               "h-2.5 w-2.5": indicator === "dot",
                               "w-1": indicator === "line",
@@ -250,7 +255,7 @@ function ChartTooltipContent({
                         </span>
                       </div>
                       {item.value != null && (
-                        <span className="font-mono font-medium text-foreground tabular-nums">
+                        <span className="font-bold text-foreground tabular-nums">
                           {typeof item.value === "number"
                             ? item.value.toLocaleString()
                             : String(item.value)}
@@ -267,9 +272,9 @@ function ChartTooltipContent({
   )
 }
 
-const ChartLegend = RechartsPrimitive.Legend
+export const IMChartLegend = RechartsPrimitive.Legend
 
-function ChartLegendContent({
+export function IMChartLegendContent({
   className,
   hideIcon = false,
   payload,
@@ -288,7 +293,7 @@ function ChartLegendContent({
   return (
     <div
       className={cn(
-        "flex items-center justify-center gap-4",
+        "flex flex-wrap items-center justify-center gap-3.5 text-xs font-semibold",
         verticalAlign === "top" ? "pb-3" : "pt-3",
         className
       )}
@@ -310,7 +315,7 @@ function ChartLegendContent({
                 <itemConfig.icon />
               ) : (
                 <div
-                  className="h-2 w-2 shrink-0 rounded-[2px]"
+                  className="size-2.5 shrink-0 rounded-full"
                   style={{
                     backgroundColor: item.color,
                   }}
@@ -326,7 +331,7 @@ function ChartLegendContent({
 
 // Helper to extract item config from a payload.
 function getPayloadConfigFromPayload(
-  config: ChartConfig,
+  config: IMChartConfig,
   payload: unknown,
   key: string
 ) {
@@ -347,31 +352,15 @@ function getPayloadConfigFromPayload(
     key in payload &&
     typeof payload[key as keyof typeof payload] === "string"
   ) {
-    configLabelKey = payload[key as keyof typeof payload] as string
+    configLabelKey = payload[key as keyof typeof payload]
   } else if (
     payloadPayload &&
     key in payloadPayload &&
     typeof payloadPayload[key as keyof typeof payloadPayload] === "string"
   ) {
-    configLabelKey = payloadPayload[
-      key as keyof typeof payloadPayload
-    ] as string
+    configLabelKey = payloadPayload[key as keyof typeof payloadPayload]
   }
 
   return configLabelKey in config ? config[configLabelKey] : config[key]
 }
 
-export {
-  ChartContainer,
-  ChartContainer as IMChartContainer,
-  ChartTooltip,
-  ChartTooltip as IMChartTooltip,
-  ChartTooltipContent,
-  ChartTooltipContent as IMChartTooltipContent,
-  ChartLegend,
-  ChartLegend as IMChartLegend,
-  ChartLegendContent,
-  ChartLegendContent as IMChartLegendContent,
-  ChartStyle,
-  ChartStyle as IMChartStyle,
-}

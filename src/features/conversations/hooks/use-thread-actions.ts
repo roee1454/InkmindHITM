@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useIMToast } from '@/components/ui/toast'
 import { queryKeys } from '@/lib/query-keys'
 import { confirmSlot } from '@/features/calendar/server/appointments'
 import { confirmDepositReceived, rejectDepositReceipt, staffConfirmCancellation } from '../server/messages'
@@ -9,7 +9,7 @@ const errorText = (err: unknown, fallback: string) => (err instanceof Error ? er
 /** The decisions the thread's action panel can make, each refreshing what it changed. */
 export function useThreadActions(conversationId: string, appointmentId: string | undefined) {
   const queryClient = useQueryClient()
-  const { toast } = useToast()
+  const { toast } = useIMToast()
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.conversations })

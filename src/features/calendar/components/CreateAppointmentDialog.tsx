@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { ChevronRight } from '@/components/ui/icon'
-import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { Button } from '@/components/ui/button'
+import { IMDialogActions, IMResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMButton } from '@/components/ui/button'
 import { StepCustomerDateTime } from './create-appointment-wizard/StepCustomerDateTime'
 import { StepStaffDuration } from './create-appointment-wizard/StepStaffDuration'
 import { StepPricingDeposit } from './create-appointment-wizard/StepPricingDeposit'
@@ -158,30 +158,30 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   const displayError = error || localError
 
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
       size="lg"
       title="תור חדש"
       description={`שלב ${currentStep + 1} מתוך ${WIZARD_STEPS.length} · ${WIZARD_STEPS[currentStep]?.title ?? ''}`}
       footer={
-        <DialogActions
+        <IMDialogActions
           start={
             currentStep > 0 && (
-              <Button type="button" variant="ghost" onClick={goBack} className="gap-1">
+              <IMButton type="button" variant="ghost" onClick={goBack} className="gap-1">
                 <ChevronRight size={16} />
                 חזרה
-              </Button>
+              </IMButton>
             )
           }
         >
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)}>
             ביטול
-          </Button>
-          <Button type="submit" form="create-appointment-form" disabled={isSaving} className="min-w-28">
+          </IMButton>
+          <IMButton type="submit" form="create-appointment-form" disabled={isSaving} className="min-w-28">
             {isLastStep ? (isSaving ? 'שומר…' : 'קביעת התור') : 'המשך'}
-          </Button>
-        </DialogActions>
+          </IMButton>
+        </IMDialogActions>
       }
     >
       <div className="step-progress mb-4 overflow-hidden rounded-full" aria-hidden>
@@ -210,7 +210,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
         {currentStep === 2 && <StepPricingDeposit values={values} onChange={handleChange} />}
         {currentStep === 3 && <StepStatusNotes values={values} onChange={handleChange} />}
       </form>
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }
 

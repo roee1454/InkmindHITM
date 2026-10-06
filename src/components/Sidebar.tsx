@@ -1,6 +1,6 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Settings, LogOut, Bell, SidebarToggle, Bot } from '@/components/ui/icon'
-import { Button } from '#/components/ui/button.tsx'
+import { IMButton } from '@/components/ui/button'
 import { logout } from '#/features/auth/server/auth.ts'
 import type { StaffRecord } from '#/integrations/pocketbase/types.ts'
 import { useQuery } from '@tanstack/react-query'
@@ -263,7 +263,7 @@ export function Sidebar({ staff, className }: SidebarProps) {
             <ThemeModeControl className="mt-3" />
           </>
         )}
-        <Button
+        <IMButton
           variant="ghost"
           size="sm"
           className={cn('mt-2 gap-2', collapsed ? 'w-full justify-center px-0' : 'w-full justify-start')}
@@ -276,7 +276,7 @@ export function Sidebar({ staff, className }: SidebarProps) {
         >
           <LogOut className="size-4" />
           {!collapsed && 'התנתקות'}
-        </Button>
+        </IMButton>
       </div>
     </aside>
   )

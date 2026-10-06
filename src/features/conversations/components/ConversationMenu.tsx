@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { EllipsisVertical, ExternalLink, FileText, Paperclip, RotateCcw, ShieldCheck, Trash2 } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { IMButton } from '@/components/ui/button'
+import { IMDropdownMenu, IMDropdownMenuContent, IMDropdownMenuItem, IMDropdownMenuSeparator, IMDropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { getCurrentStaffInfo } from '@/features/settings/server/staff'
 import type { CurrentStaffInfo } from '@/features/settings/server/staff'
 import { useResetBotConversation } from '../hooks/use-reset-bot-conversation'
@@ -21,52 +21,52 @@ export function ConversationMenu({ conversationId, customerPhone, windowExpired,
   const digits = customerPhone.replace(/\D/g, '')
 
   return (
-    <DropdownMenu dir="rtl">
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="size-9 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="פעולות נוספות">
+    <IMDropdownMenu dir="rtl">
+      <IMDropdownMenuTrigger asChild>
+        <IMButton variant="ghost" size="icon" className="size-9 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="פעולות נוספות">
           <EllipsisVertical className="size-4.5" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-52 font-assistant">
-        <DropdownMenuItem onClick={() => onOpenDialog('health')}>
+        </IMButton>
+      </IMDropdownMenuTrigger>
+      <IMDropdownMenuContent align="end" className="min-w-52 font-assistant">
+        <IMDropdownMenuItem onClick={() => onOpenDialog('health')}>
           <ShieldCheck />
           הצהרת בריאות
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onOpenDialog('gallery')}>
+        </IMDropdownMenuItem>
+        <IMDropdownMenuItem onClick={() => onOpenDialog('gallery')}>
           <Paperclip />
           תמונות ומסמכים
-        </DropdownMenuItem>
+        </IMDropdownMenuItem>
         {windowExpired && (
-          <DropdownMenuItem onClick={() => onOpenDialog('template')}>
+          <IMDropdownMenuItem onClick={() => onOpenDialog('template')}>
             <FileText />
             שליחת תבנית מאושרת
-          </DropdownMenuItem>
+          </IMDropdownMenuItem>
         )}
         {digits && (
           <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
+            <IMDropdownMenuSeparator />
+            <IMDropdownMenuItem asChild>
               <a href={`https://wa.me/${digits}`} target="_blank" rel="noreferrer">
                 <ExternalLink />
                 פתיחה בוואטסאפ
               </a>
-            </DropdownMenuItem>
+            </IMDropdownMenuItem>
           </>
         )}
         {currentStaff?.isAdmin && (
           <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => void resetBot()}>
+            <IMDropdownMenuSeparator />
+            <IMDropdownMenuItem onClick={() => void resetBot()}>
               <RotateCcw />
               איפוס שיחת הבוט
-            </DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onClick={() => onOpenDialog('delete')}>
+            </IMDropdownMenuItem>
+            <IMDropdownMenuItem variant="destructive" onClick={() => onOpenDialog('delete')}>
               <Trash2 />
               מחיקת השיחה
-            </DropdownMenuItem>
+            </IMDropdownMenuItem>
           </>
         )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </IMDropdownMenuContent>
+    </IMDropdownMenu>
   )
 }

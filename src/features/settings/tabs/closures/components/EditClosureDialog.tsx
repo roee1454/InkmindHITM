@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { IMDialogActions, IMResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMInput } from '@/components/ui/input'
+import { IMButton } from '@/components/ui/button'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { updateStudioClosureGroup } from '@/features/settings/server/closures'
 import type { ClosureGroup } from '../utils/closureSorting'
@@ -60,20 +60,20 @@ export const EditClosureDialog: React.FC<EditClosureDialogProps> = ({
   const isSingleDate = (group?.dates.length ?? 0) === 1
 
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={Boolean(group)}
       onOpenChange={onOpenChange}
       title="עריכת ימי סגירה"
       description={isSingleDate ? undefined : `${group?.dates.length} ימים. השם החדש יחול על כולם.`}
       footer={
-        <DialogActions>
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+        <IMDialogActions>
+          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)}>
             ביטול
-          </Button>
-          <Button type="submit" form="edit-closure-form" disabled={!reason.trim() || updateMutation.isPending} className="min-w-28">
+          </IMButton>
+          <IMButton type="submit" form="edit-closure-form" disabled={!reason.trim() || updateMutation.isPending} className="min-w-28">
             {updateMutation.isPending ? 'שומר…' : 'שמירה'}
-          </Button>
-        </DialogActions>
+          </IMButton>
+        </IMDialogActions>
       }
     >
       <form id="edit-closure-form" onSubmit={handleSubmit} className="form-stack" dir="rtl">
@@ -87,7 +87,7 @@ export const EditClosureDialog: React.FC<EditClosureDialogProps> = ({
           <label htmlFor="closure-reason" className="form-label">
             סיבה
           </label>
-          <Input id="closure-reason" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="למשל: שיפוצים" required />
+          <IMInput id="closure-reason" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="למשל: שיפוצים" required />
         </div>
 
         {isSingleDate && (
@@ -95,10 +95,10 @@ export const EditClosureDialog: React.FC<EditClosureDialogProps> = ({
             <label htmlFor="closure-date" className="form-label">
               תאריך
             </label>
-            <Input id="closure-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required dir="ltr" className="text-start" />
+            <IMInput id="closure-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required dir="ltr" className="text-start" />
           </div>
         )}
       </form>
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }

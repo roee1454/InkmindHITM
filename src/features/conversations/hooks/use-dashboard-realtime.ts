@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { getBrowserClient } from '@/integrations/pocketbase/client'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useIMToast } from '@/components/ui/toast'
 import { sendPwaNotification } from '@/features/notifications/utils/pwa-notifications'
 import type { MessageStatus, MessageType } from '@/integrations/whatsapp-cloud-api/types'
 import type { UIConversation, UIMessage } from '@/features/conversations/types'
@@ -16,7 +16,7 @@ interface DashboardRealtimeProps {
 }
 
 export function useDashboardRealtime({ sessionToken, sessionStaff }: DashboardRealtimeProps) {
-  const { toast } = useToast()
+  const { toast } = useIMToast()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const location = useLocation()

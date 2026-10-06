@@ -1,6 +1,6 @@
 import type { Ref } from 'react'
 import { AlertCircle, AlertTriangle, Bell, CheckCircle2, Info, Trash2 } from '@/components/ui/icon'
-import { Skeleton } from '@/components/ui/skeleton'
+import { IMSkeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import type { ApiNotification, NotificationGroup, NotificationType } from '../types'
 import { formatNotificationTime, getNotificationToneClass } from '../utils/notification-helpers'
@@ -63,7 +63,7 @@ export function SystemNotificationList({ groups, isLoading, highlightId, highlig
     return (
       <div className="card-native flex flex-col gap-3 p-4">
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-12 w-full" />
+          <IMSkeleton key={i} className="h-12 w-full" />
         ))}
       </div>
     )

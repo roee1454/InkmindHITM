@@ -1,5 +1,5 @@
-import { SearchInput } from '@/components/ui/search-input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { IMSearchInput } from '@/components/ui/search-input'
+import { IMSelect, IMSelectContent, IMSelectItem, IMSelectTrigger, IMSelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { CUSTOMER_LIFECYCLE_LABELS } from '../utils/lifecycle'
 import type { CustomerLifecycle } from '../utils/lifecycle'
@@ -31,19 +31,19 @@ export function CustomersToolbar({ search, onSearchChange, filter, onFilterChang
   return (
     <div className="flex flex-col gap-3" dir="rtl">
       <div className="flex items-center gap-2">
-        <SearchInput containerClassName="min-w-0 flex-1" size="sm" variant="card" placeholder="חיפוש שם, טלפון או אימייל" value={search} onChange={onSearchChange} />
-        <Select value={sort} onValueChange={(value) => onSortChange(value as CustomerSort)}>
-          <SelectTrigger size="sm" aria-label="מיון" className="w-40 shrink-0 data-[size=sm]:h-10">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+        <IMSearchInput containerClassName="min-w-0 flex-1" size="sm" variant="default" placeholder="חיפוש שם, טלפון או אימייל" value={search} onChange={onSearchChange} />
+        <IMSelect value={sort} onValueChange={(value) => onSortChange(value as CustomerSort)}>
+          <IMSelectTrigger size="sm" aria-label="מיון" className="w-40 shrink-0 data-[size=sm]:h-10">
+            <IMSelectValue />
+          </IMSelectTrigger>
+          <IMSelectContent>
             {Object.entries(CUSTOMER_SORT_LABELS).map(([id, label]) => (
-              <SelectItem key={id} value={id}>
+              <IMSelectItem key={id} value={id}>
                 {label}
-              </SelectItem>
+              </IMSelectItem>
             ))}
-          </SelectContent>
-        </Select>
+          </IMSelectContent>
+        </IMSelect>
       </div>
 
       <div role="group" aria-label="סינון לפי שלב" className="flex gap-1 self-start overflow-x-auto rounded-xl bg-muted p-1 scrollbar-none max-w-full">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { ChevronLeft, ChevronRight } from '@/components/ui/icon'
 
 interface ImageGalleryDialogProps {
@@ -34,7 +34,7 @@ export const ImageGalleryDialog: React.FC<ImageGalleryDialogProps> = ({
   }
 
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
       size="lg"
@@ -94,7 +94,7 @@ export const ImageGalleryDialog: React.FC<ImageGalleryDialogProps> = ({
           </div>
         )}
       </div>
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }
 

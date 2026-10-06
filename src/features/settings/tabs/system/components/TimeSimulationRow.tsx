@@ -1,7 +1,7 @@
 import React from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
+import { IMButton } from '@/components/ui/button'
+import { IMSwitch } from '@/components/ui/switch'
 import { Loader2 } from '@/components/ui/icon'
 import { SettingsRow } from '@/features/settings/components/settings-layout'
 import { cn } from '@/lib/utils'
@@ -62,28 +62,28 @@ export function TimeSimulationRow() {
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-2">
         {PRESETS.map((preset) => (
-          <Button
+          <IMButton
             key={preset.hours}
             type="button"
             size="sm"
-            variant={hoursAhead === preset.hours ? 'default' : 'outline'}
+            variant={hoursAhead === preset.hours ? 'primary' : 'outline'}
             onClick={() => setHoursAhead(preset.hours)}
           >
             {preset.label}
-          </Button>
+          </IMButton>
         ))}
       </div>
 
       <label className="flex items-center gap-3 text-xs text-foreground">
-        <Switch checked={realRun} onCheckedChange={setRealRun} />
+        <IMSwitch checked={realRun} onCheckedChange={setRealRun} />
         <span className={cn(realRun && 'font-bold text-destructive')}>
           {realRun ? 'הרצה אמיתית: הודעות יישלחו ורשומות יעודכנו' : 'הרצת ניסיון בלבד (לא נשלח ולא נשמר דבר)'}
         </span>
       </label>
 
-      <Button
+      <IMButton
         type="button"
-        variant={realRun ? 'destructive' : 'default'}
+        variant={realRun ? 'destructive' : 'primary'}
         size="sm"
         className="self-start gap-2"
         disabled={simulation.isPending}
@@ -91,7 +91,7 @@ export function TimeSimulationRow() {
       >
         {simulation.isPending && <Loader2 size={14} className="animate-spin" />}
         הרצת tick בעוד {hoursAhead} שעות
-      </Button>
+      </IMButton>
 
       {simulation.isError && (
         <p className="text-xs font-bold text-destructive">

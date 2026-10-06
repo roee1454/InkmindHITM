@@ -1,76 +1,81 @@
 import * as React from "react"
-import { Calendar as CalendarIcon } from '@/components/ui/icon'
-import { cn } from "#/lib/utils.ts"
-import { HEBREW_MONTHS, fromYmd, toYmd } from "#/lib/date-utils.ts"
-import { Popover, PopoverTrigger, PopoverContent } from "#/components/ui/popover.tsx"
-import { Calendar } from "#/components/ui/calendar.tsx"
 
-export interface DatePickerProps {
-  // "YYYY-MM-DD", or "" when nothing is selected yet.
+import { IMCalendar } from "@/components/ui/calendar"
+import { Calendar as CalendarGlyph, ChevronDown } from "@/components/ui/icon"
+import { imControlClasses, imControlHeight } from "@/components/ui/input"
+import { IMPopover, IMPopoverContent, IMPopoverTrigger } from "@/components/ui/popover"
+import { HEBREW_DAYS_LONG, HEBREW_MONTHS, fromYmd, toYmd } from "@/lib/date-utils"
+import { cn } from "@/lib/utils"
+
+/**
+ * The trigger of IMDatePicker and IMHourPicker: an IMInput look with a muted leading icon, the value
+ * (or the muted placeholder), and a trailing chevron. Buttons don't zoom on iOS, so 15px everywhere.
+ */
+export const imPickerTriggerClasses = cn(
+  "flex cursor-pointer select-none items-center gap-2 px-4 text-start text-base",
+  imControlClasses,
+  imControlHeight,
+  "data-[state=open]:border-primary data-[state=open]:ring-4 data-[state=open]:ring-ring/22"
+)
+
+/** "יום ד׳, 14 באוקטובר" — the year only when it isn't this year. */
+function formatDisplay(ymd: string): string {
+  const d = fromYmd(ymd)
+  const year = d.getFullYear() === new Date().getFullYear() ? "" : ` ${d.getFullYear()}`
+  return `${HEBREW_DAYS_LONG[d.getDay()]}, ${d.getDate()} ב${HEBREW_MONTHS[d.getMonth()]}${year}`
+}
+
+export interface IMDatePickerProps {
+  /** "YYYY-MM-DD", or "" when nothing is selected yet. */
   value: string
   onChange: (ymd: string) => void
   placeholder?: string
+  /** `true` disables the trigger; a function disables the days it returns true for. */
   disabled?: boolean | ((date: Date) => boolean)
   className?: string
+  /** "YYYY-MM-DD": days before it can't be picked, and the calendar opens on its month. */
   minDate?: string
 }
 
-function formatDisplay(ymd: string): string {
-  const d = fromYmd(ymd)
-  return `${d.getDate()} ${HEBREW_MONTHS[d.getMonth()]} ${d.getFullYear()}`
-}
-
-export const DatePicker: React.FC<DatePickerProps> = ({
+/** Date entry: an IMInput-styled trigger that opens an IMCalendar in a popover. */
+export function IMDatePicker({
   value,
   onChange,
-  placeholder = "בחר תאריך",
+  placeholder = "בחירת תאריך",
   disabled,
   className,
   minDate,
-}) => {
+}: IMDatePickerProps) {
   const [open, setOpen] = React.useState(false)
-  const isTriggerDisabled = typeof disabled === 'boolean' ? disabled : false
-  const calendarDisabled = (date: Date) => {
+  const triggerDisabled = disabled === true
+  const dayDisabled = (date: Date) => {
     if (minDate && toYmd(date) < minDate) return true
-    if (typeof disabled === 'function') return disabled(date)
-    return false
+    return typeof disabled === "function" ? disabled(date) : false
   }
-  const defaultAnchor = minDate ? fromYmd(minDate) : undefined
 
   return (
-    <Popover open={isTriggerDisabled ? false : open} onOpenChange={isTriggerDisabled ? undefined : setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          disabled={isTriggerDisabled}
-          dir="rtl"
-          className={cn(
-            "flex h-12 w-full cursor-pointer items-center justify-start text-right gap-2 rounded-2xl border border-input bg-card px-4 font-assistant text-base text-foreground shadow-xs transition-all duration-150 ease-native outline-none focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 md:h-11 md:text-base",
-            isTriggerDisabled && "cursor-not-allowed opacity-60 bg-muted/40",
-            className
-          )}
-        >
-          <CalendarIcon size={18} className="shrink-0 text-muted-foreground" />
-          <span className={cn("truncate text-right", !value && "text-muted-foreground/50")}>
+    <IMPopover open={triggerDisabled ? false : open} onOpenChange={triggerDisabled ? undefined : setOpen}>
+      <IMPopoverTrigger asChild>
+        <button type="button" disabled={triggerDisabled} className={cn(imPickerTriggerClasses, className)}>
+          {/* Phase 1b: <IMIcon name="calendar" size="sm" tone="muted" /> … <IMIcon name="chevron-down" size="sm" tone="muted" /> */}
+          <CalendarGlyph aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+          <span className={cn("min-w-0 flex-1 truncate", !value && "text-muted-foreground/70")}>
             {value ? formatDisplay(value) : placeholder}
           </span>
+          <ChevronDown aria-hidden className="size-4 shrink-0 text-muted-foreground" />
         </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto rounded-2xl border-border p-2 shadow-lg" dir="rtl">
-        <Calendar
+      </IMPopoverTrigger>
+      <IMPopoverContent className="w-auto p-2" dir="rtl">
+        <IMCalendar
           selected={value || null}
           onSelect={(ymd) => {
             onChange(ymd)
             setOpen(false)
           }}
-          disabled={calendarDisabled}
-          defaultAnchor={defaultAnchor}
+          disabled={dayDisabled}
+          defaultAnchor={minDate ? fromYmd(minDate) : undefined}
         />
-      </PopoverContent>
-    </Popover>
+      </IMPopoverContent>
+    </IMPopover>
   )
 }
-
-export { DatePicker as IMDatePicker }
-export type IMDatePickerProps = DatePickerProps
-export default DatePicker

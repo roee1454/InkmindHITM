@@ -60,7 +60,6 @@ export default [
       'eslint.config.js',
       'eslint/**', // the design-system rule files themselves
       'prettier.config.js',
-      'src/components/ui/**', // shadcn-generated primitives, not hand-edited
       'pocketbase/**', // Pocketbase's own Go migrations + MCP server, not part of the app
       '.claude/**',
       '.agents/**', // Claude Code skills/config, not part of the app

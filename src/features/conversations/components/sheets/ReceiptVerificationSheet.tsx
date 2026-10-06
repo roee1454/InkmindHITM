@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { BadgeCheck, BotOff, ReceiptText, ZoomIn } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMButton } from '@/components/ui/button'
+import { IMInput } from '@/components/ui/input'
+import { IMLabel } from '@/components/ui/label'
+import { IMDialogActions, IMResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { confirmDepositReceived, rejectDepositReceipt } from '@/features/conversations/server/messages'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useIMToast } from '@/components/ui/toast'
 
 interface ReceiptVerificationSheetProps {
   open: boolean
@@ -31,7 +31,7 @@ export function ReceiptVerificationSheet({
   onTakeover,
   isTakingOver = false,
 }: ReceiptVerificationSheetProps) {
-  const { toast } = useToast()
+  const { toast } = useIMToast()
   const [amount, setAmount] = useState(initialAmount)
 
   useEffect(() => {
@@ -57,29 +57,29 @@ export function ReceiptVerificationSheet({
   })
 
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
       title="אימות אסמכתה"
       description="בודקים שהסכום באסמכתה תואם, ומאשרים — התור נקבע והלקוח מקבל אישור."
       bodyClassName="flex flex-col gap-5"
       footer={
-        <DialogActions
+        <IMDialogActions
           start={
-            <Button type="button" variant="ghost" disabled={rejectMutation.isPending} onClick={() => rejectMutation.mutate()}>
+            <IMButton type="button" variant="ghost" disabled={rejectMutation.isPending} onClick={() => rejectMutation.mutate()}>
               {rejectMutation.isPending ? 'שולח…' : 'לבקש צילום ברור'}
-            </Button>
+            </IMButton>
           }
         >
-          <Button type="button" variant="ghost" disabled={isTakingOver} onClick={onTakeover} className="gap-1.5">
+          <IMButton type="button" variant="ghost" disabled={isTakingOver} onClick={onTakeover} className="gap-1.5">
             <BotOff size={15} />
             לקחת שליטה
-          </Button>
-          <Button type="button" className="min-w-28 gap-1.5" disabled={confirmMutation.isPending} onClick={() => confirmMutation.mutate()}>
+          </IMButton>
+          <IMButton type="button" className="min-w-28 gap-1.5" disabled={confirmMutation.isPending} onClick={() => confirmMutation.mutate()}>
             <BadgeCheck size={16} />
             {confirmMutation.isPending ? 'מאשר…' : 'אישור התשלום'}
-          </Button>
-        </DialogActions>
+          </IMButton>
+        </IMDialogActions>
       }
     >
       {/* Receipt Image Box */}
@@ -104,9 +104,9 @@ export function ReceiptVerificationSheet({
 
       {/* Amount Confirmation Field */}
       <div className="space-y-1.5">
-        <Label className="form-label">הסכום באסמכתה</Label>
+        <IMLabel className="form-label">הסכום באסמכתה</IMLabel>
         <div className="relative">
-          <Input
+          <IMInput
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
@@ -118,6 +118,6 @@ export function ReceiptVerificationSheet({
         </div>
       </div>
 
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }

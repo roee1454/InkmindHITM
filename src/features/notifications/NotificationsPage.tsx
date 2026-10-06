@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { IMTabs, IMTabsContent, IMTabsList, IMTabsTrigger } from '@/components/ui/tabs'
 import { NotificationsHeader } from './components/NotificationsHeader'
 import { PwaPermissionBanner } from './components/PwaPermissionBanner'
 import { SystemNotificationList } from './components/SystemNotificationList'
@@ -63,19 +63,19 @@ export function NotificationsPage({ highlightId, tab, onTabChange }: Notificatio
 
       <PwaPermissionBanner permission={permission} onEnable={() => void enableNotifications()} />
 
-      <Tabs value={active} onValueChange={(v) => onTabChange(v as NotificationsTab)} dir="rtl" className="gap-4">
-        <TabsList className="grid grid-cols-2">
-          <TabsTrigger value="system" className="gap-2">
+      <IMTabs value={active} onValueChange={(v) => onTabChange(v as NotificationsTab)} dir="rtl" className="gap-4">
+        <IMTabsList className="grid grid-cols-2">
+          <IMTabsTrigger value="system" className="gap-2">
             מערכת
             <TabCount unread={system.unread} />
-          </TabsTrigger>
-          <TabsTrigger value="whatsapp" className="gap-2">
+          </IMTabsTrigger>
+          <IMTabsTrigger value="whatsapp" className="gap-2">
             וואטסאפ
             <TabCount unread={whatsapp.unread} />
-          </TabsTrigger>
-        </TabsList>
+          </IMTabsTrigger>
+        </IMTabsList>
 
-        <TabsContent value="system">
+        <IMTabsContent value="system">
           <SystemNotificationList
             groups={system.groups}
             isLoading={isLoading}
@@ -84,8 +84,8 @@ export function NotificationsPage({ highlightId, tab, onTabChange }: Notificatio
             onOpen={openNotification}
             onDelete={(id) => remove([id])}
           />
-        </TabsContent>
-        <TabsContent value="whatsapp">
+        </IMTabsContent>
+        <IMTabsContent value="whatsapp">
           <WhatsAppThreadList
             threads={whatsapp.threads}
             isLoading={isLoading}
@@ -95,8 +95,8 @@ export function NotificationsPage({ highlightId, tab, onTabChange }: Notificatio
             }}
             onDelete={(thread) => remove(thread.ids)}
           />
-        </TabsContent>
-      </Tabs>
+        </IMTabsContent>
+      </IMTabs>
     </div>
   )
 }

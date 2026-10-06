@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Clock } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import { useConfirm } from '#/hooks/useConfirm'
 import { formatIls } from '@/features/payments/utils/labels'
 import { formatShortSlot } from '@/features/projects/utils/format'
@@ -23,11 +23,11 @@ interface ThreadActionPanelProps {
 /** Opens the calendar's create dialog (it reads `new=1`, and `fromSketchId` to continue a sketch). */
 function BookLink({ fromSketchId, children }: { fromSketchId?: string; children: ReactNode }) {
   return (
-    <Button size="sm" asChild>
+    <IMButton size="sm" asChild>
       <Link to="/dashboard/calendar" search={{ new: '1', ...(fromSketchId ? { fromSketchId } : {}) } as Record<string, unknown>}>
         {children}
       </Link>
-    </Button>
+    </IMButton>
   )
 }
 
@@ -82,9 +82,9 @@ export function ThreadActionPanel({ action, conversationId, appointment, receipt
 
   const quoteLabel = (isSketch: boolean) => (isSketch ? 'אישור פגישת סקיצה' : 'הצעת מחיר')
   const resumeBot = (
-    <Button size="sm" variant="outline" onClick={onResumeBot}>
+    <IMButton size="sm" variant="outline" onClick={onResumeBot}>
       החזרה לבוט עם הנחיה
-    </Button>
+    </IMButton>
   )
 
   let title: string
@@ -95,7 +95,7 @@ export function ThreadActionPanel({ action, conversationId, appointment, receipt
   switch (action.kind) {
     case 'price_offer':
       title = action.isSketch ? 'פגישת סקיצה מחכה לאישור שלך' : 'הבוט מחכה להצעת מחיר'
-      buttons = <Button size="sm" onClick={onOpenQuote}>{quoteLabel(action.isSketch)}</Button>
+      buttons = <IMButton size="sm" onClick={onOpenQuote}>{quoteLabel(action.isSketch)}</IMButton>
       break
     case 'payment':
       title = action.depositAmount ? `מקדמה של ${formatIls(action.depositAmount)} מחכה לאישור` : 'מקדמה מחכה לאישור'
@@ -107,16 +107,16 @@ export function ThreadActionPanel({ action, conversationId, appointment, receipt
       ) : null
       buttons = (
         <>
-          <Button size="sm" onClick={confirmDeposit} disabled={actions.isPending}>
+          <IMButton size="sm" onClick={confirmDeposit} disabled={actions.isPending}>
             {actions.confirmDeposit.isPending ? 'מאשר…' : 'אישור המקדמה'}
-          </Button>
-          <Button size="sm" variant="outline" onClick={onOpenReceipt}>
+          </IMButton>
+          <IMButton size="sm" variant="outline" onClick={onOpenReceipt}>
             {action.hasReceipt ? 'בדיקת האסמכתה' : 'אימות ידני'}
-          </Button>
+          </IMButton>
           {action.canAskForClearerReceipt && (
-            <Button size="sm" variant="ghost" onClick={() => actions.askForClearerReceipt.mutate()} disabled={actions.isPending}>
+            <IMButton size="sm" variant="ghost" onClick={() => actions.askForClearerReceipt.mutate()} disabled={actions.isPending}>
               בקשת אסמכתה ברורה
-            </Button>
+            </IMButton>
           )}
         </>
       )
@@ -124,18 +124,18 @@ export function ThreadActionPanel({ action, conversationId, appointment, receipt
     case 'slot_conflict':
       title = 'המועד מתנגש עם תור אחר ביומן'
       buttons = (
-        <Button size="sm" onClick={() => actions.confirmAppointmentSlot.mutate()} disabled={actions.isPending}>
+        <IMButton size="sm" onClick={() => actions.confirmAppointmentSlot.mutate()} disabled={actions.isPending}>
           {actions.confirmAppointmentSlot.isPending ? 'מאשר…' : 'אישור המועד בכל זאת'}
-        </Button>
+        </IMButton>
       )
       break
     case 'cancel_request':
       title = 'הלקוח ביקש לבטל את התור'
       buttons = (
         <>
-          <Button size="sm" variant="destructive" onClick={cancelAppointment} disabled={actions.isPending}>
+          <IMButton size="sm" variant="destructive" onClick={cancelAppointment} disabled={actions.isPending}>
             {actions.cancelAppointment.isPending ? 'מבטל…' : 'ביטול התור'}
-          </Button>
+          </IMButton>
           {resumeBot}
         </>
       )
@@ -149,7 +149,7 @@ export function ThreadActionPanel({ action, conversationId, appointment, receipt
       title = action.isConsultation ? 'הלקוח צריך ייעוץ' : action.reason ? `הבוט העביר לצוות: ${action.reason}` : 'השיחה מחכה למענה'
       buttons = (
         <>
-          {action.next === 'quote' && <Button size="sm" onClick={onOpenQuote}>{quoteLabel(action.isSketch)}</Button>}
+          {action.next === 'quote' && <IMButton size="sm" onClick={onOpenQuote}>{quoteLabel(action.isSketch)}</IMButton>}
           {action.next === 'book' && <BookLink>קביעת תור</BookLink>}
           {resumeBot}
         </>

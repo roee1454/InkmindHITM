@@ -1,26 +1,25 @@
 import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { Slot } from "radix-ui"
+import { cva } from "class-variance-authority"
+import type { VariantProps } from "class-variance-authority"
 
-import { cn } from "#/lib/utils.ts"
+import { cn } from "@/lib/utils"
 
-const badgeVariants = cva(
-  "inline-flex shrink-0 select-none items-center gap-1.5 rounded-full px-3 py-1.5 font-assistant text-xs leading-none font-bold whitespace-nowrap [&_svg:not([class*='size-'])]:size-3.5",
+const imBadgeVariants = cva(
+  "inline-flex shrink-0 select-none items-center gap-1.5 rounded-full border border-transparent px-3 py-1.5 text-xs leading-none font-bold whitespace-nowrap [&_svg:not([class*='size-'])]:size-3",
   {
     variants: {
-      // The four status roles, plus the neutral shapes. Nothing here names a hue, and no
-      // caller passes a colour — `new` is an outline and `dead` is a filled grey, so a
-      // brand-new lead can never be mistaken for a cancelled appointment.
+      // The four status roles, plus the neutral shapes. Nothing here names a hue, and no caller
+      // passes a colour — `new` is an outline and `dead` a filled grey, so a brand-new lead can
+      // never be mistaken for a cancelled appointment.
       variant: {
-        new: "border border-status-new-border text-status-new",
-        wait: "bg-accent-soft text-accent-ink",
+        new: "border-status-new-border text-status-new",
+        wait: "bg-status-wait-soft text-status-wait",
         done: "bg-status-done-soft text-status-done",
         dead: "bg-status-dead-soft text-status-dead",
-        default: "bg-accent-soft text-accent-ink",
-        muted: "bg-muted text-muted-foreground",
-        outline: "border border-border text-foreground",
-        // Reserved for destructive *actions*, never a passive state.
-        destructive: "bg-destructive/10 text-destructive",
+        muted: "bg-surface-2 text-muted-foreground",
+        outline: "border-border text-foreground",
+        // Failures only (payment failed) — never a passive state like "lost".
+        destructive: "bg-destructive/12 text-destructive",
       },
     },
     defaultVariants: {
@@ -29,23 +28,23 @@ const badgeVariants = cva(
   }
 )
 
-function Badge({
-  className,
-  variant = "default",
-  asChild = false,
-  ...props
-}: React.ComponentProps<"span"> &
-  VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
-  const Comp = asChild ? Slot.Root : "span"
+type IMBadgeVariant = NonNullable<VariantProps<typeof imBadgeVariants>["variant"]>
 
+export interface IMBadgeProps extends React.ComponentProps<"span"> {
+  variant?: IMBadgeVariant
+}
+
+/**
+ * A pill that names a state or a category in one or two words. In a dense list prefer
+ * IMStatusLabel — a column of pills is louder than the data.
+ */
+export function IMBadge({ className, variant = "muted", ...props }: IMBadgeProps) {
   return (
-    <Comp
+    <span
       data-slot="badge"
       data-variant={variant}
-      className={cn(badgeVariants({ variant }), className)}
+      className={cn(imBadgeVariants({ variant }), className)}
       {...props}
     />
   )
 }
-
-export { Badge, Badge as IMBadge, badgeVariants }

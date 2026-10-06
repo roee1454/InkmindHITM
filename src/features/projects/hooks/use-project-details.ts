@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useIMToast } from '@/components/ui/toast'
 import { queryKeys } from '@/lib/query-keys'
 import { createAppointment } from '@/features/calendar/server/appointments'
 import { toCreateAppointmentInput } from '@/features/calendar/utils/appointment-payload'
@@ -14,7 +14,7 @@ export function projectDetailsQueryKey(projectId: string | null) {
 /** The project panel's data, and the edits it makes: details, moving, attaching and booking appointments. */
 export function useProjectDetails(projectId: string | null) {
   const queryClient = useQueryClient()
-  const { toast } = useToast()
+  const { toast } = useIMToast()
 
   const details = useQuery({
     queryKey: projectDetailsQueryKey(projectId),

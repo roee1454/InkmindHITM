@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useState } from 'react'
 import type { ReactNode } from 'react'
-import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { IMConfirmDialog } from '@/components/ui/confirm-dialog'
 
 export interface ConfirmOptions {
   title: string
@@ -42,12 +42,12 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
   return (
     <ConfirmContext.Provider value={confirm}>
       {children}
-      <ConfirmDialog
+      <IMConfirmDialog
         open={pending !== null}
         onOpenChange={(open) => !open && settle(false)}
         title={pending?.options.title ?? ''}
         description={pending?.options.description}
-        tone={pending?.options.variant === 'destructive' ? 'destructive' : 'default'}
+        variant={pending?.options.variant === 'destructive' ? 'destructive' : 'primary'}
         confirmLabel={pending?.options.confirmLabel ?? 'אישור'}
         cancelLabel={pending?.options.cancelLabel}
         onConfirm={() => settle(true)}

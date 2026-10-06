@@ -1,5 +1,5 @@
 import React from 'react'
-import { Skeleton } from '@/components/ui/skeleton'
+import { IMSkeleton } from '@/components/ui/skeleton'
 import { Calendar, ClipboardList, Clock, Database, KeyRound, MessageSquare, Sparkles } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
 import { POLICY_LABELS, collectionLabel } from '../utils/delete-messages'
@@ -62,8 +62,8 @@ export function DeleteImpactSummary({ items, label }: { items: DeleteImpactItem[
 export function DeleteImpactSkeleton() {
   return (
     <div className="flex flex-col gap-2.5" aria-busy="true" aria-label="בודק נתונים מקושרים">
-      <Skeleton className="h-20 w-full" />
-      <Skeleton className="h-12 w-full" />
+      <IMSkeleton className="h-20 w-full" />
+      <IMSkeleton className="h-12 w-full" />
     </div>
   )
 }

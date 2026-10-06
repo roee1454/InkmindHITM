@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Coins, PaperPlaneTilt } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import { QuoteChoiceChips } from '@/features/conversations/components/sheets/QuoteChoiceChips'
 import { SESSION_ESTIMATE_HINT, SESSION_ESTIMATE_OPTIONS } from '../utils/session-estimate'
 import type { AppointmentFormValues } from '../types'
@@ -56,7 +56,7 @@ export function BotQuoteBanner({
           columns={5}
         />
       )}
-      <Button
+      <IMButton
         type="button"
         variant="outline"
         disabled={readOnly || isSending || missing}
@@ -74,7 +74,7 @@ export function BotQuoteBanner({
       >
         <PaperPlaneTilt size={13} className="ms-1.5" />
         {isSending ? 'שולח אישור…' : isSketch ? 'שלח אישור פגישה ללקוח בוואטסאפ' : 'שלח הצעת מחיר ללקוח בוואטסאפ'}
-      </Button>
+      </IMButton>
     </div>
   )
 }
