@@ -1,0 +1,31 @@
+import { useState } from 'react'
+import {
+  Check,
+  CheckCheck,
+  RefreshCw,
+  Send,
+  type IMIconName,
+  IMIcon,
+} from '@/components/ui/icon'
+
+const STATUS_ICON = { sent: Check, read: CheckCheck }
+const fallback: IMIconName = 'clock'
+
+export function Composer({ busy, cls, size, rest }: { busy: boolean; cls: string; size: number; rest: object }) {
+  const [open] = useState(false)
+  return (
+    <div>
+      <IMIcon name="calendar" size="sm" />
+      <Check {...rest} />
+      <Check className={cls} />
+      <Check size={size} />
+      <IMIcon name="check" size="sm" />
+      <Check weight="fill" />
+      <Check onClick={() => open} />
+      <Send className="size-3.5 rotate-180" />
+      <RefreshCw className="animate-spin" />
+      {Object.values(STATUS_ICON).length}
+      {fallback}
+    </div>
+  )
+}

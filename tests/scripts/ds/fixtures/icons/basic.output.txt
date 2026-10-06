@@ -1,0 +1,11 @@
+import { Button } from '@/components/ui/button'
+import { IMIcon } from '@/components/ui/icon'
+
+export function DeleteButton({ pending }: { pending: boolean }) {
+  return (
+    <Button>
+      {pending ? <IMIcon name="spinner" size="sm" tone="muted" spin /> : <IMIcon name="trash" size="sm" tone="muted" />}
+      מחיקה
+    </Button>
+  )
+}

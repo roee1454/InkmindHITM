@@ -125,7 +125,7 @@ export function ConversationComposer({
         />
 
         <Button type="button" size="icon" disabled={!canSend} onClick={onSend} aria-label="שליחה" className="size-10 rounded-xl">
-          <SendHorizontal className="size-5 rotate-180" />
+          <SendHorizontal className="size-5" />
         </Button>
       </div>
     </div>

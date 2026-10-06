@@ -24,10 +24,6 @@ import {
   IMLabelText,
   IMCaption,
   IMIcon,
-  Calendar,
-  User,
-  ICON_SIZES,
-  ICON_TONES,
 } from '@/components/ui'
 
 describe('Inkmind Design System (IM*) Primitives', () => {
@@ -148,25 +144,16 @@ describe('Inkmind Typography System', () => {
 })
 
 describe('Inkmind Icon System (Always Filled)', () => {
-  it('renders icons with fill weight by default (not outlined)', () => {
-    const html = renderToStaticMarkup(<Calendar />)
+  it('IMIcon renders a registry glyph by name', () => {
+    const html = renderToStaticMarkup(<IMIcon name="calendar" />)
     expect(html).toContain('<svg')
   })
 
-  it('IMIcon wrapper supports size, tone, and defaults to fill', () => {
-    const html = renderToStaticMarkup(<IMIcon icon={User} size="lg" tone="primary" />)
+  it('IMIcon supports size and tone tokens', () => {
+    const html = renderToStaticMarkup(<IMIcon name="user" size="lg" tone="accent" />)
     expect(html).toContain('<svg')
     expect(html).toContain('width="24"')
     expect(html).toContain('height="24"')
-    expect(html).toContain('text-primary')
-  })
-
-  it('supports semantic tone palette including status and artist tokens', () => {
-    expect(ICON_SIZES.md).toBe(20)
-    expect(ICON_SIZES.lg).toBe(24)
-    expect(ICON_TONES.success).toContain('text-emerald-500')
-    expect(ICON_TONES.warning).toContain('text-amber-500')
-    expect(ICON_TONES.destructive).toContain('text-rose-500')
-    expect(ICON_TONES['artist-1']).toContain('var(--brand-artist-1)')
+    expect(html).toContain('text-accent-ink')
   })
 })

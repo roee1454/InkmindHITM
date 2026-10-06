@@ -186,7 +186,7 @@ export function NewConversationDialog({
                   'שולח…'
                 ) : (
                   <>
-                    <Send className="size-3.5 rotate-180" />
+                    <Send className="size-3.5" />
                     שליחה ופתיחת שיחה
                   </>
                 )}

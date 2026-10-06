@@ -1,0 +1,18 @@
+import { Bell, Calendar, Check, ChevronLeft, Needle, Plus, Search, User, X } from '#/components/ui/icon'
+
+export function Row() {
+  return (
+    <div>
+      <Check size={11} className="stroke-[2.5]" />
+      <Plus size={13} />
+      <X size={15} className="shrink-0" />
+      <Search size={18} className="shrink-0 text-muted-foreground" />
+      <Bell className="size-[22px] text-primary" />
+      <Calendar size={28} className="ms-2 text-foreground" />
+      <Needle size={16} className="text-artist-3" />
+      <User className="size-3.5 text-muted-foreground/60 group-hover:text-foreground" />
+      <ChevronLeft size={14} className="opacity-0 transition-opacity group-hover:opacity-100 text-muted-foreground" />
+      <Check aria-label="נשלח" role="img" />
+    </div>
+  )
+}

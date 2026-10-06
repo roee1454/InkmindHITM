@@ -17,7 +17,9 @@ import { ESLint } from 'eslint'
 const ROOT = path.resolve(import.meta.dirname, '..')
 const PILLARS = ['colors', 'components', 'typography', 'icons'] as const
 type Pillar = (typeof PILLARS)[number]
-const TAG = /^\[ds:(colors|components|typography|icons)\]\s*/
+// Not anchored: ESLint prefixes no-restricted-imports messages with its own text
+// ("'Bell' import from '…' is restricted. [ds:icons] …").
+const TAG = /\[ds:(colors|components|typography|icons)\]\s*/
 
 interface Violation {
   file: string
