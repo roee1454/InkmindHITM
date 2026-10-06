@@ -128,6 +128,7 @@
 
   /* --- Reserved for destructive *actions* only. No passive state is red. --- */
   --brand-destructive: #b42318;
+  --brand-on-destructive: #ffffff;
   --brand-success: #2e7d4f;
   --brand-warning: #b25e09;
 
@@ -172,6 +173,8 @@
   --brand-status-dead-soft: rgb(154 154 159 / 0.14);
 
   --brand-destructive: #f97066;
+  /* White on #f97066 is 2.6:1 — the dark destructive fill takes ink, like the inverted primary. */
+  --brand-on-destructive: #18181b;
   --brand-success: #5fcf8e;
   --brand-warning: #e0a145;
 
@@ -206,7 +209,7 @@
   --accent: var(--brand-surface-2);
   --accent-foreground: var(--brand-text);
   --destructive: var(--brand-destructive);
-  --destructive-foreground: #ffffff;
+  --destructive-foreground: var(--brand-on-destructive);
   --success: var(--brand-success);
   --warning: var(--brand-warning);
   --border: var(--brand-border);

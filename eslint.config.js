@@ -1,6 +1,13 @@
 //  @ts-check
 
 import { tanstackConfig } from '@tanstack/eslint-config'
+import dsColors from './eslint/design-system/colors.js'
+import dsComponents from './eslint/design-system/components.js'
+import dsIcons from './eslint/design-system/icons.js'
+import dsTypography from './eslint/design-system/typography.js'
+
+// ESLint keeps only the last config of a rule, so the pillars are merged into one of each.
+const designSystem = [dsColors, dsComponents, dsTypography, dsIcons]
 
 export default [
   ...tanstackConfig,
@@ -18,44 +25,17 @@ export default [
     },
   },
   {
-    // Design system guard rails. Every one of these was a real source of drift: 382 raw
-    // palette utilities, 28 arbitrary radii in 9 sizes, 5 hardcoded shadows (two of which
-    // baked in an accent colour that no longer exists), and 100 icons imported from 83
-    // files. The tokens are only worth having if nothing can route around them.
+    // Design system guard rails, one file per pillar under eslint/design-system/. The tokens are
+    // only worth having if nothing can route around them. `pnpm ds:audit` counts what's left.
     files: ['src/**/*.{ts,tsx}'],
-    ignores: [
-      'src/features/calendar/artist-colors.ts', // the one legitimately categorical palette
-      'src/components/ui/icon.tsx', // the only module allowed to name an icon library
-    ],
+    ignores: designSystem.flatMap((pillar) => pillar.exempt),
     rules: {
-      'no-restricted-syntax': [
+      'no-restricted-syntax': ['error', ...designSystem.flatMap((pillar) => pillar.syntax)],
+      'no-restricted-imports': [
         'error',
         {
-          selector:
-            "Literal[value=/(?:^|\\s)(?:hover:|focus:|active:|group-hover:|dark:|disabled:|focus-visible:)*(?:bg|text|border|ring|from|to|via|decoration|outline|shadow|fill|stroke|accent|caret|divide|placeholder)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|[1-9]00|950)(?:\\/|\\s|$)/]",
-          message:
-            'Raw Tailwind palette colour. Use a design system token: bg-card, text-muted-foreground, bg-accent-soft, text-accent-ink, text-status-{new,done,dead}, bg-artist-N, text-destructive.',
-        },
-        {
-          selector: "Literal[value=/rounded(?:-[a-z]{1,2})?-\\[/]",
-          message:
-            'Arbitrary radius. Use the roles: rounded-md (inset 8), rounded-lg (control 10), rounded-xl (card 12), rounded-full (pill).',
-        },
-        {
-          selector: "Literal[value=/shadow-\\[/]",
-          message:
-            'Arbitrary shadow. Use shadow-xs (raised) or shadow-lg (overlay); default is flat with a 1px border.',
-        },
-        {
-          // Absolute px only — a relative `text-[0.85em]` inside prose is legitimate.
-          selector: "Literal[value=/text-\\[\\d+(?:\\.\\d+)?px\\]/]",
-          message:
-            'Arbitrary font size. Use the scale: text-2xs, text-xs, text-sm, text-base, text-lg, text-xl, text-2xl, text-3xl (or text-micro/text-mini for dense chrome).',
-        },
-        {
-          selector: "ImportDeclaration[source.value='lucide-react']",
-          message:
-            "Import icons from '@/components/ui/icon' — it is the only module that may name an icon library.",
+          paths: designSystem.flatMap((pillar) => pillar.imports.paths),
+          patterns: designSystem.flatMap((pillar) => pillar.imports.patterns),
         },
       ],
     },
@@ -63,6 +43,7 @@ export default [
   {
     ignores: [
       'eslint.config.js',
+      'eslint/**', // the design-system rule files themselves
       'prettier.config.js',
       'src/components/ui/**', // shadcn-generated primitives, not hand-edited
       'pocketbase/**', // Pocketbase's own Go migrations + MCP server, not part of the app
