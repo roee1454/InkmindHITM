@@ -1,5 +1,5 @@
 import { BellRing } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import type { NotificationPermissionState } from '../types'
 
 export interface PwaPermissionBannerProps {
@@ -18,9 +18,9 @@ export function PwaPermissionBanner({ permission, onEnable }: PwaPermissionBanne
         <span className="font-bold text-foreground">התראות במכשיר הזה</span>
         <span className="text-muted-foreground"> — גם כשהחלון סגור: הודעות, תורים ופניות חדשות.</span>
       </p>
-      <Button type="button" size="sm" onClick={onEnable} className="shrink-0">
+      <IMButton type="button" size="sm" onClick={onEnable} className="shrink-0">
         הפעלה
-      </Button>
+      </IMButton>
     </div>
   )
 }

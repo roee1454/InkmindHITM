@@ -1,6 +1,6 @@
 import type React from 'react'
-import { Button } from '@/components/ui/button'
-import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMButton } from '@/components/ui/button'
+import { IMDialogActions, IMResponsiveDialog } from '@/components/ui/responsive-dialog'
 import type { CustomerFormData } from '../types'
 import { CustomerFormFields } from './CustomerFormFields'
 
@@ -22,19 +22,19 @@ const FORM_ID = 'customer-create-form'
  */
 export function CustomerDialog({ open, onOpenChange, form, onFormChange, formError, onSubmit, isSaving }: CustomerDialogProps) {
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
       title="לקוח חדש"
       footer={
-        <DialogActions>
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            ביטול
-          </Button>
-          <Button type="submit" form={FORM_ID} disabled={isSaving} className="min-w-28">
+        <IMDialogActions>
+          <IMButton type="submit" form={FORM_ID} disabled={isSaving} className="min-w-28">
             {isSaving ? 'יוצר לקוח…' : 'הוספת לקוח'}
-          </Button>
-        </DialogActions>
+          </IMButton>
+          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            ביטול
+          </IMButton>
+        </IMDialogActions>
       }
     >
       <form id={FORM_ID} onSubmit={onSubmit} className="form-stack">
@@ -45,6 +45,6 @@ export function CustomerDialog({ open, onOpenChange, form, onFormChange, formErr
         )}
         <CustomerFormFields form={form} onFormChange={onFormChange} isCreate />
       </form>
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }

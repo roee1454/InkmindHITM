@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import { useConfirm } from '#/hooks/useConfirm'
 import { resetConversations } from '@/features/conversations/server/debug'
 import { SettingsRow, SettingsSection } from '@/features/settings/components/settings-layout'
@@ -39,9 +39,9 @@ export function DevToolsSection() {
         hint={reset.isSuccess ? `נמחקו ${reset.data.deletedConversations} שיחות ו-${reset.data.deletedMessages} הודעות.` : 'לבדיקה נקייה של הבוט. לקוחות ותורים לא נמחקים.'}
       >
         <div className="flex justify-end">
-          <Button type="button" variant="destructive" size="sm" disabled={reset.isPending} onClick={onReset}>
+          <IMButton type="button" variant="destructive" size="sm" disabled={reset.isPending} onClick={onReset}>
             {reset.isPending ? 'מאפס…' : 'איפוס'}
-          </Button>
+          </IMButton>
         </div>
       </SettingsRow>
       <DevResetRows />

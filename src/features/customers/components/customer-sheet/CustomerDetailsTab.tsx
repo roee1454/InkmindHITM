@@ -1,7 +1,7 @@
 import type React from 'react'
 import { useState } from 'react'
 import { Trash2 } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import { HealthDeclarationSummary } from '@/features/health-declaration/components/HealthDeclarationSummary'
 import { HealthDeclarationDialog } from '@/features/health-declaration/components/HealthDeclarationDialog'
 import type { CustomerFormData } from '../../types'
@@ -38,9 +38,9 @@ export function CustomerDetailsTab({ form, onFormChange, formError, onSubmit, is
         <HealthDeclarationSummary {...health} onOpenFull={() => setHealthDialogOpen(true)} />
         </div>
         <HealthDeclarationDialog open={healthDialogOpen} onOpenChange={setHealthDialogOpen} {...health} />
-        <Button type="submit" disabled={isSaving} className="w-full sm:w-auto sm:self-start">
+        <IMButton type="submit" disabled={isSaving} className="w-full sm:w-auto sm:self-start">
           {isSaving ? 'שומר…' : 'שמירה'}
-        </Button>
+        </IMButton>
       </form>
 
       <section aria-labelledby="customer-danger-zone" className="flex flex-col gap-2 border-t border-border pt-5">
@@ -48,10 +48,10 @@ export function CustomerDetailsTab({ form, onFormChange, formError, onSubmit, is
           מחיקת הלקוח
         </h3>
         <p className="text-sm text-muted-foreground">מוחקת איתו גם את הפרויקטים, התורים והשיחות שלו. לפני המחיקה יוצג בדיוק מה יימחק.</p>
-        <Button type="button" variant="outline" onClick={onDelete} className="self-start gap-2 text-destructive">
+        <IMButton type="button" variant="outline" onClick={onDelete} className="self-start gap-2 text-destructive">
           <Trash2 size={15} />
           מחיקת לקוח
-        </Button>
+        </IMButton>
       </section>
     </div>
   )

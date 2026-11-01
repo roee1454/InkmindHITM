@@ -1,5 +1,5 @@
 import { ChevronRight, ShieldAlert, ShieldCheck } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatPhoneForDisplay } from '@/lib/phone'
 import { extractMedicalAlerts } from '@/features/health-declaration/utils/health-alerts'
@@ -66,7 +66,7 @@ export function ConversationHeader({ conversation, appointment, windowInfo, onBa
         </div>
 
         {healthSigned && (
-          <Button
+          <IMButton
             variant="ghost"
             size="icon"
             onClick={() => onOpenDialog('health')}
@@ -75,7 +75,7 @@ export function ConversationHeader({ conversation, appointment, windowInfo, onBa
             className={cn('size-9 rounded-lg hover:bg-muted', healthAlerts.length > 0 ? 'text-destructive' : 'text-muted-foreground hover:text-foreground')}
           >
             {healthAlerts.length > 0 ? <ShieldAlert className="size-5" /> : <ShieldCheck className="size-5" />}
-          </Button>
+          </IMButton>
         )}
 
         <span className={cn('hidden shrink-0 items-center gap-1.5 text-sm sm:flex', needsStaff ? 'font-bold text-foreground' : 'text-muted-foreground')}>
@@ -83,13 +83,13 @@ export function ConversationHeader({ conversation, appointment, windowInfo, onBa
           {answering}
         </span>
         {botAnswering ? (
-          <Button size="sm" variant="outline" onClick={onTakeOver} disabled={isTakingOver} className="h-9 px-3">
+          <IMButton size="sm" variant="outline" onClick={onTakeOver} disabled={isTakingOver} className="h-9 px-3">
             {isTakingOver ? 'משתלט…' : 'השתלטות'}
-          </Button>
+          </IMButton>
         ) : (
-          <Button size="sm" variant="outline" onClick={() => onOpenDialog('resume-bot')} className="h-9 px-3">
+          <IMButton size="sm" variant="outline" onClick={() => onOpenDialog('resume-bot')} className="h-9 px-3">
             החזרה לבוט
-          </Button>
+          </IMButton>
         )}
 
         <ConversationMenu

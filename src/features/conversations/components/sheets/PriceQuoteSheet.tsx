@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { BotOff, SendHorizontal } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMButton } from '@/components/ui/button'
+import { IMInput } from '@/components/ui/input'
+import { IMLabel } from '@/components/ui/label'
+import { IMDialogActions, IMResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { sendPriceQuoteToCustomer } from '@/features/calendar/server/appointments'
 import { cn } from '@/lib/utils'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useIMToast } from '@/components/ui/toast'
 import { SESSION_ESTIMATE_HINT, SESSION_ESTIMATE_OPTIONS } from '@/features/calendar/utils/session-estimate'
 import { QuoteChoiceChips } from './QuoteChoiceChips'
 import { QuotePriceRange } from './QuotePriceRange'
@@ -55,7 +55,7 @@ export function PriceQuoteSheet({
   onTakeover,
   isTakingOver = false,
 }: PriceQuoteSheetProps) {
-  const { toast } = useToast()
+  const { show: toast } = useIMToast()
   const isSketch = appointmentType === 'sketch'
   const durationPresets = isSketch ? SKETCH_DURATION_PRESETS : TATTOO_DURATION_PRESETS
   const depositPresets = isSketch ? SKETCH_DEPOSIT_PRESETS : TATTOO_DEPOSIT_PRESETS
@@ -104,41 +104,41 @@ export function PriceQuoteSheet({
       })
     },
     onSuccess: () => {
-      toast(
-        isSketch ? 'אישור פגישת הסקיצה נשלח בהצלחה ללקוח בוואטסאפ' : 'הצעת המחיר נשלחה בהצלחה ללקוח בוואטסאפ',
-        'success',
-      )
+      toast({
+        tone: 'success',
+        title: isSketch ? 'אישור פגישת הסקיצה נשלח בהצלחה ללקוח בוואטסאפ' : 'הצעת המחיר נשלחה בהצלחה ללקוח בוואטסאפ',
+      })
       onSuccess()
     },
     onError: (err) => {
-      toast(err instanceof Error ? err.message : 'שליחת הצעת המחיר נכשלה', 'error')
+      toast({ tone: 'destructive', title: err instanceof Error ? err.message : 'שליחת הצעת המחיר נכשלה' })
     },
   })
 
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
       title={isSketch ? 'אישור פגישת סקיצה' : 'הצעת מחיר'}
       description={isSketch ? 'משך הפגישה ומקדמה לשריון. את מחיר הקעקוע קובעים בפגישה.' : 'טווח מחיר, הערכת סשנים ומקדמה — נשלחים ללקוח בוואטסאפ.'}
       bodyClassName="flex flex-col gap-5"
       footer={
-        <DialogActions
-          start={
-            <Button type="button" variant="ghost" disabled={isTakingOver} onClick={onTakeover} className="gap-1.5">
+        <IMDialogActions
+          secondary={
+            <IMButton type="button" variant="ghost" disabled={isTakingOver} onClick={onTakeover} className="gap-1.5">
               <BotOff size={15} />
               לקחת שליטה
-            </Button>
+            </IMButton>
           }
         >
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={quoteMutation.isPending}>
-            ביטול
-          </Button>
-          <Button type="button" className="min-w-28 gap-1.5" disabled={quoteMutation.isPending || !isTattooPriceValid} onClick={() => quoteMutation.mutate()}>
+          <IMButton type="button" className="min-w-28 gap-1.5" disabled={quoteMutation.isPending || !isTattooPriceValid} onClick={() => quoteMutation.mutate()}>
             <SendHorizontal size={15} />
             {quoteMutation.isPending ? 'שולח…' : isSketch ? 'שליחת אישור' : 'שליחת ההצעה'}
-          </Button>
-        </DialogActions>
+          </IMButton>
+          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={quoteMutation.isPending}>
+            ביטול
+          </IMButton>
+        </IMDialogActions>
       }
     >
       <QuoteChoiceChips
@@ -169,9 +169,9 @@ export function PriceQuoteSheet({
       {/* Deposit Field + Quick Chips */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label className="form-label">
+          <IMLabel className="form-label">
             {isSketch ? 'מקדמה לשריון הפגישה' : 'סכום מקדמה'}
-          </Label>
+          </IMLabel>
           <div className="flex gap-1.5">
             {depositPresets.map((preset) => (
               <button
@@ -191,7 +191,7 @@ export function PriceQuoteSheet({
           </div>
         </div>
         <div className="relative">
-          <Input
+          <IMInput
             type="text"
             value={deposit}
             onChange={(e) => setDeposit(e.target.value)}
@@ -203,6 +203,6 @@ export function PriceQuoteSheet({
         </div>
       </div>
 
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }

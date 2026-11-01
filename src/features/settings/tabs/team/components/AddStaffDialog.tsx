@@ -3,12 +3,12 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { z } from 'zod'
 import { Copy, Check } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMInput } from '@/components/ui/input'
+import { IMSelect, IMSelectContent, IMSelectItem, IMSelectTrigger, IMSelectValue } from '@/components/ui/select'
+import { IMForm, IMFormControl, IMFormField, IMFormItem, IMFormLabel, IMFormMessage } from '@/components/ui/form'
+import { IMDialogActions, IMResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { addStaffMember, addStaffSchema } from '@/features/settings/server/settings'
 
 export interface AddStaffDialogProps {
@@ -63,7 +63,7 @@ export const AddStaffDialog: React.FC<AddStaffDialogProps> = ({ open, onOpenChan
   }
 
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={open}
       onOpenChange={(v) => {
         if (!v) handleClose()
@@ -77,20 +77,20 @@ export const AddStaffDialog: React.FC<AddStaffDialogProps> = ({ open, onOpenChan
       }
       footer={
         createdInvite ? (
-          <DialogActions>
-            <Button type="button" onClick={handleClose} className="min-w-28">
+          <IMDialogActions>
+            <IMButton type="button" onClick={handleClose} className="min-w-28">
               סיום
-            </Button>
-          </DialogActions>
+            </IMButton>
+          </IMDialogActions>
         ) : (
-          <DialogActions error={addForm.formState.errors.root?.message ?? null}>
-            <Button type="button" variant="ghost" onClick={handleClose}>
-              ביטול
-            </Button>
-            <Button type="submit" form="add-staff-form" disabled={addStaffMutation.isPending} className="min-w-28">
+          <IMDialogActions error={addForm.formState.errors.root?.message ?? null}>
+            <IMButton type="submit" form="add-staff-form" disabled={addStaffMutation.isPending} className="min-w-28">
               {addStaffMutation.isPending ? 'יוצר הזמנה…' : 'שליחת הזמנה'}
-            </Button>
-          </DialogActions>
+            </IMButton>
+            <IMButton type="button" variant="ghost" onClick={handleClose}>
+              ביטול
+            </IMButton>
+          </IMDialogActions>
         )
       }
     >
@@ -100,69 +100,69 @@ export const AddStaffDialog: React.FC<AddStaffDialogProps> = ({ open, onOpenChan
             קישור ההזמנה
           </label>
           <div className="flex items-center gap-2">
-            <Input id="invite-link" readOnly dir="ltr" value={createdInvite.inviteLink} className="min-w-0 flex-1 text-sm text-muted-foreground" />
-            <Button type="button" variant="outline" onClick={() => copyLink(createdInvite.inviteLink)} className="shrink-0 gap-1.5">
+            <IMInput id="invite-link" readOnly dir="ltr" value={createdInvite.inviteLink} className="min-w-0 flex-1 text-sm text-muted-foreground" />
+            <IMButton type="button" variant="outline" onClick={() => copyLink(createdInvite.inviteLink)} className="shrink-0 gap-1.5">
               {copied ? <Check size={14} /> : <Copy size={14} />}
               {copied ? 'הועתק' : 'העתקה'}
-            </Button>
+            </IMButton>
           </div>
           <p className="text-xs text-muted-foreground">בקישור העובד בוחר סיסמה, ממלא פרופיל, קובע שעות ומחבר יומן Google.</p>
         </div>
       ) : (
-        <Form {...addForm}>
+        <IMForm {...addForm}>
           <form id="add-staff-form" onSubmit={addForm.handleSubmit((values) => addStaffMutation.mutate(values))} className="form-stack">
-            <FormField
+            <IMFormField
               control={addForm.control}
               name="name"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="form-label">שם מלא</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="לדוגמה: רועי לוי" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+                <IMFormItem>
+                  <IMFormLabel className="form-label">שם מלא</IMFormLabel>
+                  <IMFormControl>
+                    <IMInput {...field} placeholder="לדוגמה: רועי לוי" />
+                  </IMFormControl>
+                  <IMFormMessage />
+                </IMFormItem>
               )}
             />
 
-            <FormField
+            <IMFormField
               control={addForm.control}
               name="email"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="form-label">אימייל</FormLabel>
-                  <FormControl>
-                    <Input type="email" {...field} placeholder="artist@studio.co.il" dir="ltr" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+                <IMFormItem>
+                  <IMFormLabel className="form-label">אימייל</IMFormLabel>
+                  <IMFormControl>
+                    <IMInput type="email" {...field} placeholder="artist@studio.co.il" dir="ltr" />
+                  </IMFormControl>
+                  <IMFormMessage />
+                </IMFormItem>
               )}
             />
 
-            <FormField
+            <IMFormField
               control={addForm.control}
               name="role"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="form-label">תפקיד</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent dir="rtl">
-                      <SelectItem value="staff">צוות / מקעקע/ת — התורים והלידים שלו</SelectItem>
-                      <SelectItem value="admin">מנהל/ת — גישה מלאה, כולל הגדרות</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
+                <IMFormItem>
+                  <IMFormLabel className="form-label">תפקיד</IMFormLabel>
+                  <IMSelect value={field.value} onValueChange={field.onChange}>
+                    <IMFormControl>
+                      <IMSelectTrigger className="w-full">
+                        <IMSelectValue />
+                      </IMSelectTrigger>
+                    </IMFormControl>
+                    <IMSelectContent dir="rtl">
+                      <IMSelectItem value="staff">צוות / מקעקע/ת — התורים והלידים שלו</IMSelectItem>
+                      <IMSelectItem value="admin">מנהל/ת — גישה מלאה, כולל הגדרות</IMSelectItem>
+                    </IMSelectContent>
+                  </IMSelect>
+                  <IMFormMessage />
+                </IMFormItem>
               )}
             />
           </form>
-        </Form>
+        </IMForm>
       )}
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }

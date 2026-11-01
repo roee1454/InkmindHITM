@@ -1,6 +1,6 @@
 import { Fragment, useLayoutEffect, useMemo, useRef } from 'react'
 import { MessageSquare } from '@/components/ui/icon'
-import { Skeleton } from '@/components/ui/skeleton'
+import { IMSkeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { MessageBubble } from './MessageBubble'
 import { BotTypingIndicator } from './BotTypingIndicator'
@@ -23,7 +23,7 @@ function MessagesSkeleton() {
   return (
     <div className="flex flex-col gap-3" aria-hidden>
       {['w-2/3', 'w-1/2', 'w-3/5', 'w-2/5'].map((width, i) => (
-        <Skeleton key={width} className={cn('h-14 rounded-2xl', width, i % 2 === 1 && 'self-end')} />
+        <IMSkeleton key={width} className={cn('h-14 rounded-2xl', width, i % 2 === 1 && 'self-end')} />
       ))}
     </div>
   )

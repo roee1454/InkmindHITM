@@ -1,5 +1,5 @@
-import { SearchInput } from '@/components/ui/search-input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { IMSearchInput } from '@/components/ui/search-input'
+import { IMSelect, IMSelectContent, IMSelectItem, IMSelectTrigger, IMSelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import type { BoardColumn, BoardColumnId } from '../utils/board'
 
@@ -34,10 +34,10 @@ export function ProjectsToolbar(props: ProjectsToolbarProps) {
 
         {/* Search and the artist filter share one row on a phone too: search takes the width, the
             filter sits beside it at a fixed size, both the same height. */}
-        <SearchInput
+        <IMSearchInput
           containerClassName="min-w-0 flex-1 lg:max-w-md"
           size="sm"
-          variant="card"
+          variant="default"
           placeholder="חיפוש לקוח או פרויקט..."
           value={props.searchQuery}
           onChange={props.onSearchQueryChange}
@@ -45,21 +45,21 @@ export function ProjectsToolbar(props: ProjectsToolbarProps) {
 
         <div className="flex shrink-0 items-center gap-2 lg:ms-auto">
           {props.artists.length > 0 && (
-            <Select value={props.artistId} onValueChange={props.onArtistChange}>
+            <IMSelect value={props.artistId} onValueChange={props.onArtistChange}>
               {/* The trigger sizes itself through `data-[size=*]:h-*`, which a plain `h-*` can't beat —
                   override on the same variant so it matches the search's height. */}
-              <SelectTrigger size="sm" className="w-36 rounded-xl px-3 text-sm data-[size=sm]:h-9.5 md:text-sm lg:w-40" aria-label="סינון לפי מקעקע">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent dir="rtl" align="end">
-                <SelectItem value="all">כל המקעקעים</SelectItem>
+              <IMSelectTrigger size="sm" className="w-36 rounded-xl px-3 text-sm data-[size=sm]:h-9.5 md:text-sm lg:w-40" aria-label="סינון לפי מקעקע">
+                <IMSelectValue />
+              </IMSelectTrigger>
+              <IMSelectContent dir="rtl" align="end">
+                <IMSelectItem value="all">כל המקעקעים</IMSelectItem>
                 {props.artists.map((artist) => (
-                  <SelectItem key={artist.id} value={artist.id}>
+                  <IMSelectItem key={artist.id} value={artist.id}>
                     {artist.name}
-                  </SelectItem>
+                  </IMSelectItem>
                 ))}
-              </SelectContent>
-            </Select>
+              </IMSelectContent>
+            </IMSelect>
           )}
 
           <div className="hidden select-none items-center rounded-lg bg-muted p-0.5 lg:flex" role="group" aria-label="פתוחים או סגורים">

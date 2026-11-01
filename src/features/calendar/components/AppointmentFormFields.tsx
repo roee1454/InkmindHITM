@@ -1,5 +1,5 @@
 import { Calendar, Coins, Paperclip } from '@/components/ui/icon'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { IMTabs, IMTabsContent, IMTabsList, IMTabsTrigger } from '@/components/ui/tabs'
 import type { ApiAppointment, ApiGoogleConnection, AppointmentFormValues } from '../types'
 import type { QuoteToSend } from './BotQuoteBanner'
 import { AppointmentDetailsTab } from './appointment-form/AppointmentDetailsTab'
@@ -44,27 +44,27 @@ export function AppointmentFormFields({
   const docCount = Number(hasImages) + Number(hasReceipt) + Number(hasHealth)
 
   return (
-    <Tabs defaultValue="details" dir="rtl" className="gap-4">
-      <TabsList className="grid grid-cols-3">
-        <TabsTrigger value="details" className="gap-1.5">
+    <IMTabs defaultValue="details" dir="rtl" className="gap-4">
+      <IMTabsList className="grid grid-cols-3">
+        <IMTabsTrigger value="details" className="gap-1.5">
           <Calendar size={14} className="shrink-0" />
           פרטים
-        </TabsTrigger>
-        <TabsTrigger value="pricing" className="gap-1.5">
+        </IMTabsTrigger>
+        <IMTabsTrigger value="pricing" className="gap-1.5">
           <Coins size={14} className="shrink-0" />
           מחיר וסטטוס
-        </TabsTrigger>
-        <TabsTrigger value="documents" className="gap-1.5">
+        </IMTabsTrigger>
+        <IMTabsTrigger value="documents" className="gap-1.5">
           <Paperclip size={14} className="shrink-0" />
           מסמכים
           {docCount > 0 && <span className="text-xs font-bold text-muted-foreground tabular-nums">· {docCount}</span>}
-        </TabsTrigger>
-      </TabsList>
+        </IMTabsTrigger>
+      </IMTabsList>
 
-      <TabsContent value="details">
+      <IMTabsContent value="details">
         <AppointmentDetailsTab values={values} onChange={onChange} staff={staff} googleConnections={googleConnections} readOnly={readOnly} />
-      </TabsContent>
-      <TabsContent value="pricing">
+      </IMTabsContent>
+      <IMTabsContent value="pricing">
         <AppointmentPricingTab
           values={values}
           onChange={onChange}
@@ -74,11 +74,11 @@ export function AppointmentFormFields({
           onSendQuote={onSendQuote}
           isSendingQuote={isSendingQuote}
         />
-      </TabsContent>
-      <TabsContent value="documents">
+      </IMTabsContent>
+      <IMTabsContent value="documents">
         <AppointmentDocumentsTab values={values} appointment={appointment} onOpenGallery={onOpenGallery} />
-      </TabsContent>
-    </Tabs>
+      </IMTabsContent>
+    </IMTabs>
   )
 }
 

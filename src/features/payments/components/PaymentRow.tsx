@@ -1,11 +1,11 @@
 import { cn } from '@/lib/utils'
-import { StatusLabel } from '@/components/ui/status-label'
-import type { StatusRole } from '@/components/ui/status-label'
+import { IMStatusLabel } from '@/components/ui/status-label'
+import type { IMStatusRole } from '@/components/ui/status-label'
 import { Bank, ChevronLeft, Coins, CreditCard, Wallet } from '@/components/ui/icon'
 import { PAYMENT_KIND_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS, formatIls } from '../utils/labels'
 import type { LedgerPayment, PaymentMethod, PaymentStatus } from '../types'
 
-const STATUS_ROLE: Record<Exclude<PaymentStatus, 'verified'>, StatusRole> = {
+const STATUS_ROLE: Record<Exclude<PaymentStatus, 'verified'>, IMStatusRole> = {
   pending_verification: 'wait',
   rejected: 'danger',
   voided: 'dead',
@@ -60,7 +60,7 @@ export function PaymentRow({
           <span className="text-sm font-extrabold text-foreground">{PAYMENT_KIND_LABELS[payment.kind]}</span>
           <span className="text-xs text-muted-foreground">{PAYMENT_METHOD_LABELS[payment.method]}</span>
           {payment.status !== 'verified' && (
-            <StatusLabel role={STATUS_ROLE[payment.status]}>{PAYMENT_STATUS_LABELS[payment.status]}</StatusLabel>
+            <IMStatusLabel role={STATUS_ROLE[payment.status]}>{PAYMENT_STATUS_LABELS[payment.status]}</IMStatusLabel>
           )}
         </span>
         {detail && (

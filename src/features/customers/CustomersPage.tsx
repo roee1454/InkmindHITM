@@ -3,9 +3,9 @@ import React from 'react'
 import { useLocation, useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { AlertCircle, Plus } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Pagination } from '@/components/ui/pagination'
+import { IMButton } from '@/components/ui/button'
+import { IMSkeleton } from '@/components/ui/skeleton'
+import { IMPagination } from '@/components/ui/pagination'
 import type { Customer } from './types'
 import { CustomersToolbar } from './components/CustomersToolbar'
 import { CustomerRow } from './components/CustomerRow'
@@ -85,9 +85,9 @@ export const CustomersPage: React.FC = () => {
           <h1>מאגר לקוחות</h1>
           <p>כל מי שדיבר עם הסטודיו, ואיפה הוא עומד</p>
         </div>
-        <Button onClick={openCreate} className="shrink-0 gap-1.5">
+        <IMButton onClick={openCreate} className="shrink-0 gap-1.5">
           <Plus size={16} /> לקוח חדש
-        </Button>
+        </IMButton>
       </div>
 
       {error && (
@@ -112,8 +112,8 @@ export const CustomersPage: React.FC = () => {
         <div className="card-native flex flex-col gap-4 p-4" aria-hidden>
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="flex flex-col gap-2">
-              <Skeleton className="h-4 w-1/3" />
-              <Skeleton className="h-3.5 w-1/2" />
+              <IMSkeleton className="h-4 w-1/3" />
+              <IMSkeleton className="h-3.5 w-1/2" />
             </div>
           ))}
         </div>
@@ -124,7 +124,7 @@ export const CustomersPage: React.FC = () => {
               <CustomerRow key={customer.id} customer={customer} work={work} onOpen={openCustomerCard} />
             ))}
           </ul>
-          <Pagination
+          <IMPagination
             currentPage={list.page}
             totalPages={list.totalPages}
             onPageChange={(page) => React.startTransition(() => list.setPage(page))}

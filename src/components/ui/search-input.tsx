@@ -1,157 +1,122 @@
-import React, { useState, useEffect, useRef, useImperativeHandle } from 'react'
-import { Search, X } from '@/components/ui/icon'
-import { cn } from '@/lib/utils'
-import { useDebouncedCallback } from '@/hooks/useDebounce'
+import * as React from "react"
 
-export type SearchInputSize = 'default' | 'lg' | 'sm'
-export type SearchInputVariant = 'card' | 'muted'
+import { IMIcon } from "@/components/ui/icon"
+import { IMInput } from "@/components/ui/input"
+import { useDebouncedCallback } from "@/hooks/useDebounce"
+import { cn } from "@/lib/utils"
 
-export function getSearchInputClasses(
-  size: SearchInputSize,
-  variant: SearchInputVariant,
-  className?: string
-) {
-  const sizeClasses = {
-    lg: 'h-13 md:h-12 ps-11 pe-10 text-base rounded-2xl',
-    default: 'h-12 ps-10 pe-10 text-sm rounded-2xl',
-    sm: 'h-9.5 ps-9 pe-8 text-xs rounded-xl',
-  }[size]
+/** How long typing has to pause before the parent hears about it. */
+const DEBOUNCE_MS = 300
 
-  const variantClasses = {
-    card: 'border-input bg-card text-foreground shadow-xs placeholder:text-muted-foreground/50 focus:border-primary focus:ring-4 focus:ring-primary/10',
-    muted: 'border-border bg-muted/40 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10',
-  }[variant]
+type IMSearchInputVariant = "default" | "subtle"
+type IMSearchInputSize = "md" | "sm"
 
-  return cn(
-    'flex w-full items-center border font-assistant transition-all duration-150 ease-native outline-none',
-    sizeClasses,
-    variantClasses,
-    className
-  )
+const SIZES: Record<IMSearchInputSize, { input: string; icon: string }> = {
+  md: { input: "ps-10.5 pe-10", icon: "start-3.5" },
+  // Inside pickers and menus: 38px, body-sm text, also on touch.
+  sm: { input: "h-9.5 ps-9 pe-9 text-sm", icon: "start-3" },
 }
 
-export interface SearchInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'onChange'> {
+const VARIANTS: Record<IMSearchInputVariant, string> = {
+  default: "",
+  // Inside a toolbar or popover: a recessed fill, no shadow.
+  subtle: "bg-surface-2/55 shadow-none",
+}
+
+export interface IMSearchInputProps
+  extends Omit<React.ComponentProps<"input">, "size" | "onChange" | "value" | "ref" | "children"> {
   value: string
+  /** The settled value, after typing pauses. */
   onChange: (value: string) => void
+  /** Every keystroke, for UI that must follow the text immediately. */
   onImmediateChange?: (value: string) => void
   onClear?: () => void
-  debounceMs?: number
-  size?: SearchInputSize
-  variant?: SearchInputVariant
-  clearable?: boolean
+  /** `default` on a page · `subtle` inside a toolbar or popover. */
+  variant?: IMSearchInputVariant
+  /** `md` (default) · `sm` inside pickers and menus. */
+  size?: IMSearchInputSize
   containerRef?: React.Ref<HTMLDivElement>
   containerClassName?: string
+  /** Rendered inside the positioned wrapper, after the field: a results list anchored under it. */
   children?: React.ReactNode
 }
 
-export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
-  (
-    {
-      value,
-      onChange,
-      onImmediateChange,
-      onClear,
-      debounceMs = 300,
-      size = 'default',
-      variant = 'card',
-      clearable = true,
-      containerRef,
-      containerClassName,
-      className,
-      placeholder = 'חיפוש...',
-      children,
-      ...inputProps
-    },
-    ref
-  ) => {
-    const [localValue, setLocalValue] = useState(value)
-    const inputRef = useRef<HTMLInputElement>(null)
-    useImperativeHandle(ref, () => inputRef.current as HTMLInputElement)
+/**
+ * A search field with a leading search icon and a clear button once it has a value. Debounced: the
+ * parent's `onChange` receives the settled value.
+ */
+export const IMSearchInput = React.forwardRef<HTMLInputElement, IMSearchInputProps>(function IMSearchInput(
+  {
+    value,
+    onChange,
+    onImmediateChange,
+    onClear,
+    variant = "default",
+    size = "md",
+    containerRef,
+    containerClassName,
+    className,
+    placeholder = "חיפוש…",
+    children,
+    ...inputProps
+  },
+  ref
+) {
+  const [localValue, setLocalValue] = React.useState(value)
+  const inputRef = React.useRef<HTMLInputElement>(null)
+  React.useImperativeHandle(ref, () => inputRef.current as HTMLInputElement)
 
-    // Synchronize localValue when the external value changes
-    useEffect(() => {
-      setLocalValue(value)
-    }, [value])
+  // Follow the parent when it changes the value itself (a reset, a deep link).
+  React.useEffect(() => {
+    setLocalValue(value)
+  }, [value])
 
-    const debouncedOnChange = useDebouncedCallback((val: string) => {
-      onChange(val)
-    }, debounceMs)
+  const settle = useDebouncedCallback((next: string) => onChange(next), DEBOUNCE_MS)
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const nextValue = e.target.value
-      setLocalValue(nextValue)
-      onImmediateChange?.(nextValue)
-
-      if (debounceMs > 0) {
-        debouncedOnChange(nextValue)
-      } else {
-        onChange(nextValue)
-      }
-    }
-
-    const handleClear = () => {
-      setLocalValue('')
-      onImmediateChange?.('')
-      onChange('')
-      onClear?.()
-      inputRef.current?.focus()
-    }
-
-    const iconSizeClasses = {
-      lg: 'start-4 size-[18px]',
-      default: 'start-3.5 size-[18px]',
-      sm: 'start-3 size-4',
-    }[size]
-
-    const clearButtonClasses = {
-      lg: 'end-3.5 size-6',
-      default: 'end-3 size-6',
-      sm: 'end-2.5 size-5',
-    }[size]
-
-    return (
-      <div ref={containerRef} className={cn('relative w-full font-assistant', containerClassName)} dir="rtl">
-        <Search
-          className={cn(
-            'pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted-foreground/60 shrink-0',
-            iconSizeClasses
-          )}
-        />
-
-        <input
-          ref={inputRef}
-          type="text"
-          value={localValue}
-          onChange={handleChange}
-          placeholder={placeholder}
-          className={getSearchInputClasses(size, variant, className)}
-          {...inputProps}
-        />
-
-        {clearable && localValue && (
-          <button
-            type="button"
-            onClick={handleClear}
-            className={cn(
-              'absolute top-1/2 -translate-y-1/2 rounded-full flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer',
-              clearButtonClasses
-            )}
-            title="נקה חיפוש"
-            aria-label="נקה חיפוש"
-          >
-            <X size={size === 'sm' ? 12 : 14} />
-          </button>
-        )}
-
-        {children}
-      </div>
-    )
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const next = e.target.value
+    setLocalValue(next)
+    onImmediateChange?.(next)
+    settle(next)
   }
-)
 
-SearchInput.displayName = 'SearchInput'
+  const handleClear = () => {
+    setLocalValue("")
+    onImmediateChange?.("")
+    onChange("")
+    onClear?.()
+    inputRef.current?.focus()
+  }
 
-export { SearchInput as IMSearchInput }
-export type IMSearchInputProps = SearchInputProps
-
+  return (
+    <div
+      ref={containerRef}
+      data-slot="search-input"
+      data-variant={variant}
+      data-size={size}
+      className={cn("relative flex w-full items-center", containerClassName)}
+    >
+      <IMIcon name="search" size="sm" tone="muted" className={cn("pointer-events-none absolute", SIZES[size].icon)} />
+      <IMInput
+        ref={inputRef}
+        type="text"
+        value={localValue}
+        onChange={handleChange}
+        placeholder={placeholder}
+        className={cn(SIZES[size].input, VARIANTS[variant], className)}
+        {...inputProps}
+      />
+      {localValue && (
+        <button
+          type="button"
+          onClick={handleClear}
+          aria-label="ניקוי החיפוש"
+          className="absolute end-2 grid size-7 cursor-pointer place-items-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-surface-2 hover:text-foreground focus-visible:ring-4 focus-visible:ring-ring/35"
+        >
+          <IMIcon name="close" size="sm" />
+        </button>
+      )}
+      {children}
+    </div>
+  )
+})

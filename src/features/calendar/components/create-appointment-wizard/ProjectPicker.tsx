@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
+import { IMSelect, IMSelectContent, IMSelectItem, IMSelectTrigger, IMSelectValue } from '@/components/ui/select'
+import { IMSkeleton } from '@/components/ui/skeleton'
 import { Tattoo } from '@/components/ui/icon'
 import { formatDatabaseError } from '@/lib/pocketbase-error'
 import { listOpenProjects } from '@/features/projects/server/projects'
@@ -35,7 +35,7 @@ export function ProjectPicker({
   }, [projectId, projects.data, onChange])
 
   if (!customerId) return null
-  if (projects.isLoading) return <Skeleton className="h-9 w-full" />
+  if (projects.isLoading) return <IMSkeleton className="h-9 w-full" />
   if (projects.isError) {
     return <p className="text-xs text-destructive">{formatDatabaseError(projects.error, 'לא הצלחנו לטעון את הפרויקטים של הלקוח. התור ייפתח כפרויקט חדש.')}</p>
   }
@@ -51,19 +51,19 @@ export function ProjectPicker({
   return (
     <div className="flex flex-col gap-1.5" dir="rtl">
       <label className="text-xs font-bold text-foreground">שיוך לפרויקט / עבודה</label>
-      <Select value={projectId ?? NEW_PROJECT} onValueChange={(value) => onChange(value === NEW_PROJECT ? null : value)}>
-        <SelectTrigger className="w-full">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent align="end">
+      <IMSelect value={projectId ?? NEW_PROJECT} onValueChange={(value) => onChange(value === NEW_PROJECT ? null : value)}>
+        <IMSelectTrigger className="w-full">
+          <IMSelectValue />
+        </IMSelectTrigger>
+        <IMSelectContent align="end">
           {projects.data.map((project) => (
-            <SelectItem key={project.id} value={project.id}>
+            <IMSelectItem key={project.id} value={project.id}>
               {`המשך: ${project.title} · ${PROJECT_STAGE_LABELS[project.stage]}`}
-            </SelectItem>
+            </IMSelectItem>
           ))}
-          <SelectItem value={NEW_PROJECT}>פרויקט חדש (עבודה נפרדת)</SelectItem>
-        </SelectContent>
-      </Select>
+          <IMSelectItem value={NEW_PROJECT}>פרויקט חדש (עבודה נפרדת)</IMSelectItem>
+        </IMSelectContent>
+      </IMSelect>
       <p className="text-2xs text-muted-foreground">סשן נוסף באותו קעקוע שייך לאותו פרויקט, כדי שהשלב, התשלומים והבוט יראו עבודה אחת.</p>
     </div>
   )

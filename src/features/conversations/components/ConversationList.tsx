@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Plus, BotOff } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
-import { SearchInput } from '@/components/ui/search-input'
-import { Skeleton } from '@/components/ui/skeleton'
+import { IMButton } from '@/components/ui/button'
+import { IMSearchInput } from '@/components/ui/search-input'
+import { IMSkeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { phoneMatchesQuery } from '@/lib/phone'
 import { getAiSettings } from '@/features/settings/server/ai'
@@ -60,12 +60,12 @@ export function ConversationList({ selectedId, onSelect }: ConversationListProps
       <div className="flex flex-col gap-3 border-b border-border px-4 pt-4 pb-3">
         <div className="flex items-center justify-between gap-2">
           <h1 className="text-xl font-extrabold tracking-tight text-foreground">שיחות</h1>
-          <Button variant="ghost" size="icon" onClick={() => setIsNewChatOpen(true)} aria-label="שיחה חדשה" className="size-9 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
+          <IMButton variant="ghost" size="icon" onClick={() => setIsNewChatOpen(true)} aria-label="שיחה חדשה" className="size-9 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
             <Plus className="size-5" />
-          </Button>
+          </IMButton>
         </div>
 
-        <SearchInput size="sm" variant="muted" placeholder="חיפוש לפי שם או טלפון" value={searchQuery} onChange={setSearchQuery} />
+        <IMSearchInput size="sm" variant="subtle" placeholder="חיפוש לפי שם או טלפון" value={searchQuery} onChange={setSearchQuery} />
 
         <div role="group" aria-label="סינון שיחות" className="flex gap-1 rounded-xl bg-muted p-1">
           {FILTERS.map((filter) => {
@@ -101,8 +101,8 @@ export function ConversationList({ selectedId, onSelect }: ConversationListProps
           <div className="flex flex-col gap-4 p-4" aria-hidden>
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="flex flex-col gap-2">
-                <Skeleton className="h-4 w-2/5" />
-                <Skeleton className="h-3.5 w-4/5" />
+                <IMSkeleton className="h-4 w-2/5" />
+                <IMSkeleton className="h-3.5 w-4/5" />
               </div>
             ))}
           </div>

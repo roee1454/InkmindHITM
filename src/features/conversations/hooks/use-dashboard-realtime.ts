@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { getBrowserClient } from '@/integrations/pocketbase/client'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useIMToast } from '@/components/ui/toast'
+import type { IMToastTone } from '@/components/ui/toast'
 import { sendPwaNotification } from '@/features/notifications/utils/pwa-notifications'
 import type { MessageStatus, MessageType } from '@/integrations/whatsapp-cloud-api/types'
 import type { UIConversation, UIMessage } from '@/features/conversations/types'
@@ -10,13 +11,21 @@ import type { ApiNotification } from '@/features/notifications/server/notificati
 import { toNotificationKind } from '@/features/notifications/utils/notification-helpers'
 import type { RecordModel } from 'pocketbase'
 
+/** A system notification's type, as the toast tone that reports it. */
+const NOTIFICATION_TONES: Record<ApiNotification['type'], IMToastTone> = {
+  info: 'default',
+  success: 'success',
+  warning: 'warning',
+  error: 'destructive',
+}
+
 interface DashboardRealtimeProps {
   sessionToken?: string
   sessionStaff?: RecordModel
 }
 
 export function useDashboardRealtime({ sessionToken, sessionStaff }: DashboardRealtimeProps) {
-  const { toast } = useToast()
+  const { show: toast } = useIMToast()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const location = useLocation()
@@ -131,18 +140,17 @@ export function useDashboardRealtime({ sessionToken, sessionStaff }: DashboardRe
           const notifTitle = `הודעה חדשה מ-${senderName}`
           const notifLink = `/dashboard/conversations?chatId=${convId}`
 
-          toastRef.current(
-            notifTitle,
-            msgBody,
-            'info',
-            4000,
-            () => {
+          toastRef.current({
+            title: notifTitle,
+            description: msgBody,
+            duration: 4000,
+            onClick: () => {
               navigateRef.current({
                 to: '/dashboard/conversations',
                 search: { chatId: convId },
               })
-            }
-          )
+            },
+          })
 
           void sendPwaNotification(notifTitle, {
             body: msgBody,
@@ -247,18 +255,18 @@ export function useDashboardRealtime({ sessionToken, sessionStaff }: DashboardRe
         // be skipped by a `chatId=` check meant only for message notifications.
         if (newNotification.kind === 'system') {
           queryClient.invalidateQueries({ queryKey: ['ai-settings'] })
-          toastRef.current(
-            notifTitle,
-            notifMessage,
-            (data.record.type as ApiNotification['type']) || 'info',
-            4000,
-            () => {
+          toastRef.current({
+            tone: NOTIFICATION_TONES[(data.record.type as ApiNotification['type']) || 'info'],
+            title: notifTitle,
+            description: notifMessage,
+            duration: 4000,
+            onClick: () => {
               navigateRef.current({
                 to: '/dashboard/notifications',
                 search: { highlightId: data.record.id },
               })
-            }
-          )
+            },
+          })
 
           void sendPwaNotification(notifTitle, {
             body: notifMessage,

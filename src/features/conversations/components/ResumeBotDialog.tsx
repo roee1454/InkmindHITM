@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Bot, Send, AlertCircle, Clock } from '@/components/ui/icon'
-import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
-import { useToast } from '@/components/ui/ToastProvider'
+import { IMDialogActions, IMResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMButton } from '@/components/ui/button'
+import { IMTextarea } from '@/components/ui/textarea'
+import { IMLabel } from '@/components/ui/label'
+import { IMCheckbox } from '@/components/ui/checkbox'
+import { useIMToast } from '@/components/ui/toast'
 import { resumeBotWithInstruction } from '../server/messages'
 import { STAFF_REASON_LABELS } from '../utils/labels'
 import type { UIConversation } from '../types'
@@ -30,7 +30,7 @@ export function ResumeBotDialog({
   onSuccess,
 }: ResumeBotDialogProps) {
   const queryClient = useQueryClient()
-  const { toast } = useToast()
+  const { show: toast } = useIMToast()
   const [instruction, setInstruction] = useState('')
   const [triggerTurn, setTriggerTurn] = useState(!windowExpired)
 
@@ -50,40 +50,37 @@ export function ResumeBotDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       queryClient.invalidateQueries({ queryKey: ['messages', conversation.id] })
-      toast(
-        triggerTurn && !windowExpired ? 'הבוט הופעל ומעבד מענה' : 'הבוט הופעל במצב המתנה',
-        triggerTurn && !windowExpired
+      toast({
+        tone: 'success',
+        title: triggerTurn && !windowExpired ? 'הבוט הופעל ומעבד מענה' : 'הבוט הופעל במצב המתנה',
+        description: triggerTurn && !windowExpired
           ? 'ה-AI מייצר מענה ראשוני בהתאם להנחיה'
           : 'השיחה הוחזרה לבוט, יגיב להודעה הבאה של הלקוח',
-        'success',
-      )
+      })
       onOpenChange(false)
       setInstruction('')
       onSuccess?.()
     },
     onError: (err: Error) => {
-      toast(
-        'הפעלת הבוט נכשלה',
-        err.message || 'אירעה שגיאה בעת הפעלת הבוט',
-        'error',
-      )
+      toast({
+        tone: 'destructive',
+        title: 'הפעלת הבוט נכשלה',
+        description: err.message || 'אירעה שגיאה בעת הפעלת הבוט',
+      })
     },
   })
 
   const customer = conversation.customerName || formatPhoneForDisplay(conversation.customerPhone)
 
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
       title="החזרת השיחה לבוט"
       description={`הבוט ימשיך את השיחה עם ${customer}.`}
       footer={
-        <DialogActions>
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={resumeMutation.isPending}>
-            ביטול
-          </Button>
-          <Button type="button" disabled={resumeMutation.isPending} onClick={() => resumeMutation.mutate()} className="min-w-28 gap-1.5">
+        <IMDialogActions>
+          <IMButton type="button" disabled={resumeMutation.isPending} onClick={() => resumeMutation.mutate()} className="min-w-28 gap-1.5">
             {resumeMutation.isPending ? (
               'מפעיל…'
             ) : triggerTurn && !windowExpired ? (
@@ -97,8 +94,11 @@ export function ResumeBotDialog({
                 החזרה לבוט
               </>
             )}
-          </Button>
-        </DialogActions>
+          </IMButton>
+          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={resumeMutation.isPending}>
+            ביטול
+          </IMButton>
+        </IMDialogActions>
       }
     >
       <div className="form-stack">
@@ -110,10 +110,10 @@ export function ResumeBotDialog({
         )}
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="bot-instruction" className="form-label">
+          <IMLabel htmlFor="bot-instruction" className="form-label">
             הנחיה לבוט <span className="font-medium text-muted-foreground">(לא חובה)</span>
-          </Label>
-          <Textarea
+          </IMLabel>
+          <IMTextarea
             id="bot-instruction"
             value={instruction}
             onChange={(e) => setInstruction(e.target.value)}
@@ -131,7 +131,7 @@ export function ResumeBotDialog({
           </p>
         ) : (
           <label htmlFor="trigger-turn" className="flex cursor-pointer items-start gap-2.5">
-            <Checkbox id="trigger-turn" checked={triggerTurn} onCheckedChange={(checked) => setTriggerTurn(Boolean(checked))} disabled={resumeMutation.isPending} className="mt-0.5" />
+            <IMCheckbox id="trigger-turn" checked={triggerTurn} onCheckedChange={(checked) => setTriggerTurn(Boolean(checked))} disabled={resumeMutation.isPending} className="mt-0.5" />
             <span className="flex flex-col">
               <span className="text-sm font-bold text-foreground">שהבוט יענה עכשיו</span>
               <span className="text-xs text-muted-foreground">אחרת הוא ימתין להודעה הבאה של הלקוח.</span>
@@ -139,6 +139,6 @@ export function ResumeBotDialog({
           </label>
         )}
       </div>
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }

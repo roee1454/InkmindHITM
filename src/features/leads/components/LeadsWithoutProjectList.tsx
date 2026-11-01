@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import { MessageSquare } from '@/components/ui/icon'
 import { formatPhoneForDisplay } from '@/lib/phone'
 import type { LeadWithoutProject } from '@/features/projects/types'
@@ -20,7 +20,7 @@ export function LeadsWithoutProjectList({ leads }: { leads: LeadWithoutProject[]
               {lead.source && ` · ${SOURCE_LABELS[lead.source] ?? lead.source}`} · {formatLeadDate(lead.updatedAt)}
             </div>
           </div>
-          <Button
+          <IMButton
             type="button"
             variant="ghost"
             size="sm"
@@ -30,7 +30,7 @@ export function LeadsWithoutProjectList({ leads }: { leads: LeadWithoutProject[]
           >
             <MessageSquare className="size-4" />
             שיחה
-          </Button>
+          </IMButton>
         </div>
       ))}
     </div>

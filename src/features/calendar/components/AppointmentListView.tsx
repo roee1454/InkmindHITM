@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Pagination } from '@/components/ui/pagination'
+import { IMPagination } from '@/components/ui/pagination'
 import { AppointmentTable } from './AppointmentTable'
 import type { ApiAppointment, AppointmentStatus } from '../types'
 
@@ -36,7 +36,7 @@ export function AppointmentListView({ appointments, searchQuery, onEdit, onDelet
   return (
     <div className="flex flex-col gap-4">
       <AppointmentTable appointments={pageSlice} onEdit={onEdit} onDelete={onDelete} onStatusChange={onStatusChange} />
-      <Pagination
+      <IMPagination
         currentPage={page}
         totalPages={totalPages}
         onPageChange={(next) => React.startTransition(() => setCurrentPage(next))}

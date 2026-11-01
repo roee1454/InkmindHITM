@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useIMToast } from '@/components/ui/toast'
 import { useConfirm } from '@/hooks/useConfirm'
 import { queryKeys } from '@/lib/query-keys'
 import { resetBotConversation } from '../server/bot-reset'
@@ -8,15 +8,15 @@ import { resetBotConversation } from '../server/bot-reset'
 export function useResetBotConversation(conversationId: string) {
   const confirm = useConfirm()
   const queryClient = useQueryClient()
-  const { toast } = useToast()
+  const { show: toast } = useIMToast()
 
   const reset = useMutation({
     mutationFn: () => resetBotConversation({ data: { conversationId } }),
     onSuccess: () => {
-      toast('שיחת הבוט אופסה', 'ההודעה הבאה של הלקוח תתחיל תיאום חדש.', 'success')
+      toast({ tone: 'success', title: 'שיחת הבוט אופסה', description: 'ההודעה הבאה של הלקוח תתחיל תיאום חדש.' })
       return queryClient.invalidateQueries({ queryKey: queryKeys.conversations })
     },
-    onError: (err) => toast('האיפוס נכשל', err instanceof Error ? err.message : '', 'error'),
+    onError: (err) => toast({ tone: 'destructive', title: 'האיפוס נכשל', description: err instanceof Error ? err.message : '' }),
   })
 
   return async () => {

@@ -1,4 +1,4 @@
-import { Label } from '@/components/ui/label'
+import { IMLabel } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 
 /** A labelled row of choice chips, for the quote sheet's duration and session-count fields. */
@@ -19,7 +19,7 @@ export function QuoteChoiceChips<T extends string | number | null>({
 }) {
   return (
     <div className="space-y-2">
-      <Label className="block text-xs font-extrabold text-foreground">{label}</Label>
+      <IMLabel className="block text-xs font-extrabold text-foreground">{label}</IMLabel>
       <div className={cn('grid gap-2', columns === 3 ? 'grid-cols-3' : columns === 5 ? 'grid-cols-5' : 'grid-cols-4')}>
         {options.map((option) => (
           <button

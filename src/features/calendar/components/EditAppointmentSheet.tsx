@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
+  IMSheet,
+  IMSheetContent,
+  IMSheetHeader,
+  IMSheetTitle,
+  IMSheetDescription,
 } from '@/components/ui/sheet'
-import { DialogActions } from '@/components/ui/responsive-dialog'
-import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { Button } from '@/components/ui/button'
+import { IMDialogActions } from '@/components/ui/responsive-dialog'
+import { IMConfirmDialog } from '@/components/ui/confirm-dialog'
+import { IMButton } from '@/components/ui/button'
 import { CalendarPlus, ChevronLeft, Lock, Receipt, Tattoo } from '@/components/ui/icon'
 import { AppointmentFormFields } from './AppointmentFormFields'
 import type { ApiAppointment, ApiGoogleConnection, AppointmentFormValues } from '../types'
@@ -140,8 +140,8 @@ export const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({
 
   return (
     <>
-      <Sheet open={appointment !== null} onOpenChange={onOpenChange}>
-        <SheetContent
+      <IMSheet open={appointment !== null} onOpenChange={onOpenChange}>
+        <IMSheetContent
           side={isMobile ? 'bottom' : 'left'}
           dir="rtl"
           className={cn(
@@ -152,14 +152,14 @@ export const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({
           )}
         >
           {/* Fixed Header */}
-          <SheetHeader className="shrink-0 gap-1 border-b border-border/80 px-5 pt-4 pb-3.5 pe-12 text-right">
-            <SheetTitle className="text-base font-extrabold text-foreground">
+          <IMSheetHeader className="shrink-0 gap-1 border-b border-border/80 px-5 pt-4 pb-3.5 pe-12 text-right">
+            <IMSheetTitle className="text-base font-extrabold text-foreground">
               {kindLabel} — {shown?.leadName || 'לקוח ללא שם'}
-            </SheetTitle>
+            </IMSheetTitle>
             {description && (
-              <SheetDescription className="text-xs text-muted-foreground">
+              <IMSheetDescription className="text-xs text-muted-foreground">
                 {description}
-              </SheetDescription>
+              </IMSheetDescription>
             )}
 
             {(shown?.projectId || (appointment?.kind === 'consultation' && onContinueToTattoo)) && (
@@ -231,7 +231,7 @@ export const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({
                 תור של מקעקע אחר — לצפייה בלבד
               </p>
             )}
-          </SheetHeader>
+          </IMSheetHeader>
 
           {/* Scrollable Body - Clean, pristine form fields without stacked clutter */}
           {values && appointment && (
@@ -256,17 +256,17 @@ export const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({
           {/* Fixed Footer */}
           <div className="flex shrink-0 items-center gap-2 border-t border-border bg-card px-5 py-3 lg:px-6">
             {isReadOnly ? (
-              <DialogActions>
-                <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              <IMDialogActions>
+                <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)}>
                   סגירה
-                </Button>
-              </DialogActions>
+                </IMButton>
+              </IMDialogActions>
             ) : (
-              <DialogActions
+              <IMDialogActions
                 error={error || localError}
-                start={
+                secondary={
                   onDelete && (
-                    <Button
+                    <IMButton
                       type="button"
                       variant="ghost"
                       size="sm"
@@ -274,25 +274,25 @@ export const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({
                       className="text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
                     >
                       מחיקה
-                    </Button>
+                    </IMButton>
                   )
                 }
               >
-                <Button type="button" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-                  ביטול
-                </Button>
-                <Button type="submit" form="appointment-form" disabled={isSaving || isDeleting} size="sm" className="min-w-24 font-bold">
+                <IMButton type="submit" form="appointment-form" disabled={isSaving || isDeleting} size="sm" className="min-w-24 font-bold">
                   {isSaving ? 'שומר…' : 'שמירה'}
-                </Button>
-              </DialogActions>
+                </IMButton>
+                <IMButton type="button" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+                  ביטול
+                </IMButton>
+              </IMDialogActions>
             )}
           </div>
-        </SheetContent>
-      </Sheet>
+        </IMSheetContent>
+      </IMSheet>
 
       {/* Early Close Override Warning Dialog */}
       {appointment && (
-        <ConfirmDialog
+        <IMConfirmDialog
           open={showEarlyCloseWarning}
           onOpenChange={setShowEarlyCloseWarning}
           title="סגירת סשן מוקדמת (חריג)"
@@ -311,7 +311,7 @@ export const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({
           <div className="mt-3 rounded-lg border border-warning/30 bg-warning/10 p-2.5 text-xs text-warning">
             שים לב: סגירת הסשן לפני מועדו תקבע את המחיר הסופי ותסמן אותו כהושלם.
           </div>
-        </ConfirmDialog>
+        </IMConfirmDialog>
       )}
 
       {/* Close Session Dialog */}
@@ -324,7 +324,7 @@ export const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({
         />
       )}
 
-      <ConfirmDialog
+      <IMConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         title="מחיקת התור"
@@ -338,7 +338,7 @@ export const EditAppointmentSheet: React.FC<EditAppointmentSheetProps> = ({
               ]
             : undefined
         }
-        tone="destructive"
+        variant="destructive"
         confirmLabel="מחיקה"
         pendingLabel="מוחק…"
         isPending={isDeleting}

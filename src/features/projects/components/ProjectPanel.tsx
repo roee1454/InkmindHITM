@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { IMSheet, IMSheetContent, IMSheetHeader, IMSheetTitle, IMSheetDescription } from '@/components/ui/sheet'
+import { IMSkeleton } from '@/components/ui/skeleton'
+import { IMTabs, IMTabsContent, IMTabsList, IMTabsTrigger } from '@/components/ui/tabs'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
 import { getAppointments } from '@/features/calendar/server/appointments'
@@ -33,12 +33,12 @@ function errorText(error: unknown): string | null {
 function PanelSkeleton() {
   return (
     <div className="flex flex-col gap-5 px-5 py-6 lg:px-6">
-      <Skeleton className="h-5 w-24 rounded-full" />
-      <Skeleton className="h-7 w-2/3" />
-      <Skeleton className="h-20 w-full rounded-xl" />
+      <IMSkeleton className="h-5 w-24 rounded-full" />
+      <IMSkeleton className="h-7 w-2/3" />
+      <IMSkeleton className="h-20 w-full rounded-xl" />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,19rem)]">
-        <Skeleton className="h-48 w-full rounded-xl" />
-        <Skeleton className="h-32 w-full rounded-xl" />
+        <IMSkeleton className="h-48 w-full rounded-xl" />
+        <IMSkeleton className="h-32 w-full rounded-xl" />
       </div>
     </div>
   )
@@ -114,7 +114,7 @@ export function ProjectPanel({
 
   return (
     <>
-      <Sheet
+      <IMSheet
         open={Boolean(projectId)}
         onOpenChange={(open) => {
           if (open) return
@@ -122,7 +122,7 @@ export function ProjectPanel({
           onClose()
         }}
       >
-        <SheetContent
+        <IMSheetContent
           side={isMobile ? 'bottom' : 'left'}
           dir="rtl"
           className={cn(
@@ -132,10 +132,10 @@ export function ProjectPanel({
               : 'h-svh w-full sm:max-w-xl md:max-w-2xl lg:max-w-[40rem] xl:max-w-[44rem] border-s border-border',
           )}
         >
-          <SheetHeader className="sr-only">
-            <SheetTitle>{project ? project.title || 'פרויקט' : 'פרויקט'}</SheetTitle>
-            <SheetDescription>{project ? project.customer.name || 'לקוח ללא שם' : 'פרטי פרויקט'}</SheetDescription>
-          </SheetHeader>
+          <IMSheetHeader className="sr-only">
+            <IMSheetTitle>{project ? project.title || 'פרויקט' : 'פרויקט'}</IMSheetTitle>
+            <IMSheetDescription>{project ? project.customer.name || 'לקוח ללא שם' : 'פרטי פרויקט'}</IMSheetDescription>
+          </IMSheetHeader>
 
           {details.isLoading && <PanelSkeleton />}
           {details.isError && !project && (
@@ -170,23 +170,23 @@ export function ProjectPanel({
               <div className="flex flex-col gap-6 px-5 pt-5 pb-6 lg:px-6">
                 <ProjectFacts project={project} summary={summary} finance={finance.data} edit={edit} />
 
-                <Tabs dir='rtl' defaultValue="sessions" className="w-full gap-4">
-                  <TabsList className="h-10 rounded-xl bg-muted/60 p-1">
-                    <TabsTrigger value="sessions" className="gap-2 text-xs font-bold data-[state=active]:bg-card">
+                <IMTabs dir='rtl' defaultValue="sessions" className="w-full gap-4">
+                  <IMTabsList className="h-10 rounded-xl bg-muted/60 p-1">
+                    <IMTabsTrigger value="sessions" className="gap-2 text-xs font-bold data-[state=active]:bg-card">
                       <span>תורים וסשנים</span>
                       <span className="rounded-full bg-muted-foreground/15 px-2 py-0.5 text-2xs font-bold text-foreground">
                         {summary.appointments.length}
                       </span>
-                    </TabsTrigger>
-                    <TabsTrigger value="payments" className="gap-2 text-xs font-bold data-[state=active]:bg-card">
+                    </IMTabsTrigger>
+                    <IMTabsTrigger value="payments" className="gap-2 text-xs font-bold data-[state=active]:bg-card">
                       <span>תשלומים ופיננסים</span>
                       <span className="rounded-full bg-muted-foreground/15 px-2 py-0.5 text-2xs font-bold text-foreground">
                         {finance.data?.payments.length ?? 0}
                       </span>
-                    </TabsTrigger>
-                  </TabsList>
+                    </IMTabsTrigger>
+                  </IMTabsList>
 
-                  <TabsContent value="sessions" className="mt-0 focus-visible:outline-none">
+                  <IMTabsContent value="sessions" className="mt-0 focus-visible:outline-none">
                     <ProjectSessions
                       appointments={summary.appointments}
                       project={project}
@@ -201,9 +201,9 @@ export function ProjectPanel({
                       }}
                       onSelectAppointment={handleSelectAppointment}
                     />
-                  </TabsContent>
+                  </IMTabsContent>
 
-                  <TabsContent value="payments" className="mt-0 focus-visible:outline-none">
+                  <IMTabsContent value="payments" className="mt-0 focus-visible:outline-none">
                     <ProjectPayments
                       finance={finance.data}
                       isLoading={finance.isLoading}
@@ -211,8 +211,8 @@ export function ProjectPanel({
                       appointments={summary.appointments}
                       onSelectAppointment={handleSelectAppointment}
                     />
-                  </TabsContent>
-                </Tabs>
+                  </IMTabsContent>
+                </IMTabs>
                 {(move.error || attach.error) && (
                   <p className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">{errorText(move.error ?? attach.error)}</p>
                 )}
@@ -255,8 +255,8 @@ export function ProjectPanel({
           />
         </>
       )}
-        </SheetContent>
-      </Sheet>
+        </IMSheetContent>
+      </IMSheet>
 
       {internalSelectedAppt && (
         <EditAppointmentSheet

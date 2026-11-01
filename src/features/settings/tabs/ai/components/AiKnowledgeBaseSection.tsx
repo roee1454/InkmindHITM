@@ -1,20 +1,20 @@
 import { useState } from 'react'
 import { Edit3, Plus, Trash2 } from '@/components/ui/icon'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
+import { IMButton } from '@/components/ui/button'
+import { IMSkeleton } from '@/components/ui/skeleton'
 import { getFaqList, createFaq, updateFaq, deleteFaq } from '@/features/settings/server/settings'
 import type { ApiFaqEntry } from '@/features/settings/server/settings'
 import { SettingsSection } from '@/features/settings/components/settings-layout'
 import { useConfirm } from '#/hooks/useConfirm'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useIMToast } from '@/components/ui/toast'
 import { FaqDialog } from './FaqDialog'
 
 /** Questions customers ask and the answer the bot gives: a list, each entry edited in a dialog. */
 export function AiKnowledgeBaseSection() {
   const queryClient = useQueryClient()
   const confirm = useConfirm()
-  const { toast } = useToast()
+  const { show: toast } = useIMToast()
   const [faqTarget, setFaqTarget] = useState<ApiFaqEntry | 'new' | null>(null)
   const { data: entries = [], isLoading } = useQuery<ApiFaqEntry[]>({ queryKey: ['faq-list'], queryFn: () => getFaqList() })
 
@@ -32,7 +32,7 @@ export function AiKnowledgeBaseSection() {
   const removeFaq = useMutation({
     mutationFn: (id: string) => deleteFaq({ data: { id } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['faq-list'] }),
-    onError: (err: unknown) => toast('המחיקה נכשלה', err instanceof Error ? err.message : '', 'error'),
+    onError: (err: unknown) => toast({ tone: 'destructive', title: 'המחיקה נכשלה', description: err instanceof Error ? err.message : '' }),
   })
 
   const open = (target: ApiFaqEntry | 'new') => {
@@ -55,16 +55,16 @@ export function AiKnowledgeBaseSection() {
       title="מאגר ידע"
       description="שאלות שלקוחות שואלים, והתשובה שהבוט ייתן להן."
       action={
-        <Button type="button" variant="outline" size="sm" onClick={() => open('new')} className="gap-1.5">
+        <IMButton type="button" variant="outline" size="sm" onClick={() => open('new')} className="gap-1.5">
           <Plus size={14} />
           הוספה
-        </Button>
+        </IMButton>
       }
     >
       {isLoading ? (
         <div className="flex flex-col gap-2 p-4">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
+          <IMSkeleton className="h-12 w-full" />
+          <IMSkeleton className="h-12 w-full" />
         </div>
       ) : entries.length === 0 ? (
         <p className="px-4 py-6 text-center text-sm text-muted-foreground">

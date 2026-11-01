@@ -3,7 +3,7 @@ import { Check, ChevronLeft, Copy } from '@/components/ui/icon'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { StaffMember, CurrentStaffInfo } from '@/features/settings/server/settings'
 import { resendStaffInvite } from '@/features/settings/server/settings'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import { CascadeDeleteDialog } from '@/features/database/components/CascadeDeleteDialog'
 import { SettingsRow, SettingsSection } from '@/features/settings/components/settings-layout'
 import { GoogleCalendarConnection } from './GoogleCalendarConnection'
@@ -80,15 +80,15 @@ export function MemberDetail({ member, currentStaff, onDeleted }: MemberDetailPr
           <SettingsRow label="קישור ההזמנה" hint="שולחים לעובד בוואטסאפ או במייל.">
             <div className="flex flex-wrap justify-end gap-2">
               {member.inviteToken && (
-                <Button type="button" variant="outline" size="sm" onClick={() => copyInvite(`${window.location.origin}/invite?token=${member.inviteToken}`)} className="gap-1.5">
+                <IMButton type="button" variant="outline" size="sm" onClick={() => copyInvite(`${window.location.origin}/invite?token=${member.inviteToken}`)} className="gap-1.5">
                   {copiedInvite ? <Check size={14} /> : <Copy size={14} />}
                   {copiedInvite ? 'הועתק' : 'העתקה'}
-                </Button>
+                </IMButton>
               )}
               {isAdmin && (
-                <Button type="button" variant="ghost" size="sm" disabled={resend.isPending} onClick={() => resend.mutate(member.id)}>
+                <IMButton type="button" variant="ghost" size="sm" disabled={resend.isPending} onClick={() => resend.mutate(member.id)}>
                   {resend.isPending ? 'מחדש…' : 'קישור חדש'}
-                </Button>
+                </IMButton>
               )}
             </div>
           </SettingsRow>
@@ -136,9 +136,9 @@ export function MemberDetail({ member, currentStaff, onDeleted }: MemberDetailPr
         <SettingsSection title="הסרה מהצוות" tone="danger">
           <SettingsRow label={`הסרת ${member.name}`} hint="לפני ההסרה יוצג בדיוק מה משויך אליו/ה ומה יקרה לזה.">
             <div className="flex justify-end">
-              <Button type="button" variant="outline" size="sm" onClick={() => setDeleteOpen(true)} className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive">
+              <IMButton type="button" variant="outline" size="sm" onClick={() => setDeleteOpen(true)} className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive">
                 הסרה
-              </Button>
+              </IMButton>
             </div>
           </SettingsRow>
           <CascadeDeleteDialog

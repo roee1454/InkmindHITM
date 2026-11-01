@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { AlertCircle } from '@/components/ui/icon'
-import { Pagination } from '@/components/ui/pagination'
-import { SearchInput } from '@/components/ui/search-input'
+import { IMPagination } from '@/components/ui/pagination'
+import { IMSearchInput } from '@/components/ui/search-input'
 import { phoneMatchesQuery } from '@/lib/phone'
 import { listPipeline } from '@/features/projects/server/pipeline'
 import { pipelineQueryKey } from '@/features/projects/hooks/use-project-milestones'
@@ -52,14 +52,14 @@ export const LeadsPage: React.FC = () => {
         </div>
       )}
 
-      <SearchInput size="lg" variant="card" placeholder="חיפוש לפי שם או טלפון..." value={searchQuery} onChange={setSearchQuery} />
+      <IMSearchInput size="md" variant="default" placeholder="חיפוש לפי שם או טלפון..." value={searchQuery} onChange={setSearchQuery} />
 
       {query.isLoading ? (
         <LeadsSkeleton />
       ) : filtered.length > 0 ? (
         <div className="flex flex-col gap-4">
           <LeadsWithoutProjectList leads={pageSlice} />
-          <Pagination currentPage={page} totalPages={totalPages} onPageChange={(next) => React.startTransition(() => setCurrentPage(next))} totalItems={filtered.length} itemsPerPage={ITEMS_PER_PAGE} itemLabel="לידים" />
+          <IMPagination currentPage={page} totalPages={totalPages} onPageChange={(next) => React.startTransition(() => setCurrentPage(next))} totalItems={filtered.length} itemsPerPage={ITEMS_PER_PAGE} itemLabel="לידים" />
         </div>
       ) : (
         <div className="flex h-44 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border text-center text-sm font-semibold text-muted-foreground">

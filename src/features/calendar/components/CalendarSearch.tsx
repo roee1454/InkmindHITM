@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Needle, PencilLine } from '@/components/ui/icon'
-import { SearchInput } from '@/components/ui/search-input'
+import { IMSearchInput } from '@/components/ui/search-input'
 import { cn } from '@/lib/utils'
 import { formatPhoneForDisplay } from '@/lib/phone'
 import { formatDayTitle, fromYmd } from '../utils/date-utils'
@@ -57,11 +57,11 @@ export function CalendarSearch({
   }
 
   return (
-    <SearchInput
+    <IMSearchInput
       containerRef={containerRef}
       containerClassName={className}
-      size="default"
-      variant="card"
+      size="md"
+      variant="default"
       placeholder="חיפוש לפי לקוח, טלפון, קעקוע או מקעקע..."
       value={searchQuery}
       onChange={onSearchQueryChange}
@@ -131,6 +131,6 @@ export function CalendarSearch({
           )}
         </div>
       )}
-    </SearchInput>
+    </IMSearchInput>
   )
 }

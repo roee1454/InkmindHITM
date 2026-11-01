@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import { Loader2 } from '@/components/ui/icon'
 import { useProjectMilestones } from '../../hooks/use-project-milestones'
 import type { ProjectDetails } from '../../types'
@@ -12,17 +12,17 @@ export function ProjectLifecycleFooter({ project, onMarkLost }: { project: Proje
   return (
     <footer className={`${FOOTER} justify-between`}>
       {closed ? (
-        <Button type="button" variant="outline" size="sm" className="ms-auto" disabled={reopen.isPending} onClick={() => reopen.mutate(project.id)}>
+        <IMButton type="button" variant="outline" size="sm" className="ms-auto" disabled={reopen.isPending} onClick={() => reopen.mutate(project.id)}>
           פתיחה מחדש
-        </Button>
+        </IMButton>
       ) : (
         <>
-          <Button type="button" variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={onMarkLost}>
+          <IMButton type="button" variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={onMarkLost}>
             סימון כאבוד
-          </Button>
-          <Button type="button" variant="outline" size="sm" disabled={complete.isPending} onClick={() => complete.mutate(project.id)}>
+          </IMButton>
+          <IMButton type="button" variant="outline" size="sm" disabled={complete.isPending} onClick={() => complete.mutate(project.id)}>
             סיום פרויקט
-          </Button>
+          </IMButton>
         </>
       )}
     </footer>
@@ -48,13 +48,13 @@ export function ProjectEditFooter({ error, canSave, isSaving, onCancel }: EditFo
         <p className="hidden min-w-0 flex-1 text-xs text-muted-foreground lg:block">Enter לשמירה · Esc לביטול</p>
       )}
       <div className="ms-auto flex shrink-0 items-center gap-2">
-        <Button type="button" variant="ghost" size="sm" disabled={isSaving} onClick={onCancel}>
+        <IMButton type="button" variant="ghost" size="sm" disabled={isSaving} onClick={onCancel}>
           ביטול
-        </Button>
-        <Button type="submit" size="sm" disabled={!canSave || isSaving} className="min-w-28 gap-2">
+        </IMButton>
+        <IMButton type="submit" size="sm" disabled={!canSave || isSaving} className="min-w-28 gap-2">
           {isSaving && <Loader2 size={14} className="animate-spin" />}
           שמירת שינויים
-        </Button>
+        </IMButton>
       </div>
     </footer>
   )

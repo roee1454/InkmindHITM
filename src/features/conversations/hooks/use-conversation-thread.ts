@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useIMToast } from '@/components/ui/toast'
 import { queryKeys } from '@/lib/query-keys'
 import { getActiveAppointmentSummary, listMessages, markConversationAsSeen, sendMessage, takeOverConversation } from '../server/messages'
 import { useConversationsUiStore } from '../store/conversationsUiStore'
@@ -14,7 +14,7 @@ type MessagesPage = { messages: UIMessage[]; hasMore: boolean }
 /** One conversation's data and the thread-level changes: send, take over, mark seen. */
 export function useConversationThread(conversation: UIConversation) {
   const queryClient = useQueryClient()
-  const { toast } = useToast()
+  const { show: toast } = useIMToast()
   const { draft, replyingTo, selectedFile, messagesLimit, setDraft, setReplyingTo, setSelectedFile, resetThread } = useConversationsUiStore()
 
   useEffect(() => {
@@ -68,16 +68,16 @@ export function useConversationThread(conversation: UIConversation) {
       queryClient.setQueryData<MessagesPage>(messagesKey, (old) => (old ? { ...old, messages: [...old.messages, sent] } : { messages: [sent], hasMore: false }))
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations })
     },
-    onError: (err) => toast('ההודעה לא נשלחה', err instanceof Error ? err.message : 'נסו שוב.', 'error'),
+    onError: (err) => toast({ tone: 'destructive', title: 'ההודעה לא נשלחה', description: err instanceof Error ? err.message : 'נסו שוב.' }),
   })
 
   const takeOver = useMutation({
     mutationFn: () => takeOverConversation({ data: { conversationId: conversation.id } }),
     onSuccess: () => {
-      toast('השיחה אצלך', 'הבוט לא יענה עד שתחזירו אותה אליו.', 'info')
+      toast({ title: 'השיחה אצלך', description: 'הבוט לא יענה עד שתחזירו אותה אליו.' })
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations })
     },
-    onError: (err) => toast('ההשתלטות נכשלה', err instanceof Error ? err.message : 'נסו שוב.', 'error'),
+    onError: (err) => toast({ tone: 'destructive', title: 'ההשתלטות נכשלה', description: err instanceof Error ? err.message : 'נסו שוב.' }),
   })
 
   const media = useMemo(() => collectThreadMedia(messages, appointment, conversation), [messages, appointment, conversation])

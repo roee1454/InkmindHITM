@@ -1,182 +1,102 @@
-"use client"
-
 import * as React from "react"
-import { XIcon } from '@/components/ui/icon'
 import { Dialog as DialogPrimitive } from "radix-ui"
 
-import { cn } from "#/lib/utils.ts"
-import { Button } from "#/components/ui/button.tsx"
+import { IMIcon } from "@/components/ui/icon"
+import { IM_TYPE_ROLES } from "@/components/ui/typography"
+import { cn } from "@/lib/utils"
 
-function Dialog({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Root>) {
+/**
+ * The centred-dialog primitive that IMResponsiveDialog and IMConfirmDialog are built on. Features
+ * don't import it (lint): a dialog that is a sheet on phones is IMResponsiveDialog.
+ */
+export function IMDialog(props: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
 }
 
-function DialogTrigger({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
+export function IMDialogTrigger(props: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
 }
 
-function DialogPortal({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
-  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
-}
-
-function DialogClose({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Close>) {
-  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
-}
-
-function DialogOverlay({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
-  return (
-    <DialogPrimitive.Overlay
-      data-slot="dialog-overlay"
-      className={cn(
-        "fixed inset-0 z-50 bg-black/50 fill-mode-both data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:duration-300 data-[state=open]:fade-in-0",
-        className
-      )}
-      {...props}
-    />
-  )
-}
-
-function DialogContent({
-  className,
-  children,
-  showCloseButton = true,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+export interface IMDialogContentProps extends React.ComponentProps<typeof DialogPrimitive.Content> {
   showCloseButton?: boolean
-}) {
+}
+
+export function IMDialogContent({ className, children, showCloseButton = true, ...props }: IMDialogContentProps) {
   return (
-    <DialogPortal data-slot="dialog-portal">
-      <DialogOverlay />
+    <DialogPrimitive.Portal data-slot="dialog-portal">
+      <DialogPrimitive.Overlay
+        data-slot="dialog-overlay"
+        className="fixed inset-0 z-50 bg-black/50 fill-mode-both data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:duration-300 data-[state=open]:fade-in-0"
+      />
       {/* tw-animate-css's enter/exit keyframes set `transform` directly (translate3d + scale3d),
-          which fully overwrites any static translate utility on the same element — a
-          `-translate-x-1/2 -translate-y-1/2` centering trick would lose its offset mid-animation
-          and visibly jump. Centering via a flex wrapper instead means the animated element's own
-          `transform` only ever needs to carry the zoom scale, nothing else. */}
+          which overwrites any static translate utility on the same element — a
+          `-translate-x-1/2 -translate-y-1/2` centring would lose its offset mid-animation and jump.
+          A flex wrapper centres instead, so the animated element's `transform` only carries the zoom. */}
       <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4">
         <DialogPrimitive.Content
           data-slot="dialog-content"
           tabIndex={-1}
           className={cn(
-            "pointer-events-auto relative flex w-full max-w-lg flex-col gap-4 rounded-xl border border-border bg-card p-5 font-assistant shadow-lg outline-none fill-mode-both data-[state=open]:animate-in data-[state=open]:duration-300 data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            "pointer-events-auto relative flex w-full max-w-110 flex-col gap-4 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-lg outline-none fill-mode-both data-[state=open]:animate-in data-[state=open]:duration-300 data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
             className
           )}
           onOpenAutoFocus={(e) => {
-            // Don't let Radix auto-focus the first focusable element — if that's a text input, it
-            // pops the mobile on-screen keyboard immediately on mount. Focus the panel itself.
+            // Don't let Radix focus the first focusable element — if that's a text input, it pops
+            // the on-screen keyboard on mount. Focus the panel itself.
             e.preventDefault()
             ;(e.currentTarget as HTMLElement | null)?.focus()
           }}
           {...props}
         >
           {children}
-          {showCloseButton && (
-            <DialogPrimitive.Close
-              data-slot="dialog-close"
-              className="absolute end-4 top-4 cursor-pointer rounded-xs lg:end-5 lg:top-6 text-muted-foreground opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
-            >
-              <XIcon />
-              <span className="sr-only">סגירה</span>
-            </DialogPrimitive.Close>
-          )}
+          {showCloseButton && <IMOverlayClose />}
         </DialogPrimitive.Content>
       </div>
-    </DialogPortal>
+    </DialogPrimitive.Portal>
   )
 }
 
-function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+/** The close button at the inline-end corner, shared by IMDialogContent and IMSheetContent (both Radix Dialog). */
+export function IMOverlayClose() {
+  return (
+    <DialogPrimitive.Close
+      data-slot="overlay-close"
+      className="absolute end-4 top-4 grid size-8 cursor-pointer place-items-center rounded-md text-muted-foreground outline-none transition-colors duration-100 hover:bg-surface-2 hover:text-foreground focus-visible:ring-4 focus-visible:ring-ring/35 disabled:pointer-events-none"
+    >
+      <IMIcon name="close" size="sm" />
+      <span className="sr-only">סגירה</span>
+    </DialogPrimitive.Close>
+  )
+}
+
+export function IMDialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-1.5 text-right font-assistant items-start pe-8", className)}
+      className={cn("flex flex-col items-start gap-1 pe-10 text-start", className)}
       {...props}
     />
   )
 }
 
-function DialogFooter({
-  className,
-  showCloseButton = false,
-  children,
-  ...props
-}: React.ComponentProps<"div"> & {
-  showCloseButton?: boolean
-}) {
-  return (
-    <div
-      data-slot="dialog-footer"
-      className={cn(
-        "flex flex-col-reverse gap-2 sm:flex-row-reverse sm:justify-start",
-        className
-      )}
-      {...props}
-    >
-      {children}
-      {showCloseButton && (
-        <DialogPrimitive.Close asChild>
-          <Button variant="outline">סגירה</Button>
-        </DialogPrimitive.Close>
-      )}
-    </div>
-  )
-}
-
-function DialogTitle({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Title>) {
+/** The `title` text role (17/700): a question or a task ("למחוק את התור?", "תור חדש"). */
+export function IMDialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("font-assistant text-lg leading-none font-extrabold text-foreground", className)}
+      className={cn(IM_TYPE_ROLES.title, "text-foreground", className)}
       {...props}
     />
   )
 }
 
-function DialogDescription({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Description>) {
+/** The `body-sm` role, muted: what happens. */
+export function IMDialogDescription({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Description>) {
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("font-assistant text-sm font-medium text-muted-foreground", className)}
+      className={cn(IM_TYPE_ROLES["body-sm"], "text-muted-foreground", className)}
       {...props}
     />
   )
-}
-
-export {
-  Dialog,
-  Dialog as IMDialog,
-  DialogClose,
-  DialogClose as IMDialogClose,
-  DialogContent,
-  DialogContent as IMDialogContent,
-  DialogDescription,
-  DialogDescription as IMDialogDescription,
-  DialogFooter,
-  DialogFooter as IMDialogFooter,
-  DialogHeader,
-  DialogHeader as IMDialogHeader,
-  DialogOverlay,
-  DialogOverlay as IMDialogOverlay,
-  DialogPortal,
-  DialogPortal as IMDialogPortal,
-  DialogTitle,
-  DialogTitle as IMDialogTitle,
-  DialogTrigger,
-  DialogTrigger as IMDialogTrigger,
 }

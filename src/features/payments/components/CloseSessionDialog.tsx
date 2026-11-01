@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
-import { Skeleton } from '@/components/ui/skeleton'
+import { IMDialogActions, IMResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMButton } from '@/components/ui/button'
+import { IMInput } from '@/components/ui/input'
+import { IMSwitch } from '@/components/ui/switch'
+import { IMSkeleton } from '@/components/ui/skeleton'
 import { Loader2, AlertCircle } from '@/components/ui/icon'
 import { formatDatabaseError } from '@/lib/pocketbase-error'
 import type { ApiAppointment } from '@/features/calendar/types'
@@ -78,21 +78,21 @@ export function CloseSessionDialog({
   }
 
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={open}
       onOpenChange={(next) => !close.isPending && onOpenChange(next)}
       title={`סגירת ${appointmentKindLabel(appointment.kind, appointment.projectPosition)} — ${appointment.leadName ?? 'לקוח'}`}
       description="המחיר הסופי והתשלום שהתקבל נשמרים יחד. מקדמות קודמות כבר רשומות ומקוזזות."
       footer={
-        <DialogActions>
-          <Button type="button" variant="ghost" disabled={close.isPending} onClick={() => onOpenChange(false)}>
-            ביטול
-          </Button>
-          <Button type="submit" form="close-session-form" disabled={!canSubmit} className="min-w-28 gap-2">
+        <IMDialogActions>
+          <IMButton type="submit" form="close-session-form" disabled={!canSubmit} className="min-w-28 gap-2">
             {close.isPending && <Loader2 size={14} className="animate-spin" />}
             סגירת הסשן
-          </Button>
-        </DialogActions>
+          </IMButton>
+          <IMButton type="button" variant="ghost" disabled={close.isPending} onClick={() => onOpenChange(false)}>
+            ביטול
+          </IMButton>
+        </IMDialogActions>
       }
     >
       <form
@@ -121,7 +121,7 @@ export function CloseSessionDialog({
               </span>
             )}
           </div>
-          <Input
+          <IMInput
             id="final-price"
             type="number"
             inputMode="decimal"
@@ -147,7 +147,7 @@ export function CloseSessionDialog({
             </div>
           )}
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Switch checked={chargeWaived} onCheckedChange={setChargeWaived} disabled={close.isPending} />
+            <IMSwitch checked={chargeWaived} onCheckedChange={setChargeWaived} disabled={close.isPending} />
             ללא חיוב (למשל טאץ'-אפ)
           </label>
         </div>
@@ -157,7 +157,7 @@ export function CloseSessionDialog({
           <PaymentRowsEditor rows={rows} onChange={setRows} disabled={close.isPending} />
         </div>
 
-        {finance.isLoading && <Skeleton className="h-24 w-full" />}
+        {finance.isLoading && <IMSkeleton className="h-24 w-full" />}
         {finance.isError && (
           <p className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
             {formatDatabaseError(finance.error, 'לא הצלחנו לטעון את מצב התשלומים של הפרויקט.')}
@@ -167,13 +167,13 @@ export function CloseSessionDialog({
           <LastSessionQuestion onChoose={setLastSessionChoice} disabled={close.isPending} />
         ) : (
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Switch checked={isLastSession} onCheckedChange={setLastSessionChoice} disabled={close.isPending || !finance.data} />
+            <IMSwitch checked={isLastSession} onCheckedChange={setLastSessionChoice} disabled={close.isPending || !finance.data} />
             זה הסשן האחרון בפרויקט (הפרויקט יסומן כהושלם)
           </label>
         )}
         {offerNextSession && (
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Switch checked={scheduleNext} onCheckedChange={setScheduleNext} disabled={close.isPending} />
+            <IMSwitch checked={scheduleNext} onCheckedChange={setScheduleNext} disabled={close.isPending} />
             לקבוע עכשיו את הסשן הבא (ייפתח טופס תור באותו פרויקט)
           </label>
         )}
@@ -197,6 +197,6 @@ export function CloseSessionDialog({
         )}
 
       </form>
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }

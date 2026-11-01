@@ -1,6 +1,6 @@
 import React from 'react'
-import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
+import { IMInput } from '@/components/ui/input'
+import { IMSwitch } from '@/components/ui/switch'
 import { Sparkle } from '@/components/ui/icon'
 import type { AppointmentFormValues } from '../../types'
 
@@ -28,7 +28,7 @@ export const StepPricingDeposit: React.FC<StepPricingDepositProps> = ({ values, 
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-foreground">מחיר מינימלי (₪) *</label>
-            <Input
+            <IMInput
               type="number"
               min="0"
               value={values.priceMinIls ?? ''}
@@ -39,7 +39,7 @@ export const StepPricingDeposit: React.FC<StepPricingDepositProps> = ({ values, 
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-foreground">מחיר מקסימלי (₪) *</label>
-            <Input
+            <IMInput
               type="number"
               min="0"
               value={values.priceMaxIls ?? ''}
@@ -55,7 +55,7 @@ export const StepPricingDeposit: React.FC<StepPricingDepositProps> = ({ values, 
         <label className="text-xs font-semibold text-foreground">
           {isSketch ? 'מקדמה לשריון הפגישה (₪)' : 'מקדמה (₪) *'}
         </label>
-        <Input
+        <IMInput
           type="number"
           min="0"
           value={values.depositAmount ?? ''}
@@ -80,7 +80,7 @@ export const StepPricingDeposit: React.FC<StepPricingDepositProps> = ({ values, 
               : 'סמן אם מקדמת התור שולמה'}
           </span>
         </div>
-        <Switch
+        <IMSwitch
           id="appointment-deposit-paid"
           checked={values.depositPaid}
           onCheckedChange={(checked) => onChange({ depositPaid: checked })}

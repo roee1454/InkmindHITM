@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { ArrowUp, ChevronDown, ChevronUp, MessageSquarePlus, Sparkles, X } from '@/components/ui/icon'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { IMSheet, IMSheetContent, IMSheetTrigger } from '@/components/ui/sheet'
+import { IMPopover, IMPopoverContent, IMPopoverTrigger } from '@/components/ui/popover'
 import { useIsMobile } from '#/hooks/useMediaQuery'
 import { useMcpConversation } from '../hooks/useMcpConversation'
 import { useMcpUiStore } from '../store/mcpUiStore'
@@ -25,22 +25,22 @@ export function McpPanel({ anchor }: McpPanelProps) {
 
   if (isMobile) {
     return (
-      <Sheet open={isOpen} onOpenChange={(v) => (v ? open() : close())}>
-        <SheetTrigger asChild>{anchor}</SheetTrigger>
-        <SheetContent side="bottom" showCloseButton={false} className="flex h-[88svh] flex-col gap-0 p-0">
+      <IMSheet open={isOpen} onOpenChange={(v) => (v ? open() : close())}>
+        <IMSheetTrigger asChild>{anchor}</IMSheetTrigger>
+        <IMSheetContent side="bottom" showCloseButton={false} className="flex h-[88svh] flex-col gap-0 p-0">
           {body}
-        </SheetContent>
-      </Sheet>
+        </IMSheetContent>
+      </IMSheet>
     )
   }
 
   return (
-    <Popover open={isOpen} onOpenChange={(v) => (v ? open() : close())}>
-      <PopoverTrigger asChild>{anchor}</PopoverTrigger>
-      <PopoverContent side="top" align="end" sideOffset={12} className="flex h-[560px] w-[420px] flex-col gap-0 p-0">
+    <IMPopover open={isOpen} onOpenChange={(v) => (v ? open() : close())}>
+      <IMPopoverTrigger asChild>{anchor}</IMPopoverTrigger>
+      <IMPopoverContent side="top" align="end" sideOffset={12} className="flex h-[560px] w-[420px] flex-col gap-0 p-0">
         {body}
-      </PopoverContent>
-    </Popover>
+      </IMPopoverContent>
+    </IMPopover>
   )
 }
 

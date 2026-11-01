@@ -1,0 +1,21 @@
+import type { ComponentType } from 'react'
+import { Home, Sun, Users } from '@/components/ui/icon'
+import * as SelectPrimitive from '@radix-ui/react-select'
+
+export const NAV: ReadonlyArray<{ icon: typeof Home; label: string }> = [
+  { icon: Home, label: 'בית' },
+  { icon: Users, label: 'לקוחות' },
+]
+
+export function Nav({ Icon }: { Icon: ComponentType }) {
+  return (
+    <nav>
+      {NAV.map((item) => (
+        <item.icon key={item.label} size={18} />
+      ))}
+      <Icon />
+      <SelectPrimitive.Icon />
+      <Sun size={16} />
+    </nav>
+  )
+}

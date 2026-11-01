@@ -2,11 +2,11 @@ import type React from 'react'
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { MessageSquare, Star } from '@/components/ui/icon'
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
-import { StatusLabel } from '@/components/ui/status-label'
+import { IMSheet, IMSheetContent, IMSheetDescription, IMSheetTitle } from '@/components/ui/sheet'
+import { IMTabs, IMTabsContent, IMTabsList, IMTabsTrigger } from '@/components/ui/tabs'
+import { IMSkeleton } from '@/components/ui/skeleton'
+import { IMButton } from '@/components/ui/button'
+import { IMStatusLabel } from '@/components/ui/status-label'
 import { useIsMobile } from '#/hooks/useMediaQuery'
 import { cn } from '@/lib/utils'
 import { formatPhoneForDisplay } from '@/lib/phone'
@@ -33,8 +33,8 @@ interface CustomerSheetProps {
 function TabSkeleton() {
   return (
     <div className="flex flex-col gap-2">
-      <Skeleton className="h-14 w-full rounded-lg" />
-      <Skeleton className="h-14 w-full rounded-lg" />
+      <IMSkeleton className="h-14 w-full rounded-lg" />
+      <IMSkeleton className="h-14 w-full rounded-lg" />
     </div>
   )
 }
@@ -69,8 +69,8 @@ export function CustomerSheet({ customer: selected, onClose, ...details }: Custo
     'h-10 flex-none rounded-none border-b-2 border-transparent px-0 font-bold shadow-none data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none'
 
   return (
-    <Sheet open={selected !== null} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent
+    <IMSheet open={selected !== null} onOpenChange={(open) => !open && onClose()}>
+      <IMSheetContent
         side={isMobile ? 'bottom' : 'left'}
         dir="rtl"
         className={cn('gap-0 p-0', isMobile ? 'h-[92svh] pt-3 pb-0' : 'w-full sm:max-w-lg')}
@@ -80,14 +80,14 @@ export function CustomerSheet({ customer: selected, onClose, ...details }: Custo
             <header className="flex flex-col gap-3 px-5 pt-4 pb-4 pe-12">
               <div className="flex min-w-0 flex-col gap-1">
                 <div className="flex min-w-0 items-center gap-2">
-                  <SheetTitle className="truncate text-xl">{customer.name || 'לקוח ללא שם'}</SheetTitle>
+                  <IMSheetTitle className="truncate text-xl">{customer.name || 'לקוח ללא שם'}</IMSheetTitle>
                   {customer.isVip && <Star size={15} className="shrink-0 fill-warning text-warning" aria-label="VIP" />}
                 </div>
-                <SheetDescription className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                  <StatusLabel role={CUSTOMER_LIFECYCLE_ROLE[customer.lifecycle]}>{CUSTOMER_LIFECYCLE_LABELS[customer.lifecycle]}</StatusLabel>
+                <IMSheetDescription className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                  <IMStatusLabel role={CUSTOMER_LIFECYCLE_ROLE[customer.lifecycle]}>{CUSTOMER_LIFECYCLE_LABELS[customer.lifecycle]}</IMStatusLabel>
                   <span aria-hidden>·</span>
                   <span className="tabular-nums">{formatPhoneForDisplay(customer.phone)}</span>
-                </SheetDescription>
+                </IMSheetDescription>
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
@@ -98,10 +98,10 @@ export function CustomerSheet({ customer: selected, onClose, ...details }: Custo
                     {data.totals.credit > 0 && <Fact label="זיכוי" value={formatIls(data.totals.credit)} />}
                   </dl>
                 ) : (
-                  <Skeleton className="h-5 w-40" />
+                  <IMSkeleton className="h-5 w-40" />
                 )}
                 {data?.conversationId && (
-                  <Button
+                  <IMButton
                     variant="outline"
                     size="sm"
                     onClick={() => navigate({ to: '/dashboard/conversations', search: { chatId: data.conversationId! } })}
@@ -109,39 +109,39 @@ export function CustomerSheet({ customer: selected, onClose, ...details }: Custo
                   >
                     <MessageSquare size={15} />
                     לשיחה
-                  </Button>
+                  </IMButton>
                 )}
               </div>
             </header>
 
-            <Tabs key={customer.id} defaultValue="projects" dir="rtl" className="min-h-0 flex-1 gap-0">
-              <TabsList className="h-auto justify-start gap-5 rounded-none border-b border-border bg-transparent p-0 px-5">
-                <TabsTrigger value="projects" className={triggerClass}>
+            <IMTabs key={customer.id} defaultValue="projects" dir="rtl" className="min-h-0 flex-1 gap-0">
+              <IMTabsList className="h-auto justify-start gap-5 rounded-none border-b border-border bg-transparent p-0 px-5">
+                <IMTabsTrigger value="projects" className={triggerClass}>
                   פרויקטים{data ? ` · ${data.projects.length}` : ''}
-                </TabsTrigger>
-                <TabsTrigger value="payments" className={triggerClass}>
+                </IMTabsTrigger>
+                <IMTabsTrigger value="payments" className={triggerClass}>
                   תשלומים
-                </TabsTrigger>
-                <TabsTrigger value="details" className={triggerClass}>
+                </IMTabsTrigger>
+                <IMTabsTrigger value="details" className={triggerClass}>
                   פרטים
-                </TabsTrigger>
-              </TabsList>
+                </IMTabsTrigger>
+              </IMTabsList>
               <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]">
-                <TabsContent value="projects">
+                <IMTabsContent value="projects">
                   {data ? <CustomerProjectsTab projects={data.projects} now={new Date()} onOpenProject={setOpenProjectId} /> : (loading ?? failed)}
-                </TabsContent>
-                <TabsContent value="payments">{data ? <CustomerPaymentsTab overview={data} /> : (loading ?? failed)}</TabsContent>
-                <TabsContent value="details">
+                </IMTabsContent>
+                <IMTabsContent value="payments">{data ? <CustomerPaymentsTab overview={data} /> : (loading ?? failed)}</IMTabsContent>
+                <IMTabsContent value="details">
                   <CustomerDetailsTab {...details} />
-                </TabsContent>
+                </IMTabsContent>
               </div>
-            </Tabs>
+            </IMTabs>
 
             <ProjectPanel projectId={openProjectId} onClose={() => setOpenProjectId(null)} />
           </>
         )}
-      </SheetContent>
-    </Sheet>
+      </IMSheetContent>
+    </IMSheet>
   )
 }
 

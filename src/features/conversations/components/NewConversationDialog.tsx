@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Send } from '@/components/ui/icon'
-import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { Button } from '@/components/ui/button'
-import { useToast } from '@/components/ui/ToastProvider'
+import { IMDialogActions, IMResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMButton } from '@/components/ui/button'
+import { useIMToast } from '@/components/ui/toast'
 import { customersQueryOptions } from '@/features/customers/utils/customers-query'
 import type { Customer } from '@/features/customers/types'
 import {
@@ -29,7 +29,7 @@ export function NewConversationDialog({
   onSelectConversation,
 }: NewConversationDialogProps) {
   const queryClient = useQueryClient()
-  const { toast } = useToast()
+  const { show: toast } = useIMToast()
 
   const [step, setStep] = useState<'recipient' | 'template'>('recipient')
   const [recipientQuery, setRecipientQuery] = useState('')
@@ -152,17 +152,17 @@ export function NewConversationDialog({
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       queryClient.invalidateQueries({ queryKey: ['messages', res.conversationId] })
-      toast('התבנית נשלחה והשיחה נפתחה בהצלחה!', '', 'success')
+      toast({ tone: 'success', title: 'התבנית נשלחה והשיחה נפתחה בהצלחה!' })
       onOpenChange(false)
       onSelectConversation(res.conversationId)
     },
     onError: (err: Error) => {
-      toast('שליחת השיחה נכשלה', err.message || 'אירעה שגיאה', 'error')
+      toast({ tone: 'destructive', title: 'שליחת השיחה נכשלה', description: err.message || 'אירעה שגיאה' })
     },
   })
 
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
       size="lg"
@@ -170,29 +170,29 @@ export function NewConversationDialog({
       description={step === 'recipient' ? 'עם מי? לקוח קיים או מספר חדש.' : 'השיחה נפתחת בתבנית מאושרת, כי ללקוח שלא כתב לאחרונה אי אפשר לכתוב חופשי.'}
       footer={
         step === 'template' ? (
-          <DialogActions
-            start={
-              <Button type="button" variant="ghost" onClick={() => setStep('recipient')} disabled={sendMutation.isPending}>
+          <IMDialogActions
+            secondary={
+              <IMButton type="button" variant="ghost" onClick={() => setStep('recipient')} disabled={sendMutation.isPending}>
                 חזרה
-              </Button>
+              </IMButton>
             }
           >
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={sendMutation.isPending}>
+            <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={sendMutation.isPending}>
               ביטול
-            </Button>
+            </IMButton>
             {templates.length > 0 && (
-              <Button type="button" disabled={sendMutation.isPending} onClick={() => sendMutation.mutate()} className="min-w-28 gap-1.5">
+              <IMButton type="button" disabled={sendMutation.isPending} onClick={() => sendMutation.mutate()} className="min-w-28 gap-1.5">
                 {sendMutation.isPending ? (
                   'שולח…'
                 ) : (
                   <>
-                    <Send className="size-3.5 rotate-180" />
+                    <Send className="size-3.5" />
                     שליחה ופתיחת שיחה
                   </>
                 )}
-              </Button>
+              </IMButton>
             )}
-          </DialogActions>
+          </IMDialogActions>
         ) : undefined
       }
     >
@@ -222,6 +222,6 @@ export function NewConversationDialog({
           />
         )
       )}
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }

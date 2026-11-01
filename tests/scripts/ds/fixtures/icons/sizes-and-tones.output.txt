@@ -1,0 +1,18 @@
+import { IMIcon } from '#/components/ui/icon'
+
+export function Row() {
+  return (
+    <div>
+      <IMIcon name="check" size="xs" className="stroke-[2.5]" />
+      <IMIcon name="plus" size="xs" />
+      <IMIcon name="close" size="sm" />
+      <IMIcon name="search" tone="muted" />
+      <IMIcon name="bell" size="lg" tone="accent" />
+      <IMIcon name="calendar" size="xl" tone="default" className="ms-2" />
+      <IMIcon name="needle" size="sm" tone="artist-3" />
+      <IMIcon name="user" size="sm" className="text-muted-foreground/60 group-hover:text-foreground" />
+      <IMIcon name="chevron-end" size="sm" tone="muted" className="opacity-0 transition-opacity group-hover:opacity-100" />
+      <IMIcon name="check" label="נשלח" />
+    </div>
+  )
+}

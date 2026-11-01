@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Skeleton } from '@/components/ui/skeleton'
+import { IMSkeleton } from '@/components/ui/skeleton'
 import type { StageCount } from '../utils/home'
 
 /**
@@ -14,8 +14,8 @@ export function PipelineStrip({ stages, isLoading }: { stages: StageCount[]; isL
         {isLoading
           ? Array.from({ length: 6 }, (_, i) => (
               <div key={i} className="flex flex-col gap-2 bg-card px-4 py-3.5">
-                <Skeleton className="h-3.5 w-14" />
-                <Skeleton className="h-7 w-8" />
+                <IMSkeleton className="h-3.5 w-14" />
+                <IMSkeleton className="h-7 w-8" />
               </div>
             ))
           : stages.map((stage) => (

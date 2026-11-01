@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Skeleton } from '@/components/ui/skeleton'
+import { IMSkeleton } from '@/components/ui/skeleton'
 import { StatStrip } from '@/components/StatStrip'
 import { getStudioAnalytics } from './server/analytics'
 import { SourceBreakdownChart } from './components/SourceBreakdownChart'
@@ -99,22 +99,22 @@ function AnalyticsSkeleton() {
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="flex flex-col gap-1.5 bg-card px-4 py-3.5 sm:px-5 sm:py-4">
-            <Skeleton className="h-3.5 w-20" />
-            <Skeleton className="h-8 w-24" />
-            <Skeleton className="h-3 w-28" />
+            <IMSkeleton className="h-3.5 w-20" />
+            <IMSkeleton className="h-8 w-24" />
+            <IMSkeleton className="h-3 w-28" />
           </div>
         ))}
       </div>
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
         <div className="card-native h-80 overflow-hidden p-5">
-          <Skeleton className="h-full w-full rounded-xl" />
+          <IMSkeleton className="h-full w-full rounded-xl" />
         </div>
         <div className="card-native h-80 overflow-hidden p-5">
-          <Skeleton className="h-full w-full rounded-xl" />
+          <IMSkeleton className="h-full w-full rounded-xl" />
         </div>
       </div>
       <div className="card-native h-64 overflow-hidden p-5">
-        <Skeleton className="h-full w-full rounded-xl" />
+        <IMSkeleton className="h-full w-full rounded-xl" />
       </div>
     </div>
   )

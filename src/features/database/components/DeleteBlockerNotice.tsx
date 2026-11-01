@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import { CalendarClock, ShieldAlert } from '@/components/ui/icon'
 import { blockerMessage, formatAppointmentSlot } from '../utils/delete-messages'
 import type { DeleteBlocker } from '../types'
@@ -28,9 +28,9 @@ export function DeleteBlockerNotice({ blocker }: { blocker: DeleteBlocker }) {
               </li>
             ))}
           </ul>
-          <Button asChild variant="outline" size="sm" className="self-start">
+          <IMButton asChild variant="outline" size="sm" className="self-start">
             <Link to="/dashboard/calendar">מעבר ליומן לביטול התורים</Link>
-          </Button>
+          </IMButton>
         </>
       )}
     </div>

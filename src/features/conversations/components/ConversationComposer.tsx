@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { Clock, Paperclip, SendHorizontal, X } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
+import { IMButton } from '@/components/ui/button'
+import { IMTextarea } from '@/components/ui/textarea'
 import type { UIMessage } from '../types'
 import type { SelectedFile } from '../store/conversationsUiStore'
 
@@ -86,9 +86,9 @@ export function ConversationComposer({
           <p className="min-w-0 flex-1 text-muted-foreground">
             <span className="font-semibold text-foreground">חלון 24 השעות נסגר.</span> עד שהלקוח יכתוב שוב, אפשר לשלוח רק תבנית מאושרת.
           </p>
-          <Button size="sm" onClick={onOpenSendTemplate} className="h-9">
+          <IMButton size="sm" onClick={onOpenSendTemplate} className="h-9">
             שליחת תבנית
-          </Button>
+          </IMButton>
         </div>
       )}
 
@@ -101,7 +101,7 @@ export function ConversationComposer({
 
       <div className="flex items-end gap-2">
         <input ref={fileInputRef} type="file" accept="image/*,video/*,application/pdf" onChange={handleFileChange} className="hidden" />
-        <Button
+        <IMButton
           type="button"
           variant="ghost"
           size="icon"
@@ -111,9 +111,9 @@ export function ConversationComposer({
           className="size-10 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <Paperclip className="size-5" />
-        </Button>
+        </IMButton>
 
-        <Textarea
+        <IMTextarea
           rows={1}
           value={draft}
           disabled={closed || isSending}
@@ -124,9 +124,9 @@ export function ConversationComposer({
           className="max-h-32 min-h-10 flex-1 resize-none rounded-xl py-2.5 text-sm leading-relaxed md:min-h-10"
         />
 
-        <Button type="button" size="icon" disabled={!canSend} onClick={onSend} aria-label="שליחה" className="size-10 rounded-xl">
-          <SendHorizontal className="size-5 rotate-180" />
-        </Button>
+        <IMButton type="button" size="icon" disabled={!canSend} onClick={onSend} aria-label="שליחה" className="size-10 rounded-xl">
+          <SendHorizontal className="size-5" />
+        </IMButton>
       </div>
     </div>
   )

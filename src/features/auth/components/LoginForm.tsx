@@ -4,14 +4,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
-import { Input } from '@/components/ui/input'
+import { IMInput } from '@/components/ui/input'
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+  IMForm,
+  IMFormControl,
+  IMFormField,
+  IMFormItem,
+  IMFormLabel,
+  IMFormMessage,
 } from '@/components/ui/form'
 import { login } from '@/features/auth/server/auth'
 import { Mail, Lock, AlertCircle, Eye, EyeOff } from '@/components/ui/icon'
@@ -37,23 +37,23 @@ export function LoginForm() {
   })
 
   return (
-    <Form {...form}>
+    <IMForm {...form}>
       <form
         onSubmit={form.handleSubmit((values) => mutation.mutate(values))}
         className="form-stack gap-8 text-right font-assistant"
         dir="rtl"
       >
         <div className="form-stack">
-          <FormField
+          <IMFormField
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="form-label">כתובת אימייל</FormLabel>
-                <FormControl>
+              <IMFormItem>
+                <IMFormLabel className="form-label">כתובת אימייל</IMFormLabel>
+                <IMFormControl>
                   <div className="flex h-14 w-full items-center gap-2.5 rounded-2xl border border-input bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
                     <Mail className="size-[18px] shrink-0 text-muted-foreground" />
-                    <Input
+                    <IMInput
                       type="email"
                       placeholder="name@studio.com"
                       dir="ltr"
@@ -61,22 +61,22 @@ export function LoginForm() {
                       {...field}
                     />
                   </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+                </IMFormControl>
+                <IMFormMessage />
+              </IMFormItem>
             )}
           />
 
-          <FormField
+          <IMFormField
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="form-label">סיסמה</FormLabel>
-                <FormControl>
+              <IMFormItem>
+                <IMFormLabel className="form-label">סיסמה</IMFormLabel>
+                <IMFormControl>
                   <div className="flex h-14 w-full items-center gap-2.5 rounded-2xl border border-input bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
                     <Lock className="size-[18px] shrink-0 text-muted-foreground" />
-                    <Input
+                    <IMInput
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       dir="ltr"
@@ -91,9 +91,9 @@ export function LoginForm() {
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+                </IMFormControl>
+                <IMFormMessage />
+              </IMFormItem>
             )}
           />
         </div>
@@ -114,6 +114,6 @@ export function LoginForm() {
           </Link>
         </div>
       </form>
-    </Form>
+    </IMForm>
   )
 }

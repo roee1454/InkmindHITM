@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { CalendarDays, Edit3, Plus, Repeat, Trash2 } from '@/components/ui/icon'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
-import { SearchInput } from '@/components/ui/search-input'
-import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { IMButton } from '@/components/ui/button'
+import { IMSkeleton } from '@/components/ui/skeleton'
+import { IMSearchInput } from '@/components/ui/search-input'
+import { IMConfirmDialog } from '@/components/ui/confirm-dialog'
 import { getStudioClosures, deleteStudioClosure } from '@/features/settings/server/settings'
 import type { StudioClosure } from '@/features/settings/server/settings'
 import { SettingsPage, SettingsSection } from '@/features/settings/components/settings-layout'
@@ -120,19 +120,19 @@ function ClosuresSettings() {
         title="מועדים"
         description={groups.length > 0 ? `${groups.length} מועדים. חגים שנוספו מהלוח העברי נסגרים לפי התאריך העברי בכל שנה.` : undefined}
         action={
-          <Button type="button" size="sm" onClick={() => setAddOpen(true)} className="gap-1.5">
+          <IMButton type="button" size="sm" onClick={() => setAddOpen(true)} className="gap-1.5">
             <Plus size={14} />
             הוספה
-          </Button>
+          </IMButton>
         }
         bare
       >
-        {groups.length > 5 && <SearchInput size="sm" variant="card" placeholder="חיפוש לפי שם או תאריך (פסח, 2026-10)…" value={search} onChange={setSearch} />}
+        {groups.length > 5 && <IMSearchInput size="sm" variant="default" placeholder="חיפוש לפי שם או תאריך (פסח, 2026-10)…" value={search} onChange={setSearch} />}
         <div className="card-native overflow-hidden">
           {isLoading ? (
             <div className="flex flex-col gap-2 p-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
+              <IMSkeleton className="h-10 w-full" />
+              <IMSkeleton className="h-10 w-full" />
             </div>
           ) : groups.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-muted-foreground">אין ימי סגירה. אפשר להוסיף את החגים בלחיצה אחת.</p>
@@ -146,7 +146,7 @@ function ClosuresSettings() {
 
       <AddClosureDialog open={addOpen} onOpenChange={setAddOpen} />
       <EditClosureDialog group={editingGroup} onOpenChange={(open) => !open && setEditingGroup(null)} onSaved={() => setEditingGroup(null)} />
-      <ConfirmDialog
+      <IMConfirmDialog
         open={groupToDelete !== null}
         onOpenChange={(open) => !open && setGroupToDelete(null)}
         title={groupToDelete ? `הסרת "${groupToDelete.reason}"` : ''}
@@ -158,7 +158,7 @@ function ClosuresSettings() {
               : [{ label: 'תאריך', value: <span dir="ltr">{groupToDelete.dates[0]}</span> }]
             : undefined
         }
-        tone="destructive"
+        variant="destructive"
         confirmLabel="הסרה"
         pendingLabel="מסיר…"
         isPending={removeGroup.isPending}

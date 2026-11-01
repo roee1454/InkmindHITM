@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { ChevronLeft } from '@/components/ui/icon'
-import { Skeleton } from '@/components/ui/skeleton'
+import { IMSkeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
 interface HomeSectionProps {
@@ -71,8 +71,8 @@ export function HomeRowsSkeleton({ rows = 3 }: { rows?: number }) {
     <div className="flex flex-col gap-4 px-4 py-4 sm:px-5" aria-hidden>
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex flex-col gap-2">
-          <Skeleton className="h-4 w-2/5" />
-          <Skeleton className="h-3.5 w-3/5" />
+          <IMSkeleton className="h-4 w-2/5" />
+          <IMSkeleton className="h-3.5 w-3/5" />
         </div>
       ))}
     </div>

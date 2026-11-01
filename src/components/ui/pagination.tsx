@@ -1,130 +1,129 @@
-import React from 'react'
-import { ChevronRight, ChevronLeft } from '@/components/ui/icon'
-import { cn } from '@/lib/utils'
+import { IMButton } from "@/components/ui/button"
+import { IMNum, IMText, IM_TYPE_ROLES } from "@/components/ui/typography"
+import { cn } from "@/lib/utils"
 
-export type PaginationItem = number | 'ellipsis-start' | 'ellipsis-end'
+export type IMPaginationItem = number | "ellipsis-start" | "ellipsis-end"
 
-export function getPaginationPages(currentPage: number, totalPages: number): PaginationItem[] {
+/**
+ * The page slots to show: every page up to 7, else the first, the last, a window around the current
+ * page and an ellipsis for each gap — never more than 7 slots, so the row can't overflow.
+ */
+export function imPaginationPages(currentPage: number, totalPages: number): IMPaginationItem[] {
   if (totalPages <= 7) {
     return Array.from({ length: totalPages }, (_, i) => i + 1)
   }
-
   if (currentPage <= 4) {
-    return [1, 2, 3, 4, 5, 'ellipsis-end', totalPages]
+    return [1, 2, 3, 4, 5, "ellipsis-end", totalPages]
   }
-
   if (currentPage >= totalPages - 3) {
-    return [1, 'ellipsis-start', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
+    return [1, "ellipsis-start", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
   }
-
-  return [1, 'ellipsis-start', currentPage - 1, currentPage, currentPage + 1, 'ellipsis-end', totalPages]
+  return [1, "ellipsis-start", currentPage - 1, currentPage, currentPage + 1, "ellipsis-end", totalPages]
 }
 
-export interface PaginationProps {
+export interface IMPaginationProps {
   currentPage: number
   totalPages: number
   onPageChange: (page: number) => void
+  /** With it, a range summary ("מציג 11–20 מתוך 57 לקוחות") sits at the inline start. */
   totalItems?: number
   itemsPerPage?: number
+  /** The plural noun of the summary. */
   itemLabel?: string
   className?: string
 }
 
-export const Pagination: React.FC<PaginationProps> = ({
+/**
+ * Windowed pagination under a list: the range summary at the start; previous / pages / next at the
+ * end. On phones the page chips collapse to "2 / 7". Renders nothing for a single page.
+ */
+export function IMPagination({
   currentPage,
   totalPages,
   onPageChange,
   totalItems,
   itemsPerPage = 10,
-  itemLabel = 'פריטים',
+  itemLabel = "פריטים",
   className,
-}) => {
+}: IMPaginationProps) {
   if (totalPages <= 1) return null
 
-  const safePage = Math.min(Math.max(1, currentPage), totalPages)
-  const pages = getPaginationPages(safePage, totalPages)
-
-  const startItem = (safePage - 1) * itemsPerPage + 1
-  const endItem = totalItems !== undefined ? Math.min(safePage * itemsPerPage, totalItems) : safePage * itemsPerPage
+  const page = Math.min(Math.max(1, currentPage), totalPages)
+  const startItem = (page - 1) * itemsPerPage + 1
+  const endItem = totalItems !== undefined ? Math.min(page * itemsPerPage, totalItems) : page * itemsPerPage
 
   return (
-    <div
-      className={cn(
-        'flex flex-col gap-3 border-t border-border pt-4 font-assistant text-sm sm:flex-row sm:items-center sm:justify-between',
-        className
-      )}
-      dir="rtl"
+    <nav
+      aria-label="עימוד"
+      data-slot="pagination"
+      className={cn("flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3.5", className)}
     >
       {totalItems !== undefined && (
-        <div className="text-muted-foreground text-center sm:text-start">
-          מציג {startItem}–{endItem} מתוך {totalItems} {itemLabel}
-        </div>
+        <IMText variant="body-sm" tone="muted">
+          מציג <IMNum>{startItem}–{endItem}</IMNum> מתוך <IMNum>{totalItems}</IMNum> {itemLabel}
+        </IMText>
       )}
 
-      <div className="flex items-center justify-between gap-2 sm:justify-start">
-        <button
+      <div className="ms-auto flex items-center gap-1">
+        <IMButton
           type="button"
-          onClick={() => onPageChange(Math.max(1, safePage - 1))}
-          disabled={safePage === 1}
-          className="flex h-9 cursor-pointer items-center gap-1 rounded-xl border border-border bg-card px-3.5 text-sm font-bold text-foreground transition-all duration-100 active:scale-95 active:bg-muted disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100 shadow-2xs"
+          variant="outline"
+          size="sm"
+          icon="chevron-start"
+          onClick={() => onPageChange(page - 1)}
+          disabled={page === 1}
           aria-label="עמוד קודם"
         >
-          <ChevronRight size={15} /> הקודם
-        </button>
+          הקודם
+        </IMButton>
 
-        {/* Mobile compact indicator */}
-        <span className="font-bold text-muted-foreground sm:hidden">
-          עמוד {safePage} מתוך {totalPages}
-        </span>
+        <IMText as="span" variant="label" tone="muted" numeric className="px-2 sm:hidden">
+          {page} / {totalPages}
+        </IMText>
 
-        {/* Desktop windowed page numbers */}
-        <div className="hidden items-center gap-1 sm:flex">
-          {pages.map((item, idx) => {
-            if (typeof item === 'string') {
-              return (
-                <span
-                  key={`ellipsis-${idx}`}
-                  className="flex h-8 w-8 items-center justify-center text-xs font-bold text-muted-foreground select-none"
-                >
-                  ...
-                </span>
-              )
-            }
-
-            const isCurrent = item === safePage
-            return (
+        <div className="hidden items-center gap-1 px-1 sm:flex">
+          {imPaginationPages(page, totalPages).map((item) =>
+            typeof item === "string" ? (
+              <span
+                key={item}
+                aria-hidden
+                className={cn(IM_TYPE_ROLES.label, "grid size-8 place-items-center text-muted-foreground select-none")}
+              >
+                …
+              </span>
+            ) : (
               <button
                 key={item}
                 type="button"
                 onClick={() => onPageChange(item)}
+                aria-current={item === page ? "page" : undefined}
+                aria-label={`עמוד ${item}`}
                 className={cn(
-                  'h-8 w-8 cursor-pointer rounded-lg text-sm font-bold transition-transform duration-150 ease-native active:scale-95',
-                  isCurrent
-                    ? 'bg-primary text-primary-foreground shadow-2xs'
-                    : 'border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/80 active:bg-muted'
+                  IM_TYPE_ROLES.label,
+                  "grid size-8 cursor-pointer place-items-center rounded-md border outline-none transition-[transform,background-color,color] duration-150 ease-native focus-visible:ring-4 focus-visible:ring-ring/35 active:scale-95",
+                  item === page
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-muted-foreground hover:bg-surface-2 hover:text-foreground"
                 )}
-                aria-current={isCurrent ? 'page' : undefined}
               >
-                {item}
+                <IMNum>{item}</IMNum>
               </button>
             )
-          })}
+          )}
         </div>
 
-        <button
+        <IMButton
           type="button"
-          onClick={() => onPageChange(Math.min(totalPages, safePage + 1))}
-          disabled={safePage === totalPages}
-          className="flex h-9 cursor-pointer items-center gap-1 rounded-xl border border-border bg-card px-3.5 text-sm font-bold text-foreground transition-all duration-100 active:scale-95 active:bg-muted disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100 shadow-2xs"
+          variant="outline"
+          size="sm"
+          iconEnd="chevron-end"
+          onClick={() => onPageChange(page + 1)}
+          disabled={page === totalPages}
           aria-label="עמוד הבא"
         >
-          הבא <ChevronLeft size={15} />
-        </button>
+          הבא
+        </IMButton>
       </div>
-    </div>
+    </nav>
   )
 }
-
-export { Pagination as IMPagination }
-export type IMPaginationProps = PaginationProps
-

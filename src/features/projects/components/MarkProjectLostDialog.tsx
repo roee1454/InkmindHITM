@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { IMDialogActions, IMResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMButton } from '@/components/ui/button'
+import { IMTextarea } from '@/components/ui/textarea'
+import { IMSelect, IMSelectContent, IMSelectItem, IMSelectTrigger, IMSelectValue } from '@/components/ui/select'
 import { Loader2 } from '@/components/ui/icon'
 import { LOST_REASONS } from '../types'
 import type { LostReason } from '../types'
@@ -33,47 +33,47 @@ export function MarkProjectLostDialog({ projectId, projectTitle, open, onOpenCha
   const submit = () => markLost.mutate({ projectId, reason, note: note.trim() || undefined }, { onSuccess: () => onOpenChange(false) })
 
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={open}
       onOpenChange={(next) => !markLost.isPending && onOpenChange(next)}
       title="סימון הפרויקט כאבוד"
       description={`${projectTitle || 'הפרויקט'} יוצא מהלוח הפתוח. אפשר לפתוח אותו מחדש בכל רגע.`}
       footer={
-        <DialogActions error={markLost.isError ? (markLost.error instanceof Error ? markLost.error.message : 'הסימון נכשל.') : null}>
-          <Button type="button" variant="ghost" disabled={markLost.isPending} onClick={() => onOpenChange(false)}>
-            ביטול
-          </Button>
-          <Button type="button" disabled={markLost.isPending} onClick={submit} className="min-w-28 gap-2">
+        <IMDialogActions error={markLost.isError ? (markLost.error instanceof Error ? markLost.error.message : 'הסימון נכשל.') : null}>
+          <IMButton type="button" disabled={markLost.isPending} onClick={submit} className="min-w-28 gap-2">
             {markLost.isPending && <Loader2 size={14} className="animate-spin" />}
             סימון כאבוד
-          </Button>
-        </DialogActions>
+          </IMButton>
+          <IMButton type="button" variant="ghost" disabled={markLost.isPending} onClick={() => onOpenChange(false)}>
+            ביטול
+          </IMButton>
+        </IMDialogActions>
       }
     >
       <div className="form-stack">
         <div className="flex flex-col gap-1.5">
           <label className="form-label">למה הלקוח לא המשיך?</label>
-          <Select value={reason} onValueChange={(value) => setReason(value as LostReason)}>
-            <SelectTrigger className="w-full" aria-label="סיבה">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent dir="rtl">
+          <IMSelect value={reason} onValueChange={(value) => setReason(value as LostReason)}>
+            <IMSelectTrigger className="w-full" aria-label="סיבה">
+              <IMSelectValue />
+            </IMSelectTrigger>
+            <IMSelectContent dir="rtl">
               {LOST_REASONS.map((option) => (
-                <SelectItem key={option} value={option}>
+                <IMSelectItem key={option} value={option}>
                   {LOST_REASON_LABELS[option]}
-                </SelectItem>
+                </IMSelectItem>
               ))}
-            </SelectContent>
-          </Select>
+            </IMSelectContent>
+          </IMSelect>
           <p className="text-xs text-muted-foreground">הסיבה נספרת בניתוח הנשירה במשפך.</p>
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="lost-note" className="form-label">
             הערה <span className="font-medium text-muted-foreground">(לא חובה)</span>
           </label>
-          <Textarea id="lost-note" value={note} maxLength={1000} onChange={(e) => setNote(e.target.value)} className="min-h-20" />
+          <IMTextarea id="lost-note" value={note} maxLength={1000} onChange={(e) => setNote(e.target.value)} className="min-h-20" />
         </div>
       </div>
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }

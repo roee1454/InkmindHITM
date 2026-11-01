@@ -19,6 +19,8 @@
     "start": "node .output/server/index.mjs",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "db:audit": "tsx pocketbase/scripts/db-audit.ts",
+    "ds:audit": "tsx scripts/ds-audit.ts",
+    "ds:codemod": "tsx scripts/ds/codemods/index.ts",
     "ai:models": "tsx scripts/check-anthropic-models.ts"
   },
   "dependencies": {
@@ -44,7 +46,6 @@
     "dotenv": "^17.4.2",
     "google-auth-library": "10.5.0",
     "ioredis": "^5.11.1",
-    "lucide-react": "^1.48.0",
     "motion": "^13.4.6",
     "pocketbase": "^0.27.3",
     "radix-ui": "^1.6.7",

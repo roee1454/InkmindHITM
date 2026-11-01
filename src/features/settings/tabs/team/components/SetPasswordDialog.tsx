@@ -1,9 +1,9 @@
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMButton } from '@/components/ui/button'
+import { IMInput } from '@/components/ui/input'
+import { IMDialogActions, IMResponsiveDialog } from '@/components/ui/responsive-dialog'
 import { setStaffPassword } from '@/features/settings/server/settings'
 
 interface SetPasswordDialogProps {
@@ -48,7 +48,7 @@ export function SetPasswordDialog({ open, onOpenChange, trigger, staffId, name, 
   }
 
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
       trigger={trigger}
@@ -56,14 +56,14 @@ export function SetPasswordDialog({ open, onOpenChange, trigger, staffId, name, 
       title={hasPassword ? `איפוס הסיסמה של ${name}` : `סיסמה ל${name}`}
       description={hasPassword ? 'הסיסמה הקודמת תפסיק לעבוד.' : undefined}
       footer={
-        <DialogActions error={error}>
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            ביטול
-          </Button>
-          <Button type="submit" form="set-password-form" disabled={mutation.isPending} className="min-w-28">
+        <IMDialogActions error={error}>
+          <IMButton type="submit" form="set-password-form" disabled={mutation.isPending} className="min-w-28">
             {mutation.isPending ? 'שומר…' : hasPassword ? 'איפוס' : 'קביעת סיסמה'}
-          </Button>
-        </DialogActions>
+          </IMButton>
+          <IMButton type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            ביטול
+          </IMButton>
+        </IMDialogActions>
       }
     >
       <form id="set-password-form" onSubmit={submit} className="form-stack">
@@ -71,16 +71,16 @@ export function SetPasswordDialog({ open, onOpenChange, trigger, staffId, name, 
           <label htmlFor="new-password" className="form-label">
             סיסמה חדשה
           </label>
-          <Input id="new-password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} dir="ltr" />
+          <IMInput id="new-password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} dir="ltr" />
           <p className="text-xs text-muted-foreground">לפחות {MIN_LENGTH} תווים.</p>
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="confirm-password" className="form-label">
             אימות
           </label>
-          <Input id="confirm-password" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} dir="ltr" />
+          <IMInput id="confirm-password" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} dir="ltr" />
         </div>
       </form>
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }

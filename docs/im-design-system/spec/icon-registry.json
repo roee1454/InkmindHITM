@@ -1,0 +1,472 @@
+{
+ "check": {
+  "glyph": "Check",
+  "weight": "bold",
+  "mirrorInRtl": false
+ },
+ "check-double": {
+  "glyph": "Checks",
+  "weight": "bold",
+  "mirrorInRtl": false
+ },
+ "check-circle": {
+  "glyph": "CheckCircle",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "verified": {
+  "glyph": "SealCheck",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "close": {
+  "glyph": "X",
+  "weight": "bold",
+  "mirrorInRtl": false
+ },
+ "info": {
+  "glyph": "Info",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "help": {
+  "glyph": "Question",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "warning": {
+  "glyph": "Warning",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "warning-circle": {
+  "glyph": "WarningCircle",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "shield-check": {
+  "glyph": "ShieldCheck",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "shield-warning": {
+  "glyph": "ShieldWarning",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "prohibited": {
+  "glyph": "Prohibit",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "spinner": {
+  "glyph": "CircleNotch",
+  "weight": "bold",
+  "mirrorInRtl": false
+ },
+ "dot": {
+  "glyph": "Circle",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "star": {
+  "glyph": "Star",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "plus": {
+  "glyph": "Plus",
+  "weight": "bold",
+  "mirrorInRtl": false
+ },
+ "edit": {
+  "glyph": "PencilSimple",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "trash": {
+  "glyph": "Trash",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "copy": {
+  "glyph": "Copy",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "save": {
+  "glyph": "FloppyDisk",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "search": {
+  "glyph": "MagnifyingGlass",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "zoom-in": {
+  "glyph": "MagnifyingGlassPlus",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "filter": {
+  "glyph": "SlidersHorizontal",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "refresh": {
+  "glyph": "ArrowsClockwise",
+  "weight": "bold",
+  "mirrorInRtl": false
+ },
+ "undo": {
+  "glyph": "ArrowCounterClockwise",
+  "weight": "bold",
+  "mirrorInRtl": true
+ },
+ "redo": {
+  "glyph": "ArrowClockwise",
+  "weight": "bold",
+  "mirrorInRtl": true
+ },
+ "repeat": {
+  "glyph": "Repeat",
+  "weight": "bold",
+  "mirrorInRtl": false
+ },
+ "reply": {
+  "glyph": "ArrowBendUpLeft",
+  "weight": "bold",
+  "mirrorInRtl": true
+ },
+ "send": {
+  "glyph": "PaperPlaneRight",
+  "weight": "fill",
+  "mirrorInRtl": true
+ },
+ "download": {
+  "glyph": "DownloadSimple",
+  "weight": "bold",
+  "mirrorInRtl": false
+ },
+ "upload": {
+  "glyph": "UploadSimple",
+  "weight": "bold",
+  "mirrorInRtl": false
+ },
+ "external-link": {
+  "glyph": "ArrowSquareOut",
+  "weight": "fill",
+  "mirrorInRtl": true
+ },
+ "link": {
+  "glyph": "Link",
+  "weight": "bold",
+  "mirrorInRtl": false
+ },
+ "attach": {
+  "glyph": "Paperclip",
+  "weight": "bold",
+  "mirrorInRtl": false
+ },
+ "more": {
+  "glyph": "DotsThreeVertical",
+  "weight": "bold",
+  "mirrorInRtl": false
+ },
+ "menu": {
+  "glyph": "List",
+  "weight": "bold",
+  "mirrorInRtl": false
+ },
+ "sidebar": {
+  "glyph": "SidebarSimple",
+  "weight": "fill",
+  "mirrorInRtl": true
+ },
+ "logout": {
+  "glyph": "SignOut",
+  "weight": "fill",
+  "mirrorInRtl": true
+ },
+ "eye": {
+  "glyph": "Eye",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "eye-off": {
+  "glyph": "EyeSlash",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "lock": {
+  "glyph": "Lock",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "key": {
+  "glyph": "Key",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "keyboard": {
+  "glyph": "Keyboard",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "chevron-down": {
+  "glyph": "CaretDown",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "chevron-up": {
+  "glyph": "CaretUp",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "chevron-start": {
+  "glyph": "CaretLeft",
+  "weight": "fill",
+  "mirrorInRtl": true
+ },
+ "chevron-end": {
+  "glyph": "CaretRight",
+  "weight": "fill",
+  "mirrorInRtl": true
+ },
+ "arrow-back": {
+  "glyph": "ArrowLeft",
+  "weight": "bold",
+  "mirrorInRtl": true
+ },
+ "arrow-up": {
+  "glyph": "ArrowUp",
+  "weight": "bold",
+  "mirrorInRtl": false
+ },
+ "trend-up": {
+  "glyph": "TrendUp",
+  "weight": "bold",
+  "mirrorInRtl": true
+ },
+ "calendar": {
+  "glyph": "CalendarDots",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "calendar-blank": {
+  "glyph": "CalendarBlank",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "calendar-check": {
+  "glyph": "CalendarCheck",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "calendar-plus": {
+  "glyph": "CalendarPlus",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "calendar-x": {
+  "glyph": "CalendarX",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "calendar-off": {
+  "glyph": "CalendarSlash",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "calendar-heart": {
+  "glyph": "CalendarHeart",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "clock": {
+  "glyph": "Clock",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "needle": {
+  "glyph": "Needle",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "pen-nib": {
+  "glyph": "PenNib",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "image": {
+  "glyph": "Image",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "kanban": {
+  "glyph": "Kanban",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "first-aid": {
+  "glyph": "FirstAid",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "heartbeat": {
+  "glyph": "Heartbeat",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "activity": {
+  "glyph": "Pulse",
+  "weight": "bold",
+  "mirrorInRtl": false
+ },
+ "map-pin": {
+  "glyph": "MapPin",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "home": {
+  "glyph": "House",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "settings": {
+  "glyph": "Gear",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "chart-bar": {
+  "glyph": "ChartBar",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "database": {
+  "glyph": "Database",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "monitor": {
+  "glyph": "Monitor",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "moon": {
+  "glyph": "Moon",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "sun": {
+  "glyph": "Sun",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "user": {
+  "glyph": "User",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "user-check": {
+  "glyph": "UserCheck",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "user-gear": {
+  "glyph": "UserGear",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "users": {
+  "glyph": "Users",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "chat": {
+  "glyph": "ChatCircleDots",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "mail": {
+  "glyph": "Envelope",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "phone": {
+  "glyph": "Phone",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "bell": {
+  "glyph": "Bell",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "bell-ringing": {
+  "glyph": "BellRinging",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "bot": {
+  "glyph": "Robot",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "sparkle": {
+  "glyph": "Sparkle",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "coins": {
+  "glyph": "Coins",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "hand-coins": {
+  "glyph": "HandCoins",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "credit-card": {
+  "glyph": "CreditCard",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "wallet": {
+  "glyph": "Wallet",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "bank": {
+  "glyph": "Bank",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "receipt": {
+  "glyph": "Receipt",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "file-text": {
+  "glyph": "FileText",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "file-download": {
+  "glyph": "FileArrowDown",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "clipboard": {
+  "glyph": "ClipboardText",
+  "weight": "fill",
+  "mirrorInRtl": false
+ },
+ "certificate": {
+  "glyph": "Certificate",
+  "weight": "fill",
+  "mirrorInRtl": false
+ }
+}

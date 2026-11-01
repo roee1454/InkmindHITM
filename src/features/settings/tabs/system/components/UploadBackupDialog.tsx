@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react'
-import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
-import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
+import { IMDialogActions, IMResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMButton } from '@/components/ui/button'
+import { IMSwitch } from '@/components/ui/switch'
 import { AlertTriangle, Upload, FileText, X, RotateCcw } from '@/components/ui/icon'
 import { restoreBackup } from '@/features/settings/server/settings'
 
@@ -103,27 +103,27 @@ export const UploadBackupDialog: React.FC<UploadBackupDialogProps> = ({
   }
 
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={open}
       onOpenChange={handleDialogChange}
       title="העלאת גיבוי"
       description="קובץ ZIP של גיבוי שנשמר אצלך. הוא נשמר ברשימת הגיבויים, ואפשר גם לשחזר ממנו מיד."
       footer={
-        <DialogActions error={error}>
-          <Button type="button" variant="ghost" onClick={() => handleDialogChange(false)} disabled={isProcessing}>
-            ביטול
-          </Button>
-          <Button
+        <IMDialogActions error={error}>
+          <IMButton
             type="button"
-            variant={shouldRestore ? 'destructive' : 'default'}
+            variant={shouldRestore ? 'destructive' : 'primary'}
             disabled={!selectedFile || isProcessing}
             onClick={handleUpload}
             className="min-w-28 gap-1.5"
           >
             {shouldRestore ? <RotateCcw size={15} /> : <Upload size={15} />}
             {isProcessing ? (shouldRestore ? 'מעלה ומשחזר…' : 'מעלה…') : shouldRestore ? 'העלאה ושחזור' : 'העלאה'}
-          </Button>
-        </DialogActions>
+          </IMButton>
+          <IMButton type="button" variant="ghost" onClick={() => handleDialogChange(false)} disabled={isProcessing}>
+            ביטול
+          </IMButton>
+        </IMDialogActions>
       }
     >
       <div className="form-stack">
@@ -180,7 +180,7 @@ export const UploadBackupDialog: React.FC<UploadBackupDialogProps> = ({
               </div>
             </div>
 
-            <Button
+            <IMButton
               type="button"
               variant="ghost"
               size="sm"
@@ -190,7 +190,7 @@ export const UploadBackupDialog: React.FC<UploadBackupDialogProps> = ({
               title="בחר קובץ אחר"
             >
               <X size={15} />
-            </Button>
+            </IMButton>
           </div>
         )}
 
@@ -200,7 +200,7 @@ export const UploadBackupDialog: React.FC<UploadBackupDialogProps> = ({
               <span className="text-sm font-bold text-foreground">לשחזר מיד אחרי ההעלאה</span>
               <span className="text-xs text-muted-foreground">אחרת הקובץ רק נשמר ברשימת הגיבויים.</span>
             </span>
-            <Switch checked={shouldRestore} onCheckedChange={setShouldRestore} disabled={isProcessing} aria-label="לשחזר מיד" />
+            <IMSwitch checked={shouldRestore} onCheckedChange={setShouldRestore} disabled={isProcessing} aria-label="לשחזר מיד" />
           </label>
           {shouldRestore && (
             <p className="flex items-start gap-2 text-xs font-bold text-destructive">
@@ -210,7 +210,7 @@ export const UploadBackupDialog: React.FC<UploadBackupDialogProps> = ({
           )}
         </div>
       </div>
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }
 

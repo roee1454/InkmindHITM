@@ -1,5 +1,5 @@
 import { AlertCircle } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import type { UIMetaTemplate } from '@/integrations/whatsapp-cloud-api/types'
 import { formatPhoneForDisplay } from '@/lib/phone'
 import { TemplateComposer } from './TemplateComposer'
@@ -52,7 +52,7 @@ export function NewConversationTemplateStep({
             {formatPhoneForDisplay(selectedRecipient.phone)}
           </span>
         </div>
-        <Button
+        <IMButton
           type="button"
           variant="outline"
           size="sm"
@@ -60,7 +60,7 @@ export function NewConversationTemplateStep({
           className="h-8 text-xs font-semibold shrink-0 cursor-pointer"
         >
           החלפה
-        </Button>
+        </IMButton>
       </div>
 
       {/* Meta 24h Window Notice */}

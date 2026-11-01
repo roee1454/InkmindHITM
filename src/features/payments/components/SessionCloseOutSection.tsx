@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import { Clock, Receipt, Wallet } from '@/components/ui/icon'
-import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { IMConfirmDialog } from '@/components/ui/confirm-dialog'
 import type { ApiAppointment } from '@/features/calendar/types'
 import { formatShortSlot } from '@/features/projects/utils/format'
 import { appointmentNeedsCloseOut } from '../utils/balance'
@@ -59,9 +59,9 @@ export function SessionCloseOutSection({
               <span className="text-2xs text-muted-foreground">הזנת מחיר סופי ותשלום שהתקבל</span>
             </div>
           </div>
-          <Button type="button" size="sm" className="h-8 shrink-0 px-3 text-xs font-extrabold" onClick={() => setClosing(true)}>
+          <IMButton type="button" size="sm" className="h-8 shrink-0 px-3 text-xs font-extrabold" onClick={() => setClosing(true)}>
             סגירת סשן
-          </Button>
+          </IMButton>
         </div>
       ) : (
         <div className="flex items-center justify-between gap-2 rounded-lg border border-border/70 bg-muted/30 p-3">
@@ -76,7 +76,7 @@ export function SessionCloseOutSection({
               </span>
             </div>
           </div>
-          <Button
+          <IMButton
             type="button"
             variant="outline"
             size="sm"
@@ -84,11 +84,11 @@ export function SessionCloseOutSection({
             onClick={() => setShowEarlyCloseWarning(true)}
           >
             סגירה מוקדמת (חריג)
-          </Button>
+          </IMButton>
         </div>
       )}
 
-      <ConfirmDialog
+      <IMConfirmDialog
         open={showEarlyCloseWarning}
         onOpenChange={setShowEarlyCloseWarning}
         title="סגירת סשן מוקדמת (חריג)"
@@ -107,7 +107,7 @@ export function SessionCloseOutSection({
         <div className="mt-3 rounded-lg border border-warning/30 bg-warning/10 p-2.5 text-xs text-warning">
           שים לב: סגירת הסשן לפני מועדו תקבע את המחיר הסופי ותסמן אותו כהושלם.
         </div>
-      </ConfirmDialog>
+      </IMConfirmDialog>
 
       <CloseSessionDialog appointment={appointment} open={closing} onOpenChange={setClosing} onScheduleNextSession={onScheduleNextSession} />
     </>

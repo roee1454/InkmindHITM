@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useIMToast } from '@/components/ui/toast'
 import { queryKeys } from '@/lib/query-keys'
 import { confirmSlot } from '@/features/calendar/server/appointments'
 import { confirmDepositReceived, rejectDepositReceipt, staffConfirmCancellation } from '../server/messages'
@@ -9,7 +9,7 @@ const errorText = (err: unknown, fallback: string) => (err instanceof Error ? er
 /** The decisions the thread's action panel can make, each refreshing what it changed. */
 export function useThreadActions(conversationId: string, appointmentId: string | undefined) {
   const queryClient = useQueryClient()
-  const { toast } = useToast()
+  const { show: toast } = useIMToast()
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.conversations })
@@ -23,19 +23,19 @@ export function useThreadActions(conversationId: string, appointmentId: string |
   const confirmDeposit = useMutation({
     mutationFn: () => confirmDepositReceived({ data: { conversationId } }),
     onSuccess: () => {
-      toast('המקדמה אושרה', 'הלקוח קיבל הודעת סיכום עם מועד התור.', 'success')
+      toast({ tone: 'success', title: 'המקדמה אושרה', description: 'הלקוח קיבל הודעת סיכום עם מועד התור.' })
       refresh()
     },
-    onError: (err) => toast('אישור המקדמה נכשל', errorText(err, 'נסו שוב.'), 'error'),
+    onError: (err) => toast({ tone: 'destructive', title: 'אישור המקדמה נכשל', description: errorText(err, 'נסו שוב.') }),
   })
 
   const askForClearerReceipt = useMutation({
     mutationFn: () => rejectDepositReceipt({ data: { conversationId } }),
     onSuccess: () => {
-      toast('נשלחה בקשה ללקוח', 'ביקשנו אסמכתה ברורה יותר.', 'info')
+      toast({ title: 'נשלחה בקשה ללקוח', description: 'ביקשנו אסמכתה ברורה יותר.' })
       refresh()
     },
-    onError: (err) => toast('הבקשה לא נשלחה', errorText(err, 'נסו שוב.'), 'error'),
+    onError: (err) => toast({ tone: 'destructive', title: 'הבקשה לא נשלחה', description: errorText(err, 'נסו שוב.') }),
   })
 
   const confirmAppointmentSlot = useMutation({
@@ -44,19 +44,19 @@ export function useThreadActions(conversationId: string, appointmentId: string |
       return confirmSlot({ data: { appointmentId } })
     },
     onSuccess: () => {
-      toast('המועד אושר', 'התור נשמר ביומן.', 'success')
+      toast({ tone: 'success', title: 'המועד אושר', description: 'התור נשמר ביומן.' })
       refresh()
     },
-    onError: (err) => toast('אישור המועד נכשל', errorText(err, 'נסו שוב.'), 'error'),
+    onError: (err) => toast({ tone: 'destructive', title: 'אישור המועד נכשל', description: errorText(err, 'נסו שוב.') }),
   })
 
   const cancelAppointment = useMutation({
     mutationFn: () => staffConfirmCancellation({ data: { conversationId, appointmentId } }),
     onSuccess: () => {
-      toast('התור בוטל', 'המשבצת ביומן התפנתה והלקוח קיבל הודעה.', 'info')
+      toast({ title: 'התור בוטל', description: 'המשבצת ביומן התפנתה והלקוח קיבל הודעה.' })
       refresh()
     },
-    onError: (err) => toast('ביטול התור נכשל', errorText(err, 'נסו שוב.'), 'error'),
+    onError: (err) => toast({ tone: 'destructive', title: 'ביטול התור נכשל', description: errorText(err, 'נסו שוב.') }),
   })
 
   return {

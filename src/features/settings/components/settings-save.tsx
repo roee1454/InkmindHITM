@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Loader2 } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
-import { useToast } from '@/components/ui/ToastProvider'
+import { IMButton } from '@/components/ui/button'
+import { useIMToast } from '@/components/ui/toast'
 
 interface SaveHandlers {
   save: () => Promise<unknown>
@@ -67,7 +67,7 @@ export function useSettingsSave(id: string, { dirty, save, reset }: { dirty: boo
 }
 
 function SettingsSaveBar({ dirtyIds, handlers }: { dirtyIds: ReadonlySet<string>; handlers: React.RefObject<Map<string, SaveHandlers>> }) {
-  const { toast } = useToast()
+  const { show: toast } = useIMToast()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   if (dirtyIds.size === 0) return null
@@ -79,7 +79,7 @@ function SettingsSaveBar({ dirtyIds, handlers }: { dirtyIds: ReadonlySet<string>
     setSaving(false)
     const failed = results.find((r): r is PromiseRejectedResult => r.status === 'rejected')
     if (failed) setError(failed.reason instanceof Error ? failed.reason.message : 'השמירה נכשלה.')
-    else toast('השינויים נשמרו', '', 'success')
+    else toast({ tone: 'success', title: 'השינויים נשמרו' })
   }
 
   const discardAll = () => {
@@ -100,13 +100,13 @@ function SettingsSaveBar({ dirtyIds, handlers }: { dirtyIds: ReadonlySet<string>
         <p className={error ? 'min-w-0 flex-1 text-sm font-bold text-destructive' : 'min-w-0 flex-1 text-sm font-bold text-foreground'} role={error ? 'alert' : undefined}>
           {error ?? 'יש שינויים שלא נשמרו'}
         </p>
-        <Button type="button" variant="ghost" size="sm" onClick={discardAll} disabled={saving}>
+        <IMButton type="button" variant="ghost" size="sm" onClick={discardAll} disabled={saving}>
           ביטול
-        </Button>
-        <Button type="button" size="sm" onClick={saveAll} disabled={saving} className="min-w-24 gap-1.5">
+        </IMButton>
+        <IMButton type="button" size="sm" onClick={saveAll} disabled={saving} className="min-w-24 gap-1.5">
           {saving && <Loader2 size={14} className="animate-spin" />}
           שמירה
-        </Button>
+        </IMButton>
       </div>
     </div>
   )

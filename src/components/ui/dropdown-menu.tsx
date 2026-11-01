@@ -1,35 +1,32 @@
 import * as React from "react"
-import { CheckIcon, ChevronRightIcon, CircleIcon } from '@/components/ui/icon'
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
 
-import { cn } from "#/lib/utils.ts"
+import { IMIcon } from "@/components/ui/icon"
+import { IM_TYPE_ROLES } from "@/components/ui/typography"
+import { cn } from "@/lib/utils"
 
-function DropdownMenu({
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
+// Items, sub-triggers: 44px, `radius-inset`, a muted sm icon at the start.
+const ITEM = cn(
+  IM_TYPE_ROLES.body,
+  "relative flex h-11 cursor-pointer select-none items-center gap-2.5 rounded-md px-3 outline-none transition-colors duration-100 data-[highlighted]:bg-surface-2 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:ps-9 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground"
+)
+
+const SURFACE =
+  "z-50 min-w-55 origin-(--radix-dropdown-menu-content-transform-origin) rounded-xl border border-border bg-popover p-1.5 text-popover-foreground shadow-lg data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+
+/**
+ * Actions on one thing, opened from a `more` button. Items are verb + object ("מחיקת לקוח"); the
+ * destructive one goes last, after a separator, and opens a confirm dialog rather than acting.
+ */
+export function IMDropdownMenu(props: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
   return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />
 }
 
-function DropdownMenuPortal({
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Portal>) {
-  return (
-    <DropdownMenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
-  )
+export function IMDropdownMenuTrigger(props: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
+  return <DropdownMenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
 }
 
-function DropdownMenuTrigger({
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
-  return (
-    <DropdownMenuPrimitive.Trigger
-      data-slot="dropdown-menu-trigger"
-      {...props}
-    />
-  )
-}
-
-function DropdownMenuContent({
+export function IMDropdownMenuContent({
   className,
   sideOffset = 4,
   ...props
@@ -40,7 +37,8 @@ function DropdownMenuContent({
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          "z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-[10rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-2xl border border-border bg-popover p-1.5 text-popover-foreground shadow-lg data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+          SURFACE,
+          "max-h-(--radix-dropdown-menu-content-available-height) overflow-x-hidden overflow-y-auto",
           className
         )}
         {...props}
@@ -49,30 +47,21 @@ function DropdownMenuContent({
   )
 }
 
-function DropdownMenuGroup({
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Group>) {
-  return (
-    <DropdownMenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
-  )
-}
-
-function DropdownMenuItem({
-  className,
-  inset,
-  variant = "default",
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Item> & {
+export interface IMDropdownMenuItemProps extends React.ComponentProps<typeof DropdownMenuPrimitive.Item> {
+  /** Leaves room for a leading icon on items that have none, so labels line up. */
   inset?: boolean
   variant?: "default" | "destructive"
-}) {
+}
+
+export function IMDropdownMenuItem({ className, inset, variant = "default", ...props }: IMDropdownMenuItemProps) {
   return (
     <DropdownMenuPrimitive.Item
       data-slot="dropdown-menu-item"
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "relative flex h-11 cursor-pointer select-none items-center gap-2.5 rounded-xl px-3 text-base font-medium outline-none transition-colors duration-100 data-[highlighted]:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:ps-8 data-[variant=destructive]:text-destructive data-[variant=destructive]:data-[highlighted]:bg-destructive/10 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[17px] [&_svg:not([class*='text-'])]:text-muted-foreground data-[variant=destructive]:*:[svg]:text-destructive!",
+        ITEM,
+        "data-[variant=destructive]:text-destructive data-[variant=destructive]:data-[highlighted]:bg-destructive/10 data-[variant=destructive]:*:[svg]:text-destructive!",
         className
       )}
       {...props}
@@ -80,191 +69,78 @@ function DropdownMenuItem({
   )
 }
 
-function DropdownMenuCheckboxItem({
-  className,
-  children,
-  checked,
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.CheckboxItem>) {
-  return (
-    <DropdownMenuPrimitive.CheckboxItem
-      data-slot="dropdown-menu-checkbox-item"
-      className={cn(
-        "relative flex h-11 cursor-pointer select-none items-center gap-2.5 rounded-xl ps-8 pe-3 text-base font-medium outline-none transition-colors duration-100 data-[highlighted]:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[17px]",
-        className
-      )}
-      checked={checked}
-      {...props}
-    >
-      <span className="pointer-events-none absolute start-2 flex size-3.5 items-center justify-center">
-        <DropdownMenuPrimitive.ItemIndicator>
-          <CheckIcon className="size-4" />
-        </DropdownMenuPrimitive.ItemIndicator>
-      </span>
-      {children}
-    </DropdownMenuPrimitive.CheckboxItem>
-  )
-}
-
-function DropdownMenuRadioGroup({
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioGroup>) {
-  return (
-    <DropdownMenuPrimitive.RadioGroup
-      data-slot="dropdown-menu-radio-group"
-      {...props}
-    />
-  )
-}
-
-function DropdownMenuRadioItem({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem>) {
-  return (
-    <DropdownMenuPrimitive.RadioItem
-      data-slot="dropdown-menu-radio-item"
-      className={cn(
-        "relative flex h-11 cursor-pointer select-none items-center gap-2.5 rounded-xl ps-8 pe-3 text-base font-medium outline-none transition-colors duration-100 data-[highlighted]:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[17px]",
-        className
-      )}
-      {...props}
-    >
-      <span className="pointer-events-none absolute start-2 flex size-3.5 items-center justify-center">
-        <DropdownMenuPrimitive.ItemIndicator>
-          <CircleIcon className="size-2 fill-current" />
-        </DropdownMenuPrimitive.ItemIndicator>
-      </span>
-      {children}
-    </DropdownMenuPrimitive.RadioItem>
-  )
-}
-
-function DropdownMenuLabel({
+export function IMDropdownMenuLabel({
   className,
   inset,
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Label> & {
-  inset?: boolean
-}) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Label> & { inset?: boolean }) {
   return (
     <DropdownMenuPrimitive.Label
       data-slot="dropdown-menu-label"
       data-inset={inset}
-      className={cn(
-        "px-3 py-1.5 text-sm font-bold text-muted-foreground data-[inset]:ps-8",
-        className
-      )}
+      className={cn(IM_TYPE_ROLES.label, "px-3 py-1.5 text-muted-foreground data-[inset]:ps-9", className)}
       {...props}
     />
   )
 }
 
-function DropdownMenuSeparator({
+export function IMDropdownMenuSeparator({
   className,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
   return (
     <DropdownMenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
-      className={cn("-mx-1 my-1 h-px bg-border/60", className)}
+      className={cn("-mx-1.5 my-1 h-px bg-border", className)}
       {...props}
     />
   )
 }
 
-function DropdownMenuShortcut({
-  className,
-  ...props
-}: React.ComponentProps<"span">) {
+/** A keyboard hint at the inline end of an item. */
+export function IMDropdownMenuShortcut({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
       data-slot="dropdown-menu-shortcut"
-      className={cn(
-        "ms-auto text-xs tracking-widest text-muted-foreground",
-        className
-      )}
+      className={cn(IM_TYPE_ROLES.caption, "ms-auto text-muted-foreground", className)}
       {...props}
     />
   )
 }
 
-function DropdownMenuSub({
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Sub>) {
+export function IMDropdownMenuSub(props: React.ComponentProps<typeof DropdownMenuPrimitive.Sub>) {
   return <DropdownMenuPrimitive.Sub data-slot="dropdown-menu-sub" {...props} />
 }
 
-function DropdownMenuSubTrigger({
+export function IMDropdownMenuSubTrigger({
   className,
   inset,
   children,
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.SubTrigger> & {
-  inset?: boolean
-}) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.SubTrigger> & { inset?: boolean }) {
   return (
     <DropdownMenuPrimitive.SubTrigger
       data-slot="dropdown-menu-sub-trigger"
       data-inset={inset}
-      className={cn(
-        "flex h-11 cursor-pointer select-none items-center gap-2.5 rounded-xl px-3 text-base font-medium outline-none transition-colors duration-100 data-[inset]:ps-8 data-[state=open]:bg-muted [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[17px] [&_svg:not([class*='text-'])]:text-muted-foreground",
-        className
-      )}
+      className={cn(ITEM, "data-[state=open]:bg-surface-2", className)}
       {...props}
     >
       {children}
-      <ChevronRightIcon className="ms-auto size-[17px]" />
+      {/* The submenu opens toward the inline end — left, in RTL. */}
+      <IMIcon name="chevron-end" size="sm" className="ms-auto" />
     </DropdownMenuPrimitive.SubTrigger>
   )
 }
 
-function DropdownMenuSubContent({
+export function IMDropdownMenuSubContent({
   className,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.SubContent>) {
   return (
     <DropdownMenuPrimitive.SubContent
       data-slot="dropdown-menu-sub-content"
-      className={cn(
-        "z-50 min-w-[10rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-2xl border border-border bg-popover p-1.5 text-popover-foreground shadow-lg data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
-        className
-      )}
+      className={cn(SURFACE, "overflow-hidden", className)}
       {...props}
     />
   )
-}
-
-export {
-  DropdownMenu,
-  DropdownMenu as IMDropdownMenu,
-  DropdownMenuPortal,
-  DropdownMenuPortal as IMDropdownMenuPortal,
-  DropdownMenuTrigger,
-  DropdownMenuTrigger as IMDropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuContent as IMDropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuGroup as IMDropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuLabel as IMDropdownMenuLabel,
-  DropdownMenuItem,
-  DropdownMenuItem as IMDropdownMenuItem,
-  DropdownMenuCheckboxItem,
-  DropdownMenuCheckboxItem as IMDropdownMenuCheckboxItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioGroup as IMDropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuRadioItem as IMDropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuSeparator as IMDropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuShortcut as IMDropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSub as IMDropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubTrigger as IMDropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-  DropdownMenuSubContent as IMDropdownMenuSubContent,
 }

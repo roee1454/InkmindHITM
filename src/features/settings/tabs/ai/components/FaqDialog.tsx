@@ -1,9 +1,9 @@
 import type React from 'react'
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { DialogActions, ResponsiveDialog } from '@/components/ui/responsive-dialog'
+import { IMButton } from '@/components/ui/button'
+import { IMInput } from '@/components/ui/input'
+import { IMTextarea } from '@/components/ui/textarea'
+import { IMDialogActions, IMResponsiveDialog } from '@/components/ui/responsive-dialog'
 import type { ApiFaqEntry } from '@/features/settings/server/settings'
 
 interface FaqDialogProps {
@@ -30,13 +30,13 @@ function FaqForm({ entry, onSave }: { entry: ApiFaqEntry | null; onSave: FaqDial
         <label htmlFor="faq-question" className="form-label">
           שאלה
         </label>
-        <Input id="faq-question" value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="למשל: האם כואב לעשות קעקוע?" required />
+        <IMInput id="faq-question" value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="למשל: האם כואב לעשות קעקוע?" required />
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="faq-answer" className="form-label">
           התשובה שהבוט ייתן
         </label>
-        <Textarea
+        <IMTextarea
           id="faq-answer"
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
@@ -53,24 +53,24 @@ function FaqForm({ entry, onSave }: { entry: ApiFaqEntry | null; onSave: FaqDial
 export function FaqDialog({ target, onClose, onSave, isSaving, error }: FaqDialogProps) {
   const entry = target === 'new' ? null : target
   return (
-    <ResponsiveDialog
+    <IMResponsiveDialog
       open={target !== null}
       onOpenChange={(open) => !open && onClose()}
       title={entry ? 'עריכת שאלה נפוצה' : 'שאלה נפוצה חדשה'}
       description="הבוט עונה ללקוחות לפי השאלות והתשובות במאגר."
       footer={
-        <DialogActions error={error}>
-            <Button type="button" variant="ghost" onClick={onClose}>
-              ביטול
-            </Button>
-            <Button type="submit" form="faq-form" disabled={isSaving} className="min-w-28">
+        <IMDialogActions error={error}>
+            <IMButton type="submit" form="faq-form" disabled={isSaving} className="min-w-28">
               {isSaving ? 'שומר…' : entry ? 'שמירה' : 'הוספה למאגר'}
-            </Button>
-        </DialogActions>
+            </IMButton>
+            <IMButton type="button" variant="ghost" onClick={onClose}>
+              ביטול
+            </IMButton>
+        </IMDialogActions>
       }
     >
       {/* Keyed so opening another entry (or "new") starts from its own text, not the last one's. */}
       {target !== null && <FaqForm key={entry?.id ?? 'new'} entry={entry} onSave={onSave} />}
-    </ResponsiveDialog>
+    </IMResponsiveDialog>
   )
 }

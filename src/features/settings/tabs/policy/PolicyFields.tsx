@@ -1,5 +1,5 @@
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { IMInput } from '@/components/ui/input'
+import { IMSelect, IMSelectContent, IMSelectItem, IMSelectTrigger, IMSelectValue } from '@/components/ui/select'
 
 /** Radix Select can't hold an empty value, so "not decided yet" gets a sentinel. */
 const UNDECIDED = '__undecided__'
@@ -23,19 +23,19 @@ interface PolicySelectProps {
 
 export function PolicySelect({ value, onChange, options, undecidedLabel }: PolicySelectProps) {
   return (
-    <Select value={value === '' ? UNDECIDED : value} onValueChange={(next) => onChange(next === UNDECIDED ? '' : next)}>
-      <SelectTrigger className="w-full">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent dir="rtl">
-        {undecidedLabel && <SelectItem value={UNDECIDED}>{undecidedLabel}</SelectItem>}
+    <IMSelect value={value === '' ? UNDECIDED : value} onValueChange={(next) => onChange(next === UNDECIDED ? '' : next)}>
+      <IMSelectTrigger className="w-full">
+        <IMSelectValue />
+      </IMSelectTrigger>
+      <IMSelectContent dir="rtl">
+        {undecidedLabel && <IMSelectItem value={UNDECIDED}>{undecidedLabel}</IMSelectItem>}
         {options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
+          <IMSelectItem key={option.value} value={option.value}>
             {option.label}
-          </SelectItem>
+          </IMSelectItem>
         ))}
-      </SelectContent>
-    </Select>
+      </IMSelectContent>
+    </IMSelect>
   )
 }
 
@@ -50,7 +50,7 @@ interface PolicyNumberInputProps {
 export function PolicyNumberInput({ value, onChange, placeholder, unit }: PolicyNumberInputProps) {
   return (
     <div className="flex items-center gap-2">
-      <Input
+      <IMInput
         type="number"
         inputMode="numeric"
         min={1}

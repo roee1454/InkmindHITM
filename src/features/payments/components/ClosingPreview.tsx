@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { balanceAfterClosing } from '../utils/balance'
 import { suggestedCollection } from '../utils/closing'
@@ -44,9 +44,9 @@ export function ClosingPreview({ finance, appointmentId, finalPrice, chargeWaive
           <span className="text-xs font-bold text-foreground">לגבייה עכשיו: {formatIls(suggested)}</span>
           {keepsCredit && <span className="text-2xs text-muted-foreground">המקדמה נשמרת לסשן האחרון, לפי מדיניות הסטודיו.</span>}
         </div>
-        <Button type="button" variant="outline" size="sm" disabled={suggested === 0} onClick={() => onFillSuggested(suggested)}>
+        <IMButton type="button" variant="outline" size="sm" disabled={suggested === 0} onClick={() => onFillSuggested(suggested)}>
           מילוי
-        </Button>
+        </IMButton>
       </div>
       {earlier.map((payment) => (
         <PreviewLine key={payment.id} label={`${PAYMENT_KIND_LABELS[payment.kind]} ששולם/ה קודם`} value={formatIls(payment.amount)} />

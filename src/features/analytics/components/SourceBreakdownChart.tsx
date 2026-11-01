@@ -1,7 +1,7 @@
 import React from 'react'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import type { ChartConfig } from '@/components/ui/chart'
+import { IMChartContainer, IMChartTooltip, IMChartTooltipContent } from '@/components/ui/chart'
+import type { IMChartConfig } from '@/components/ui/chart'
 import type { SourceBreakdownItem } from '../types'
 
 interface SourceBreakdownChartProps {
@@ -14,7 +14,7 @@ const chartConfig = {
     label: 'לידים',
     color: 'var(--primary)',
   },
-} satisfies ChartConfig
+} satisfies IMChartConfig
 
 export const SourceBreakdownChart: React.FC<SourceBreakdownChartProps> = ({
   sourceBreakdown,
@@ -58,7 +58,7 @@ export const SourceBreakdownChart: React.FC<SourceBreakdownChartProps> = ({
         <>
           {/* Chart View */}
           <div className="p-4 sm:p-6">
-            <ChartContainer config={chartConfig} className="h-[200px] w-full sm:h-[220px]">
+            <IMChartContainer config={chartConfig} className="h-[200px] w-full sm:h-[220px]">
               <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-border/40" />
                 <XAxis
@@ -74,13 +74,13 @@ export const SourceBreakdownChart: React.FC<SourceBreakdownChartProps> = ({
                   allowDecimals={false}
                   className="fill-muted-foreground font-assistant text-xs"
                 />
-                <ChartTooltip
+                <IMChartTooltip
                   cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                  content={<ChartTooltipContent indicator="line" />}
+                  content={<IMChartTooltipContent indicator="line" />}
                 />
                 <Bar dataKey="count" fill="var(--primary)" radius={[4, 4, 0, 0]} />
               </BarChart>
-            </ChartContainer>
+            </IMChartContainer>
           </div>
 
           {/* List Breakdown - Responsive Mobile/Desktop */}

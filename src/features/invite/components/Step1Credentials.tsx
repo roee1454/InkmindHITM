@@ -1,5 +1,5 @@
 import React from 'react'
-import { Input } from '@/components/ui/input'
+import { IMInput } from '@/components/ui/input'
 import { Lock, Phone, Eye, EyeOff, AlertCircle } from '@/components/ui/icon'
 import { useInviteUiStore } from '../store/inviteUiStore'
 import { useInviteMutations } from '../hooks/useInviteMutations'
@@ -65,7 +65,7 @@ export function Step1Credentials() {
           </div>
           <div className="flex h-14 w-full items-center gap-2.5 rounded-2xl border border-input bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
             <Phone className="size-[18px] shrink-0 text-muted-foreground" />
-            <Input
+            <IMInput
               type="tel"
               dir="ltr"
               autoFocus
@@ -83,7 +83,7 @@ export function Step1Credentials() {
           <label className="text-sm font-bold text-foreground">סיסמה חדשה (לפחות 8 תווים) *</label>
           <div className="flex h-14 w-full items-center gap-2.5 rounded-2xl border border-input bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
             <Lock className="size-[18px] shrink-0 text-muted-foreground" />
-            <Input
+            <IMInput
               type={showPassword ? 'text' : 'password'}
               placeholder="לפחות 8 תווים"
               value={password}
@@ -106,7 +106,7 @@ export function Step1Credentials() {
           <label className="text-sm font-bold text-foreground">אימות סיסמה *</label>
           <div className="flex h-14 w-full items-center gap-2.5 rounded-2xl border border-input bg-card px-4 shadow-xs outline-none transition-all duration-150 ease-native focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
             <Lock className="size-[18px] shrink-0 text-muted-foreground" />
-            <Input
+            <IMInput
               type={showPasswordConfirm ? 'text' : 'password'}
               placeholder="הזן שוב את הסיסמה"
               value={passwordConfirm}

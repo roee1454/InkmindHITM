@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Textarea } from '@/components/ui/textarea'
+import { IMTextarea } from '@/components/ui/textarea'
 import { getAiSettings, saveAiInstructions } from '@/features/settings/server/settings'
 import { SettingsRow, SettingsSection } from '@/features/settings/components/settings-layout'
 import { useSettingsSave } from '@/features/settings/components/settings-save'
@@ -30,7 +30,7 @@ export function AiIronRulesSection() {
   return (
     <SettingsSection title="חוקי ברזל" description="כללים שהבוט פועל לפיהם בכל שיחה, בלי יוצא מן הכלל.">
       <SettingsRow label="הכללים" htmlFor="iron-rules" hint="כלל בכל שורה. הבוט לא יחרוג מהם גם אם הלקוח מבקש." stacked>
-        <Textarea
+        <IMTextarea
           id="iron-rules"
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}

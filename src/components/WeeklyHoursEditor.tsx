@@ -1,7 +1,7 @@
 import React from 'react'
 import { Copy } from '@/components/ui/icon'
-import { Switch } from '@/components/ui/switch'
-import { HourPicker } from '@/components/ui/hour-picker'
+import { IMSwitch } from '@/components/ui/switch'
+import { IMHourPicker } from '@/components/ui/hour-picker'
 import { DAY_LABELS } from '#/lib/working-hours.ts'
 import type { WorkingHoursWindow } from '#/lib/working-hours.ts'
 import { cn } from '#/lib/utils.ts'
@@ -139,7 +139,7 @@ export const WeeklyHoursEditor: React.FC<WeeklyHoursEditorProps> = ({
               )}
             >
               <div className="flex shrink-0 items-center gap-3 text-right sm:w-32">
-                <Switch checked={active} onCheckedChange={() => toggleDay(dayOfWeek)} disabled={readOnly} />
+                <IMSwitch checked={active} onCheckedChange={() => toggleDay(dayOfWeek)} disabled={readOnly} />
                 <span className={cn('text-sm font-bold', active ? 'text-foreground' : 'text-muted-foreground/50')}>
                   {label}
                 </span>
@@ -147,7 +147,7 @@ export const WeeklyHoursEditor: React.FC<WeeklyHoursEditorProps> = ({
 
               {w ? (
                 <div className="flex min-w-0 flex-1 items-center justify-between gap-3 sm:gap-4">
-                  <HourPicker
+                  <IMHourPicker
                       value={w.startTime || defaultStartTime}
                       onChange={(val) => updateDayTime(dayOfWeek, 'startTime', val)}
                       step={30}
@@ -156,7 +156,7 @@ export const WeeklyHoursEditor: React.FC<WeeklyHoursEditorProps> = ({
                       className="h-6 w-[76px] justify-center rounded-lg border-0  px-2 text-[4px] font-bold hover:bg-card sm:w-[80px]"
                     />
                     <span className="select-none text-xs font-bold text-muted-foreground/60">עד</span>
-                    <HourPicker
+                    <IMHourPicker
                       value={w.endTime || defaultEndTime}
                       onChange={(val) => updateDayTime(dayOfWeek, 'endTime', val)}
                       step={30}

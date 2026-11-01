@@ -1,6 +1,6 @@
 import React from 'react'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { IMTextarea } from '@/components/ui/textarea'
+import { IMSelect, IMSelectContent, IMSelectItem, IMSelectTrigger, IMSelectValue } from '@/components/ui/select'
 import type { AppointmentFormValues, AppointmentStatus } from '../../types'
 import { STATUS_LABELS } from '../../types'
 
@@ -14,18 +14,18 @@ export const StepStatusNotes: React.FC<StepStatusNotesProps> = ({ values, onChan
     <div className="space-y-4 font-assistant" dir="rtl">
       <div className="flex flex-col gap-1.5" dir="rtl">
         <label className="text-xs font-semibold text-foreground">סטטוס</label>
-        <Select value={values.status} onValueChange={(val) => onChange({ status: val as AppointmentStatus })}>
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent align="end">
+        <IMSelect value={values.status} onValueChange={(val) => onChange({ status: val as AppointmentStatus })}>
+          <IMSelectTrigger className="w-full">
+            <IMSelectValue />
+          </IMSelectTrigger>
+          <IMSelectContent align="end">
             {Object.entries(STATUS_LABELS).map(([key, label]) => (
-              <SelectItem key={key} value={key}>
+              <IMSelectItem key={key} value={key}>
                 {label}
-              </SelectItem>
+              </IMSelectItem>
             ))}
-          </SelectContent>
-        </Select>
+          </IMSelectContent>
+        </IMSelect>
         {values.status === 'pending' && (
           <p className="text-2xs text-muted-foreground">
             תור ממתין הוא החזקה עד אישור. אם לא יאושר תוך 48 שעות הוא משתחרר אוטומטית, והלקוח לא מקבל עליו תזכורות.
@@ -35,7 +35,7 @@ export const StepStatusNotes: React.FC<StepStatusNotesProps> = ({ values, onChan
 
       <div className="flex flex-col gap-1.5">
         <label className="text-xs font-semibold text-foreground">הערות פנימיות לצוות (אופציונלי)</label>
-        <Textarea
+        <IMTextarea
           rows={3}
           placeholder="הערות תפעוליות לצוות הסטודיו (למשל: רגישות לחומרים, מלווה, בקשות מיוחדות)…"
           value={values.notes}

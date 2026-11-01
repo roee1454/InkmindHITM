@@ -1,5 +1,5 @@
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { IMInput } from '@/components/ui/input'
+import { IMLabel } from '@/components/ui/label'
 
 /** The tattoo quote's estimated price range, in shekels. */
 export function QuotePriceRange({
@@ -15,12 +15,12 @@ export function QuotePriceRange({
 }) {
   return (
     <div className="space-y-2">
-      <Label className="text-xs font-extrabold text-foreground block">
+      <IMLabel className="text-xs font-extrabold text-foreground block">
         טווח מחירים משוער למפגש
-      </Label>
+      </IMLabel>
       <div className="grid grid-cols-2 gap-3">
         <div className="relative">
-          <Input
+          <IMInput
             type="number"
             inputMode="numeric"
             placeholder="מינימום"
@@ -33,7 +33,7 @@ export function QuotePriceRange({
           </span>
         </div>
         <div className="relative">
-          <Input
+          <IMInput
             type="number"
             inputMode="numeric"
             placeholder="מקסימום"

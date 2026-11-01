@@ -1,9 +1,9 @@
 import React from 'react'
 import { ChevronLeft, ChevronRight, Info, Plus, SlidersHorizontal } from '@/components/ui/icon'
-import { Button } from '@/components/ui/button'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { IMButton } from '@/components/ui/button'
+import { IMPopover, IMPopoverContent, IMPopoverTrigger } from '@/components/ui/popover'
+import { IMSelect, IMSelectContent, IMSelectItem, IMSelectTrigger, IMSelectValue } from '@/components/ui/select'
+import { IMAvatar, IMAvatarFallback, IMAvatarImage } from '@/components/ui/avatar'
 import { GoogleIcon } from '@/components/icons/GoogleIcon'
 import { cn } from '@/lib/utils'
 import { CalendarLegend } from './CalendarLegend'
@@ -67,9 +67,9 @@ export function CalendarToolbar(props: CalendarToolbarProps) {
       <div className="flex flex-wrap items-center gap-2">
         {props.showNav && (
           <div className="flex shrink-0 items-center gap-1">
-            <Button variant="outline" size="sm" onClick={props.onToday} className="h-9 px-3">
+            <IMButton variant="outline" size="sm" onClick={props.onToday} className="h-9 px-3">
               היום
-            </Button>
+            </IMButton>
             <button type="button" onClick={() => props.onStep(-1)} aria-label="הקודם" className="tap-target size-9 text-muted-foreground">
               <ChevronRight size={18} />
             </button>
@@ -128,65 +128,65 @@ export function CalendarToolbar(props: CalendarToolbarProps) {
             )}
           </button>
 
-          <Popover>
-            <PopoverTrigger asChild>
+          <IMPopover>
+            <IMPopoverTrigger asChild>
               <button type="button" aria-label="מקרא היומן" title="מקרא היומן" className="tap-target size-9 text-muted-foreground">
                 <Info size={17} />
               </button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-80 p-0" dir="rtl">
+            </IMPopoverTrigger>
+            <IMPopoverContent align="end" className="w-80 p-0" dir="rtl">
               <CalendarLegend />
-            </PopoverContent>
-          </Popover>
+            </IMPopoverContent>
+          </IMPopover>
 
-          <Button onClick={props.onNewAppointment} size="sm" className="h-9 shrink-0 gap-1.5">
+          <IMButton onClick={props.onNewAppointment} size="sm" className="h-9 shrink-0 gap-1.5">
             <Plus size={16} />
             <span className="hidden sm:inline">תור חדש</span>
-          </Button>
+          </IMButton>
         </div>
       </div>
 
       {showFilters && (
         <div className="flex flex-wrap items-center gap-2">
-          <Select value={props.selectedArtist} onValueChange={props.onSelectedArtistChange}>
-            <SelectTrigger size="sm" className="w-full rounded-lg px-3 text-sm data-[size=sm]:h-9 md:text-sm sm:w-48" aria-label="סינון לפי מקעקע">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent align="end" dir="rtl" className="font-assistant">
-              <SelectItem value="all">כל המקעקעים</SelectItem>
+          <IMSelect value={props.selectedArtist} onValueChange={props.onSelectedArtistChange}>
+            <IMSelectTrigger size="sm" className="w-full rounded-lg px-3 text-sm data-[size=sm]:h-9 md:text-sm sm:w-48" aria-label="סינון לפי מקעקע">
+              <IMSelectValue />
+            </IMSelectTrigger>
+            <IMSelectContent align="end" dir="rtl" className="font-assistant">
+              <IMSelectItem value="all">כל המקעקעים</IMSelectItem>
               {props.staff.map((artist) => {
                 const connection = props.googleConnections.find((c) => c.staffId === artist.id && c.status === 'connected')
                 return (
-                  <SelectItem key={artist.id} value={artist.id}>
+                  <IMSelectItem key={artist.id} value={artist.id}>
                     <span className="flex items-center gap-2">
-                      <Avatar className="size-5">
-                        <AvatarImage src={connection?.googleAccountPicture || artist.avatar || undefined} />
-                        <AvatarFallback className="bg-muted text-2xs">{artist.name.slice(0, 2)}</AvatarFallback>
-                      </Avatar>
+                      <IMAvatar className="size-5">
+                        <IMAvatarImage src={connection?.googleAccountPicture || artist.avatar || undefined} />
+                        <IMAvatarFallback className="bg-muted text-2xs">{artist.name.slice(0, 2)}</IMAvatarFallback>
+                      </IMAvatar>
                       <span>{artist.name}</span>
                       {connection && <GoogleIcon size={12} />}
                     </span>
-                  </SelectItem>
+                  </IMSelectItem>
                 )
               })}
-            </SelectContent>
-          </Select>
+            </IMSelectContent>
+          </IMSelect>
 
-          <Select value={props.selectedStatus} onValueChange={(value) => props.onSelectedStatusChange(value as StatusFilter)}>
-            <SelectTrigger size="sm" className="w-full rounded-lg px-3 text-sm data-[size=sm]:h-9 md:text-sm sm:w-44" aria-label="סינון לפי סטטוס">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent align="end" dir="rtl" className="font-assistant">
+          <IMSelect value={props.selectedStatus} onValueChange={(value) => props.onSelectedStatusChange(value as StatusFilter)}>
+            <IMSelectTrigger size="sm" className="w-full rounded-lg px-3 text-sm data-[size=sm]:h-9 md:text-sm sm:w-44" aria-label="סינון לפי סטטוס">
+              <IMSelectValue />
+            </IMSelectTrigger>
+            <IMSelectContent align="end" dir="rtl" className="font-assistant">
               {STATUS_OPTIONS.map((status) => (
-                <SelectItem key={status} value={status}>
+                <IMSelectItem key={status} value={status}>
                   {status === 'all' ? 'כל הסטטוסים' : STATUS_LABELS[status]} · {props.statusCounts[status]}
-                </SelectItem>
+                </IMSelectItem>
               ))}
-            </SelectContent>
-          </Select>
+            </IMSelectContent>
+          </IMSelect>
 
           {filtersActive && (
-            <Button
+            <IMButton
               variant="ghost"
               size="sm"
               className="h-9"
@@ -196,7 +196,7 @@ export function CalendarToolbar(props: CalendarToolbarProps) {
               }}
             >
               נקה סינון
-            </Button>
+            </IMButton>
           )}
         </div>
       )}

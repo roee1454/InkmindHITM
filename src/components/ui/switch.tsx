@@ -1,29 +1,28 @@
 import * as React from "react"
 import { Switch as SwitchPrimitive } from "radix-ui"
 
-import { cn } from "#/lib/utils.ts"
+import { cn } from "@/lib/utils"
 
-function Switch({
-  className,
-  ...props
-}: React.ComponentProps<typeof SwitchPrimitive.Root>) {
+export type IMSwitchProps = React.ComponentProps<typeof SwitchPrimitive.Root>
+
+/**
+ * An on/off setting that takes effect at once — no save button. 50×30; the thumb travels to the
+ * inline end. Pair it with a subtitle and a one-line muted explanation in a settings row.
+ */
+export function IMSwitch({ className, ...props }: IMSwitchProps) {
   return (
     <SwitchPrimitive.Root
       data-slot="switch"
       className={cn(
-        "peer inline-flex h-[30px] w-[50px] shrink-0 cursor-pointer items-center rounded-full border-0 p-[3px] transition-colors duration-150 ease-native outline-none focus-visible:ring-4 focus-visible:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted",
+        "peer inline-flex h-7.5 w-12.5 shrink-0 cursor-pointer items-center rounded-full p-0.75 outline-none transition-colors duration-150 ease-native focus-visible:ring-4 focus-visible:ring-ring/35 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-surface-2",
         className
       )}
       {...props}
     >
       <SwitchPrimitive.Thumb
         data-slot="switch-thumb"
-        className={cn(
-          "pointer-events-none block size-6 rounded-full bg-white shadow-sm ring-0 transition-transform duration-150 ease-native data-[state=checked]:translate-x-0 data-[state=unchecked]:translate-x-0 data-[state=checked]:ms-auto"
-        )}
+        className="pointer-events-none block size-6 rounded-full bg-white shadow-xs data-[state=checked]:ms-auto data-[state=checked]:bg-primary-foreground"
       />
     </SwitchPrimitive.Root>
   )
 }
-
-export { Switch, Switch as IMSwitch }

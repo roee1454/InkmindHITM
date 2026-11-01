@@ -7,7 +7,7 @@ import {
 
 import appCss from '../styles.css?url'
 
-import { ToastProvider } from '../components/ui/ToastProvider'
+import { IMToastProvider } from '@/components/ui/toast'
 import { MotionProvider } from '../components/motion'
 import { ServiceWorkerRegistrar } from '../components/ServiceWorkerRegistrar'
 
@@ -86,9 +86,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <MotionProvider>
-          <ToastProvider>
+          <IMToastProvider>
             {children}
-          </ToastProvider>
+          </IMToastProvider>
         </MotionProvider>
         <ServiceWorkerRegistrar />
         <Suspense fallback={null}>

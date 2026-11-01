@@ -1,6 +1,6 @@
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Skeleton } from '@/components/ui/skeleton'
+import { IMInput } from '@/components/ui/input'
+import { IMTextarea } from '@/components/ui/textarea'
+import { IMSkeleton } from '@/components/ui/skeleton'
 import { DEPOSIT_NOTICE_HOURS } from '@/lib/cancellation-policy'
 import { DEFAULT_PROJECT_POLICY } from '@/lib/project-policy'
 import { SettingsPage, SettingsRow, SettingsSection } from '@/features/settings/components/settings-layout'
@@ -43,7 +43,7 @@ function SectionSkeleton({ rows }: { rows: number }) {
   return (
     <div className="card-native flex flex-col gap-3 p-4">
       {Array.from({ length: rows }, (_, i) => (
-        <Skeleton key={i} className="h-10 w-full" />
+        <IMSkeleton key={i} className="h-10 w-full" />
       ))}
     </div>
   )
@@ -67,7 +67,7 @@ function PolicySettings() {
       ) : (
         <SettingsSection title="תשלום וביטולים" description="הבוט שולח את ההוראות ללקוח כשמגיע שלב המקדמה.">
           <SettingsRow label="הוראות תשלום מקדמה" htmlFor="payment-instructions" hint="איך משלמים ולאן. הבוט מעתיק את זה כמו שהוא." stacked>
-            <Textarea
+            <IMTextarea
               id="payment-instructions"
               value={s.paymentInstructions}
               onChange={(e) => studio.setField('paymentInstructions', e.target.value)}
@@ -87,7 +87,7 @@ function PolicySettings() {
       {s && (
         <SettingsSection title="הצהרת בריאות" description="נשלחת ללקוח לפני אישור התור.">
           <SettingsRow label="קישור לטופס" htmlFor="health-form-url" hint="Google Forms או כל טופס מקוון.">
-            <Input
+            <IMInput
               id="health-form-url"
               value={s.healthDeclarationFormUrl}
               onChange={(e) => studio.setField('healthDeclarationFormUrl', e.target.value)}
@@ -143,10 +143,10 @@ function PolicySettings() {
             <PolicySelect value={p.postProjectFeedback || 'review_links'} onChange={(v) => project.setField('postProjectFeedback', v)} options={FEEDBACK_OPTIONS} />
           </SettingsRow>
           <SettingsRow label="ביקורת ב-Google" htmlFor="google-review">
-            <Input id="google-review" value={s.reviewLink} onChange={(e) => studio.setField('reviewLink', e.target.value)} placeholder="https://g.page/r/…" dir="ltr" />
+            <IMInput id="google-review" value={s.reviewLink} onChange={(e) => studio.setField('reviewLink', e.target.value)} placeholder="https://g.page/r/…" dir="ltr" />
           </SettingsRow>
           <SettingsRow label="ביקורת ב-Easy" htmlFor="easy-review">
-            <Input id="easy-review" value={p.easyReviewLink} onChange={(e) => project.setField('easyReviewLink', e.target.value)} placeholder="https://easy.co.il/page/…" dir="ltr" />
+            <IMInput id="easy-review" value={p.easyReviewLink} onChange={(e) => project.setField('easyReviewLink', e.target.value)} placeholder="https://easy.co.il/page/…" dir="ltr" />
           </SettingsRow>
         </SettingsSection>
       )}

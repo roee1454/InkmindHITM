@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+import { IMButton } from '@/components/ui/button'
 
 /**
  * Asked when closing a session with nothing to go on — no estimate of the sessions and nothing else
@@ -10,12 +10,12 @@ export function LastSessionQuestion({ onChoose, disabled }: { onChoose: (isLast:
       <span className="text-xs font-extrabold text-foreground">האם זה הסשן האחרון בקעקוע הזה?</span>
       <span className="text-2xs text-muted-foreground">לא הוזן מספר מפגשים משוער לפרויקט, ואין תור נוסף ביומן.</span>
       <div className="grid grid-cols-2 gap-2">
-        <Button type="button" size="sm" variant="outline" disabled={disabled} onClick={() => onChoose(true)}>
+        <IMButton type="button" size="sm" variant="outline" disabled={disabled} onClick={() => onChoose(true)}>
           כן, העבודה הסתיימה
-        </Button>
-        <Button type="button" size="sm" variant="outline" disabled={disabled} onClick={() => onChoose(false)}>
+        </IMButton>
+        <IMButton type="button" size="sm" variant="outline" disabled={disabled} onClick={() => onChoose(false)}>
           לא, יש עוד מפגשים
-        </Button>
+        </IMButton>
       </div>
     </div>
   )

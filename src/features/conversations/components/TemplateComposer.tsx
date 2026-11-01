@@ -6,16 +6,16 @@ import {
   Loader2,
   MessageSquare,
 } from '@/components/ui/icon'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
+import { IMBadge } from '@/components/ui/badge'
+import { IMInput } from '@/components/ui/input'
+import { IMLabel } from '@/components/ui/label'
+import { IMCheckbox } from '@/components/ui/checkbox'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  IMSelect,
+  IMSelectContent,
+  IMSelectItem,
+  IMSelectTrigger,
+  IMSelectValue,
 } from '@/components/ui/select'
 import type { UIMetaTemplate } from '@/integrations/whatsapp-cloud-api/types'
 import { shouldExcludeTemplate } from '../utils/templates'
@@ -115,22 +115,22 @@ export function TemplateComposer({
       {/* Template Selector with rich Hebrew metadata */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
-          <Label className="text-xs font-semibold text-muted-foreground">
+          <IMLabel className="text-xs font-semibold text-muted-foreground">
             בחירת תבנית מאושרת
-          </Label>
-          <Badge variant="done" className="text-2xs py-0 px-2 h-5 flex items-center gap-1">
+          </IMLabel>
+          <IMBadge variant="done" className="text-2xs py-0 px-2 h-5 flex items-center gap-1">
             <CheckCircle2 className="size-3" />
             <span>{filteredTemplates.length} תבניות מאושרות</span>
-          </Badge>
+          </IMBadge>
         </div>
 
-        <Select value={selectedTemplateId} onValueChange={onSelectTemplateId}>
-          <SelectTrigger className="w-full text-right font-medium">
-            <SelectValue placeholder="בחר תבנית מאושרת" />
-          </SelectTrigger>
-          <SelectContent align="end" className="max-h-72" dir="rtl">
+        <IMSelect value={selectedTemplateId} onValueChange={onSelectTemplateId}>
+          <IMSelectTrigger className="w-full text-right font-medium">
+            <IMSelectValue placeholder="בחר תבנית מאושרת" />
+          </IMSelectTrigger>
+          <IMSelectContent align="end" className="max-h-72" dir="rtl">
             {filteredTemplates.map((tpl) => (
-              <SelectItem key={tpl.id} value={tpl.id} className="text-right py-2 cursor-pointer">
+              <IMSelectItem key={tpl.id} value={tpl.id} className="text-right py-2 cursor-pointer">
                 <div className="flex flex-col gap-0.5 text-right w-full">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-bold text-xs text-foreground">
@@ -149,10 +149,10 @@ export function TemplateComposer({
                     {tpl.description}
                   </span>
                 </div>
-              </SelectItem>
+              </IMSelectItem>
             ))}
-          </SelectContent>
-        </Select>
+          </IMSelectContent>
+        </IMSelect>
       </div>
 
       {/* Dynamic Template Parameters */}
@@ -167,12 +167,12 @@ export function TemplateComposer({
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             {currentTemplate.params.map((p, idx) => (
               <div key={p.index} className="flex flex-col gap-1">
-                <Label className="text-xs text-muted-foreground flex items-center justify-between">
+                <IMLabel className="text-xs text-muted-foreground flex items-center justify-between">
                   <span>{p.label}</span>
                   <span className="font-mono text-2xs text-muted-foreground/80">{`{{${p.index}}}`}</span>
                   <span className="text-2xs text-muted-foreground/80 font-medium">{`{{${p.index}}}`}</span>
-                </Label>
-                <Input
+                </IMLabel>
+                <IMInput
                   value={paramValues[idx] ?? ''}
                   onChange={(e) => onParamChange(idx, e.target.value)}
                   placeholder={p.placeholder}
@@ -192,9 +192,9 @@ export function TemplateComposer({
               <CheckCircle2 className="size-3.5" />
               <span className="text-xs font-bold">תצוגה מקדימה (WhatsApp):</span>
             </div>
-            <Badge variant="outline" className="text-2xs py-0 px-1.5 h-4.5 text-muted-foreground">
+            <IMBadge variant="outline" className="text-2xs py-0 px-1.5 h-4.5 text-muted-foreground">
               Meta Approved
-            </Badge>
+            </IMBadge>
           </div>
           <p className="whitespace-pre-wrap text-xs text-foreground/90 leading-relaxed font-sans bg-card/80 p-2.5 rounded-md border border-border shadow-xs">
             {previewText}
@@ -205,19 +205,19 @@ export function TemplateComposer({
       {/* Optional Bot Continuation Checkbox */}
       {showBotToggle && (
         <div className="flex items-center gap-2.5 rounded-xl border border-border bg-muted/30 p-2.5">
-          <Checkbox
+          <IMCheckbox
             id="template-bot-continuation"
             checked={botContinuation}
             onCheckedChange={(checked) => onBotContinuationChange?.(Boolean(checked))}
           />
-          <Label
+          <IMLabel
             htmlFor="template-bot-continuation"
             className="text-xs font-semibold cursor-pointer select-none leading-tight"
           >
             {recipientDisplayName
               ? `הבוט ימשיך את השיחה כש${recipientDisplayName} תשיב`
               : 'הבוט ימשיך את השיחה כשהלקוח/ה תשיב'}
-          </Label>
+          </IMLabel>
         </div>
       )}
     </div>

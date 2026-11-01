@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Skeleton } from '@/components/ui/skeleton'
+import { IMSkeleton } from '@/components/ui/skeleton'
 import { WeeklyHoursEditor } from '@/components/WeeklyHoursEditor'
 import { getWorkingHours, saveWorkingHours } from '@/features/settings/server/settings'
 import { isValidTimeRange } from '#/lib/working-hours.ts'
@@ -37,7 +37,7 @@ export function MemberHoursSection({ staffId, readOnly }: { staffId: string; rea
     // section's card would nest one inside the other.
     <SettingsSection title="שעות עבודה" description={hours.data ? `${summarizeWorkingHours(hours.data)}. הבוט מציע תורים רק בשעות האלה.` : 'הבוט מציע תורים רק בשעות האלה.'} bare>
       {windows === null ? (
-        <Skeleton className="h-40 w-full rounded-xl" />
+        <IMSkeleton className="h-40 w-full rounded-xl" />
       ) : (
         <div className="flex flex-col gap-3">
           {invalid && !readOnly && <p className="px-1 text-xs font-bold text-destructive">שעת ההתחלה צריכה להיות לפני שעת הסיום.</p>}
