@@ -2,6 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import type { getSuperuserClient } from '@/integrations/pocketbase/superuser.server'
 import { requireAuth, requireAdmin, getSettingsRecord } from './helpers.server'
+import { studioConfig } from '@/config/studio.config'
 
 export interface StudioPolicySettings {
   paymentInstructions: string | null
@@ -28,20 +29,20 @@ export async function getStudioPolicyForBot(
   const list = typeof col?.getList === 'function' ? await col.getList(1, 1).catch(() => ({ items: [] })) : { items: [] }
   const record = list?.items?.[0]
   return {
-    paymentInstructions: (record?.payment_instructions as string) || null,
-    reviewLink: (record?.google_review_link as string) || null,
+    paymentInstructions: (record?.payment_instructions as string) || studioConfig.paymentInstructions || null,
+    reviewLink: (record?.google_review_link as string) || studioConfig.googleReviewLink || null,
     // Preserves 0 hours when studio policy permits free cancellation anytime (Bug 20)
     cancellationCutoffHours:
       typeof record?.cancellation_cutoff_hours === 'number'
         ? (record.cancellation_cutoff_hours)
-        : 48,
-    depositRequired: Boolean(record?.deposit_required),
-    depositAmount: (record?.deposit_amount as number) ?? null,
-    healthDeclarationFormUrl: (record?.health_declaration_form_url as string) || null,
+        : studioConfig.cancellationCutoffHours,
+    depositRequired: record?.deposit_required !== undefined ? Boolean(record.deposit_required) : studioConfig.depositRequired,
+    depositAmount: (record?.deposit_amount as number) ?? studioConfig.depositAmount,
+    healthDeclarationFormUrl: (record?.health_declaration_form_url as string) || studioConfig.healthDeclarationFormUrl || null,
     healthDeclarationValidityMonths:
       typeof record?.health_declaration_validity_months === 'number'
         ? (record.health_declaration_validity_months)
-        : 6,
+        : studioConfig.healthDeclarationValidityMonths,
   }
 }
 
@@ -50,17 +51,17 @@ export const getStudioPolicySettings = createServerFn({ method: 'GET' }).handler
     await requireAuth()
     const { record } = await getSettingsRecord()
     return {
-      paymentInstructions: (record?.payment_instructions as string) || null,
-      reviewLink: (record?.google_review_link as string) || null,
+      paymentInstructions: (record?.payment_instructions as string) || studioConfig.paymentInstructions || null,
+      reviewLink: (record?.google_review_link as string) || studioConfig.googleReviewLink || null,
       cancellationCutoffHours:
         typeof record?.cancellation_cutoff_hours === 'number'
           ? (record.cancellation_cutoff_hours)
-          : 48,
-      healthDeclarationFormUrl: (record?.health_declaration_form_url as string) || null,
+          : studioConfig.cancellationCutoffHours,
+      healthDeclarationFormUrl: (record?.health_declaration_form_url as string) || studioConfig.healthDeclarationFormUrl || null,
       healthDeclarationValidityMonths:
         typeof record?.health_declaration_validity_months === 'number'
           ? (record.health_declaration_validity_months)
-          : 6,
+          : studioConfig.healthDeclarationValidityMonths,
     }
   },
 )

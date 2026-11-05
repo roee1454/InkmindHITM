@@ -9,7 +9,7 @@ import { getUnreadNotificationsCount } from '#/features/notifications/server/not
 import { getAiSettings } from '@/features/settings/server/ai'
 import { cn } from '#/lib/utils.ts'
 import { BrandMark } from '#/components/BrandMark.tsx'
-import { ThemeModeControl } from '#/components/ThemeModeControl.tsx'
+import { studioConfig } from '#/config/studio.config.ts'
 import { NAV_GROUPS } from '#/components/navigation.ts'
 import { useSidebarCollapsed } from '#/hooks/useSidebarCollapsed.ts'
 import { clearSessionCache } from '@/features/auth/utils/session-cache'
@@ -74,9 +74,9 @@ export function Sidebar({ staff, className }: SidebarProps) {
           <BrandMark size="sm" />
           {!collapsed && (
             <div className="flex min-w-0 flex-col items-start font-assistant">
-              <h1 className="text-sm font-extrabold text-foreground">INKMIND</h1>
-              <span className="text-2xs font-bold uppercase text-muted-foreground">
-                ניהול סטודיו
+              <h1 className="truncate text-sm font-extrabold text-foreground">{studioConfig.studioName}</h1>
+              <span className="truncate text-2xs font-bold uppercase text-muted-foreground">
+                {studioConfig.tagline || 'ניהול סטודיו'}
               </span>
             </div>
           )}
@@ -260,7 +260,6 @@ export function Sidebar({ staff, className }: SidebarProps) {
             <p className="font-assistant text-sm text-muted-foreground">
               {ROLE_LABELS[staff.role] ?? staff.role}
             </p>
-            <ThemeModeControl className="mt-3" />
           </>
         )}
         <IMButton

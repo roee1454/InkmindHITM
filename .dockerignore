@@ -2,6 +2,7 @@ node_modules
 .output
 .nitro
 .tanstack
+src/.tmp
 .vinxi
 dist
 dist-ssr
@@ -14,3 +15,11 @@ pocketbase
 docs
 scratch
 *.log
+.agents
+.claude
+.vscode
+.idea
+tests
+coverage
+deploy-history.log
+.deploy-tag

@@ -87,7 +87,7 @@ describe('IMIcon', () => {
     ).toContain('text-destructive')
     expect(
       classOf(renderToStaticMarkup(<IMIcon name="needle" tone="artist-3" />)),
-    ).toContain('text-artist-3')
+    ).toContain('text-foreground')
   })
 
   it('mirrors in RTL exactly the glyphs the registry flags', () => {

@@ -20,7 +20,6 @@ function SettingsLayout() {
 
   useEffect(() => {
     const adminOnlyRoutes = [
-      '/dashboard/settings/general',
       '/dashboard/settings/policy',
       '/dashboard/settings/closures',
       '/dashboard/settings/ai',

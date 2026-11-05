@@ -5,6 +5,7 @@ import { getSession } from '@/lib/session.server'
 import { STUDIO_TIMEZONE } from '@/lib/timezone'
 import { getWorkingHoursForStaff } from '@/features/settings/server/profiles'
 import { needsBootstrap } from '@/features/auth/server/auth'
+import { syncStudioConfigToDb } from '@/config/studio/sync.server'
 
 async function requireSession() {
   const session = await getSession()
@@ -18,16 +19,9 @@ async function requireSession() {
 
 export const ensureSettings = createServerFn({ method: 'POST' }).handler(async () => {
   const su = await getSuperuserClient()
+  await syncStudioConfigToDb(su)
   const existing = await su.collection('settings').getList(1, 1)
-  if (existing.totalItems > 0) return existing.items[0]
-  return su.collection('settings').create({
-    studio_name: 'My Studio',
-    // Mirror of the code-level constant (src/lib/timezone.ts) — display-only today,
-    // but must never drift from the timezone the process actually runs in.
-    timezone: STUDIO_TIMEZONE,
-    currency: 'USD',
-    onboarding_completed: false,
-  })
+  return existing.items[0]
 })
 
 export const getSettings = createServerFn({ method: 'GET' }).handler(async () => {
@@ -50,7 +44,7 @@ async function findOnboardingGaps(staffId: string): Promise<OnboardingGap[]> {
   const settings = (await su.collection('settings').getList(1, 1)).items[0]
   if (!settings) throw new Error('הגדרות המערכת חסרות — יש להתחיל מתחילת התהליך.')
   const studioName = String(settings.studio_name ?? '').trim()
-  if (!studioName || studioName === 'My Studio') gaps.push({ step: 1, message: 'שם הסטודיו עוד לא הוגדר.' })
+  if (!studioName) gaps.push({ step: 1, message: 'שם הסטודיו עוד לא הוגדר.' })
 
   const staff = await su.collection('staff').getOne(staffId).catch(() => null)
   if (!staff) throw new Error('רשומת מנהל הסטודיו לא נמצאה.')

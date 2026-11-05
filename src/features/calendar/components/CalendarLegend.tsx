@@ -14,22 +14,11 @@ export const CalendarLegend: React.FC = () => {
 
       <div className="flex flex-col gap-2">
         <div className="flex items-start gap-2">
-          <span className="mt-0.5 flex shrink-0 gap-0.5">
-            <span className="size-3 rounded border border-artist-1/45 bg-artist-1/[0.08]" />
-            <span className="size-3 rounded border border-artist-2/45 bg-artist-2/[0.08]" />
-            <span className="size-3 rounded border border-artist-5/45 bg-artist-5/[0.08]" />
-          </span>
-          <span className="text-muted-foreground">
-            <span className="font-bold text-foreground">צבע = מקעקע.</span> לכל מקעקע צבע קבוע משלו.
-          </span>
-        </div>
-
-        <div className="flex items-start gap-2">
-          <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-artist-2/20 text-2xs font-extrabold leading-none ring-1 ring-artist-2/50">
+          <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-muted text-2xs font-extrabold leading-none ring-1 ring-border text-foreground">
             דח
           </span>
           <span className="text-muted-foreground">
-            <span className="font-bold text-foreground">עיגול = מי המקעקע.</span> תמונת הפרופיל מגוגל, או ראשי תיבות בצבע שלו.
+            <span className="font-bold text-foreground">עיגול = מי המקעקע.</span> תמונת הפרופיל מגוגל, או ראשי תיבות של המקעקע.
           </span>
         </div>
 

@@ -4,7 +4,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import { getBrowserClient } from '@/integrations/pocketbase/client'
 import { useIMToast } from '@/components/ui/toast'
 import type { IMToastTone } from '@/components/ui/toast'
-import { sendPwaNotification } from '@/features/notifications/utils/pwa-notifications'
 import type { MessageStatus, MessageType } from '@/integrations/whatsapp-cloud-api/types'
 import type { UIConversation, UIMessage } from '@/features/conversations/types'
 import type { ApiNotification } from '@/features/notifications/server/notifications'
@@ -138,7 +137,6 @@ export function useDashboardRealtime({ sessionToken, sessionStaff }: DashboardRe
                   ? '📄 שלח/ה מסמך'
                   : 'שלח/ה מדיה')
           const notifTitle = `הודעה חדשה מ-${senderName}`
-          const notifLink = `/dashboard/conversations?chatId=${convId}`
 
           toastRef.current({
             title: notifTitle,
@@ -150,12 +148,6 @@ export function useDashboardRealtime({ sessionToken, sessionStaff }: DashboardRe
                 search: { chatId: convId },
               })
             },
-          })
-
-          void sendPwaNotification(notifTitle, {
-            body: msgBody,
-            link: notifLink,
-            tag: `msg-${data.record.id}`,
           })
         }
       }
@@ -266,12 +258,6 @@ export function useDashboardRealtime({ sessionToken, sessionStaff }: DashboardRe
                 search: { highlightId: data.record.id },
               })
             },
-          })
-
-          void sendPwaNotification(notifTitle, {
-            body: notifMessage,
-            link: notifLink || `/dashboard/notifications?highlightId=${data.record.id}`,
-            tag: `notif-${data.record.id}`,
           })
         }
       } else if (data.action === 'delete') {

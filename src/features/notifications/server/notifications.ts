@@ -131,7 +131,7 @@ export const addSystemNotification = createServerOnlyFn(
     }
     const { getSuperuserClient } = await import('@/integrations/pocketbase/superuser.server')
     const su = await getSuperuserClient()
-    return su.collection('notifications').create({
+    const record = await su.collection('notifications').create({
       title: data.title,
       message: data.message,
       type: data.type,
@@ -139,6 +139,15 @@ export const addSystemNotification = createServerOnlyFn(
       read: false,
       link: data.link,
     })
+
+    const { broadcastWebPushToStaff } = await import('./web-push')
+    void broadcastWebPushToStaff({
+      title: data.title,
+      body: data.message,
+      url: data.link || '/dashboard/notifications',
+    })
+
+    return record
   },
 )
 
@@ -150,14 +159,24 @@ export const addWhatsAppMessageNotification = createServerOnlyFn(
     }
     const { getSuperuserClient } = await import('@/integrations/pocketbase/superuser.server')
     const su = await getSuperuserClient()
-    return su.collection('notifications').create({
+    const link = conversationLink(data.conversationId)
+    const record = await su.collection('notifications').create({
       title: data.sender,
       message: data.preview,
       type: 'info',
       kind: 'whatsapp_message',
       read: false,
-      link: conversationLink(data.conversationId),
+      link,
     })
+
+    const { broadcastWebPushToStaff } = await import('./web-push')
+    void broadcastWebPushToStaff({
+      title: `הודעה חדשה: ${data.sender}`,
+      body: data.preview,
+      url: link,
+    })
+
+    return record
   },
 )
 

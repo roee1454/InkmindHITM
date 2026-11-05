@@ -99,7 +99,7 @@ function DashboardLayout() {
   const mobileTopBarAction = showsCreateAction ? (
     <Link
       to="."
-      search={(prev) => ({ ...prev, new: '1' }) as Record<string, unknown>}
+      search={((prev: Record<string, unknown>) => ({ ...prev, new: '1' })) as any}
       aria-label="הוספה"
       className="tap-target text-primary"
     >

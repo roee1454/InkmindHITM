@@ -62,7 +62,6 @@ export const MOBILE_NAV_ITEMS: readonly NavItem[] = [HOME, CALENDAR, CONVERSATIO
 export const DRAWER_NAV_ITEMS: readonly NavItem[] = [ANALYTICS]
 
 export const SETTINGS_SUB_ITEMS = [
-  { id: 'general', label: 'כללי', route: '/dashboard/settings/general' },
   { id: 'team', label: 'צוות', route: '/dashboard/settings/team' },
   { id: 'policy', label: 'מדיניות', route: '/dashboard/settings/policy' },
   { id: 'closures', label: 'ימי סגירה', route: '/dashboard/settings/closures' },

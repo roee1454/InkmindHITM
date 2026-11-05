@@ -43,9 +43,9 @@ describe('IMAvatar', () => {
     expect(renderToStaticMarkup(<IMAvatar name="א" size="lg" />)).toContain('size-14')
   })
 
-  it("rings an artist in their identity colour; a customer gets no ring", () => {
+  it("rings an artist in solid styling; a customer gets no ring", () => {
     const artist = renderToStaticMarkup(<IMAvatar name="דור" artist={3} />)
-    expect(artist).toContain('ring-artist-3')
+    expect(artist).toContain('ring-border')
     expect(artist).toContain('ring-offset-card')
     expect(renderToStaticMarkup(<IMAvatar name="דור" />)).not.toContain('ring-')
   })

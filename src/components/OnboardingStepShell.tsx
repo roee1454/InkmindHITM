@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { Check, ChevronRight } from '@/components/ui/icon'
 import { TOTAL_ONBOARDING_STEPS } from '@/features/onboarding/utils/onboarding-steps'
-import { getSettings } from '@/features/onboarding/server/onboarding'
+import { studioConfig } from '@/config/studio.config'
 
 interface OnboardingStepShellProps {
   /** 1–6 across the whole wizard — account creation is 1–3, studio setup is 4–6, or employee steps (1–4). */
@@ -15,11 +14,6 @@ interface OnboardingStepShellProps {
   /** Optional list of 3 benefits with checkmarks for the desktop Brand Panel. */
   benefits?: string[]
   children: ReactNode
-}
-
-function logoUrl(recordId: string, filename: string): string {
-  const base = import.meta.env.VITE_POCKETBASE_URL ?? 'http://127.0.0.1:8090'
-  return `${base}/api/files/settings/${recordId}/${encodeURIComponent(filename)}`
 }
 
 function getInitials(name: string): string {
@@ -55,13 +49,8 @@ export function OnboardingStepShell({
 }: OnboardingStepShellProps) {
   const percent = Math.min(100, Math.round((stepNumber / totalSteps) * 100))
 
-  const { data: settings } = useQuery({
-    queryKey: ['settings'],
-    queryFn: () => getSettings(),
-  })
-
-  const studioName = (settings?.studio_name as string) || 'Inkmind'
-  const logo = settings?.id && settings?.logo ? logoUrl(settings.id, settings.logo as string) : null
+  const studioName = studioConfig.studioName
+  const logo = studioConfig.logoAssetUrl || null
   const initials = getInitials(studioName)
 
   return (

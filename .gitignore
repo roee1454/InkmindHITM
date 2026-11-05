@@ -5,6 +5,7 @@ dist-ssr
 *.local
 .nitro
 .tanstack
+src/.tmp
 .wrangler
 .output
 .vinxi
@@ -17,7 +18,3 @@ pocketbase/pocketbase
 .env
 .env.prod
 .env.local
-
-# Deploy state (scripts/deploy.sh, scripts/rollback.sh) — machine-local, not source
-.deploy-tag
-deploy-history.log

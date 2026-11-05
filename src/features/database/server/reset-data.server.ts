@@ -57,6 +57,9 @@ async function sweep(su: PocketBase, collections: string[], deleted: Record<stri
       for (const { id } of records) {
         // A bot turn still generating could otherwise reply into a conversation that is gone.
         if (collection === 'conversations') cancelPendingBotTurn(id)
+        if (collection === 'staff') {
+          await su.collection('staff').update(id, { role: 'staff' }).catch(() => null)
+        }
         try {
           await su.collection(collection).delete(id)
           deleted[collection] = (deleted[collection] ?? 0) + 1

@@ -6,7 +6,7 @@ import { PwaPermissionBanner } from './components/PwaPermissionBanner'
 import { SystemNotificationList } from './components/SystemNotificationList'
 import { WhatsAppThreadList } from './components/WhatsAppThreadList'
 import { useNotifications } from './hooks/useNotifications'
-import { usePwaNotifications } from './hooks/usePwaNotifications'
+import { useWebPushNotifications } from './hooks/useWebPushNotifications'
 import type { ApiNotification } from './types'
 
 export type NotificationsTab = 'system' | 'whatsapp'
@@ -30,7 +30,15 @@ function TabCount({ unread }: { unread: number }) {
 export function NotificationsPage({ highlightId, tab, onTabChange }: NotificationsPageProps) {
   const navigate = useNavigate()
   const { notifications, isLoading, system, whatsapp, markRead, remove, markAllRead, clearAll, isMarkingAllRead, isClearingAll } = useNotifications()
-  const { permission, enableNotifications } = usePwaNotifications()
+  const {
+    permission,
+    isSubscribed,
+    isLoading: isPushLoading,
+    isTesting: isPushTesting,
+    isIosNotStandalone,
+    enableNotifications,
+    sendTestNotification,
+  } = useWebPushNotifications()
   const highlightRef = useRef<HTMLDivElement>(null)
 
   const highlighted = highlightId ? notifications.find((n) => n.id === highlightId) : undefined
@@ -61,7 +69,15 @@ export function NotificationsPage({ highlightId, tab, onTabChange }: Notificatio
         onClearAll={() => void clearAll(active === 'system' ? 'system' : 'whatsapp_message')}
       />
 
-      <PwaPermissionBanner permission={permission} onEnable={() => void enableNotifications()} />
+      <PwaPermissionBanner
+        permission={permission}
+        isSubscribed={isSubscribed}
+        isIosNotStandalone={isIosNotStandalone}
+        isLoading={isPushLoading}
+        isTesting={isPushTesting}
+        onEnable={() => void enableNotifications()}
+        onSendTest={() => void sendTestNotification()}
+      />
 
       <IMTabs value={active} onValueChange={(v) => onTabChange(v as NotificationsTab)} dir="rtl" className="gap-4">
         <IMTabsList className="grid grid-cols-2">

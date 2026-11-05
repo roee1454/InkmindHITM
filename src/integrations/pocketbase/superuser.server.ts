@@ -54,7 +54,7 @@ if (!globalForRecovery.__strandedRecoveryScheduled && !process.env.VITEST) {
  * `persistSessionCookie()` (src/lib/session.server.ts) after any auth-mutating call.
  */
 export function createRequestClient(cookieHeader: string | undefined | null) {
-  const client = new PocketBase(process.env.POCKETBASE_URL ?? 'http://127.0.0.1:8090')
+  const client = new PocketBase(process.env.POCKETBASE_URL || process.env.PB_URL || 'http://127.0.0.1:8090')
   client.autoCancellation(false)
   if (cookieHeader) client.authStore.loadFromCookie(cookieHeader)
   return client
@@ -81,7 +81,7 @@ export function createRequestClient(cookieHeader: string | undefined | null) {
  */
 
 async function createSuperuserClient(): Promise<PocketBase> {
-  const client = new PocketBase(process.env.POCKETBASE_URL ?? 'http://127.0.0.1:8090')
+  const client = new PocketBase(process.env.POCKETBASE_URL || process.env.PB_URL || 'http://127.0.0.1:8090')
   client.autoCancellation(false)
   await client.collection('_superusers').authWithPassword(
     process.env.PB_SUPERUSER_EMAIL ?? '',

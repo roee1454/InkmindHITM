@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { LogOut, ChevronLeft, SlidersHorizontal, Users, Sparkles, Database, FileText, CalendarOff } from '@/components/ui/icon'
+import { LogOut, ChevronLeft, Users, Sparkles, Database, FileText, CalendarOff } from '@/components/ui/icon'
 import { logout } from '@/features/auth/server/auth'
 import { getStaffList } from '@/features/settings/server/staff'
 import { clearSessionCache } from '@/features/auth/utils/session-cache'
@@ -9,8 +9,7 @@ import { SETTINGS_SUB_ITEMS } from '@/components/navigation'
 import { useIsMobile } from '#/hooks/useMediaQuery'
 import type { StaffRecord } from '@/integrations/pocketbase/types'
 
-const ICONS: Record<(typeof SETTINGS_SUB_ITEMS)[number]['id'], typeof SlidersHorizontal> = {
-  general: SlidersHorizontal,
+const ICONS: Record<(typeof SETTINGS_SUB_ITEMS)[number]['id'], typeof Users> = {
   team: Users,
   policy: FileText,
   closures: CalendarOff,
@@ -33,9 +32,9 @@ export function SettingsMenu({ staff }: SettingsMenuProps) {
   // the first allowed section instead of a blank content pane.
   useEffect(() => {
     if (!isMobile) {
-      navigate({ to: isAdmin ? '/dashboard/settings/general' : '/dashboard/settings/team', replace: true })
+      navigate({ to: '/dashboard/settings/team', replace: true })
     }
-  }, [isMobile, isAdmin, navigate])
+  }, [isMobile, navigate])
 
   const logoutMutation = useMutation({
     mutationFn: async () => {

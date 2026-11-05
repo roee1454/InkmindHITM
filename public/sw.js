@@ -7,7 +7,7 @@
  * Not processed by Vite (it lives in public/ and is copied verbatim), so: plain JS only, no
  * imports, no import.meta.env. Bump VERSION on every change to this file.
  */
-const VERSION = 'v2'
+const VERSION = 'v3'
 const CACHE = `inkmind-${VERSION}`
 const OFFLINE_URL = '/offline.html'
 
@@ -90,6 +90,33 @@ self.addEventListener('fetch', (event) => {
   // Everything else falls through to the network untouched.
 })
 
+// Handle incoming Web Push from server (Apple APNs / Google FCM)
+self.addEventListener('push', (event) => {
+  let data = {}
+  if (event.data) {
+    try {
+      data = event.data.json()
+    } catch {
+      data = { title: 'Inkmind CRM', body: event.data.text() }
+    }
+  }
+
+  const title = data.title || 'Inkmind CRM'
+  const options = {
+    body: data.body || '',
+    icon: data.icon || '/icons/icon-192.png',
+    badge: data.badge || '/icons/icon-192.png',
+    dir: 'rtl',
+    lang: 'he',
+    tag: data.tag || `inkmind-${Date.now()}`,
+    data: {
+      url: data.url || '/dashboard/notifications',
+    },
+  }
+
+  event.waitUntil(self.registration.showNotification(title, options))
+})
+
 // Handle notification click on PC / Mobile device
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
@@ -114,3 +141,4 @@ self.addEventListener('notificationclick', (event) => {
     }),
   )
 })
+

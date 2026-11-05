@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   createPendingHoldForBot,
   getActiveAppointmentForBot,
@@ -44,7 +44,13 @@ vi.mock('@/integrations/whatsapp-cloud-api/client', () => ({
 
 describe('Cluster 5: Calendar Tools, Working Hours, Shifts & Cancellation Policy', () => {
   beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-01T08:00:00.000Z'))
     vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   describe('Bug 20: 0-Hour Cancellation Cutoff Support', () => {

@@ -50,7 +50,7 @@ describe('Onboarding & Settings Validation & Navigation Tests', () => {
     })
 
     it('returns /dashboard/settings for admin navigating within sub-settings', () => {
-      const target = settingsBackTarget('/dashboard/settings/general', {}, true)
+      const target = settingsBackTarget('/dashboard/settings/policy', {}, true)
       expect(target).toEqual({ to: '/dashboard/settings' })
     })
 

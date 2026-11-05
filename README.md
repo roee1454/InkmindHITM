@@ -2,11 +2,25 @@ Welcome to your new TanStack Start app!
 
 # Getting Started
 
-To run this application:
+To run this application locally:
 
 ```bash
 pnpm install
 pnpm dev
+```
+
+### Docker Local Development (with Watch Mode)
+
+Run the full local stack (Web with live HMR + PocketBase + Redis):
+
+```bash
+# Standard Docker Compose with live bind mounts
+docker compose up
+
+# Or Docker Compose Watch mode (instant sync & dependency rebuilds)
+docker compose watch
+# or
+docker compose up --watch
 ```
 
 # Building For Production
@@ -80,12 +94,16 @@ To deploy:
 Both services use the `starter` plan ($7/mo each) so they stay always-on — no cold-start spin-down.
 
 
-## Deploy to a VPS (Docker Compose + Caddy)
+## Deploy to a VPS (Dokploy / Docker Compose)
 
-Self-hosted alternative to Render: `docker-compose.yml` + `Caddyfile` run the app, PocketBase,
-and a Caddy reverse proxy (automatic HTTPS, no certbot) as three services. Full first-deploy
-walkthrough — DNS, env vars, PocketBase superuser bootstrap, webhook URLs, backup cron — is in
-[`DEPLOY.md`](./DEPLOY.md). Ongoing deploys/rollbacks use `scripts/deploy.sh`/`scripts/rollback.sh`.
+Production deployment runs via Dokploy on a Hetzner VPS using `docker-compose.prod.yml`:
+- Push to `main` triggers automated build and deployment.
+- PocketBase starts and bootstraps superuser.
+- `studio-sync` provisions studio constants from `src/config/studio.config.ts` and seeds initial FAQs.
+- Web service and Redis launch once database sync completes successfully.
+- Domain routing and automatic TLS are managed by Dokploy (Traefik).
+
+Full deployment and operational guide: [`DEPLOY.md`](./DEPLOY.md).
 
 
 

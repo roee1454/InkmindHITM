@@ -43,12 +43,12 @@ export function useGoogleCalendarOAuth(staffId?: string) {
     if (!staffId) return
     setCalendarError(null)
     setConnectingCalendar(true)
-    const popup = window.open(
+
+    popupRef.current = window.open(
       `/api/staff/${staffId}/google-calendar/connect`,
       'google-calendar-connect',
       'width=500,height=650',
     )
-    popupRef.current = popup
   }
 
   return {

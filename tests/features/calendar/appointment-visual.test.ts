@@ -38,10 +38,10 @@ describe('appointment visual language (track-b B6.8)', () => {
 })
 
 describe('artist colours carry identity, not status', () => {
-  it('gives the same artist the same surface every time, and an unassigned one a neutral surface', () => {
+  it('gives solid, consistent neutral surface for artists without categorical rainbow clash', () => {
     expect(artistColor('st_abc').surface).toBe(artistColor('st_abc').surface)
-    expect(artistColor('st_abc').surface).toContain('artist-')
-    expect(artistColor(null).surface).not.toContain('artist-')
+    expect(artistColor('st_abc').surface).toBe('border-border bg-card')
+    expect(artistColor(null).surface).toBe('border-border bg-card')
   })
 
   it('never borrows a status role for an artist', () => {

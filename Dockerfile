@@ -1,38 +1,70 @@
-# Multi-stage build for the TanStack Start app. Nitro's `node-server` preset bundles almost
-# everything into .output/server/index.mjs (verified: only `tslib` survives as a real
-# node_modules dependency at runtime), so the final image only needs Node + that one directory —
-# no source, no full node_modules, no build toolchain.
+# Multi-stage build for Inkmind CRM (TanStack Start + Nitro + Node 22).
+# Supports development (with live reload) and production (minimal hardened runner).
 
-FROM node:22-alpine AS builder
+# ---------------------------------------------------------------------------
+# Base stage: Node 22 Alpine, system timezone, and pnpm
+# ---------------------------------------------------------------------------
+FROM node:22-alpine AS base
 WORKDIR /app
-
+RUN apk add --no-cache tzdata
+ENV TZ=Asia/Jerusalem
+ENV TSR_TMP_DIR=/app/src/.tmp
 RUN corepack enable
 
+# ---------------------------------------------------------------------------
+# Dependencies stage: Install all npm packages (with frozen lockfile)
+# ---------------------------------------------------------------------------
+FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
+# ---------------------------------------------------------------------------
+# Development stage: Live dev server for docker-compose watch / volume mounts
+# ---------------------------------------------------------------------------
+FROM deps AS dev
+ENV NODE_ENV=development
+ENV PORT=3101
+ENV TSR_TMP_DIR=/app/src/.tmp
+
+# Copy source in case volumes aren't mounted (volumes/watch will overlay this)
 COPY . .
 
-# VITE_-prefixed vars are inlined into the client bundle at BUILD time (Vite convention), not
-# read at container runtime — must be passed as a build arg, not a docker-compose `environment:`
-# entry. This is the browser's own PocketBase URL (used for realtime + direct media access), so
-# it must be the real public URL in production — never the Docker-internal service name
-# (`http://pocketbase:8090` is only resolvable inside the compose network, not from a browser).
+EXPOSE 3101
+CMD ["sh", "-c", "pnpm generate-routes && pnpm dev"]
+
+# ---------------------------------------------------------------------------
+# Studio sync stage: Provisions database with studio.config.ts
+# ---------------------------------------------------------------------------
+FROM deps AS sync
+COPY . .
+CMD ["pnpm", "studio:sync"]
+
+# ---------------------------------------------------------------------------
+# Builder stage: Generate route tree and build production bundle with Nitro
+# ---------------------------------------------------------------------------
+FROM deps AS builder
+
+COPY . .
+
+# VITE_-prefixed vars are inlined into the client bundle at BUILD time.
+# This must be the real public PocketBase URL (e.g. https://pb.yourdomain.com),
+# not the Docker-internal service name (`http://pocketbase:8090`).
 ARG VITE_POCKETBASE_URL
 ENV VITE_POCKETBASE_URL=${VITE_POCKETBASE_URL}
 
 RUN pnpm generate-routes && pnpm build
 
 # ---------------------------------------------------------------------------
-
-FROM node:22-alpine AS runner
-WORKDIR /app
-RUN apk add --no-cache tzdata
-ENV TZ=Asia/Jerusalem
+# Production runner: Minimal image with only Nitro's standalone output
+# ---------------------------------------------------------------------------
+FROM base AS runner
 ENV NODE_ENV=production
 ENV PORT=3101
 
-COPY --from=builder /app/.output ./.output
+# Run as non-root node user for container security
+USER node
+
+COPY --chown=node:node --from=builder /app/.output ./.output
 
 EXPOSE 3101
 CMD ["node", ".output/server/index.mjs"]

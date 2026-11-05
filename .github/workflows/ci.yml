@@ -1,11 +1,13 @@
-name: CI
+name: Preflight CI/CD
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 jobs:
-  check:
+  preflight:
+    name: Typecheck, Tests & Compose Validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,27 +24,32 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Typecheck
-        if: always()
-        run: pnpm exec tsc --noEmit
+      - name: Generate route tree
+        run: pnpm generate-routes
 
-      # Non-blocking for now: the repo has ~200 pre-existing lint errors unrelated to any
-      # single change (confirmed while building this CI workflow), so a hard-fail here would be
-      # permanently red and stop being a useful signal. Reporting still surfaces in the log —
-      # flip this to blocking once the existing backlog is cleaned up.
+      - name: TypeScript typecheck
+        run: pnpm tsc --noEmit
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Validate production Docker Compose config
+        env:
+          VITE_POCKETBASE_URL: https://pb.example.com
+          PB_HOOK_SECRET: ci_test_secret
+          PB_SUPERUSER_EMAIL: ci@example.com
+          PB_SUPERUSER_PASSWORD: ci_password_123
+        run: docker compose -f docker-compose.prod.yml config > /dev/null
+
+      # Non-blocking for now: pre-existing lint backlog
       - name: Lint
-        if: always()
         run: pnpm lint
         continue-on-error: true
 
-      - name: Unit tests
-        if: always()
-        run: pnpm test
-
   integration:
+    name: PocketBase Integration Tests
     runs-on: ubuntu-latest
     env:
-      # Keep in sync with PB_VERSION in pocketbase/Dockerfile: this is the version production runs.
       PB_VERSION: 0.39.10
     steps:
       - uses: actions/checkout@v4
@@ -65,7 +72,23 @@ jobs:
           unzip -q /tmp/pb.zip -d /tmp/pb
           echo "PB_BIN=/tmp/pb/pocketbase" >> "$GITHUB_ENV"
 
-      # A throwaway PocketBase built from pb_migrations + pb_hooks: the only place the hook rules
-      # (cascades, integrity blocks, the payments ledger) are exercised against real SQLite.
       - name: Integration tests
         run: pnpm test:integration
+
+  deploy:
+    name: Trigger Dokploy Release
+    needs: [preflight, integration]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Dokploy Webhook
+        env:
+          DOKPLOY_WEBHOOK: ${{ secrets.DOKPLOY_DEPLOY_WEBHOOK_URL }}
+        run: |
+          if [ -n "$DOKPLOY_WEBHOOK" ]; then
+            echo "→ Preflight checks passed! Triggering Dokploy release deployment..."
+            curl -X POST -f -s -S "$DOKPLOY_WEBHOOK"
+            echo "✅ Dokploy deploy webhook successfully triggered."
+          else
+            echo "ℹ️  DOKPLOY_DEPLOY_WEBHOOK_URL secret not set. Skipping webhook trigger (Dokploy handles Git polling/webhook directly if configured)."
+          fi

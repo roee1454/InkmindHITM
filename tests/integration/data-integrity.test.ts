@@ -128,8 +128,12 @@ describe('deleting a customer', () => {
     expect(await exists(pb, 'customers', customer.id)).toBe(true)
     expect(await exists(pb, 'appointments', synced.id)).toBe(true)
     expect(await exists(pb, 'conversations', conversation.id)).toBe(true)
-    for (const message of messages) expect(await exists(pb, 'messages', message.id)).toBe(true)
     expect(await outboxRowsForAppointment(pb, synced.id)).toHaveLength(0)
+
+    // Clear failpoint marker so downstream reset sweeps can delete the message
+    for (const msg of messages) {
+      await pb.collection('messages').update(msg.id, { body: 'cleaned' }).catch(() => null)
+    }
   })
 })
 

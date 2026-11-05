@@ -16,6 +16,7 @@ export default defineConfig(({ command, mode }) => {
       // Meta's webhook (and local tunnel testing) reach the dev server. Dev-only.
       allowedHosts: ['.ngrok-free.dev', '.ngrok-free.app', '.ngrok.app', '.ngrok.io'],
       host: true,
+      watch: process.env.CHOKIDAR_USEPOLLING === 'true' ? { usePolling: true } : undefined,
     },
     plugins: [
       isDev && devtools(),

@@ -1,5 +1,3 @@
-import type { PwaNotificationOptions } from './utils/pwa-notifications'
-
 export type NotificationType = 'info' | 'warning' | 'error' | 'success'
 
 /** `whatsapp_message`: a customer wrote in (title = the sender). `system`: everything the CRM tells staff. */
@@ -22,6 +20,4 @@ export interface NotificationGroup {
 }
 
 export type NotificationPermissionState = NotificationPermission | 'unsupported'
-
-export type { PwaNotificationOptions }
 

@@ -13,17 +13,8 @@ const SIZES: Record<IMAvatarSize, string> = {
   lg: "size-14 text-xl",
 }
 
-// Literal class names, so Tailwind sees every one of them.
-const ARTIST_RINGS: Record<IMAvatarArtist, string> = {
-  1: "ring-artist-1",
-  2: "ring-artist-2",
-  3: "ring-artist-3",
-  4: "ring-artist-4",
-  5: "ring-artist-5",
-  6: "ring-artist-6",
-  7: "ring-artist-7",
-  8: "ring-artist-8",
-}
+// Solid ring for artist avatars
+const ARTIST_RING = "ring-2 ring-offset-2 ring-offset-card ring-border"
 
 /**
  * Two letters: the first letter of the first and of the last word ("דניאל כהן" → "דכ"), or the
@@ -68,7 +59,7 @@ export function IMAvatar({ name, src, size = "md", artist, className, children, 
       className={cn(
         "relative flex shrink-0 select-none items-center justify-center overflow-hidden rounded-full bg-accent-soft leading-none font-extrabold text-accent-ink",
         SIZES[size],
-        artist && ["ring-2 ring-offset-2 ring-offset-card", ARTIST_RINGS[artist]],
+        artist && ARTIST_RING,
         className
       )}
       {...props}

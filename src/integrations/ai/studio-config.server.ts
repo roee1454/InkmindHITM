@@ -1,5 +1,6 @@
 import type PocketBase from 'pocketbase'
 import { DEPOSIT_NOTICE_HOURS } from '@/lib/cancellation-policy'
+import { studioConfig } from '@/config/studio.config'
 import { SYSTEM_AI_MODEL, SYSTEM_AI_MAX_TOKENS } from './model/defaults'
 
 export interface StudioAgentRuntimeConfig {
@@ -67,25 +68,25 @@ export async function getStudioAgentRuntimeConfig(
   const record = list?.items?.[0]
 
   const rawCutoff = record?.cancellation_cutoff_hours
-  const cutoffHours = typeof rawCutoff === 'number' ? rawCutoff : 48
+  const cutoffHours = typeof rawCutoff === 'number' ? rawCutoff : studioConfig.cancellationCutoffHours
 
   const rawValidity = record?.health_declaration_validity_months
-  const validityMonths = typeof rawValidity === 'number' ? rawValidity : 6
+  const validityMonths = typeof rawValidity === 'number' ? rawValidity : studioConfig.healthDeclarationValidityMonths
 
   const rawDepositAmount = record?.deposit_amount
-  const depositAmount = typeof rawDepositAmount === 'number' ? rawDepositAmount : null
+  const depositAmount = typeof rawDepositAmount === 'number' ? rawDepositAmount : studioConfig.depositAmount
 
   const rawInstructions = record?.ai_system_instructions as string | undefined
-  const customInstructions = rawInstructions?.trim() ? rawInstructions.trim() : null
+  const customInstructions = rawInstructions?.trim() || studioConfig.systemInstructions || null
 
   return {
     studio: {
-      name: (record?.studio_name as string)?.trim() || 'סטודיו לקעקועים',
-      timezone: (record?.timezone as string)?.trim() || 'Asia/Jerusalem',
-      currency: (record?.currency as string)?.trim() || 'ILS',
+      name: (record?.studio_name as string)?.trim() || studioConfig.studioName,
+      timezone: (record?.timezone as string)?.trim() || studioConfig.timezone,
+      currency: (record?.currency as string)?.trim() || studioConfig.currency,
     },
     healthDeclaration: {
-      formUrl: (record?.health_declaration_form_url as string)?.trim() || null,
+      formUrl: (record?.health_declaration_form_url as string)?.trim() || studioConfig.healthDeclarationFormUrl,
       validityMonths,
       validitySummaryHebrew: formatValiditySummaryHebrew(validityMonths),
     },
@@ -94,18 +95,18 @@ export async function getStudioAgentRuntimeConfig(
       summaryHebrew: formatCancellationSummaryHebrew(cutoffHours),
     },
     deposit: {
-      required: Boolean(record?.deposit_required),
+      required: record?.deposit_required !== undefined ? Boolean(record.deposit_required) : studioConfig.depositRequired,
       defaultAmount: depositAmount,
-      paymentInstructions: (record?.payment_instructions as string)?.trim() || null,
+      paymentInstructions: (record?.payment_instructions as string)?.trim() || studioConfig.paymentInstructions || null,
     },
-    reviewLink: (record?.google_review_link as string)?.trim() || null,
+    reviewLink: (record?.google_review_link as string)?.trim() || studioConfig.googleReviewLink,
     ironRules: {
       customInstructions,
     },
     aiEngine: {
-      enabled: Boolean(record?.ai_enabled),
+      enabled: record?.ai_enabled !== undefined ? Boolean(record.ai_enabled) : studioConfig.aiEnabled,
       maxTokens: SYSTEM_AI_MAX_TOKENS,
-      model: (record?.ai_model as string)?.trim() || SYSTEM_AI_MODEL,
+      model: (record?.ai_model as string)?.trim() || studioConfig.aiModel || SYSTEM_AI_MODEL,
     },
   }
 }

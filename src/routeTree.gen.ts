@@ -42,7 +42,6 @@ import { Route as ApiInternalLifecycleTickRouteImport } from './routes/api/inter
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
 import { Route as DashboardSettingsAiRouteImport } from './routes/dashboard/settings/ai'
 import { Route as DashboardSettingsClosuresRouteImport } from './routes/dashboard/settings/closures'
-import { Route as DashboardSettingsGeneralRouteImport } from './routes/dashboard/settings/general'
 import { Route as DashboardSettingsPolicyRouteImport } from './routes/dashboard/settings/policy'
 import { Route as DashboardSettingsSystemRouteImport } from './routes/dashboard/settings/system'
 import { Route as DashboardSettingsTeamRouteImport } from './routes/dashboard/settings/team'
@@ -221,12 +220,6 @@ const DashboardSettingsClosuresRoute =
     path: '/closures',
     getParentRoute: () => DashboardSettingsRouteRoute,
   } as any)
-const DashboardSettingsGeneralRoute =
-  DashboardSettingsGeneralRouteImport.update({
-    id: '/general',
-    path: '/general',
-    getParentRoute: () => DashboardSettingsRouteRoute,
-  } as any)
 const DashboardSettingsPolicyRoute = DashboardSettingsPolicyRouteImport.update({
   id: '/policy',
   path: '/policy',
@@ -300,7 +293,6 @@ export interface FileRoutesByFullPath {
   '/api/internal/lifecycle-tick': typeof ApiInternalLifecycleTickRoute
   '/dashboard/settings/ai': typeof DashboardSettingsAiRoute
   '/dashboard/settings/closures': typeof DashboardSettingsClosuresRoute
-  '/dashboard/settings/general': typeof DashboardSettingsGeneralRoute
   '/dashboard/settings/policy': typeof DashboardSettingsPolicyRoute
   '/dashboard/settings/system': typeof DashboardSettingsSystemRoute
   '/dashboard/settings/team': typeof DashboardSettingsTeamRoute
@@ -340,7 +332,6 @@ export interface FileRoutesByTo {
   '/api/internal/lifecycle-tick': typeof ApiInternalLifecycleTickRoute
   '/dashboard/settings/ai': typeof DashboardSettingsAiRoute
   '/dashboard/settings/closures': typeof DashboardSettingsClosuresRoute
-  '/dashboard/settings/general': typeof DashboardSettingsGeneralRoute
   '/dashboard/settings/policy': typeof DashboardSettingsPolicyRoute
   '/dashboard/settings/system': typeof DashboardSettingsSystemRoute
   '/dashboard/settings/team': typeof DashboardSettingsTeamRoute
@@ -384,7 +375,6 @@ export interface FileRoutesById {
   '/api/internal/lifecycle-tick': typeof ApiInternalLifecycleTickRoute
   '/dashboard/settings/ai': typeof DashboardSettingsAiRoute
   '/dashboard/settings/closures': typeof DashboardSettingsClosuresRoute
-  '/dashboard/settings/general': typeof DashboardSettingsGeneralRoute
   '/dashboard/settings/policy': typeof DashboardSettingsPolicyRoute
   '/dashboard/settings/system': typeof DashboardSettingsSystemRoute
   '/dashboard/settings/team': typeof DashboardSettingsTeamRoute
@@ -429,7 +419,6 @@ export interface FileRouteTypes {
     | '/api/internal/lifecycle-tick'
     | '/dashboard/settings/ai'
     | '/dashboard/settings/closures'
-    | '/dashboard/settings/general'
     | '/dashboard/settings/policy'
     | '/dashboard/settings/system'
     | '/dashboard/settings/team'
@@ -469,7 +458,6 @@ export interface FileRouteTypes {
     | '/api/internal/lifecycle-tick'
     | '/dashboard/settings/ai'
     | '/dashboard/settings/closures'
-    | '/dashboard/settings/general'
     | '/dashboard/settings/policy'
     | '/dashboard/settings/system'
     | '/dashboard/settings/team'
@@ -512,7 +500,6 @@ export interface FileRouteTypes {
     | '/api/internal/lifecycle-tick'
     | '/dashboard/settings/ai'
     | '/dashboard/settings/closures'
-    | '/dashboard/settings/general'
     | '/dashboard/settings/policy'
     | '/dashboard/settings/system'
     | '/dashboard/settings/team'
@@ -774,13 +761,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsClosuresRouteImport
       parentRoute: typeof DashboardSettingsRouteRoute
     }
-    '/dashboard/settings/general': {
-      id: '/dashboard/settings/general'
-      path: '/general'
-      fullPath: '/dashboard/settings/general'
-      preLoaderRoute: typeof DashboardSettingsGeneralRouteImport
-      parentRoute: typeof DashboardSettingsRouteRoute
-    }
     '/dashboard/settings/policy': {
       id: '/dashboard/settings/policy'
       path: '/policy'
@@ -854,7 +834,6 @@ const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
 interface DashboardSettingsRouteRouteChildren {
   DashboardSettingsAiRoute: typeof DashboardSettingsAiRoute
   DashboardSettingsClosuresRoute: typeof DashboardSettingsClosuresRoute
-  DashboardSettingsGeneralRoute: typeof DashboardSettingsGeneralRoute
   DashboardSettingsPolicyRoute: typeof DashboardSettingsPolicyRoute
   DashboardSettingsSystemRoute: typeof DashboardSettingsSystemRoute
   DashboardSettingsTeamRoute: typeof DashboardSettingsTeamRoute
@@ -865,7 +844,6 @@ const DashboardSettingsRouteRouteChildren: DashboardSettingsRouteRouteChildren =
   {
     DashboardSettingsAiRoute: DashboardSettingsAiRoute,
     DashboardSettingsClosuresRoute: DashboardSettingsClosuresRoute,
-    DashboardSettingsGeneralRoute: DashboardSettingsGeneralRoute,
     DashboardSettingsPolicyRoute: DashboardSettingsPolicyRoute,
     DashboardSettingsSystemRoute: DashboardSettingsSystemRoute,
     DashboardSettingsTeamRoute: DashboardSettingsTeamRoute,

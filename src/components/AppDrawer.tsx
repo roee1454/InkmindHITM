@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/sheet'
 import { IMButton } from '@/components/ui/button'
 import { BrandMark } from '#/components/BrandMark.tsx'
-import { ThemeModeControl } from '#/components/ThemeModeControl.tsx'
+import { studioConfig } from '#/config/studio.config.ts'
 import { logout } from '#/features/auth/server/auth.ts'
 import { getAiSettings } from '#/features/settings/server/ai.ts'
 import { getUnreadNotificationsCount } from '#/features/notifications/server/notifications.ts'
@@ -66,9 +66,9 @@ export function AppDrawer({ open, onOpenChange, staff }: AppDrawerProps) {
         <IMSheetHeader className="flex-row items-center gap-3 border-border">
           <BrandMark size="sm" />
           <div className="flex min-w-0 flex-col items-start">
-            <IMSheetTitle>INKMIND</IMSheetTitle>
-            <IMSheetDescription className="text-2xs font-bold uppercase text-muted-foreground">
-              ניהול סטודיו
+            <IMSheetTitle className="truncate">{studioConfig.studioName}</IMSheetTitle>
+            <IMSheetDescription className="truncate text-2xs font-bold uppercase text-muted-foreground">
+              {studioConfig.tagline || 'ניהול סטודיו'}
             </IMSheetDescription>
           </div>
         </IMSheetHeader>
@@ -158,7 +158,6 @@ export function AppDrawer({ open, onOpenChange, staff }: AppDrawerProps) {
               {ROLE_LABELS[staff.role] ?? staff.role}
             </p>
           </div>
-          <ThemeModeControl />
           <IMButton
             variant="ghost"
             className="h-11 w-full justify-start gap-2"

@@ -11,9 +11,8 @@ import {
 
 describe('Settings navigation (docs/settings-redesign.md)', () => {
   it('gives studio policy and closure days their own pages, apart from the bot', () => {
-    expect(SETTINGS_SUB_ITEMS.map((item) => item.id)).toEqual(['general', 'team', 'policy', 'closures', 'ai', 'system'])
+    expect(SETTINGS_SUB_ITEMS.map((item) => item.id)).toEqual(['team', 'policy', 'closures', 'ai', 'system'])
     expect(SETTINGS_SUB_ITEMS.map((item) => item.route)).toEqual([
-      '/dashboard/settings/general',
       '/dashboard/settings/team',
       '/dashboard/settings/policy',
       '/dashboard/settings/closures',
@@ -23,7 +22,6 @@ describe('Settings navigation (docs/settings-redesign.md)', () => {
   })
 
   it('provides correct routeTitle for every settings page and fallbacks', () => {
-    expect(routeTitle('/dashboard/settings/general')).toBe('כללי')
     expect(routeTitle('/dashboard/settings/team')).toBe('צוות')
     expect(routeTitle('/dashboard/settings/policy')).toBe('מדיניות')
     expect(routeTitle('/dashboard/settings/closures')).toBe('ימי סגירה')
@@ -34,7 +32,7 @@ describe('Settings navigation (docs/settings-redesign.md)', () => {
 
   it('correctly maps settingsBackTarget on mobile', () => {
     // Top-level settings routes go back to /dashboard/settings
-    expect(settingsBackTarget('/dashboard/settings/general', {})).toEqual({
+    expect(settingsBackTarget('/dashboard/settings/policy', {})).toEqual({
       to: '/dashboard/settings',
     })
     expect(settingsBackTarget('/dashboard/settings/ai', {})).toEqual({

@@ -13,11 +13,6 @@ import { ServiceWorkerRegistrar } from '../components/ServiceWorkerRegistrar'
 
 import type { QueryClient } from '@tanstack/react-query'
 
-// Runs before first paint (blocking inline script, not a React effect) so a returning visitor
-// never flashes light before dark applies. Mirrors `useTheme` in `hooks/use-theme.ts`: the
-// preference is per-device, and "system" (or nothing stored) follows prefers-color-scheme.
-const THEME_INIT_SCRIPT = `(function(){try{var m=localStorage.getItem('ui-mode');if(m!=='light'&&m!=='dark')m='system';var d=m==='dark'||(m==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();`
-
 interface MyRouterContext {
   queryClient: QueryClient
 }
@@ -41,9 +36,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         name: 'description',
         content: 'מערכת ניהול סטודיו קעקועים — תורים, לידים, לקוחות ושיחות',
       },
-      { name: 'theme-color', content: '#f3f5f9', media: '(prefers-color-scheme: light)' },
-      { name: 'theme-color', content: '#0a0a0b', media: '(prefers-color-scheme: dark)' },
-      { name: 'color-scheme', content: 'light dark' },
+      { name: 'theme-color', content: '#f3f5f9' },
+      { name: 'color-scheme', content: 'light' },
       { name: 'application-name', content: 'Inkmind' },
       { name: 'mobile-web-app-capable', content: 'yes' },
       { name: 'apple-mobile-web-app-capable', content: 'yes' },
@@ -76,12 +70,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    // The inline THEME_INIT_SCRIPT below toggles `.dark` from localStorage before hydration,
-    // on purpose, so returning visitors don't flash the wrong mode — React must be told not
-    // to reconcile that intentional mismatch.
-    <html lang="he" dir="rtl" suppressHydrationWarning>
+    <html lang="he" dir="rtl">
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
       <body>
